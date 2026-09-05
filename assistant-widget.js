@@ -3,8 +3,13 @@
 
   const css = document.createElement("link");
   css.rel = "stylesheet";
-  css.href = "/assistant-widget.css?v=20260904.2";
+  css.href = "/assistant-widget.css?v=20260904.3";
   document.head.append(css);
+
+  const mobileCss = document.createElement("link");
+  mobileCss.rel = "stylesheet";
+  mobileCss.href = "/assistant-widget-mobile.css?v=20260904.1";
+  document.head.append(mobileCss);
 
   const root = document.createElement("aside");
   root.className = "ogri-assistant";
@@ -36,7 +41,7 @@
     teste: "A Ogritech Agenda poderá oferecer período gratuito de teste conforme a condição comercial vigente. Confirmamos a disponibilidade no primeiro contato.",
     beneficios: "A Ogritech Agenda reúne agenda, equipe, serviços, histórico e relacionamento com clientes, com atendimento focado em agendamentos.",
     pagamento: "As formas de pagamento são apresentadas na proposta. O cancelamento não tem taxa; eventuais condições do plano são informadas antes da contratação.",
-    contato: "Você pode pedir retorno por WhatsApp, ligação ou e-mail. Escolha o canal no formulário e nossa equipe receberá sua solicitação."
+    contato: "Você pode solicitar retorno por ligação telefônica, WhatsApp ou e-mail. Escolha o canal e informe seus dados."
   };
 
   function menu() {
@@ -45,20 +50,21 @@
       <button class="ogri-assistant__option" data-topic="teste">Período gratuito</button>
       <button class="ogri-assistant__option" data-topic="beneficios">Benefícios</button>
       <button class="ogri-assistant__option" data-topic="pagamento">Pagamento e cancelamento</button>
-      <button class="ogri-assistant__option" data-topic="contato">Pedir contato</button>
+      <button class="ogri-assistant__option" data-topic="contato">Solicitar contato</button>
     </div><p class="ogri-assistant__notice">Atendimento restrito à aquisição, implantação e uso da Ogritech Agenda.</p>`;
   }
 
   function answer(topic) {
-    body.innerHTML = `<p class="ogri-assistant__message">${topics[topic]}</p><div class="ogri-assistant__actions"><button class="ogri-assistant__action" type="button" data-request-contact="${topic}">Solicitar contato</button><a class="ogri-assistant__action ogri-assistant__action--quiet" href="mailto:contato@ogritech.com.br">Enviar e-mail</a></div><button class="ogri-assistant__back" type="button">← Ver outras dúvidas</button>`;
+    body.innerHTML = `<p class="ogri-assistant__message">${topics[topic]}</p><div class="ogri-assistant__actions"><button class="ogri-assistant__action" type="button" data-request-contact="${topic}">Solicitar contato</button></div><button class="ogri-assistant__back" type="button">← Ver outras dúvidas</button>`;
     body.querySelector(".ogri-assistant__back").addEventListener("click", menu);
   }
 
-  function callbackForm() {
+  function callbackForm(returnTopic = "contato") {
     body.innerHTML = `<p class="ogri-assistant__message">Informe como prefere receber o contato da Ogritech.</p>
       <form class="ogri-assistant__form" novalidate>
-        <label><span>Telefone *</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="(00) 00000-0000" required></label>
-        <fieldset><legend>Receber contato por *</legend><label class="ogri-assistant__choice"><input type="radio" name="channel" value="WhatsApp" checked><span>WhatsApp</span></label><label class="ogri-assistant__choice"><input type="radio" name="channel" value="Ligação"><span>Ligação telefônica</span></label></fieldset>
+        <fieldset><legend>Como prefere receber o contato? *</legend><label class="ogri-assistant__choice"><input type="radio" name="channel" value="Ligação" checked><span>Ligação telefônica</span></label><label class="ogri-assistant__choice"><input type="radio" name="channel" value="WhatsApp"><span>WhatsApp</span></label><label class="ogri-assistant__choice"><input type="radio" name="channel" value="E-mail"><span>E-mail</span></label></fieldset>
+        <label data-phone-field><span>Telefone *</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="(00) 00000-0000" required></label>
+        <label data-email-field hidden><span>E-mail *</span><input name="email" type="email" inputmode="email" autocomplete="email" maxlength="320" placeholder="voce@empresa.com.br"></label>
         <label class="ogri-assistant__consent" data-whatsapp-consent><input type="checkbox" name="whatsappConsent" required><span>Aceito receber pelo WhatsApp uma mensagem da Ogritech iniciando o contato.</span></label>
         <label class="ogri-assistant__consent"><input type="checkbox" name="privacyConsent" required><span>Autorizo o uso destes dados para a Ogritech entrar em contato. Li a <a href="/privacidade.html" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>.</span></label>
         <label class="ogri-assistant__honeypot" aria-hidden="true">Site<input name="website" tabindex="-1" autocomplete="off"></label>
@@ -67,9 +73,18 @@
       </form><button class="ogri-assistant__back" type="button">← Voltar</button>`;
     const form = body.querySelector(".ogri-assistant__form");
     const phone = form.elements.phone;
+    const email = form.elements.email;
+    const phoneField = body.querySelector("[data-phone-field]");
+    const emailField = body.querySelector("[data-email-field]");
     const whatsappConsent = body.querySelector("[data-whatsapp-consent]");
     const updateConsent = () => {
-      const isWhatsApp = form.elements.channel.value === "WhatsApp";
+      const channel = form.elements.channel.value;
+      const isWhatsApp = channel === "WhatsApp";
+      const isEmail = channel === "E-mail";
+      phoneField.hidden = isEmail;
+      emailField.hidden = !isEmail;
+      phone.required = !isEmail;
+      email.required = isEmail;
       whatsappConsent.hidden = !isWhatsApp;
       form.elements.whatsappConsent.required = isWhatsApp;
       if (!isWhatsApp) form.elements.whatsappConsent.checked = false;
@@ -79,7 +94,8 @@
     });
     form.elements.channel.forEach(input => input.addEventListener("change", updateConsent));
     form.addEventListener("submit", submitCallback);
-    body.querySelector(".ogri-assistant__back").addEventListener("click", () => answer("planos"));
+    body.querySelector(".ogri-assistant__back").addEventListener("click", returnTopic === "contato" ? menu : () => answer(returnTopic));
+    updateConsent();
     phone.focus();
   }
 
@@ -98,9 +114,11 @@
     const message = form.querySelector(".ogri-assistant__form-message");
     const submit = form.querySelector(".ogri-assistant__submit");
     const digits = form.elements.phone.value.replace(/\D/g, "");
+    const email = form.elements.email.value.trim().toLowerCase();
     const channel = form.elements.channel.value;
     const whatsappAccepted = form.elements.whatsappConsent.checked;
-    if (digits.length < 10 || digits.length > 11) { message.textContent = "Informe um telefone válido com DDD."; form.elements.phone.focus(); return; }
+    if (channel !== "E-mail" && (digits.length < 10 || digits.length > 11)) { message.textContent = "Informe um telefone válido com DDD."; form.elements.phone.focus(); return; }
+    if (channel === "E-mail" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { message.textContent = "Informe um e-mail válido."; form.elements.email.focus(); return; }
     if (!form.elements.privacyConsent.checked) { message.textContent = "Confirme a autorização para receber o contato."; return; }
     if (channel === "WhatsApp" && !whatsappAccepted) { message.textContent = "Confirme o aceite para receber a mensagem pelo WhatsApp."; return; }
     submit.disabled = true;
@@ -110,12 +128,13 @@
       const response = await fetch(`${url}/rest/v1/rpc/public_submit_assistant_callback`, {
         method: "POST",
         headers: { apikey: key, "Content-Type": "application/json" },
-        body: JSON.stringify({ supplied_phone: digits, supplied_channel: channel, accepted_privacy: true, accepted_whatsapp: channel === "WhatsApp" && whatsappAccepted, website: form.elements.website.value })
+        body: JSON.stringify({ supplied_phone: channel === "E-mail" ? "" : digits, supplied_email: channel === "E-mail" ? email : "", supplied_channel: channel, accepted_privacy: true, accepted_whatsapp: channel === "WhatsApp" && whatsappAccepted, website: form.elements.website.value })
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.message || "Não foi possível enviar agora.");
       const delivery = result?.data?.delivery_status;
-      body.innerHTML = `<p class="ogri-assistant__message">${channel === "WhatsApp" && delivery === "sent" ? "Enviei uma mensagem para o seu WhatsApp. Podemos continuar por lá." : channel === "WhatsApp" ? "Solicitação recebida. Seu contato por WhatsApp foi autorizado e está na fila de atendimento." : "Solicitação recebida. A Ogritech entrará em contato por ligação."}</p><button class="ogri-assistant__back" type="button">← Voltar ao início</button>`;
+      const successText = channel === "WhatsApp" && delivery === "sent" ? "Enviei uma mensagem para o seu WhatsApp. Podemos continuar por lá." : channel === "WhatsApp" ? "Solicitação recebida. Seu contato por WhatsApp foi autorizado e está na fila de atendimento." : channel === "E-mail" ? "Solicitação recebida. Seu contato por e-mail foi registrado." : "Solicitação recebida. A Ogritech entrará em contato por ligação telefônica.";
+      body.innerHTML = `<p class="ogri-assistant__message">${successText}</p><button class="ogri-assistant__back" type="button">← Voltar ao início</button>`;
       body.querySelector(".ogri-assistant__back").addEventListener("click", menu);
     } catch (error) {
       message.textContent = error?.message || "Não foi possível enviar agora. Tente novamente.";
@@ -136,8 +155,13 @@
   close.addEventListener("click", () => { setOpen(false); toggle.focus(); });
   body.addEventListener("click", event => {
     const topicButton = event.target.closest("[data-topic]");
-    if (topicButton) answer(topicButton.dataset.topic);
-    if (event.target.closest("[data-request-contact]")) callbackForm();
+    if (topicButton) {
+      if (topicButton.dataset.topic === "contato") callbackForm("contato");
+      else answer(topicButton.dataset.topic);
+      return;
+    }
+    const requestButton = event.target.closest("[data-request-contact]");
+    if (requestButton) callbackForm(requestButton.dataset.requestContact);
   });
   document.addEventListener("keydown", event => { if (event.key === "Escape" && !panel.hidden) setOpen(false); });
 })();
