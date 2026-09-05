@@ -8,7 +8,7 @@
 
   const mobileCss = document.createElement("link");
   mobileCss.rel = "stylesheet";
-  mobileCss.href = "/assistant-widget-mobile.css?v=20260904.1";
+  mobileCss.href = "/assistant-widget-mobile.css?v=20260904.2";
   document.head.append(mobileCss);
 
   const root = document.createElement("aside");

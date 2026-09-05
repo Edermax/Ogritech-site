@@ -40,9 +40,12 @@
     position: fixed;
     display: flex;
     flex-direction: column;
-    inset: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    top: auto;
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: max(8px, env(safe-area-inset-left));
     width: auto;
-    max-height: none;
+    max-height: calc(100dvh - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom)));
     border-radius: 18px;
   }
 
@@ -63,7 +66,7 @@
   .ogri-assistant__body {
     flex: 1;
     min-height: 0;
-    max-height: none;
+    max-height: calc(100dvh - 92px - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom)));
     padding: 15px;
     overflow-y: auto;
     overscroll-behavior: contain;
