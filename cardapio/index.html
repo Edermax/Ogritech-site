@@ -1,1 +1,61 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow,noarchive"><meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' https://cdn.jsdelivr.net;style-src 'self';img-src 'self' data: https:;connect-src 'self' http://127.0.0.1:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co;object-src 'none';base-uri 'self';form-action 'self'"><title>Cardápio | Ogritech</title><link rel="stylesheet" href="../commercial-public.css"><link rel="icon" href="../ogritech-favicon.ico"></head><body><main class="public-shell"><nav class="public-nav"><a href="../"><img src="../ogritech-header-logo.png" alt="Ogritech"></a></nav><section id="loading" class="public-hero"><p>Carregando cardápio...</p></section><div id="content" class="hidden"><header class="public-hero"><small>CARDÁPIO ONLINE</small><h1 id="menuTitle"></h1><p id="menuDescription"></p></header><div id="catalog"></div><div id="cartBar" class="cart-bar hidden"><span><strong id="cartCount">0</strong> itens · <strong id="cartTotal">R$ 0</strong></span><button id="checkoutButton" class="public-button">Finalizar pedido</button></div><article id="checkout" class="public-card hidden"><h2>Finalizar pedido</h2><form id="orderForm" class="public-form"><label>Nome<input name="name" required maxlength="150"></label><label>Telefone<input name="phone" required maxlength="20"></label><label>E-mail<input name="email" type="email" maxlength="320"></label><label>Recebimento<select name="fulfillment" id="fulfillment"></select></label><label id="addressLabel" class="hidden">Endereço<textarea name="address" maxlength="1000"></textarea></label><label>Observações<textarea name="notes" maxlength="2000"></textarea></label><label class="honeypot">Site<input name="website" tabindex="-1"></label><label><span><input name="privacy" type="checkbox" required> Aceito o aviso de privacidade.</span></label><p id="orderMessage" class="public-message"></p><button class="public-button">Enviar pedido</button></form></article></div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script><script src="../supabase-config.js"></script><script src="cardapio.js"></script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,follow,noarchive">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' https://cdn.jsdelivr.net;style-src 'self';img-src 'self' data: https:;connect-src 'self' http://127.0.0.1:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co;object-src 'none';base-uri 'self';form-action 'self'">
+  <title>Cardápio | Ogritech</title>
+  <link rel="stylesheet" href="../commercial-public.css">
+  <link rel="stylesheet" href="catalog.css">
+  <link rel="icon" href="../ogritech-favicon.ico">
+</head>
+<body>
+  <main class="public-shell">
+    <nav class="public-nav"><a href="../"><img src="../ogritech-header-logo.png" alt="Ogritech"></a></nav>
+    <section id="loading" class="public-hero"><p>Carregando cardápio...</p></section>
+    <div id="content" class="hidden">
+      <header class="public-hero"><small>CARDÁPIO ONLINE</small><h1 id="menuTitle"></h1><p id="menuDescription"></p></header>
+      <aside class="public-card"><h2>Informações do estabelecimento</h2><p id="menuHours"></p><p id="menuPayments"></p></aside>
+      <div id="catalog"></div>
+      <div id="cartBar" class="cart-bar hidden"><span><strong id="cartCount">0</strong> itens · <strong id="cartTotal">R$ 0</strong></span><button id="checkoutButton" class="public-button">Finalizar pedido</button></div>
+      <article id="checkout" class="public-card hidden">
+        <h2 id="checkoutTitle">Finalizar pedido</h2>
+        <form id="orderForm" class="public-form">
+          <label>Nome<input name="name" required maxlength="150"></label>
+          <label>Telefone<input name="phone" required maxlength="20"></label>
+          <label>E-mail<input name="email" type="email" maxlength="320"></label>
+          <label>Recebimento<select name="fulfillment" id="fulfillment"></select></label>
+          <label id="deliveryZoneLabel" class="hidden">Região de entrega<select name="delivery_zone" id="deliveryZone"></select></label>
+          <label id="addressLabel" class="hidden">Endereço<textarea name="address" maxlength="1000"></textarea></label>
+          <label>Agendar para (opcional)<input name="scheduled_for" type="datetime-local"></label>
+          <label>Observações<textarea name="notes" maxlength="2000"></textarea></label>
+          <label class="honeypot">Site<input name="website" tabindex="-1"></label>
+          <label><span><input name="privacy" type="checkbox" required> Aceito o aviso de privacidade.</span></label>
+          <p id="orderMessage" class="public-message"></p>
+          <button id="orderSubmitButton" class="public-button">Enviar pedido</button>
+        </form>
+      </article>
+    </div>
+  </main>
+  <dialog id="configurator" class="public-card configurator">
+    <form id="configuratorForm" class="public-form">
+      <div class="configurator-heading"><h2 id="configuratorTitle"></h2><button id="closeConfigurator" type="button" class="public-button secondary" aria-label="Fechar">Fechar</button></div>
+      <div id="configuratorGroups"></div>
+      <p id="configuratorMessage" class="public-message"></p>
+      <button type="submit" class="public-button">Adicionar ao carrinho</button>
+    </form>
+  </dialog>
+  <aside id="menuAssistant" class="menu-assistant hidden" aria-label="Assistente do cardápio">
+    <button id="menuAssistantToggle" class="public-button menu-assistant-toggle" type="button" aria-expanded="false" aria-controls="menuAssistantPanel">Ajuda para escolher</button>
+    <section id="menuAssistantPanel" class="public-card menu-assistant-panel hidden" role="dialog" aria-modal="false" aria-labelledby="menuAssistantTitle">
+      <div class="configurator-heading"><div><h2 id="menuAssistantTitle">Assistente do cardápio</h2><small>Consulta este cardápio e ajuda a revisar o carrinho. Não envia pedidos sozinho.</small></div><button id="menuAssistantClose" class="public-button secondary" type="button" aria-label="Fechar assistente">Fechar</button></div>
+      <div id="menuAssistantMessages" class="menu-assistant-messages" aria-live="polite"><p class="assistant-message">Olá! Diga o que você procura.</p></div>
+      <form id="menuAssistantForm" class="public-form"><label for="menuAssistantInput">Sua mensagem</label><div class="menu-assistant-input"><input id="menuAssistantInput" required maxlength="500" autocomplete="off" placeholder="Ex.: Tem pizza de calabresa?"><button class="public-button" type="submit">Enviar</button></div><p id="menuAssistantNotice" class="public-message">Respostas automáticas baseadas somente nos dados cadastrados. Confira antes de adicionar.</p></form>
+    </section>
+  </aside>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="../supabase-config.js"></script>
+  <script src="cardapio.js"></script>
+</body>
+</html>

@@ -57,9 +57,10 @@ if (OGRITECH_ENV === "staging") {
         if (document.getElementById("ogritechStagingBadge")) return;
         const badge = document.createElement("div");
         badge.id = "ogritechStagingBadge";
-        badge.textContent = "STAGING — DADOS DE TESTE";
+        const isPrivatePilot = new URLSearchParams(window.location.search).get("pilot") === "private";
+        badge.textContent = isPrivatePilot ? "STAGING — PILOTO PRIVADO" : "STAGING — DADOS DE TESTE";
         badge.setAttribute("role", "status");
-        badge.style.cssText = "position:fixed;right:12px;bottom:12px;z-index:2147483647;padding:8px 12px;border-radius:999px;background:#b45309;color:#fff;font:700 12px/1.2 system-ui,sans-serif;box-shadow:0 4px 16px #0005";
+        badge.style.cssText = "position:fixed;right:12px;bottom:12px;z-index:2147483647;padding:8px 12px;border-radius:999px;background:#b45309;color:#fff;font:700 12px/1.2 system-ui,sans-serif;box-shadow:0 4px 16px #0005;pointer-events:none";
         document.body.appendChild(badge);
     };
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", showStagingBadge, { once: true });
