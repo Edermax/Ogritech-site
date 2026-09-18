@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' https://cdn.jsdelivr.net;style-src 'self';img-src 'self' data: https:;connect-src 'self' http://127.0.0.1:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co;object-src 'none';base-uri 'self';form-action 'self'">
   <title>Cardápio | Ogritech</title>
   <link rel="stylesheet" href="../commercial-public.css">
-  <link rel="stylesheet" href="catalog.css?v=20260918b">
+  <link rel="stylesheet" href="catalog.css?v=20260918c">
   <link rel="icon" href="../ogritech-favicon.ico">
 </head>
 <body>
@@ -41,7 +41,7 @@
   </main>
   <dialog id="configurator" class="public-card configurator">
     <form id="configuratorForm" class="public-form">
-      <div class="configurator-heading"><h2 id="configuratorTitle"></h2><button id="closeConfigurator" type="button" class="public-button secondary" aria-label="Fechar">Fechar</button></div>
+      <div class="configurator-heading"><h2 id="configuratorTitle"></h2><button id="closeConfigurator" type="button" class="configurator-close" aria-label="Fechar escolhas"><span aria-hidden="true">×</span></button></div>
       <div id="configuratorGroups"></div>
       <p id="configuratorMessage" class="public-message"></p>
       <button type="submit" class="public-button">Adicionar ao carrinho</button>
@@ -57,6 +57,6 @@
   </aside>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="../supabase-config.js"></script>
-  <script src="cardapio.js?v=20260918b"></script>
+  <script src="cardapio.js?v=20260918c"></script>
 </body>
 </html>

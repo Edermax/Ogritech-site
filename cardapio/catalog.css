@@ -139,6 +139,25 @@ body { background: radial-gradient(circle at 15% -5%, #083b46 0, #091b20 20rem, 
 .menu-assistant-input .public-button { background: #42d9ed; color: #031012; }
 .menu-assistant-body .public-message { min-height: 0; margin-bottom: 0; color: #829599; font-size: 10px; line-height: 1.45; }
 
+.configurator { width: min(620px, calc(100% - 24px)); max-height: min(88dvh, 760px); padding: 0; overflow: hidden; border: 2px solid #42d9ed8c; border-radius: 22px; background: #071114; color: #f5fbfc; box-shadow: 0 32px 100px #000f, 0 0 0 1px #ffffff0a inset; }
+.configurator::backdrop { background: #000e; backdrop-filter: blur(5px); }
+.configurator .public-form { display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 0; max-height: min(88dvh, 760px); }
+.configurator .configurator-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 19px 20px; border-bottom: 1px solid #42d9ed38; background: linear-gradient(135deg, #123039, #081416 72%); }
+.configurator .configurator-heading h2 { margin: 0; padding-top: 5px; font-size: clamp(21px, 5vw, 29px); line-height: 1.2; }
+.configurator-close { display: grid; place-items: center; flex: 0 0 auto; width: 42px; height: 42px; padding: 0; border: 1px solid #42d9ed99; border-radius: 50%; background: #42d9ed1c; color: #eaffff; font: 400 29px/1 Arial, sans-serif; cursor: pointer; }
+.configurator-close:hover, .configurator-close:focus-visible { background: #42d9ed; color: #031012; outline: 3px solid #42d9ed33; }
+#configuratorGroups { min-height: 0; padding: 16px 18px 8px; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: #42d9ed #0b1517; }
+.configurator fieldset { min-width: 0; margin: 0 0 16px; padding: 15px; border: 1px solid #42d9ed3d; border-radius: 16px; background: #0b171a; }
+.configurator legend { float: left; width: 100%; margin: 0 0 12px; padding: 0; color: #f3fcfd; font-size: 15px; line-height: 1.35; }
+.configurator legend small { display: block; margin-top: 4px; color: #8eaaaf; font-size: 11px; font-weight: 500; }
+.configurator legend + label { clear: both; }
+.configurator fieldset label { display: flex; grid-template-columns: none; align-items: center; gap: 12px; min-height: 48px; margin: 8px 0 0; padding: 10px 12px; border: 1px solid #ffffff12; border-radius: 11px; background: #111f22; color: #e3edef; font-size: 14px; cursor: pointer; }
+.configurator fieldset label:hover, .configurator fieldset label:has(input:checked) { border-color: #42d9ed7a; background: #103039; }
+.configurator fieldset input { flex: 0 0 auto; width: 20px; height: 20px; margin: 0; accent-color: #08b9d3; }
+.configurator fieldset label span { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+#configuratorMessage { min-height: 0; margin: 0 18px 10px; }
+.configurator > form > .public-button[type="submit"] { width: calc(100% - 36px); margin: 0 18px 18px; background: #08b9d3; color: #031012; }
+
 @media (max-width: 900px) {
   .catalog-items {
     grid-template-columns: 1fr;
@@ -172,10 +191,11 @@ body { background: radial-gradient(circle at 15% -5%, #083b46 0, #091b20 20rem, 
     padding: 0;
   }
 
-  .configurator-heading {
-    align-items: stretch;
-    flex-direction: column;
-  }
+  .configurator .configurator-heading { align-items: flex-start; flex-direction: row; padding: 16px; }
+  #configuratorGroups { padding: 14px 14px 6px; }
+  .configurator fieldset { padding: 12px; }
+  #configuratorMessage { margin-inline: 14px; }
+  .configurator > form > .public-button[type="submit"] { width: calc(100% - 28px); margin: 0 14px 14px; }
   .menu-assistant { right: max(10px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); left: auto; }
   .menu-assistant-toggle { width: 66px; height: 66px; }
   .menu-assistant-toggle span { right: 73px; bottom: 12px; }
