@@ -71,15 +71,18 @@ body { background: radial-gradient(circle at 15% -5%, #083b46 0, #091b20 20rem, 
   font-weight: 700;
 }
 
-.menu-price-picker {
+.menu-price-picker,
+.menu-quantity-picker {
   display: grid;
   gap: 7px;
   color: #ccc;
   font-size: 13px;
 }
-.menu-price-picker span { font-weight: 700; color: #eee; }
+.menu-price-picker span,
+.menu-quantity-picker span { font-weight: 700; color: #eee; }
 
-.menu-price-picker select {
+.menu-price-picker select,
+.menu-quantity-picker input {
   width: 100%;
   min-width: 0;
   padding: 12px;
@@ -109,6 +112,10 @@ body { background: radial-gradient(circle at 15% -5%, #083b46 0, #091b20 20rem, 
   font-size: 21px;
 }
 .public-message { color: #42d9ed; }
+.delivery-address-fields { display: grid; gap: 8px; }
+.cep-search-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.cep-search-row .public-button { padding-inline: 16px; }
+.delivery-address-fields .public-message { min-height: 0; margin: 0; }
 
 .menu-quote-notice {
   padding: 12px;
@@ -203,4 +210,8 @@ body { background: radial-gradient(circle at 15% -5%, #083b46 0, #091b20 20rem, 
   .menu-assistant:has(.menu-assistant-panel:not(.hidden)) .menu-assistant-toggle { display: none; }
   .menu-assistant-heading { flex: 0 0 auto; }
   .menu-assistant-body { flex: 1; min-height: 0; max-height: none; }
+}
+
+@media (max-width: 420px) {
+  .cep-search-row { grid-template-columns: 1fr; }
 }
