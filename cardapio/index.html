@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' https://cdn.jsdelivr.net;style-src 'self';img-src 'self' data: https:;connect-src 'self' http://127.0.0.1:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co;object-src 'none';base-uri 'self';form-action 'self'">
   <title>Cardápio | Ogritech</title>
   <link rel="stylesheet" href="../commercial-public.css">
-  <link rel="stylesheet" href="catalog.css?v=2a687a9">
+  <link rel="stylesheet" href="catalog.css?v=20260918a">
   <link rel="icon" href="../ogritech-favicon.ico">
 </head>
 <body>
@@ -15,8 +15,9 @@
     <nav class="public-nav"><a href="../"><img src="../ogritech-header-logo.png" alt="Ogritech"></a></nav>
     <section id="loading" class="public-hero"><p>Carregando cardápio...</p></section>
     <div id="content" class="hidden">
-      <header class="public-hero"><small>CARDÁPIO ONLINE</small><h1 id="menuTitle"></h1><p id="menuDescription"></p></header>
-      <aside class="public-card"><h2>Informações do estabelecimento</h2><p id="menuHours"></p><p id="menuPayments"></p></aside>
+      <header class="public-hero menu-hero"><small>ENCOMENDAS ONLINE</small><h1 id="menuTitle"></h1><p id="menuDescription"></p><div class="menu-hero-trust"><span>Pedido direto</span><span>Confirmação humana</span><span>Sem taxa de aplicativo</span></div></header>
+      <aside class="public-card menu-store-info"><div><small>ATENDIMENTO</small><p id="menuHours"></p></div><div><small>PAGAMENTO</small><p id="menuPayments"></p></div></aside>
+      <nav id="categoryNav" class="category-nav" aria-label="Categorias do cardápio"></nav>
       <div id="catalog"></div>
       <div id="cartBar" class="cart-bar hidden"><span><strong id="cartCount">0</strong> itens · <strong id="cartTotal">R$ 0</strong></span><button id="checkoutButton" class="public-button">Finalizar pedido</button></div>
       <article id="checkout" class="public-card hidden">
@@ -56,6 +57,6 @@
   </aside>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="../supabase-config.js"></script>
-  <script src="cardapio.js?v=2a687a9"></script>
+  <script src="cardapio.js?v=20260918a"></script>
 </body>
 </html>

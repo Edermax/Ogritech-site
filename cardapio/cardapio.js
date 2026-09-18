@@ -5,6 +5,31 @@
   const createUuid = () => globalThis.crypto?.randomUUID?.() || "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => { const value = Math.floor(Math.random() * 16); return (char === "x" ? value : (value & 3) | 8).toString(16); });
   const clean = (value) => String(value || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
   const isQuoteItem = (item) => item.metadata?.order_mode === "quote";
+  const categoryId = (index) => `categoria-${index + 1}`;
+  const displayPriceLabel = (label) => String(label || "")
+    .replace(/\s*[·|-]\s*\d+\s*pessoas?\b/gi, "")
+    .replace(/\s*\(\s*\d+\s*pessoas?\s*\)/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  const weightPickerLabel = (records, quote) => {
+    const usesWeight = records.some((record) => /\bkg\b/i.test(record.label || ""));
+    if (quote) return usesWeight ? "Peso de referência" : "Tamanho de referência";
+    return usesWeight ? "Escolha o formato e o peso" : "Escolha uma opção";
+  };
+  function servingGuide() {
+    const portions = new Map();
+    prices.forEach((price) => {
+      const match = String(price.label || "").match(/(\d+(?:[.,]\d+)?)\s*kg\b.*?(\d+)\s*pessoas?/i);
+      if (!match) return;
+      const weight = match[1].replace(".", ","), people = Number(match[2]);
+      const values = portions.get(weight) || new Set(); values.add(people); portions.set(weight, values);
+    });
+    const rows = [...portions].sort(([a], [b]) => Number(a.replace(",", ".")) - Number(b.replace(",", "."))).map(([weight, values]) => {
+      const ordered = [...values].sort((a, b) => a - b), people = ordered.length > 1 ? `${ordered[0]} a ${ordered.at(-1)}` : String(ordered[0]);
+      return `${weight} kg: cerca de ${people} pessoas`;
+    });
+    return rows.length ? `Como referência aproximada: ${rows.join("; ")}. O rendimento pode variar conforme o corte e o tipo de recheio.` : "A quantidade de pessoas pode variar conforme o corte. Confirme o rendimento com o estabelecimento.";
+  }
   const applyVisualIdentity = (identity) => { if (identity?.customized !== true) return; if (/^#[0-9a-f]{6}$/i.test(identity.accent_color || "")) document.documentElement.style.setProperty("--accent", identity.accent_color); };
   const deliveryZoneLabel = (zone) => Number(zone.fee) === 0 && zone.code === "bolo-agendado" ? `${clean(zone.name)} · taxa calculada após informar o endereço` : `${clean(zone.name)} · ${money.format(zone.fee)}`;
   const estimatedUnitPrice = (entry) => entry.price + entry.selections.reduce((sum, item) => sum + item.price_delta * item.quantity, 0);
@@ -37,6 +62,10 @@
   $("menuAssistantForm").addEventListener("submit", async (event) => {
     event.preventDefault(); const input = $("menuAssistantInput"), message = input.value.trim(), button = event.submitter; if (!message) return;
     assistantMessage(message, "user"); input.value = ""; button.disabled = true; $("menuAssistantNotice").textContent = "Consultando apenas os dados cadastrados...";
+    const normalizedMessage = message.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    if (/(kg|quilo|peso|pessoas?|serve|rende|rendimento)/.test(normalizedMessage) && /(pessoas?|serve|rende|rendimento)/.test(normalizedMessage)) {
+      assistantMessage(servingGuide()); $("menuAssistantNotice").textContent = "Estimativa baseada na tabela do estabelecimento. Confirme o rendimento antes de concluir."; button.disabled = false; input.focus(); return;
+    }
     let sessionToken = sessionStorage.getItem(`ogritechMenuAssistant:${slug}`); if (!sessionToken) { sessionToken = createUuid().replaceAll("-", ""); sessionStorage.setItem(`ogritechMenuAssistant:${slug}`, sessionToken); }
     const { data, error } = await supabaseClient.rpc("public_menu_assistant_message", { target_slug: slug, session_token: sessionToken, supplied_message: message }); button.disabled = false;
     if (error) return assistantMessage(error.message?.includes("Limite") ? error.message : "Não consegui responder agora. Continue pelo cardápio ou fale com o estabelecimento.");
@@ -52,11 +81,12 @@
     $("menuHours").textContent = hours ? `Horário informado: ${(hours.weekdays || []).map((day) => days[day]).join(", ")} · ${hours.opens_at} às ${hours.closes_at}. A confirmação do pedido depende do estabelecimento.` : "";
     $("fulfillment").innerHTML = (data.menu.accepts_pickup ? '<option value="pickup">Retirada</option>' : "") + (data.menu.accepts_delivery ? '<option value="delivery">Entrega</option>' : "");
     const zones = data.delivery_zones || []; $("deliveryZone").innerHTML = '<option value="">Selecione sua região</option>' + zones.map((zone) => `<option value="${zone.code}">${deliveryZoneLabel(zone)}</option>`).join(""); updateFulfillmentFields();
-    $("catalog").innerHTML = data.categories.map((category) => `<section class="catalog-section"><h2>${clean(category.name)}</h2><p>${clean(category.description)}</p><div class="catalog-items">${category.items.map((item) => {
+    $("categoryNav").innerHTML = data.categories.map((category, index) => `<a href="#${categoryId(index)}">${clean(category.name)}</a>`).join("");
+    $("catalog").innerHTML = data.categories.map((category, categoryIndex) => `<section id="${categoryId(categoryIndex)}" class="catalog-section"><header class="catalog-section-heading"><small>EXPLORE</small><h2>${clean(category.name)}</h2><p>${clean(category.description)}</p></header><div class="catalog-items">${category.items.map((item) => {
       const records = item.prices.map((record) => { const amount = Number(record.promotional_price ?? record.price); prices.set(record.id, { ...record, amount, item }); return { ...record, amount }; });
       const quote = isQuoteItem(item), first = records[0];
-      const pricePicker = records.length ? `<label class="menu-price-picker"><span>${quote ? "Referência de tamanho" : "Escolha o formato e tamanho"}</span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(record.label)}</option>`).join("")}</select></label><div class="menu-price-action"><strong data-selected-price="${item.id}">${quote ? `A partir de ${money.format(first.amount)}` : money.format(first.amount)}</strong><button class="public-button" data-add-selected="${item.id}">${quote ? "Solicitar análise" : ((item.option_groups || []).length ? "Configurar" : "Adicionar")}</button></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
-      return `<article class="menu-item-card" data-item="${item.id}">${item.image_url ? `<img class="menu-item-image" src="${clean(item.image_url)}" alt="">` : ""}<h3>${clean(item.name)}</h3><p>${clean(item.description)}</p>${quote ? '<span class="menu-item-badge">Orçamento com confirmação humana</span>' : ((item.option_groups || []).length ? '<span class="menu-item-badge">Personalizável</span>' : "")}${pricePicker}</article>`;
+      const pricePicker = records.length ? `<label class="menu-price-picker"><span>${weightPickerLabel(records, quote)}</span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(displayPriceLabel(record.label))}</option>`).join("")}</select></label><div class="menu-price-action"><strong data-selected-price="${item.id}">${quote ? `A partir de ${money.format(first.amount)}` : money.format(first.amount)}</strong><button class="public-button" data-add-selected="${item.id}">${quote ? "Solicitar análise" : ((item.option_groups || []).length ? "Configurar" : "Adicionar")}</button></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
+      return `<article class="menu-item-card" data-item="${item.id}">${item.image_url ? `<img class="menu-item-image" src="${clean(item.image_url)}" alt="">` : `<div class="menu-item-placeholder" aria-hidden="true"><span>${clean(category.name.slice(0, 1))}</span><small>Feito por encomenda</small></div>`}<div class="menu-item-content"><div class="menu-item-heading"><h3>${clean(item.name)}</h3>${quote ? '<span class="menu-item-badge">Sob consulta</span>' : ((item.option_groups || []).length ? '<span class="menu-item-badge">Personalizável</span>' : "")}</div><p>${clean(item.description)}</p>${pricePicker}</div></article>`;
     }).join("")}</div></section>`).join("");
     $("catalog").querySelectorAll("[data-price-select]").forEach((select) => select.addEventListener("change", () => { const price = prices.get(select.value), output = $("catalog").querySelector(`[data-selected-price="${select.dataset.priceSelect}"]`); output.textContent = `${isQuoteItem(price.item) ? "A partir de " : ""}${money.format(price.amount)}`; }));
     $("catalog").querySelectorAll("[data-add-selected]").forEach((button) => button.addEventListener("click", () => { const select = $("catalog").querySelector(`[data-price-select="${button.dataset.addSelected}"]`); configure(prices.get(select.value)); })); $("loading").classList.add("hidden"); $("content").classList.remove("hidden"); initAssistant();

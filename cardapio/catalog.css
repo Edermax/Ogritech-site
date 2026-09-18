@@ -1,7 +1,30 @@
-.catalog-items {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start;
-}
+:root { --menu-surface: #121212; --menu-surface-raised: #181818; --menu-line: #ffffff14; }
+
+body { background: radial-gradient(circle at 15% -5%, #4a3b0f 0, #171408 20rem, #080808 48rem); }
+.public-shell { width: min(1160px, calc(100% - 32px)); }
+.public-nav { margin-bottom: 24px; }
+.public-nav img { width: 132px; }
+.menu-hero { position: relative; max-width: none; overflow: hidden; padding: 52px; border: 1px solid #ffffff12; border-radius: 28px; background: linear-gradient(125deg, #171717 0%, #111 58%, #2a230c 100%); box-shadow: 0 28px 80px #0008; }
+.menu-hero::after { content: ""; position: absolute; right: -5rem; top: -7rem; width: 23rem; height: 23rem; border: 1px solid #d4af3740; border-radius: 50%; box-shadow: 0 0 0 4rem #d4af3708, 0 0 0 8rem #d4af3705; pointer-events: none; }
+.menu-hero > * { position: relative; z-index: 1; }
+.menu-hero small, .catalog-section-heading small, .menu-store-info small { color: #e8ca63; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+.menu-hero h1 { max-width: 820px; font-size: clamp(42px, 7vw, 72px); letter-spacing: -.04em; }
+.menu-hero p { max-width: 660px; margin-bottom: 26px; }
+.menu-hero-trust { display: flex; flex-wrap: wrap; gap: 8px; }
+.menu-hero-trust span { padding: 8px 11px; border: 1px solid #ffffff18; border-radius: 999px; background: #ffffff08; color: #ddd; font-size: 12px; }
+.menu-store-info { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 18px; padding: 0; overflow: hidden; }
+.menu-store-info > div { padding: 22px 24px; }
+.menu-store-info > div + div { border-left: 1px solid var(--menu-line); }
+.menu-store-info p { margin: 8px 0 0; color: #d1d1d1; line-height: 1.55; }
+.category-nav { position: sticky; top: 0; z-index: 15; display: flex; gap: 8px; margin: 26px 0 6px; padding: 12px 0; overflow-x: auto; background: linear-gradient(#080808f2, #080808dc); backdrop-filter: blur(14px); scrollbar-width: none; }
+.category-nav::-webkit-scrollbar { display: none; }
+.category-nav a { flex: 0 0 auto; padding: 10px 14px; border: 1px solid #ffffff18; border-radius: 999px; background: #151515; color: #eee; font-size: 13px; font-weight: 700; text-decoration: none; }
+.category-nav a:hover, .category-nav a:focus-visible { border-color: var(--accent); color: #fff; }
+.catalog-section { scroll-margin-top: 76px; margin: 44px 0 58px; }
+.catalog-section-heading { margin-bottom: 20px; }
+.catalog-section-heading h2 { margin: 6px 0; font-size: clamp(28px, 4vw, 40px); letter-spacing: -.025em; }
+.catalog-section-heading p { max-width: 720px; margin: 0; color: var(--muted); line-height: 1.55; }
+.catalog-items { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 18px; }
 
 .menu-item-card {
   width: 100%;
@@ -9,7 +32,19 @@
   min-width: 0;
   align-content: start;
   overflow: hidden;
+  padding: 0;
+  gap: 0;
+  border-color: var(--menu-line);
+  border-radius: 22px;
+  background: var(--menu-surface);
+  box-shadow: 0 16px 46px #0005;
+  transition: transform .18s ease, border-color .18s ease;
 }
+.menu-item-card:hover { transform: translateY(-2px); border-color: #d4af3755; }
+.menu-item-content { display: grid; align-content: start; gap: 14px; padding: 22px; height: 100%; }
+.menu-item-heading { display: flex; align-items: start; justify-content: space-between; gap: 14px; }
+.menu-item-heading h3 { margin: 0; font-size: 20px; line-height: 1.25; }
+.menu-item-content > p { min-height: 3.1em; margin: 0; color: #bdbdbd; line-height: 1.55; }
 
 .menu-item-card p,
 .menu-price-action strong {
@@ -18,16 +53,19 @@
 
 .menu-item-image {
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 8;
   object-fit: cover;
-  border-radius: 12px;
 }
+.menu-item-placeholder { display: flex; align-items: end; justify-content: space-between; aspect-ratio: 16 / 5; padding: 18px 22px; background: radial-gradient(circle at 88% 15%, #d4af3738, transparent 32%), linear-gradient(135deg, #26200e, #111); border-bottom: 1px solid var(--menu-line); color: #e8ca63; }
+.menu-item-placeholder span { font-family: Georgia, serif; font-size: 44px; line-height: .8; opacity: .9; }
+.menu-item-placeholder small { color: #d9d1b5; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
 
 .menu-item-badge {
   width: max-content;
   max-width: 100%;
   padding: 6px 9px;
   border-radius: 999px;
+  flex: 0 0 auto;
   background: #d4af371a;
   color: #e8ca63;
   font-size: 12px;
@@ -40,6 +78,7 @@
   color: #ccc;
   font-size: 13px;
 }
+.menu-price-picker span { font-weight: 700; color: #eee; }
 
 .menu-price-picker select {
   width: 100%;
@@ -47,7 +86,7 @@
   padding: 12px;
   border: 1px solid #ffffff24;
   border-radius: 11px;
-  background: #0d0d0d;
+  background: #0b0b0b;
   color: #fff;
   font: inherit;
 }
@@ -57,6 +96,8 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
+  margin-top: auto;
+  padding-top: 2px;
 }
 
 .menu-price-action .public-button {
@@ -66,6 +107,7 @@
 
 .menu-price-action strong {
   color: #e8ca63;
+  font-size: 21px;
 }
 
 .menu-quote-notice {
@@ -82,6 +124,20 @@
 }
 
 @media (max-width: 560px) {
+  .public-shell { width: min(100% - 20px, 1160px); padding-top: 18px; }
+  .public-nav { margin-bottom: 16px; }
+  .public-nav img { width: 112px; }
+  .menu-hero { padding: 28px 22px; border-radius: 22px; }
+  .menu-hero h1 { font-size: clamp(36px, 12vw, 52px); }
+  .menu-hero p { font-size: 16px; }
+  .menu-hero-trust span { font-size: 11px; }
+  .menu-store-info { grid-template-columns: 1fr; border-radius: 18px; }
+  .menu-store-info > div { padding: 18px; }
+  .menu-store-info > div + div { border-top: 1px solid var(--menu-line); border-left: 0; }
+  .category-nav { margin-inline: -10px; padding-inline: 10px; }
+  .catalog-section { margin-top: 34px; }
+  .menu-item-heading { align-items: flex-start; flex-direction: column; gap: 9px; }
+  .menu-item-content > p { min-height: 0; }
   .menu-price-action {
     grid-template-columns: 1fr;
   }
@@ -91,7 +147,7 @@
   }
 
   .menu-item-card {
-    padding: 16px;
+    padding: 0;
   }
 
   .configurator-heading {
