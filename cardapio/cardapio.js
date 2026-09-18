@@ -62,16 +62,14 @@
     const input = $("deliveryCep"), button = $("lookupCepButton"), message = $("cepMessage"), cep = input.value.replace(/\D/g, "");
     if (cep.length !== 8) { message.textContent = "Informe um CEP com 8 dígitos."; input.setAttribute("aria-invalid", "true"); input.focus(); return; }
     input.value = cep.replace(/^(\d{5})(\d{3})$/, "$1-$2"); input.removeAttribute("aria-invalid"); button.disabled = true; message.textContent = "Buscando endereço...";
-    const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 6000);
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`, { signal: controller.signal });
-      if (!response.ok) throw new Error("lookup_failed");
-      const address = await response.json();
-      if (address.erro) { message.textContent = "CEP não encontrado. Confira o número ou preencha o endereço manualmente."; return; }
+      const { data: result, error } = await supabaseClient.functions.invoke("cep-lookup", { body: { cep } });
+      if (error || !result?.data) { message.textContent = result?.error?.code === "cep_not_found" ? "CEP não encontrado. Confira o número ou preencha o endereço manualmente." : "Não foi possível consultar o CEP agora. Preencha o endereço manualmente."; return; }
+      const address = result.data;
       const city = address.localidade && address.uf ? `${address.localidade} - ${address.uf}` : address.localidade || address.uf, numberPlaceholder = "[informe o número]", parts = [address.logradouro ? `${address.logradouro}, ${numberPlaceholder}` : "", address.bairro, city].filter(Boolean);
       $("deliveryAddress").value = parts.join(", "); $("deliveryAddress").focus(); const placeholderStart = $("deliveryAddress").value.indexOf(numberPlaceholder), placeholderEnd = placeholderStart + numberPlaceholder.length; $("deliveryAddress").setSelectionRange(placeholderStart >= 0 ? placeholderStart : $("deliveryAddress").value.length, placeholderStart >= 0 ? placeholderEnd : $("deliveryAddress").value.length); message.textContent = "Endereço localizado. Complete com o número e, se necessário, o complemento.";
     } catch { message.textContent = "Não foi possível consultar o CEP agora. Preencha o endereço manualmente."; }
-    finally { clearTimeout(timeout); button.disabled = false; }
+    finally { button.disabled = false; }
   }
   function updateCart() { let count = 0, total = 0, hasQuote = false; cart.forEach((entry) => { count += entry.quantity; total += entry.quantity * estimatedUnitPrice(entry); hasQuote ||= entry.isQuote; }); $("cartCount").textContent = count; $("cartTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total); $("checkoutButton").textContent = hasQuote ? "Revisar solicitação" : "Finalizar pedido"; $("checkoutTitle").textContent = hasQuote ? "Enviar solicitação para análise" : "Finalizar pedido"; $("orderSubmitButton").textContent = hasQuote ? "Enviar solicitação" : "Enviar pedido"; $("cartBar").classList.toggle("hidden", !count); updateSchedulingRequirement(); }
   function addConfigured(price, selections = [], quantity = 1) { const signature = `${price.id}:${selections.map((item) => `${item.menu_option_id}x${item.quantity}`).sort().join(",")}`; const entry = cart.get(signature) || { menu_item_price_id: price.id, name: price.item.name, price: price.amount, quantity: 0, selections, isQuote: isQuoteItem(price.item), leadTimeHours: price.item.lead_time_hours }; entry.quantity += quantity; cart.set(signature, entry); pendingRequestId = null; updateCart(); }
