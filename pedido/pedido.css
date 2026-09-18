@@ -1,0 +1,16 @@
+.order-contact {
+  margin: 16px 0 72px;
+}
+
+.order-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  text-align: center;
+  text-decoration: none;
+  line-height: 1.35;
+}
