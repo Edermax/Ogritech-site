@@ -83,7 +83,16 @@
   function assistantControls(data) {
     if ((data.suggestions || []).length) {
       const list = document.createElement("div"); list.className = "assistant-suggestions";
-      data.suggestions.forEach((suggestion) => { const row = document.createElement("div"); row.className = "assistant-suggestion"; const label = document.createElement("span"); label.textContent = `${suggestion.name} · ${suggestion.label} · ${money.format(Number(suggestion.price))}`; const button = document.createElement("button"); button.className = "public-button"; button.type = "button"; button.textContent = "Adicionar"; button.addEventListener("click", () => { const price = prices.get(suggestion.menu_item_price_id); if (!price) return assistantMessage("Este item não está mais disponível. Atualize o cardápio e tente novamente."); configure(price); }); row.append(label, button); list.append(row); });
+      data.suggestions.forEach((suggestion) => {
+        const row = document.createElement("article"); row.className = "assistant-suggestion";
+        const copy = document.createElement("div"); copy.className = "assistant-suggestion-copy";
+        const name = document.createElement("strong"); name.className = "assistant-suggestion-name"; name.textContent = suggestion.name;
+        const detail = document.createElement("span"); detail.className = "assistant-suggestion-detail"; detail.textContent = displayPriceLabel(suggestion.label);
+        const priceLabel = document.createElement("strong"); priceLabel.className = "assistant-suggestion-price"; priceLabel.textContent = money.format(Number(suggestion.price));
+        const button = document.createElement("button"); button.className = "public-button assistant-suggestion-action"; button.type = "button"; button.textContent = "Adicionar";
+        button.addEventListener("click", () => { const price = prices.get(suggestion.menu_item_price_id); if (!price) return assistantMessage("Este item não está mais disponível. Atualize o cardápio e tente novamente."); configure(price); });
+        copy.append(name, detail, priceLabel); row.append(copy, button); list.append(row);
+      });
       $("menuAssistantMessages").append(list);
     }
     if (data.action?.type === "open_cart") { const button = document.createElement("button"); button.className = "public-button"; button.type = "button"; button.textContent = data.action.label || "Revisar carrinho"; button.addEventListener("click", () => { if (!cart.size) return assistantMessage("Seu carrinho ainda está vazio. Escolha um produto primeiro."); $("checkout").classList.remove("hidden"); $("checkout").scrollIntoView({ behavior: "smooth" }); }); $("menuAssistantMessages").append(button); }
@@ -94,8 +103,8 @@
     if (error || !data?.available) return;
     $("menuAssistant").classList.remove("hidden");
   }
-  $("menuAssistantToggle").addEventListener("click", () => { const opening = $("menuAssistantPanel").classList.contains("hidden"); $("menuAssistantPanel").classList.toggle("hidden", !opening); $("menuAssistantToggle").setAttribute("aria-expanded", String(opening)); $("menuAssistantToggle").setAttribute("aria-label", opening ? "Fechar assistente Ogritech" : "Abrir assistente Ogritech"); });
-  $("menuAssistantClose").addEventListener("click", () => { $("menuAssistantPanel").classList.add("hidden"); $("menuAssistantToggle").setAttribute("aria-expanded", "false"); $("menuAssistantToggle").focus(); });
+  $("menuAssistantToggle").addEventListener("click", () => { const opening = $("menuAssistantPanel").classList.contains("hidden"); $("menuAssistantPanel").classList.toggle("hidden", !opening); document.body.classList.toggle("menu-assistant-open", opening); $("menuAssistantToggle").setAttribute("aria-expanded", String(opening)); $("menuAssistantToggle").setAttribute("aria-label", opening ? "Fechar assistente Ogritech" : "Abrir assistente Ogritech"); if (opening) $("menuAssistantInput").focus(); });
+  $("menuAssistantClose").addEventListener("click", () => { $("menuAssistantPanel").classList.add("hidden"); document.body.classList.remove("menu-assistant-open"); $("menuAssistantToggle").setAttribute("aria-expanded", "false"); $("menuAssistantToggle").focus(); });
   $("menuAssistantForm").addEventListener("submit", async (event) => {
     event.preventDefault(); const input = $("menuAssistantInput"), message = input.value.trim(), button = event.submitter; if (!message) return;
     assistantMessage(message, "user"); input.value = ""; button.disabled = true; $("menuAssistantNotice").textContent = "Consultando apenas os dados cadastrados...";
