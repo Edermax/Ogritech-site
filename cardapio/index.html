@@ -48,11 +48,11 @@
     </form>
   </dialog>
   <aside id="menuAssistant" class="menu-assistant hidden" aria-label="Assistente do cardápio">
-    <button id="menuAssistantToggle" class="public-button menu-assistant-toggle" type="button" aria-expanded="false" aria-controls="menuAssistantPanel">Ajuda para escolher</button>
+    <button id="menuAssistantToggle" class="menu-assistant-toggle" type="button" aria-label="Abrir assistente Ogritech" aria-expanded="false" aria-controls="menuAssistantPanel"><span>Ajuda para escolher</span><img src="../ogritech-assistant-avatar.png" alt=""></button>
     <section id="menuAssistantPanel" class="public-card menu-assistant-panel hidden" role="dialog" aria-modal="false" aria-labelledby="menuAssistantTitle">
-      <div class="configurator-heading"><div><h2 id="menuAssistantTitle">Assistente do cardápio</h2><small>Consulta este cardápio e ajuda a revisar o carrinho. Não envia pedidos sozinho.</small></div><button id="menuAssistantClose" class="public-button secondary" type="button" aria-label="Fechar assistente">Fechar</button></div>
-      <div id="menuAssistantMessages" class="menu-assistant-messages" aria-live="polite"><p class="assistant-message">Olá! Diga o que você procura.</p></div>
-      <form id="menuAssistantForm" class="public-form"><label for="menuAssistantInput">Sua mensagem</label><div class="menu-assistant-input"><input id="menuAssistantInput" required maxlength="500" autocomplete="off" placeholder="Ex.: Tem pizza de calabresa?"><button class="public-button" type="submit">Enviar</button></div><p id="menuAssistantNotice" class="public-message">Respostas automáticas baseadas somente nos dados cadastrados. Confira antes de adicionar.</p></form>
+      <header class="menu-assistant-heading"><img src="../ogritech-assistant-avatar.png" alt=""><div><h2 id="menuAssistantTitle">Assistente Ogritech</h2><small>Ajuda com este cardápio</small></div><button id="menuAssistantClose" class="menu-assistant-close" type="button" aria-label="Fechar assistente"><span aria-hidden="true">×</span></button></header>
+      <div class="menu-assistant-body"><div id="menuAssistantMessages" class="menu-assistant-messages" aria-live="polite"><p class="assistant-message">Posso ajudar a escolher bolos, doces, tamanhos e recheios deste cardápio.</p></div>
+      <form id="menuAssistantForm" class="public-form"><label for="menuAssistantInput">O que você gostaria de saber?</label><div class="menu-assistant-input"><input id="menuAssistantInput" required maxlength="500" autocomplete="off" placeholder="Ex.: Um bolo de 3 kg serve quantas pessoas?"><button class="public-button" type="submit">Enviar</button></div><p id="menuAssistantNotice" class="public-message">Respostas baseadas somente nos dados cadastrados. Não envia pedidos sozinho.</p></form></div>
     </section>
   </aside>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
