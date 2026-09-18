@@ -183,6 +183,8 @@ body.menu-assistant-open #ogritechStagingBadge { display: none !important; }
 }
 
 @media (max-width: 560px) {
+  body.menu-assistant-open { overflow: hidden; }
+  body.menu-assistant-open > .public-shell { visibility: hidden; }
   .public-shell { width: min(100% - 20px, 1160px); padding-top: 18px; }
   .public-nav { margin-bottom: 16px; }
   .public-nav img { width: 112px; }
