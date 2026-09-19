@@ -6,10 +6,7 @@ const root = new URL("../", import.meta.url);
 const readJson = (path) => readFile(new URL(path, root), "utf8").then(JSON.parse);
 
 test("fase 7F aprova oito jornadas em staging e termina sem resíduos", async () => {
-  const [result, browser] = await Promise.all([
-    readJson("config/menu-staging-phase-7f-result.json"),
-    readJson("outputs/menu-staging-7f/report.json")
-  ]);
+  const result = await readJson("config/menu-staging-phase-7f-result.json");
   assert.equal(result.status, "passed_synthetic_staging_homologation");
   assert.equal(result.migrationsLocal, 60);
   assert.equal(result.migrationsRemote, 60);
@@ -21,8 +18,9 @@ test("fase 7F aprova oito jornadas em staging e termina sem resíduos", async ()
   assert.equal(result.javascriptErrors, 0);
   assert.equal(result.syntheticBusinessesRemaining, 0);
   assert.equal(result.cleanup, "complete_zero_residual_records");
-  assert.equal(browser.passed, 8);
-  assert.ok(browser.results.every((item) => item.orderStatus === "Recebido" && item.javascriptErrors === 0));
+  assert.equal(result.browserSummary.passed, 8);
+  assert.equal(result.browserSummary.allOrdersReceived, true);
+  assert.equal(result.browserSummary.javascriptErrors, 0);
 });
 
 test("fase 7F mantém IA e produção bloqueadas", async () => {

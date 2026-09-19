@@ -18,7 +18,13 @@
   "externalCalls": 0,
   "remoteDatabaseCalls": 0,
   "paidAiCalls": 0,
+  "segmentResults": {
+    "confectionery": { "completed": true, "easeScore": 10, "finalStatusVisible": "Recebido" },
+    "pizzeria": { "completed": true, "easeScore": 10, "finalStatusVisible": "Recebido" },
+    "restaurant": { "completed": true, "easeScore": 10, "finalStatusVisible": "Recebido" },
+    "snack_bar": { "completed": true, "easeScore": 10, "finalStatusVisible": "Recebido" }
+  },
   "productionAuthorized": false,
   "publicReleaseApproved": false,
-  "evidence": "outputs/menu-beta-human-2026-09-16.json"
+  "localEvidence": "outputs/menu-beta-human-2026-09-16.json"
 }
