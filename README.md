@@ -5,6 +5,7 @@ Plataforma de gestão para negócios de atendimento.
 ## Estrutura de marca
 
 - **Ogritech** é a plataforma.
+- **Ogritech Agenda**, **Ogritech Páginas**, **Ogritech Orçamentos** e **Ogritech Cardápio** são as quatro soluções oficiais da plataforma.
 - **Japa na Barba** é uma empresa fictícia usada na demonstração inicial.
 - A plataforma está em pré-operação; todos os negócios atualmente cadastrados são demonstrativos.
 - Cada barbearia é isolada por `barbershop_id` e pelas políticas RLS do Supabase.
@@ -72,7 +73,7 @@ Para ativar a central em um projeto Supabase, aplique as migrations e publique a
 
 ## Desenvolvimento e validação
 
-Requisitos: Node.js 22+ e Supabase CLI 2.115.0 com Docker.
+Requisitos: Node.js 22+ e Supabase CLI 2.116.0 com Docker (mesma versão usada no CI).
 
 ```sh
 npm run validate

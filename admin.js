@@ -5,7 +5,7 @@ const SEGMENTS = {
     "Professor de música": { icon: "♫", color: "#6ba8f7" }, "Personal training": { icon: "◆", color: "#65d39b" },
     "Outro": { icon: "●", color: "#8fa3aa" }
 };
-let businesses = [], plans = [], users = [], invoices = [], billingCustomers = [], payments = [], refunds = [], selectedBusinessId = null;
+let businesses = [], plans = [], products = [], subscriptions = [], users = [], invoices = [], billingCustomers = [], payments = [], refunds = [], selectedBusinessId = null;
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const moneyPrecise = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 const shortDate = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" });
@@ -53,9 +53,11 @@ async function validatePlatformAdmin() {
 }
 
 async function loadData() {
-    const [businessResult, planResult, userResult, customerResult, invoiceResult, paymentResult, refundResult] = await Promise.all([
+    const [businessResult, planResult, productResult, subscriptionResult, userResult, customerResult, invoiceResult, paymentResult, refundResult] = await Promise.all([
         supabaseClient.from("saas_clients").select("id,barbershop_id,name,segment,contact_name,owner_email,phone,plan,monthly_fee,origin,notes,status,invite_status,user_count,client_count,appointment_count,business_revenue,created_at").is("deleted_at", null).order("created_at", { ascending: true }).limit(500),
-        supabaseClient.from("saas_plans").select("id,name,monthly_fee,description,features,featured,display_order").eq("active", true).order("display_order"),
+        supabaseClient.from("saas_plans").select("id,product_id,code,name,monthly_fee,description,features,featured,display_order,max_users,max_professionals,max_services").eq("active", true).order("display_order"),
+        supabaseClient.from("platform_products").select("id,code,name,launch_state,display_order").eq("active",true).order("display_order"),
+        supabaseClient.from("platform_subscriptions").select("id,billing_customer_id,product_id,plan_id,status,base_amount,current_period_end").order("created_at",{ascending:false}).limit(2000),
         supabaseClient.functions.invoke("platform-users", { body: { action: "list" } }),
         supabaseClient.from("billing_customers").select("id,saas_client_id,billing_email,payment_method,billing_day").limit(1000),
         supabaseClient.from("platform_invoices").select("id,invoice_number,billing_customer_id,status,issue_date,due_date,subtotal,discount_total,credit_total,total,paid_total,refunded_total,notes,created_at").order("created_at", { ascending: false }).limit(1000),
@@ -64,6 +66,8 @@ async function loadData() {
     ]);
     if (businessResult.error) throw businessResult.error;
     if (planResult.error) throw planResult.error;
+    if (productResult.error) throw productResult.error;
+    if (subscriptionResult.error) throw subscriptionResult.error;
     if (userResult.error || userResult.data?.error) throw userResult.error || new Error(userResult.data.error);
     const authUsersWithoutProfile = userResult.data?.auth_users_without_profile || [];
     if (authUsersWithoutProfile.length) {
@@ -75,6 +79,8 @@ async function loadData() {
     if (refundResult.error) throw refundResult.error;
     businesses = businessResult.data || [];
     plans = planResult.data || [];
+    products = productResult.data || [];
+    subscriptions = subscriptionResult.data || [];
     users = (userResult.data?.users || []).filter((profile) => profile.id !== sessionStorage.getItem("japaUserId"));
     billingCustomers = customerResult.data || [];
     invoices = invoiceResult.data || [];
@@ -116,8 +122,51 @@ function renderBusinesses() {
 function renderPlans() {
     $("plansGrid").innerHTML = plans.map((plan) => {
         const features = Array.isArray(plan.features) ? plan.features : [];
-        return `<article class="plan-card ${plan.featured ? "featured" : ""}">${plan.featured ? '<span class="recommended-plan">MAIS ESCOLHIDO</span>' : ""}<p class="platform-kicker">${escapeHtml(plan.name)}</p><strong>${money.format(plan.monthly_fee)}<small>/mês</small></strong><p>${escapeHtml(plan.description)}</p><ul>${features.map((feature) => `<li>✓ ${escapeHtml(feature)}</li>`).join("")}</ul></article>`;
+        const limit = (value) => value == null ? "Ilimitado" : Number(value).toLocaleString("pt-BR");
+        return `<article class="plan-card ${plan.featured ? "featured" : ""}">${plan.featured ? '<span class="recommended-plan">MAIS ESCOLHIDO</span>' : ""}<p class="platform-kicker">${escapeHtml(plan.name)}</p><strong>${money.format(plan.monthly_fee)}<small>/mês</small></strong><p>${escapeHtml(plan.description)}</p><div class="plan-limits"><span>${limit(plan.max_users)} usuários</span><span>${limit(plan.max_professionals)} profissionais</span><span>${limit(plan.max_services)} serviços</span></div><ul>${features.map((feature) => `<li>✓ ${escapeHtml(feature)}</li>`).join("")}</ul><button type="button" class="outline-cyan-button full" data-edit-plan="${plan.id}">Editar regras</button></article>`;
     }).join("");
+}
+
+function optionalPositiveInteger(value) {
+    if (String(value).trim() === "") return null;
+    const parsed = Number(value);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : NaN;
+}
+
+function openPlanForm(plan) {
+    $("planForm").reset(); $("planFormMessage").textContent = "";
+    $("planId").value = plan.id; $("planName").value = plan.name;
+    $("planPrice").value = Number(plan.monthly_fee).toFixed(2);
+    $("planMaxUsers").value = plan.max_users ?? "";
+    $("planMaxProfessionals").value = plan.max_professionals ?? "";
+    $("planMaxServices").value = plan.max_services ?? "";
+    $("planDescription").value = plan.description;
+    $("planFeatures").value = (Array.isArray(plan.features) ? plan.features : []).join("\n");
+    $("planFeatured").checked = Boolean(plan.featured);
+    $("planModalTitle").textContent = `Editar plano ${plan.name}`;
+    $("planModal").classList.remove("hidden");
+}
+
+async function savePlan(event) {
+    event.preventDefault();
+    const maxUsers = optionalPositiveInteger($("planMaxUsers").value);
+    const maxProfessionals = optionalPositiveInteger($("planMaxProfessionals").value);
+    const maxServices = optionalPositiveInteger($("planMaxServices").value);
+    if ([maxUsers, maxProfessionals, maxServices].some(Number.isNaN)) {
+        $("planFormMessage").textContent = "Use números inteiros maiores que zero ou deixe vazio para ilimitado.";
+        $("planFormMessage").className = "form-message error"; return;
+    }
+    const payload = {
+        monthly_fee: Number($("planPrice").value), description: $("planDescription").value.trim(),
+        features: $("planFeatures").value.split("\n").map((item) => item.trim()).filter(Boolean),
+        featured: $("planFeatured").checked, max_users: maxUsers,
+        max_professionals: maxProfessionals, max_services: maxServices
+    };
+    $("savePlanButton").disabled = true; $("planFormMessage").textContent = "Salvando regras...";
+    const { error } = await supabaseClient.from("saas_plans").update(payload).eq("id", $("planId").value);
+    $("savePlanButton").disabled = false;
+    if (error) { $("planFormMessage").textContent = error.message || "Não foi possível salvar o plano."; $("planFormMessage").className = "form-message error"; return; }
+    await loadData(); populateSelectors(); refreshViews(); closeModals();
 }
 
 const billingStatusLabels = { draft: "Rascunho", open: "Em aberto", overdue: "Atrasada", paid: "Paga", void: "Cancelada", refunded: "Devolvida", partially_refunded: "Devolução parcial" };
@@ -161,15 +210,55 @@ function renderUsers() {
     $("usersEmpty").classList.toggle("hidden", filtered.length > 0);
 }
 
-function refreshViews() { renderSummary(); renderSegments(); renderBusinesses(); renderPlans(); renderUsers(); renderBilling(); }
+function subscriptionFor(business, product) {
+    const customer = billingCustomers.find((item) => item.saas_client_id === business?.id);
+    return subscriptions.find((item) => item.billing_customer_id === customer?.id && item.product_id === product.id && item.status !== "cancelled");
+}
+const productStatusLabels = { trial: "Teste", active: "Ativo", pending_activation: "Pendente", past_due: "Em atraso", grace_period: "Carência", suspended: "Suspenso", cancelled: "Cancelado" };
+function renderProductAccess() {
+    if (!$('productAccessTableBody')) return;
+    const business = businesses.find((item) => item.id === $('productBusinessFilter').value) || businesses[0];
+    $('productAccessTableBody').innerHTML = products.map((product) => {
+        const subscription = subscriptionFor(business,product);
+        const plan = plans.find((item) => item.id === subscription?.plan_id) || plans.find((item) => item.product_id === product.id);
+        const status = subscription?.status || 'not_subscribed';
+        const canActivate = business && plan && product.code !== 'agenda';
+        const action = subscription
+            ? `<button class="danger" data-product-action="cancel" data-product-code="${product.code}" data-plan-id="${plan?.id || ''}">Cancelar</button>`
+            : canActivate ? `<button data-product-action="activate" data-product-code="${product.code}" data-plan-id="${plan.id}">Ativar</button>` : '<span>Gerido pelo fluxo Agenda</span>';
+        return `<tr><td><strong>${escapeHtml(product.name)}</strong><br><small>${escapeHtml(product.launch_state)}</small></td><td>${escapeHtml(plan?.name || 'Plano não configurado')}</td><td>${subscription ? moneyPrecise.format(subscription.base_amount) : '—'}</td><td><span class="${subscription ? 'active-badge' : 'suspended-badge'}">${escapeHtml(productStatusLabels[status] || 'Não contratado')}</span></td><td><div class="admin-row-actions">${action}</div></td></tr>`;
+    }).join('');
+}
+
+async function changeProductSubscription(button) {
+    const business = businesses.find((item) => item.id === $('productBusinessFilter').value) || businesses[0];
+    if (!business) return;
+    const cancelling = button.dataset.productAction === 'cancel';
+    if (cancelling && !confirm(`Cancelar somente ${button.dataset.productCode} para ${business.name}? As outras soluções permanecerão intactas.`)) return;
+    button.disabled = true;
+    const { error } = await supabaseClient.rpc('platform_set_product_subscription', {
+        target_saas_client_id: business.id,
+        target_product_code: button.dataset.productCode,
+        target_plan_id: button.dataset.planId,
+        target_status: cancelling ? 'cancelled' : 'active',
+        target_base_amount: null
+    });
+    button.disabled = false;
+    if (error) return alert(error.message || 'Não foi possível alterar o produto.');
+    await loadData(); populateSelectors(); refreshViews();
+}
+
+function refreshViews() { renderSummary(); renderSegments(); renderBusinesses(); renderPlans(); renderProductAccess(); renderUsers(); renderBilling(); }
 function populateSelectors() {
     $("businessSegment").innerHTML = Object.keys(SEGMENTS).map((segment) => `<option>${segment}</option>`).join("");
     $("segmentFilter").innerHTML = '<option value="all">Todos os segmentos</option>' + Object.keys(SEGMENTS).map((segment) => `<option>${segment}</option>`).join("");
-    $("businessPlan").innerHTML = plans.map((plan) => `<option value="${escapeHtml(plan.name)}" data-price="${plan.monthly_fee}">${escapeHtml(plan.name)}</option>`).join("");
+    const agendaProduct = products.find((product) => product.code === 'agenda');
+    $("businessPlan").innerHTML = plans.filter((plan) => plan.product_id === agendaProduct?.id).map((plan) => `<option value="${escapeHtml(plan.name)}" data-price="${plan.monthly_fee}">${escapeHtml(plan.name)}</option>`).join("");
     const businessOptions = businesses.filter((business) => business.barbershop_id).map((business) => `<option value="${business.barbershop_id}">${escapeHtml(business.name)}</option>`).join("");
     if ($("userBusiness")) $("userBusiness").innerHTML = businessOptions;
     if ($("userBusinessFilter")) $("userBusinessFilter").innerHTML = '<option value="all">Todos os negócios</option>' + businessOptions;
     if ($("invoiceBusiness")) $("invoiceBusiness").innerHTML = businesses.filter((business) => business.status !== "Arquivado").map((business) => `<option value="${business.id}">${escapeHtml(business.name)}</option>`).join("");
+    if ($("productBusinessFilter")) $("productBusinessFilter").innerHTML = businesses.filter((business) => business.barbershop_id).map((business) => `<option value="${business.id}">${escapeHtml(business.name)}</option>`).join("");
 }
 
 function isoDateWithOffset(days) { const date = new Date(); date.setDate(date.getDate() + days); return date.toISOString().slice(0, 10); }
@@ -309,6 +398,8 @@ async function saveUser(event) {
 function bindEvents() {
     $("businessSearch").addEventListener("input", renderBusinesses); $("segmentFilter").addEventListener("change", renderBusinesses);
     $("newBusinessButton").addEventListener("click", () => openBusinessForm()); $("businessPlan").addEventListener("change", syncPlanPrice); $("businessForm").addEventListener("submit", saveBusiness);
+    $("plansGrid").addEventListener("click", (event) => { const button = event.target.closest("[data-edit-plan]"); if (button) openPlanForm(plans.find((plan) => plan.id === button.dataset.editPlan)); });
+    $("planForm").addEventListener("submit", savePlan);
     document.querySelectorAll("[data-close-modal]").forEach((button) => button.addEventListener("click", closeModals));
     document.querySelectorAll(".platform-modal").forEach((modal) => modal.addEventListener("click", (event) => { if (event.target === modal) closeModals(); }));
     $("businessTableBody").addEventListener("click", (event) => { const button = event.target.closest("[data-action]"); if (!button) return; const business = businesses.find((item) => item.id === button.dataset.id); if (!business) return; if (button.dataset.action === "detail") openBusinessDetail(business); if (button.dataset.action === "operate") operateBusiness(business); if (button.dataset.action === "edit") openBusinessForm(business); if (button.dataset.action === "delete") deleteBusiness(business); });
@@ -322,6 +413,8 @@ function bindEvents() {
     $("detailBillingButton")?.addEventListener("click", () => { closeModals(); openInvoiceForm(selectedBusinessId); });
     $("newInvoiceButton")?.addEventListener("click", () => openInvoiceForm());
     $("billingStatusFilter")?.addEventListener("change", renderBilling);
+    $("productBusinessFilter")?.addEventListener("change", renderProductAccess);
+    $("productAccessTableBody")?.addEventListener("click", (event) => { const button=event.target.closest('[data-product-action]'); if (button) changeProductSubscription(button); });
     $("invoiceBusiness")?.addEventListener("change", syncInvoiceBusiness);
     $("invoiceItemType")?.addEventListener("change", () => { if ($('invoiceItemType').value === 'subscription') syncInvoiceBusiness(); else { $('invoiceDescription').value = ''; $('invoiceUnitAmount').value = ''; updateInvoicePreview(); } });
     ["invoiceQuantity", "invoiceUnitAmount", "invoiceDiscount", "invoiceCredit"].forEach((id) => $(id)?.addEventListener("input", updateInvoicePreview));

@@ -28,6 +28,7 @@
                 <a href="#users"><span>♙</span>Usuários</a>
                 <a href="#segments"><span>◫</span>Segmentos</a>
                 <a href="#plans"><span>◈</span>Planos</a>
+                <a href="#products"><span>▦</span>Produtos</a>
                 <a href="#billing"><span>R$</span>Cobranças</a>
                 <a href="demonstracoes.html" target="_blank" rel="noopener"><span>↗</span>Demonstrações</a>
             </nav>
@@ -86,9 +87,18 @@
             <section class="platform-panel" id="plans">
                 <div class="platform-section-title">
                     <div><p class="platform-kicker">ASSINATURAS</p><h2>Planos da Ogritech</h2></div>
-                    <span>Valores e recursos oferecidos</span>
+                    <span>Valores, recursos e limites contratados</span>
                 </div>
                 <div class="plans-grid" id="plansGrid"></div>
+            </section>
+
+            <section class="platform-panel" id="products">
+                <div class="platform-section-title business-heading">
+                    <div><p class="platform-kicker">ACESSO MULTIPRODUTO</p><h2>Produtos por negócio</h2></div>
+                    <div class="business-controls"><select id="productBusinessFilter" aria-label="Selecionar negócio"></select></div>
+                </div>
+                <p class="demo-notice">Ative ou cancele uma solução sem alterar as demais. Toda mudança é validada e auditada no servidor.</p>
+                <div class="business-table-wrap"><table class="business-table"><thead><tr><th>Produto</th><th>Plano</th><th>Valor</th><th>Status</th><th>Ação</th></tr></thead><tbody id="productAccessTableBody"></tbody></table></div>
             </section>
 
             <section class="platform-panel" id="billing">
@@ -148,6 +158,25 @@
                 <p class="form-message" id="businessFormMessage"></p>
                 <button type="submit" class="cyan-button full" id="saveBusinessButton">Salvar negócio</button>
             </form>
+        </div>
+    </div>
+
+    <div class="platform-modal hidden" id="planModal" role="dialog" aria-modal="true" aria-labelledby="planModalTitle">
+        <div class="platform-modal-card compact-card">
+            <button type="button" class="modal-close" data-close-modal aria-label="Fechar">×</button>
+            <p class="platform-kicker">REGRAS DO PLANO</p>
+            <h2 id="planModalTitle">Editar plano</h2>
+            <p class="modal-description">Deixe um limite vazio para oferecer o recurso sem limite.</p>
+            <form id="planForm"><input type="hidden" id="planId"><div class="platform-form-grid">
+                <label>Nome<input id="planName" required maxlength="80" readonly></label>
+                <label>Mensalidade<input id="planPrice" type="number" min="0" step="0.01" required></label>
+                <label>Usuários com acesso<input id="planMaxUsers" type="number" min="1" step="1" placeholder="Ilimitado"></label>
+                <label>Profissionais na agenda<input id="planMaxProfessionals" type="number" min="1" step="1" placeholder="Ilimitado"></label>
+                <label>Tipos de serviço<input id="planMaxServices" type="number" min="1" step="1" placeholder="Ilimitado"></label>
+                <label class="full-field">Descrição<textarea id="planDescription" rows="3" maxlength="300" required></textarea></label>
+                <label class="full-field">Recursos (um por linha)<textarea id="planFeatures" rows="5" maxlength="1000"></textarea></label>
+                <label><input id="planFeatured" type="checkbox"> Destacar como recomendado</label>
+            </div><p class="form-message" id="planFormMessage"></p><button type="submit" class="cyan-button full" id="savePlanButton">Salvar plano</button></form>
         </div>
     </div>
 

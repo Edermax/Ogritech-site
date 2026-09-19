@@ -1,0 +1,119 @@
+{
+  "contractVersion": "1.0.0",
+  "recordedAt": "2026-09-08",
+  "phase": "1B",
+  "status": "implemented_locally",
+  "scope": {
+    "allows": [
+      "local documentation",
+      "local database migrations",
+      "local contract validation",
+      "local tests",
+      "local database replay and lint"
+    ],
+    "forbids": [
+      "production deployment",
+      "remote migrations",
+      "external provider activation",
+      "real messages",
+      "whatsapp integration",
+      "ai chatbot"
+    ]
+  },
+  "baseline": {
+    "repository": "work/Ogritech-site",
+    "branch": "main",
+    "head": "b855c9052f23b470e2d5de37da700ff6cf037a27",
+    "worktree": "dirty",
+    "preexistingStatusEntries": 64,
+    "rule": "Preserve every preexisting change; never reset, discard, overwrite, or mix unrelated work into the multiproduct delivery."
+  },
+  "platform": {
+    "tenantTable": "public.barbershops",
+    "tenantLanguage": "business",
+    "tenantTableRenameIn1B": false,
+    "products": [
+      { "code": "agenda", "name": "Ogritech Agenda", "launchState": "priority" },
+      { "code": "pages", "name": "Ogritech Páginas", "launchState": "planned" },
+      { "code": "quotes", "name": "Ogritech Orçamentos", "launchState": "planned" },
+      { "code": "menu", "name": "Ogritech Cardápio", "launchState": "planned" }
+    ]
+  },
+  "phase1B": {
+    "goal": "Represent products, plans, optional modules, subscriptions, and effective entitlements without changing the existing Agenda behavior.",
+    "migrationName": "multiproduct_foundation",
+    "newTables": [
+      "public.platform_products",
+      "public.platform_modules",
+      "public.plan_entitlements",
+      "public.subscription_modules"
+    ],
+    "extendedTables": {
+      "public.saas_plans": ["product_id", "code"],
+      "public.platform_subscriptions": ["product_id"]
+    },
+    "requiredProductCodes": ["agenda", "pages", "quotes", "menu"],
+    "requiredRules": [
+      "Every plan belongs to exactly one product.",
+      "Every subscription belongs to exactly one product and its plan must belong to the same product.",
+      "A billing customer may have at most one non-cancelled subscription per product.",
+      "Modules are optional capabilities owned by one product.",
+      "A subscribed module must belong to the same product as the subscription.",
+      "Entitlements are evaluated on the server and default to denied when absent.",
+      "Agenda access remains equivalent to the behavior before this migration.",
+      "The legacy saas_clients.plan field remains compatible and is not repurposed as the source of multiproduct truth.",
+      "The existing billing synchronization trigger must affect only the Agenda subscription until checkout becomes multiproduct-aware.",
+      "No planned product is exposed to a business without an explicit active or trial subscription.",
+      "All exposed tables use explicit grants and RLS.",
+      "Privileged helpers live in the private schema, revoke PUBLIC execution, validate auth.uid(), and expose only narrow wrappers when required."
+    ],
+    "compatibility": {
+      "preserveTables": [
+        "public.barbershops",
+        "public.saas_clients",
+        "public.saas_plans",
+        "public.platform_subscriptions",
+        "public.online_menus",
+        "public.menu_categories",
+        "public.menu_items",
+        "public.menu_item_prices",
+        "public.menu_orders",
+        "public.menu_order_items"
+      ],
+      "preserveRoutes": [
+        "/agenda-online/",
+        "/agendar/",
+        "/painel/",
+        "/pagina/",
+        "/cardapio/",
+        "/pedido/",
+        "/contratar/"
+      ],
+      "preservePublicRpcs": [
+        "public.public_menu",
+        "public.public_create_menu_order",
+        "public.public_get_menu_order"
+      ]
+    },
+    "security": {
+      "rlsRequired": true,
+      "explicitDataApiGrants": true,
+      "denyByDefault": true,
+      "userMetadataAuthorization": false,
+      "publicSecurityDefinerFunctions": false,
+      "updatePoliciesRequireUsingAndWithCheck": true
+    },
+    "acceptance": [
+      "A migrated Agenda customer retains access and limits without manual action.",
+      "A business without a Cardápio subscription cannot use protected Cardápio administration.",
+      "A business may hold Agenda and Cardápio subscriptions simultaneously.",
+      "Cancelling one product does not cancel or suspend another product.",
+      "A module cannot be attached across products or tenants.",
+      "Cross-tenant reads and writes fail in database tests.",
+      "All existing Node tests pass.",
+      "All database tests pass on a fresh local replay.",
+      "Supabase database advisors report no unresolved security findings introduced by the migration.",
+      "No remote environment is changed without a separate authorization."
+    ]
+  }
+}

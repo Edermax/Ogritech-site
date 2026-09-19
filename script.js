@@ -39,6 +39,7 @@ let availabilityDraftTimeOff = [];
 let financialCache = [];
 let businessSettingsCache = {};
 let publicBookingSettingsCache = {};
+let planCapacityCache = { plan: "Demonstração", max_users: 10, max_professionals: 10, max_services: null, active_users: 1, active_professionals: 0, active_services: 0 };
 
 // =========================================================
 // 2. SESSÃO ATUAL
@@ -67,6 +68,23 @@ const employeeProfessional =
 // =========================================================
 const pageTitle = document.getElementById("page-title");
 const menuItems = document.querySelectorAll(".menu-item");
+const PRODUCT_SECTION_CODES = { agenda: "agenda", landing: "pages", orcamentos: "quotes", cardapio: "menu" };
+
+async function applyProductAccess() {
+    if (IS_DEMO || !BARBERSHOP_ID) return;
+    const { data, error } = await supabaseClient.rpc("business_product_catalog", { target_barbershop_id: BARBERSHOP_ID });
+    if (error) throw error;
+    const access = new Map((Array.isArray(data) ? data : []).map((item) => [item.code, Boolean(item.subscribed) && ["trial", "active", "grace_period"].includes(item.status)]));
+    menuItems.forEach((item) => {
+        const productCode = PRODUCT_SECTION_CODES[item.dataset.section];
+        if (!productCode) return;
+        const allowed = access.get(productCode) === true;
+        item.dataset.productAllowed = String(allowed);
+        item.classList.toggle("product-locked", !allowed);
+        item.setAttribute("aria-disabled", String(!allowed));
+        if (!allowed) item.title = "Solução não contratada para este negócio";
+    });
+}
 
 const dashboardView = document.getElementById("dashboardView");
 const clientsView = document.getElementById("clientsView");
@@ -338,7 +356,7 @@ function reportDataError(action, error) {
     const message = document.createElement("div");
     message.id = "operationalDataError";
     message.setAttribute("role", "alert");
-    message.textContent = `Não foi possível ${action}. Verifique a conexão e tente novamente.`;
+    message.textContent = /limite|plano/i.test(error?.message || "") ? error.message : `Não foi possível ${action}. Verifique a conexão e tente novamente.`;
     message.style.cssText = "position:fixed;left:50%;bottom:20px;z-index:10000;max-width:min(520px,calc(100vw - 32px));transform:translateX(-50%);padding:12px 16px;border:1px solid #ef4444;border-radius:10px;background:#1f1111;color:#fecaca;font:600 14px/1.4 system-ui,sans-serif;box-shadow:0 10px 30px #0008";
     document.body.appendChild(message);
 }
@@ -571,6 +589,11 @@ function showSection(section) {
 menuItems.forEach((item) => {
     item.addEventListener("click", (event) => {
         event.preventDefault();
+
+        if (item.dataset.productAllowed === "false") {
+            alert("Esta solução não está ativa para o negócio. Consulte os produtos contratados ou fale com a Ogritech.");
+            return;
+        }
 
         menuItems.forEach((menu) =>
             menu.classList.remove("active")
@@ -1347,6 +1370,34 @@ function syncOperationalOptions() {
     businessConfig.professionals = professionals.map((item) => item.name);
     applyBusinessCustomization();
     renderBusinessIndicators();
+    renderPlanCapacity();
+}
+
+function capacityText(current, maximum, label) {
+    return maximum == null ? `${current} ${label} · sem limite no plano` : `${current} de ${maximum} ${label}`;
+}
+
+function renderPlanCapacity() {
+    if (currentRole === "employee") {
+        document.getElementById("servicesCapacity").textContent = "";
+        document.getElementById("professionalsCapacity").textContent = "";
+        return;
+    }
+    const services = getServices().length, professionals = getProfessionals().length;
+    planCapacityCache.active_services = services;
+    planCapacityCache.active_professionals = professionals;
+    const serviceLimit = planCapacityCache.max_services;
+    const professionalLimit = planCapacityCache.max_professionals;
+    document.getElementById("servicesCapacity").textContent = `Plano ${planCapacityCache.plan}: ${capacityText(services, serviceLimit, "serviços ativos")}`;
+    document.getElementById("professionalsCapacity").textContent = `Plano ${planCapacityCache.plan}: ${capacityText(professionals, professionalLimit, "profissionais ativos")}`;
+    const serviceButton = document.getElementById("newServiceButton");
+    const professionalButton = document.getElementById("newProfessionalButton");
+    serviceButton.disabled = serviceLimit != null && services >= serviceLimit;
+    professionalButton.disabled = professionalLimit != null && professionals >= professionalLimit;
+    serviceButton.title = serviceButton.disabled ? "Limite do plano atingido" : "Adicionar tipo de serviço";
+    professionalButton.title = professionalButton.disabled ? "Limite do plano atingido; editar nomes continua disponível" : "Adicionar profissional";
+    document.getElementById("quickAddService").disabled = serviceButton.disabled;
+    document.getElementById("quickAddProfessional").disabled = professionalButton.disabled;
 }
 
 async function persistService(item) {
@@ -1696,7 +1747,7 @@ async function importLocalDataOnce() {
 async function loadOperationalData() {
     if (IS_DEMO) return;
     const historyStart = new Date(); historyStart.setFullYear(historyStart.getFullYear() - 1);
-    const [appointmentsResult, clientsResult, privacyResult, servicesResult, employeesResult, financialResult, settingsResult, employeeServicesResult, workingHoursResult, timeOffResult] = await Promise.all([
+    const [appointmentsResult, clientsResult, privacyResult, servicesResult, employeesResult, financialResult, settingsResult, employeeServicesResult, workingHoursResult, timeOffResult, capacityResult] = await Promise.all([
         supabaseClient.from("business_appointments").select("id,client_name,client_email,service,professional,appointment_date,appointment_time,status,created_by,created_at,updated_at").eq("barbershop_id", BARBERSHOP_ID).gte("appointment_date", historyStart.toISOString().slice(0, 10)).order("appointment_date").limit(1000),
         supabaseClient.from("business_clients").select("id,name,phone,email,birthday,notes").eq("barbershop_id", BARBERSHOP_ID).order("name").limit(500),
         supabaseClient.from("privacy_requests").select("id,requester_name,request_type,status,created_at").eq("barbershop_id", BARBERSHOP_ID).order("created_at", { ascending: false }).limit(100),
@@ -1706,7 +1757,8 @@ async function loadOperationalData() {
         supabaseClient.from("business_settings").select("display_name,segment,open_time,close_time,slot_duration_minutes").eq("barbershop_id", BARBERSHOP_ID).maybeSingle(),
         supabaseClient.from("employee_services").select("employee_id,service_id").eq("barbershop_id", BARBERSHOP_ID),
         supabaseClient.from("employee_working_hours").select("id,employee_id,weekday,start_time,end_time").eq("barbershop_id", BARBERSHOP_ID).order("weekday").order("start_time"),
-        supabaseClient.from("employee_time_off").select("id,employee_id,starts_at,ends_at,reason").eq("barbershop_id", BARBERSHOP_ID).gte("ends_at", new Date().toISOString().slice(0,16)).order("starts_at").limit(500)
+        supabaseClient.from("employee_time_off").select("id,employee_id,starts_at,ends_at,reason").eq("barbershop_id", BARBERSHOP_ID).gte("ends_at", new Date().toISOString().slice(0,16)).order("starts_at").limit(500),
+        currentRole === "employee" ? Promise.resolve({ data: null, error: null }) : supabaseClient.rpc("business_plan_capacity", { target_barbershop_id: BARBERSHOP_ID })
     ]);
     if (appointmentsResult.error) throw appointmentsResult.error;
     if (clientsResult.error) throw clientsResult.error;
@@ -1718,6 +1770,7 @@ async function loadOperationalData() {
     if (employeeServicesResult.error) throw employeeServicesResult.error;
     if (workingHoursResult.error) throw workingHoursResult.error;
     if (timeOffResult.error) throw timeOffResult.error;
+    if (capacityResult.error) throw capacityResult.error;
     appointmentsCache = (appointmentsResult.data || []).map(appointmentFromDatabase);
     clientsCache = (clientsResult.data || []).map((row) => ({ id: row.id, name: row.name, phone: row.phone,
         email: row.email, birthday: row.birthday || "", notes: row.notes || "" }));
@@ -1729,6 +1782,7 @@ async function loadOperationalData() {
     employeeServicesCache = employeeServicesResult.data || [];
     workingHoursCache = workingHoursResult.data || [];
     timeOffCache = timeOffResult.data || [];
+    if (capacityResult.data) planCapacityCache = capacityResult.data;
     financialCache = financialResult.data || [];
     if (settingsResult.data) { businessSettingsCache = { name: settingsResult.data.display_name, segment: settingsResult.data.segment, openTime: String(settingsResult.data.open_time).slice(0,5), closeTime: String(settingsResult.data.close_time).slice(0,5), slotDuration: String(settingsResult.data.slot_duration_minutes) }; businessConfig.name = businessSettingsCache.name; businessConfig.segment = businessSettingsCache.segment; }
     if (servicesCache.length) businessConfig.services = servicesCache.map((service) => [service.name, Number(service.price), service.description || "", Number(service.cost), service.category, service.duration_minutes]);
@@ -1745,6 +1799,7 @@ async function initializeOperationalDashboard() {
     if (savedSettings.segment) businessConfig.segment = savedSettings.segment;
     if (!BARBERSHOP_ID) return;
     await loadOperationalData();
+    await applyProductAccess();
     await refreshNotifications();
     updateClientCount();
     renderClients();
@@ -1754,6 +1809,7 @@ async function initializeOperationalDashboard() {
     renderAgenda();
     renderServices();
     renderProfessionals();
+    renderPlanCapacity();
     renderFinancial();
 }
 

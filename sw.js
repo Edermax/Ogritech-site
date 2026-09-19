@@ -1,10 +1,11 @@
-const CACHE_NAME = "ogritech-shell-v9";
+const CACHE_NAME = "ogritech-shell-v10";
 const APP_SHELL = [
   "./", "./login/", "./painel/", "./login.html", "./cliente.html", "./style.css",
   "./auth.js", "./script.js", "./commercial-admin.js", "./cliente.js", "./login.js", "./business-config.js",
   "./supabase-config.js", "./pwa.js", "./pwa.css", "./manifest.webmanifest",
   "./ogritech-brand-symbol.png", "./ogritech-favicon.ico",
   "./home.css", "./home.js", "./commercial-public.css",
+  "./agendar/", "./agendar/agendar.css", "./agendar/agendar-enhancements.css", "./agendar/agendar.js",
   "./pagina/", "./pagina/pagina.js", "./cardapio/", "./cardapio/cardapio.js",
   "./proposta/", "./proposta/proposta.js", "./pedido/", "./pedido/pedido.js",
   "./ogritech-header-logo.png", "./instagram.png", "./linkedin.png"
@@ -26,7 +27,15 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET" || new URL(event.request.url).origin !== self.location.origin) return;
 
   if (event.request.mode === "navigate") {
-    event.respondWith(fetch(event.request).catch(() => caches.match(event.request).then((response) => response || caches.match("./login.html"))));
+    event.respondWith(fetch(event.request).catch(async () => {
+      const url = new URL(event.request.url);
+      const exact = await caches.match(event.request);
+      if (exact) return exact;
+      if (url.pathname.startsWith("/agendar/")) return caches.match("./agendar/");
+      if (url.pathname.startsWith("/painel/")) return caches.match("./painel/");
+      if (url.pathname.startsWith("/login/")) return caches.match("./login/");
+      return caches.match("./");
+    }));
     return;
   }
 
