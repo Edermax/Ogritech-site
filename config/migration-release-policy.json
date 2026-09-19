@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-09-18",
+  "auditedAt": "2026-09-19",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -63,7 +63,8 @@
       "menu_ai_staging_inference",
       "fix_menu_ai_staging_telemetry_authorization",
       "allow_menu_ai_service_private_schema",
-      "diniz_sunday_hours_and_sweets_quantity"
+      "diniz_sunday_hours_and_sweets_quantity",
+      "menu_private_pilot_metrics"
     ],
     "remoteVersionAliases": {
       "platform_contact_leads": "20260901214935",
@@ -179,6 +180,10 @@
       {
         "name": "diniz_sunday_hours_and_sweets_quantity",
         "reason": "Ajustes específicos do piloto privado da Diniz Doces permanecem restritos ao staging e não devem alterar dados de produção."
+      },
+      {
+        "name": "menu_private_pilot_metrics",
+        "reason": "Métricas agregadas da Fase 7K-B permanecem restritas ao staging durante o piloto privado; produção exige decisão pós-piloto."
       }
     ]
   }

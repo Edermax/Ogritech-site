@@ -1,0 +1,27 @@
+{
+  "version": "2026-09-19",
+  "status": "instrumentation_active_in_staging",
+  "deployedAt": "2026-09-19",
+  "phase": "7K-B",
+  "product": "Ogritech Cardápio",
+  "pilotCode": "PILOTO-CARDAPIO-01",
+  "environment": "staging",
+  "limits": { "businesses": 1, "maximumConsumers": 25, "maximumOrders": 100 },
+  "metrics": [
+    "orders_count",
+    "consumers_count",
+    "status_counts",
+    "fulfillment_counts",
+    "possible_duplicate_groups",
+    "price_divergences",
+    "received_over_24h",
+    "payment_pending",
+    "missing_consent"
+  ],
+  "personalDataReturned": false,
+  "access": "authenticated_business_team_only",
+  "productionAuthorized": false,
+  "paidAiEnabled": false,
+  "automaticMessages": false,
+  "automaticRenewal": false
+}

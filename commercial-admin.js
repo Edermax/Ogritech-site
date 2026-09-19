@@ -183,6 +183,49 @@
         byId("menuAssistantUsage").textContent = `Uso neste mês: ${Number(data.month_interactions || 0)} interações · custo estimado ${formatMoney.format(Number(data.month_estimated_cost_micros || 0) / 1000000)}. Nesta fase determinística, o custo por interação é R$ 0,00.`;
     }
 
+    function renderMenuPilotMetrics(metrics, error) {
+        const message = byId("menuPilotMetricsMessage");
+        if (error || !metrics) {
+            notify(message, `${menuError(error)} Os pedidos continuam disponíveis normalmente.`, true);
+            return;
+        }
+        const orders = Number(metrics.orders_count || 0);
+        const consumers = Number(metrics.consumers_count || 0);
+        byId("menuMetricOrders").textContent = `${orders} de ${Number(metrics.limits?.maximum_orders || 100)}`;
+        byId("menuMetricConsumers").textContent = `${consumers} de ${Number(metrics.limits?.maximum_consumers || 25)}`;
+        byId("menuMetricDuplicates").textContent = String(Number(metrics.possible_duplicate_groups || 0));
+        byId("menuMetricPrices").textContent = String(Number(metrics.price_divergences || 0));
+        byId("menuMetricOrdersLimit").textContent = `${Number(metrics.orders_usage_percent || 0).toLocaleString("pt-BR")} % do limite do piloto`;
+        byId("menuMetricConsumersLimit").textContent = `${Number(metrics.consumers_usage_percent || 0).toLocaleString("pt-BR")} % do limite do piloto`;
+        const operational = [];
+        operational.push(`${Number(metrics.status_counts?.received || 0)} recebidos`);
+        operational.push(`${Number(metrics.status_counts?.confirmed || 0)} confirmados`);
+        operational.push(`${Number(metrics.status_counts?.completed || 0)} concluídos`);
+        operational.push(`${Number(metrics.payment_pending || 0)} com pagamento pendente`);
+        operational.push(`${Number(metrics.received_over_24h || 0)} recebidos há mais de 24 horas`);
+        byId("menuMetricOperational").textContent = operational.join(" · ");
+        const warnings = [];
+        if (metrics.approaching_order_limit || metrics.approaching_consumer_limit) warnings.push("O piloto está próximo de um limite operacional.");
+        if (metrics.order_limit_reached || metrics.consumer_limit_reached) warnings.push("Um limite do piloto foi atingido; interrompa novas entradas e acione o suporte.");
+        if (Number(metrics.possible_duplicate_groups || 0)) warnings.push("Confira as possíveis duplicidades antes de confirmar pedidos.");
+        if (Number(metrics.price_divergences || 0)) warnings.push("Há divergência de preço; pause o piloto e acione o suporte.");
+        if (Number(metrics.missing_consent || 0)) warnings.push("Há pedido sem registro de consentimento; pause o piloto e acione o suporte.");
+        notify(message, warnings.join(" ") || "Indicadores atualizados. Nenhuma condição de interrupção foi detectada.", warnings.length > 0);
+    }
+
+    async function loadMenuPilotMetrics() {
+        if (!BARBERSHOP_ID || IS_DEMO) return;
+        notify(byId("menuPilotMetricsMessage"), "Atualizando indicadores...");
+        const { data, error } = await supabaseClient.rpc("menu_pilot_metrics", {
+            target_barbershop_id: BARBERSHOP_ID,
+            target_started_at: null,
+            target_ends_at: null,
+            target_max_consumers: 25,
+            target_max_orders: 100
+        });
+        renderMenuPilotMetrics(data, error);
+    }
+
     byId("menuAiCostForm")?.addEventListener("submit", (event) => {
         event.preventDefault();
         const number = (id) => Math.max(0, Number(byId(id)?.value || 0));
@@ -254,6 +297,7 @@
             byId("menuOrdersList").innerHTML = ordersError ? `<p role="status">${escapeHtml(menuError(ordersError))} Use “Atualizar etapas” para recarregar os pedidos.</p>` : (orders || []).map((order) => `<article><header><div><strong>#${escapeHtml(order.public_reference)} · ${escapeHtml(order.customer_name)}</strong><p>${formatMoney.format(Number(order.total_amount))}${order.is_test ? " · Pedido de teste, sem cobrança real" : ""}</p></div><span class="commercial-badge">${order.is_test ? "Teste concluído" : escapeHtml(order.status)}</span></header>${!order.is_test && !["completed", "cancelled", "rejected"].includes(order.status) ? `<div class="commercial-actions"><button class="table-button edit" data-order-status="confirmed" data-order="${order.id}">Confirmar</button><button class="table-button edit" data-order-status="completed" data-order="${order.id}">Concluir</button></div>` : ""}</article>`).join("") || "<p class='section-description'>Nenhum pedido recebido.</p>";
             byId("menuOrdersList").querySelectorAll("[data-order]").forEach((button) => button.addEventListener("click", () => runMenuAction("menuOnboardingMessage", "Atualizando pedido...", () => supabaseClient.from("menu_orders").update({ status: button.dataset.orderStatus, [button.dataset.orderStatus === "completed" ? "completed_at" : "confirmed_at"]: new Date().toISOString() }).eq("id", button.dataset.order).eq("barbershop_id", BARBERSHOP_ID), "Pedido atualizado.")));
             loadMenuAssistantAdmin().catch(() => notify(byId("menuAssistantSettingsMessage"), "O assistente está temporariamente indisponível; o restante do Cardápio continua funcionando.", true));
+            loadMenuPilotMetrics().catch((metricsError) => renderMenuPilotMetrics(null, metricsError));
             return true;
         } catch (error) {
             if (loadVersion === menuLoadVersion) {
@@ -301,6 +345,7 @@
         notify(byId("menuOnboardingMessage"), "Atualizando etapas...");
         if (await loadMenuAdmin()) notify(byId("menuOnboardingMessage"), "Etapas atualizadas com a configuração salva.");
     });
+    byId("menuPilotMetricsReload")?.addEventListener("click", loadMenuPilotMetrics);
     byId("menuTestOrderButton")?.addEventListener("click", () => {
         if (byId("menuTestOrderButton").disabled) return;
         return runMenuAction("menuOnboardingMessage", "Executando pedido de teste...", () => supabaseClient.rpc("run_menu_test_order", { target_barbershop_id: BARBERSHOP_ID }), (data) => `Pedido de teste aprovado: ${formatMoney.format(Number(data.total_amount))}. Sem cobrança real. Confira o resumo e confirme a revisão.`);

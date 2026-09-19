@@ -260,5 +260,6 @@ Quando o responsável decidir iniciar, a primeira autorização recomendada é a
 - 17/09/2026: Fase 7I publicou a prévia privada exclusivamente no staging, concluiu os onze gates de entrada e validou exportação e despublicação, sem liberar produção.
 - 17/09/2026: Fase 7J iniciou o piloto privado `PILOTO-CARDAPIO-01` exclusivamente no staging, com término automático em 01/10/2026 às 18h44, limite de uma empresa, 25 consumidores e 100 pedidos. IA paga, mensagens automáticas, renovação e produção permanecem bloqueadas.
 - 19/09/2026: Fase 7K-A iniciou o saneamento e a consolidação do repositório, reconciliando o estado documental com o piloto ativo e separando evidências locais geradas do conteúdo seguro para versionamento.
+- 19/09/2026: Fase 7K-B implementou métricas agregadas no painel, protegidas por autenticação, vínculo com o estabelecimento e RLS. O resumo acompanha limites, estados, possíveis duplicidades e integridade de valores sem retornar dados pessoais.
 
 O estado vigente é o piloto privado da Fase 7J em staging. A continuidade autorizada é a Fase 7K-A (consolidação técnica) seguida da Fase 7K-B (instrumentação e acompanhamento). Produção, IA paga, mensagens automáticas e renovação automática continuam sem autorização.
