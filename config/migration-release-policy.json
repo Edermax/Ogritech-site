@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-09-02",
+  "auditedAt": "2026-09-18",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -42,13 +42,38 @@
       "platform_contact_leads",
       "deny_platform_contact_attempt_reads",
       "index_remaining_foreign_keys",
-      "remove_legacy_rls_policies"
+      "remove_legacy_rls_policies",
+      "add_appointment_reassignment_offers",
+      "link_public_bookings_to_client_auth",
+      "enforce_plan_capacity",
+      "fix_plan_capacity_access",
+      "harden_authenticated_booking_actions",
+      "assistant_callback_requests",
+      "assistant_email_callbacks",
+      "ogritech_billing_self_service",
+      "billing_lifecycle_automation",
+      "multiproduct_foundation",
+      "multiproduct_activation",
+      "menu_catalog_core",
+      "menu_cart_orders",
+      "menu_self_service_onboarding",
+      "commercial_self_service_lifecycle",
+      "menu_assistant_foundation",
+      "menu_ai_staging_controls",
+      "menu_ai_staging_inference",
+      "fix_menu_ai_staging_telemetry_authorization",
+      "allow_menu_ai_service_private_schema",
+      "diniz_sunday_hours_and_sweets_quantity"
     ],
     "remoteVersionAliases": {
       "platform_contact_leads": "20260901214935",
       "deny_platform_contact_attempt_reads": "20260901215227",
       "index_remaining_foreign_keys": "20260901220744",
-      "remove_legacy_rls_policies": "20260902103025"
+      "remove_legacy_rls_policies": "20260902103025",
+      "enforce_plan_capacity": "20260903163936",
+      "link_public_bookings_to_client_auth": "20260903154920",
+      "fix_plan_capacity_access": "20260903201303",
+      "harden_authenticated_booking_actions": "20260904023742"
     }
   },
   "production": {
@@ -70,6 +95,90 @@
       {
         "name": "remove_legacy_rls_policies",
         "reason": "Correção do drift legado será promovida somente após validação no staging e autorização do lote de produção."
+      },
+      {
+        "name": "add_appointment_reassignment_offers",
+        "reason": "Substituição de profissional permanece retida até concluir aceite público, notificações e testes transacionais no staging."
+      },
+      {
+        "name": "link_public_bookings_to_client_auth",
+        "reason": "Login por SMS e área do cliente permanecem retidos até configurar credenciais dos provedores e validar a jornada no staging."
+      },
+      {
+        "name": "enforce_plan_capacity",
+        "reason": "Limites comerciais de usuários, profissionais e serviços permanecem retidos até validação completa no staging e autorização do lote de produção."
+      },
+      {
+        "name": "fix_plan_capacity_access",
+        "reason": "Correção de acesso acompanha o lote de limites de planos no staging."
+      },
+      {
+        "name": "harden_authenticated_booking_actions",
+        "reason": "Correção de cancelamento autenticado e confirmação de telefone validada no staging; acompanha lote de identidade ainda não autorizado para produção."
+      },
+      {
+        "name": "assistant_callback_requests",
+        "reason": "Formulário e fila de consentimento aguardam validação no staging e credenciais do provedor oficial de WhatsApp antes da produção."
+      },
+      {
+        "name": "assistant_email_callbacks",
+        "reason": "Retorno por e-mail aguarda validação no staging, autenticação do domínio e credencial do provedor de entrega antes da produção."
+      },
+      {
+        "name": "ogritech_billing_self_service",
+        "reason": "Contratação self-service aguarda credenciais sandbox, planos Mercado Pago, hash dos termos, webhook e homologação integral no staging."
+      },
+      {
+        "name": "billing_lifecycle_automation",
+        "reason": "Automação de renovação, suspensão e liberação acompanha a homologação integral do Ogritech Billing no staging."
+      },
+      {
+        "name": "multiproduct_foundation",
+        "reason": "Fundação multiproduto permanece exclusivamente local até replay limpo, validação de segurança e autorização separada para qualquer ambiente remoto."
+      },
+      {
+        "name": "multiproduct_activation",
+        "reason": "Ativação multiproduto e bloqueios de interface permanecem locais até homologação específica e autorização de staging."
+      },
+      {
+        "name": "menu_catalog_core",
+        "reason": "Núcleo universal e templates do Cardápio permanecem locais até validação do catálogo e autorização separada de staging."
+      },
+      {
+        "name": "menu_cart_orders",
+        "reason": "Carrinho, pedidos e idempotência do Cardápio permanecem locais até homologação funcional e autorização separada de staging."
+      },
+      {
+        "name": "menu_self_service_onboarding",
+        "reason": "Onboarding, pedido de teste e publicação autônoma do Cardápio permanecem locais até homologação da jornada e autorização separada de staging."
+      },
+      {
+        "name": "commercial_self_service_lifecycle",
+        "reason": "Gestão autônoma de assinaturas, módulos e exportação permanece local até homologação comercial, jurídica e autorização separada de staging."
+      },
+      {
+        "name": "menu_assistant_foundation",
+        "reason": "Fundação determinística do assistente web permanece local até homologação de segurança, custo, precisão e autorização específica de staging e de qualquer modelo externo."
+      },
+      {
+        "name": "menu_ai_staging_controls",
+        "reason": "Controles da homologação híbrida permanecem locais; segredo, função e tráfego de staging exigem autorização específica posterior."
+      },
+      {
+        "name": "menu_ai_staging_inference",
+        "reason": "Telemetria da inferência permanece fora de produção até conclusão da janela sintética, revisão de custo e nova autorização."
+      },
+      {
+        "name": "fix_menu_ai_staging_telemetry_authorization",
+        "reason": "Correção da telemetria acompanha a inferência de staging e permanece retida até autorização específica de produção."
+      },
+      {
+        "name": "allow_menu_ai_service_private_schema",
+        "reason": "Permissão mínima do serviço para registrar telemetria permanece retida com a inferência até autorização específica de produção."
+      },
+      {
+        "name": "diniz_sunday_hours_and_sweets_quantity",
+        "reason": "Ajustes específicos do piloto privado da Diniz Doces permanecem restritos ao staging e não devem alterar dados de produção."
       }
     ]
   }

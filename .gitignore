@@ -7,6 +7,9 @@ node_modules/
 coverage/
 test-results/
 playwright-report/
+outputs/
+private/
+*.local.json
 *.log
 .env
 .env.*
