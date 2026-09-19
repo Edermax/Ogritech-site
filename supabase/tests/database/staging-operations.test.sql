@@ -16,9 +16,17 @@ insert into auth.users (
   ('c0000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'operations-owner@example.invalid', '', now(), '{"provider":"email","providers":["email"]}', '{}', now(), now()),
   ('f0000000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'operations-master@example.invalid', '', now(), '{"provider":"email","providers":["email"]}', '{}', now(), now());
 
+insert into public.saas_clients (
+  id, name, segment, contact_name, owner_email, origin, plan,
+  monthly_fee, status, barbershop_id
+) values (
+  '33000000-0000-4000-8000-000000000003', 'STAGING Cliente Financeiro',
+  'Teste', 'Contato Teste', 'billing-test@example.invalid', 'Teste automatizado',
+  'Agenda', 100, 'Ativo', '30000000-0000-4000-8000-000000000003'
+);
+
 insert into public.profiles (id, barbershop_id, full_name, role) values
-  ('c0000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000003', 'Owner Operações', 'owner'),
-  ('f0000000-0000-4000-8000-000000000002', null, 'Master Operações', 'owner');
+  ('c0000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000003', 'Owner Operações', 'owner');
 
 insert into public.platform_admins (user_id)
 values ('f0000000-0000-4000-8000-000000000002');
@@ -29,14 +37,7 @@ values ('31000000-0000-4000-8000-000000000003', '30000000-0000-4000-8000-0000000
 insert into public.employees (id, barbershop_id, name)
 values ('32000000-0000-4000-8000-000000000003', '30000000-0000-4000-8000-000000000003', 'Profissional Concorrente');
 
-insert into public.saas_clients (
-  id, name, segment, contact_name, owner_email, origin, plan,
-  monthly_fee, status, barbershop_id
-) values (
-  '33000000-0000-4000-8000-000000000003', 'STAGING Cliente Financeiro',
-  'Teste', 'Contato Teste', 'billing-test@example.invalid', 'Teste automatizado',
-  'Pro', 100, 'Ativo', '30000000-0000-4000-8000-000000000003'
-);
+
 
 set local role authenticated;
 

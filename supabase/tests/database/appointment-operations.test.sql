@@ -15,6 +15,8 @@ insert into public.barbershops(id,name,slug,segment)
 values('41000000-0000-4000-8000-000000000001','Operacoes Atomicas','operacoes-atomicas','Teste');
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
 values('42000000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','atomic-owner@example.invalid','',now(),'{"provider":"email","providers":["email"]}','{}',now(),now());
+insert into public.saas_clients(name,segment,contact_name,origin,plan,barbershop_id)
+values('STAGING Plano Atomico','Teste','Fixture','Teste automatizado','Agenda','41000000-0000-4000-8000-000000000001');
 insert into public.profiles(id,barbershop_id,full_name,role)
 values('42000000-0000-4000-8000-000000000001','41000000-0000-4000-8000-000000000001','Owner Atomico','owner');
 insert into public.business_appointments(

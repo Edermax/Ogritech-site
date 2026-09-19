@@ -24,10 +24,14 @@ test("agenda pública mantém o contrato completo da jornada", async () => {
     assert.match(migration, new RegExp(`function public\\.${rpc}`, "i"), `${rpc} ausente no banco`);
   }
 
-  assert.match(frontend, /accepted_privacy:\$\("privacyConsent"\)\.checked/);
-  assert.match(frontend, /error\.code===\"23505\"/);
-  assert.match(frontend, /localStorage\.setItem\(`ogritechPublicBooking:/);
+  assert.match(frontend, /accepted_privacy:\s*\$\("privacyConsent"\)\.checked/);
+  assert.match(frontend, /section\.inert\s*=\s*!enabled/);
+  assert.match(frontend, /\$\("bookingTime"\)\.value\s*=\s*draft\.time/);
+  assert.match(frontend, /error\.code\s*===\s*\"23505\"/);
+  assert.match(frontend, /localStorage\.setItem\(preferenceKey/);
+  assert.doesNotMatch(frontend, /localStorage\.setItem\(`ogritechPublicBooking:/);
   assert.match(page, /id="privacyConsent"[^>]+required/);
+  assert.match(page, /id="clientEmail"[^>]+required/);
   assert.match(schedulingMigration, /business_appointments_no_employee_overlap/i);
   assert.match(migration, /Muitas tentativas/i);
   assert.match(migration, /digest\(secret_token,'sha256'\)/i);

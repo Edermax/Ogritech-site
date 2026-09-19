@@ -19,6 +19,9 @@ insert into auth.users (
   ('b0000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'owner-b@example.invalid', '', now(), '{"provider":"email","providers":["email"]}', '{}', now(), now()),
   ('f0000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'platform-admin@example.invalid', '', now(), '{"provider":"email","providers":["email"]}', '{}', now(), now());
 
+insert into public.saas_clients (name, segment, contact_name, origin, plan, barbershop_id) values
+  ('STAGING RLS Plano A', 'Teste', 'Fixture A', 'Teste automatizado', 'Agenda', '10000000-0000-4000-8000-000000000001'),
+  ('STAGING RLS Plano B', 'Teste', 'Fixture B', 'Teste automatizado', 'Agenda', '20000000-0000-4000-8000-000000000002');
 insert into public.employees (id, barbershop_id, name) values
   ('e0000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'Funcionário A');
 
@@ -27,8 +30,7 @@ insert into public.profiles (id, barbershop_id, full_name, role, employee_id) va
   ('a0000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', 'Admin A', 'admin', null),
   ('a0000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000001', 'Employee A', 'employee', 'e0000000-0000-4000-8000-000000000001'),
   ('a0000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000001', 'Client A', 'client', null),
-  ('b0000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002', 'Owner B', 'owner', null),
-  ('f0000000-0000-4000-8000-000000000001', null, 'Platform Admin', 'owner', null);
+  ('b0000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002', 'Owner B', 'owner', null);
 
 insert into public.platform_admins (user_id) values
   ('f0000000-0000-4000-8000-000000000001');

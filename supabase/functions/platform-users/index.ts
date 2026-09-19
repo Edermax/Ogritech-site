@@ -39,6 +39,21 @@ Deno.serve(async (request) => {
   const { data: withinLimit } = await caller.rpc("platform_check_rate_limit", { action_name: action, max_actions: 30 });
   if (!withinLimit) return reply({ error: "Muitas solicitações; tente novamente em um minuto" }, 429, origin);
   const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const assertCapacity = async (shopId: string, role: string) => {
+    if (role === "client") return;
+    const { data: client, error: clientError } = await admin.from("saas_clients").select("plan").eq("barbershop_id", shopId).is("deleted_at", null).single();
+    if (clientError) throw clientError;
+    const { data: plan, error: planError } = await admin.from("saas_plans").select("name,max_users,max_professionals").eq("name", client.plan).eq("active", true).single();
+    if (planError) throw planError;
+    const { count: userCount, error: userCountError } = await admin.from("profiles").select("id", { count: "exact", head: true }).eq("barbershop_id", shopId).eq("active", true).in("role", ["owner", "admin", "employee"]);
+    if (userCountError) throw userCountError;
+    if (plan.max_users != null && (userCount || 0) >= plan.max_users) throw new Error(`Limite de usuários do plano ${plan.name} atingido (${plan.max_users}).`);
+    if (role === "employee") {
+      const { count: professionalCount, error: professionalCountError } = await admin.from("employees").select("id", { count: "exact", head: true }).eq("barbershop_id", shopId).eq("active", true);
+      if (professionalCountError) throw professionalCountError;
+      if (plan.max_professionals != null && (professionalCount || 0) >= plan.max_professionals) throw new Error(`Limite de profissionais do plano ${plan.name} atingido (${plan.max_professionals}).`);
+    }
+  };
   const audit = async (success: boolean, targetId = "", details: Record<string, unknown> = {}) => {
     await admin.from("platform_admin_events").insert({ actor_id: authData.user.id, action, target_id: targetId || null, success, details });
   };
@@ -82,6 +97,7 @@ Deno.serve(async (request) => {
       if (!validEmail(userEmail) || !fullName || !shopId || !roles.has(role)) return reply({ error: "Dados inválidos" }, 400, origin);
       const { data: shop } = await admin.from("barbershops").select("id,active,deleted_at").eq("id", shopId).single();
       if (!shop?.active || shop.deleted_at) return reply({ error: "Negócio indisponível" }, 400, origin);
+      await assertCapacity(shopId, role);
       const { data, error: inviteError } = await admin.auth.admin.inviteUserByEmail(userEmail, { data: { full_name: fullName } });
       if (inviteError) throw inviteError;
       const rollback = async () => { await admin.auth.admin.deleteUser(data.user.id); };
@@ -196,6 +212,7 @@ Deno.serve(async (request) => {
     return reply({ error: "Ação inválida" }, 400, origin);
   } catch (error) {
     await audit(false, validUuid(body.user_id) || validUuid(body.barbershop_id), { message: error instanceof Error ? error.message : "Erro desconhecido" });
-    return reply({ error: "Não foi possível concluir a operação" }, 400, origin);
+    const message = error instanceof Error && /limite|plano/i.test(error.message) ? error.message : "Não foi possível concluir a operação";
+    return reply({ error: message }, 400, origin);
   }
 });

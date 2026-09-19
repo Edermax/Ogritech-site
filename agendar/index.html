@@ -10,11 +10,12 @@
   <meta name="description" content="Escolha serviço, profissional, data e horário para solicitar seu atendimento.">
   <link rel="icon" href="../ogritech-favicon.ico" sizes="any">
   <link rel="stylesheet" href="agendar.css">
+  <link rel="stylesheet" href="agendar-enhancements.css">
 </head>
 <body>
   <header class="public-header">
     <a href="../" class="ogritech-brand" aria-label="Ogritech"><img src="../ogritech-header-logo.png" alt="Ogritech"></a>
-    <span>Agendamento seguro</span>
+    <button class="header-back" id="backButton" type="button">← Voltar</button>
   </header>
   <main>
     <section class="booking-hero">
@@ -29,20 +30,41 @@
 
       <form id="bookingForm" class="hidden">
         <section class="booking-step">
-          <div class="step-heading"><span>Serviço</span><h2>O que você precisa?</h2></div>
+          <div class="step-heading"><span>Serviço</span><h2>Como podemos te atender?</h2></div>
           <div class="choice-grid" id="serviceChoices"></div>
         </section>
-        <section class="booking-step disabled-step" id="professionalStep">
+        <section class="booking-step disabled-step" id="professionalStep" inert>
           <div class="step-heading"><span>Profissional</span><h2>Com quem deseja agendar?</h2></div>
           <div class="choice-grid" id="professionalChoices"></div>
         </section>
-        <section class="booking-step disabled-step" id="dateStep">
+        <section class="booking-step disabled-step" id="dateStep" inert>
           <div class="step-heading"><span>Data e horário</span><h2>Quando você pode vir?</h2></div>
-          <label class="date-field">Escolha a data<input type="date" id="bookingDate" required></label>
+          <div class="date-time-entry">
+            <label class="date-field">Data<input type="date" id="bookingDate" required></label>
+            <label class="date-field">Horário<input type="time" id="bookingTime" step="900" aria-describedby="timeHelp"></label>
+          </div>
+          <p class="hint" id="timeHelp">Digite a data e o horário ou escolha um horário livre na agenda visual.</p>
+          <div class="availability-legend" aria-label="Legenda da disponibilidade">
+            <span><i class="available"></i>Livre</span>
+            <span><i class="unavailable"></i>Indisponível</span>
+          </div>
           <div class="slots-grid" id="slotChoices"><p class="hint">Selecione serviço, profissional e data.</p></div>
         </section>
-        <section class="booking-step disabled-step" id="contactStep">
+        <section class="booking-step disabled-step" id="contactStep" inert>
           <div class="step-heading"><span>Seus dados</span><h2>Como confirmamos com você?</h2></div>
+          <div class="identity-panel" id="identityPanel">
+            <strong>Confirme sua identidade</strong>
+            <p>Entre rapidamente para acompanhar ou cancelar sem precisar guardar códigos.</p>
+            <p class="identity-hint">Informe seu celular abaixo e receba um código de acesso.</p>
+            <div class="otp-actions">
+              <button class="secondary-button" id="sendPhoneOtpButton" type="button">Continuar com celular</button>
+              <div class="otp-verification hidden" id="otpVerification">
+                <label>Código recebido<input id="phoneOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}"></label>
+                <button class="secondary-button" id="verifyPhoneOtpButton" type="button">Confirmar código</button>
+              </div>
+            </div>
+            <p class="identity-status" id="identityStatus" role="status"></p>
+          </div>
           <div class="contact-grid">
             <label>Nome completo<input id="clientName" autocomplete="name" maxlength="150" required></label>
             <label>WhatsApp<input id="clientPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" required></label>
@@ -50,6 +72,8 @@
             <label class="honeypot" aria-hidden="true">Site<input id="clientWebsite" tabindex="-1" autocomplete="off"></label>
           </div>
           <label class="consent"><input type="checkbox" id="privacyConsent" required><span>Concordo com o uso destes dados para solicitar e acompanhar o atendimento, conforme a <a href="../privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</span></label>
+          <label class="consent"><input type="checkbox" id="whatsappConsent"><span>Autorizo mensagens operacionais no WhatsApp sobre confirmação, lembrete, cancelamento ou troca de profissional. Não inclui publicidade.</span></label>
+          <label class="consent"><input type="checkbox" id="marketingConsent"><span>Quero receber novidades e ofertas. Opcional e desmarcado por padrão.</span></label>
           <div class="booking-summary" id="bookingSummary"></div>
           <p class="form-message" id="formMessage" role="status"></p>
           <button class="primary-button" id="submitBooking" type="submit">Solicitar agendamento</button>
@@ -57,10 +81,16 @@
       </form>
 
       <section class="success-state hidden" id="successState">
-        <span class="success-mark">✓</span><p class="eyebrow">SOLICITAÇÃO RECEBIDA</p><h2>Seu horário foi solicitado.</h2>
-        <p>Guarde os dados abaixo. Eles são necessários para consultar ou cancelar o atendimento.</p>
-        <div class="reference-box"><span>Referência</span><strong id="successReference"></strong></div>
+        <span class="success-mark">✓</span><p class="eyebrow">SOLICITAÇÃO RECEBIDA</p><h2>Agendamento solicitado com sucesso.</h2>
+        <p>O horário está salvo. Você pode adicionar ao calendário, fazer outra reserva ou cancelar esta solicitação.</p>
         <div class="appointment-detail" id="successDetail"></div>
+        <p>Referência: <strong id="successReference"></strong></p>
+        <p>Guarde o link abaixo para consultar ou cancelar. Ele dá acesso à sua reserva.</p>
+        <a class="secondary-button" id="manageBookingLink" href="./">Consultar ou cancelar minha reserva</a>
+        <p class="form-message" id="successMessage" role="status"></p>
+        <div class="success-actions">
+          <button class="danger-button" id="cancelSuccessBookingButton" type="button">Cancelar este horário</button>
+        </div>
         <button class="secondary-button" id="newBookingButton" type="button">Fazer outro agendamento</button>
       </section>
 
@@ -71,12 +101,18 @@
         <button class="danger-button hidden" id="cancelBookingButton" type="button">Cancelar agendamento</button>
         <a class="secondary-button" id="backToBooking" href="./">Voltar para a agenda</a>
       </section>
+
+      <section class="my-appointments hidden" id="myAppointments">
+        <div class="step-heading"><span>MINHA CONTA</span><h2>Meus agendamentos</h2></div>
+        <div id="myAppointmentsList"></div>
+        <p class="form-message" id="myAppointmentsMessage" role="status"></p>
+      </section>
     </section>
-    <p class="privacy-note">Seus dados são usados somente para administrar este atendimento.</p>
+    <p class="privacy-note">Guardamos temporariamente apenas suas escolhas neste navegador. Dados de contato não são salvos nas preferências locais.</p>
   </main>
-  <footer><span>Tecnologia para negócios locais</span><a href="https://ogritech.com.br">ogritech.com.br</a></footer>
+  <footer><span>Tecnologia para negócios</span><a href="https://ogritech.com.br">ogritech.com.br</a></footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="../supabase-config.js"></script>
-  <script src="agendar.js"></script>
+  <script src="agendar.js?v=20260904.4"></script>
 </body>
 </html>

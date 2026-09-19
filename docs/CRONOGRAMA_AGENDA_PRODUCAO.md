@@ -42,6 +42,7 @@ Status em 29/08/2026: **concluída e validada no staging**. Foi criada a rota mo
 - Substituir atualizações em lote por RPCs transacionais de confirmação, conclusão, ausência e cancelamento.
 - Aplicar máquina de estados e auditoria no banco.
 - Enviar notificações de solicitação, confirmação e cancelamento; preparar lembrete.
+- Implementar a substituição consentida de profissional conforme `docs/SUBSTITUICAO_PROFISSIONAL_AGENDA.md`, preservando o atendimento original até a resposta do cliente e usando os botões `Aceitar {nome}`, `Escolher outro(a) profissional` e `Cancelar`.
 - Instrumentar erros de API, autenticação, conflitos e latência.
 
 Critério de aceite: todas as mudanças de estado são atômicas, auditáveis e notificadas.
