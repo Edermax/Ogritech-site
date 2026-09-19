@@ -1,0 +1,43 @@
+{
+  "version": "2026-09-16",
+  "status": "passed_synthetic_staging_homologation",
+  "product": "Ogritech Cardápio",
+  "environment": "staging",
+  "projectRef": "fuesdztsvrkkgnbqhcxi",
+  "migrationsLocal": 60,
+  "migrationsRemote": 60,
+  "schemaChangesApplied": 0,
+  "syntheticBusinessesCreated": 1,
+  "syntheticBusinessesRemaining": 0,
+  "segments": 4,
+  "viewports": 2,
+  "scenarios": 8,
+  "scenariosPassed": 8,
+  "ordersCreated": 8,
+  "ordersReceived": 8,
+  "uniqueRequestIds": 8,
+  "priceDivergences": 0,
+  "javascriptErrors": 0,
+  "crossTenantAccessEvents": 0,
+  "paidAiCalls": 0,
+  "externalMessages": 0,
+  "productionCalls": 0,
+  "assistantMode": "deterministic",
+  "aiFinalState": {
+    "hybridEnabled": false,
+    "killSwitch": true,
+    "maximumCalls": 0,
+    "maximumCostCents": 0
+  },
+  "technicalFindings": 3,
+  "technicalFindingsResolved": 3,
+  "findings": [
+    "staging_badge_intercepted_assistant_button",
+    "tracking_page_exposed_raw_status_code",
+    "tracking_page_missing_favicon"
+  ],
+  "cleanup": "complete_zero_residual_records",
+  "productionAuthorized": false,
+  "publicReleaseApproved": false,
+  "evidence": "outputs/menu-staging-7f/report.json"
+}

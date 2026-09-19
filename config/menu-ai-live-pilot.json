@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "authorizedAt": "2026-09-10",
+  "status": "authorized_local_synthetic_pilot",
+  "authorization": {
+    "provider": "openai",
+    "model": "gpt-5.6-luna",
+    "maximumCalls": 100,
+    "maximumSpendBrl": 30,
+    "syntheticDataOnly": true,
+    "staging": false,
+    "production": false,
+    "whatsapp": false
+  },
+  "controls": {
+    "timeoutMs": 30000,
+    "maximumRetries": 0,
+    "exchangeRateBrlPerUsd": 6,
+    "safetyMarginPercent": 20,
+    "fallback": "deterministic_phase_6a",
+    "persistRawContent": false
+  },
+  "pricing": {
+    "verifiedAt": "2026-09-10",
+    "inputUsdPerMillionTokens": 0.2,
+    "outputUsdPerMillionTokens": 1.2,
+    "source": "https://platform.openai.com/docs/models"
+  }
+}

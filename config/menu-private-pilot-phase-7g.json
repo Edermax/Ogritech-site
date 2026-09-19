@@ -1,0 +1,80 @@
+{
+  "version": "2026-09-16",
+  "status": "package_prepared_pilot_not_authorized",
+  "product": "Ogritech Cardápio",
+  "technicalDecision": "go_for_private_pilot_preparation",
+  "operationalDecision": "no_go_until_entry_gates_are_satisfied",
+  "pilotExecutionAuthorized": false,
+  "productionAuthorized": false,
+  "partnerContactAuthorized": false,
+  "realDataAuthorized": false,
+  "externalMessagesAuthorized": false,
+  "paidAiAuthorized": false,
+  "validatedEvidence": {
+    "localHumanBeta": "passed_local_human_beta",
+    "stagingHomologation": "passed_synthetic_staging_homologation",
+    "humanEaseScore": 10,
+    "stagingScenariosPassed": 8,
+    "criticalIncidents": 0,
+    "priceDivergences": 0,
+    "residualSyntheticRecords": 0
+  },
+  "proposedPilotLimits": {
+    "businesses": 1,
+    "maximumDurationDays": 14,
+    "maximumConsumers": 25,
+    "maximumOrders": 100,
+    "assistantMode": "deterministic",
+    "paymentMode": "manual_or_on_delivery",
+    "whatsapp": false,
+    "paidAi": false,
+    "automaticRenewal": false
+  },
+  "requiredEntryGates": [
+    "partner_business_privately_selected",
+    "business_owner_consent_recorded",
+    "pilot_operator_and_backup_named",
+    "start_and_end_window_defined",
+    "support_and_incident_channel_defined",
+    "privacy_notice_and_retention_accepted",
+    "real_catalog_reviewed_by_business_owner",
+    "commercial_terms_and_zero_auto_renewal_confirmed",
+    "staging_or_private_preview_publication_authorized",
+    "rollback_and_export_rehearsed",
+    "final_preflight_passed"
+  ],
+  "autonomyRequirements": [
+    "self_service_contracting_or_invitation_acceptance",
+    "guided_setup_without_ogritech_intervention",
+    "test_order_before_publication",
+    "self_service_catalog_and_order_operation",
+    "self_service_export",
+    "self_service_unpublish_and_cancel",
+    "optional_human_support_always_visible"
+  ],
+  "stopConditions": [
+    "cross_tenant_access",
+    "wrong_or_client_controlled_price",
+    "duplicate_or_unconfirmed_order",
+    "privacy_or_consent_failure",
+    "unrecoverable_unpublish_or_cancel_failure",
+    "external_message_without_specific_consent",
+    "paid_ai_or_production_access",
+    "critical_error_without_safe_fallback"
+  ],
+  "exitCriteria": {
+    "minimumTaskCompletionPercent": 90,
+    "minimumBusinessEaseScore": 8,
+    "minimumConsumerEaseScore": 8,
+    "criticalIncidents": 0,
+    "crossTenantAccessEvents": 0,
+    "duplicateOrders": 0,
+    "priceDivergences": 0,
+    "unresolvedPrivacyIncidents": 0,
+    "exportCompleted": true,
+    "unpublishAndCancelCompleted": true,
+    "residualTestRecords": 0
+  },
+  "nextPhase": "7H",
+  "nextPhaseRequiresExplicitAuthorization": true
+}

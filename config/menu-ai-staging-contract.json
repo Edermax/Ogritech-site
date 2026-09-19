@@ -1,0 +1,29 @@
+{
+  "version": "2026-09-10",
+  "status": "staging_prepared_ai_disabled",
+  "environment": "staging",
+  "operatingMode": "ambiguous_messages_only",
+  "model": "gpt-5.6-luna",
+  "serviceTier": "default",
+  "providerTimeoutMs": 6000,
+  "latencyPolicy": {
+    "hybridJourneyP95Ms": 2500,
+    "modelRouteDiagnosticP95Ms": 6000,
+    "modelRouteIsExcludedFromCriticalActions": true
+  },
+  "requiredServerSecrets": ["OPENAI_API_KEY", "OGRITECH_MENU_AI_ENV", "ALLOWED_ORIGINS"],
+  "forbiddenPublicSecrets": ["NEXT_PUBLIC_OPENAI_API_KEY", "VITE_OPENAI_API_KEY"],
+  "defaults": {
+    "functionEnabled": true,
+    "globalHybridEnabled": false,
+    "globalKillSwitch": true,
+    "businessOptIn": false,
+    "maximumCalls": 0,
+    "maximumCostCents": 0
+  },
+  "noticeVersion": "menu-ai-pilot-2026-09-10",
+  "notice": "Este atendimento combina respostas automáticas locais e inteligência artificial. Preços e pedidos são confirmados pelo sistema e por você.",
+  "fallback": "deterministic_phase_6a",
+  "rolloutOrder": ["deploy_database_controls", "set_server_secrets", "deploy_disabled_function", "enable_one_test_business", "remove_global_kill_switch"],
+  "rollbackOrder": ["activate_global_kill_switch", "disable_edge_function", "disable_business_opt_ins", "retain_hash_only_audit_events"]
+}

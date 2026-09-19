@@ -1,0 +1,71 @@
+{
+  "version": "2026-09-17",
+  "status": "private_pilot_active_in_staging",
+  "product": "Ogritech Cardápio",
+  "pilotCode": "PILOTO-CARDAPIO-01",
+  "segment": "confectionery",
+  "realIdentityStoredInRepository": false,
+  "restrictedLocalRecord": "../../private/pilot-cardapio-01.local.json",
+  "contactPerformed": false,
+  "pilotExecutionAuthorized": true,
+  "environmentPreparationAuthorized": true,
+  "productionAuthorized": false,
+  "plannedWindow": {
+    "startRule": "immediately_after_all_entry_gates_and_explicit_pilot_authorization",
+    "durationDays": 14,
+    "automaticEnd": true,
+    "started": true,
+    "startedAt": "2026-09-17T18:44:32-03:00",
+    "endsAt": "2026-10-01T18:44:32-03:00"
+  },
+  "supportChannel": {
+    "code": "SUPORTE-01",
+    "methods": ["human_whatsapp", "phone_call"],
+    "realContactStoredInRepository": false,
+    "systemIntegration": false,
+    "automaticMessages": false
+  },
+  "catalogIntake": {
+    "sourceImages": 5,
+    "primaryCatalogYear": 2026,
+    "olderReferenceYear": 2025,
+    "restrictedCatalogRecord": "../../private/pilot-cardapio-01-catalog.local.json",
+    "status": "reviewed_and_clarified_by_business_owner",
+    "realCatalogStoredInRepository": false,
+    "categoriesExtracted": 4,
+    "operationalRulesReceived": ["dynamic_delivery_fee", "card_machine_fee", "thirty_percent_advance_payment", "business_hours", "minimum_lead_time", "mixed_filling_highest_tier", "personalized_items_manual_quote"],
+    "privateAudioSources": 4,
+    "privateAudioTranscriptionStatus": "completed",
+    "personalNonOperationalDetailsStoredInRepository": false,
+    "pendingConfirmations": 0
+  },
+  "privatePreview": {
+    "publicationAuthorized": true,
+    "environment": "staging",
+    "realUrlStoredInRepository": false,
+    "published": true,
+    "exportCompleted": true,
+    "rollbackRehearsed": true,
+    "finalPreflightPassed": true,
+    "ordersCreated": 0,
+    "paidAiCalls": 0,
+    "externalMessages": 0,
+    "productionCalls": 0
+  },
+  "completedEntryGates": [
+    "partner_business_privately_selected",
+    "pilot_operator_and_backup_named",
+    "start_and_end_window_defined",
+    "business_owner_consent_recorded",
+    "support_and_incident_channel_defined",
+    "privacy_notice_and_retention_accepted",
+    "commercial_terms_and_zero_auto_renewal_confirmed",
+    "real_catalog_reviewed_by_business_owner",
+    "staging_or_private_preview_publication_authorized",
+    "rollback_and_export_rehearsed",
+    "final_preflight_passed"
+  ],
+  "pendingEntryGates": [],
+  "nextRequiredInformation": [],
+  "nextAction": "operate_limited_private_pilot_and_monitor_stop_conditions"
+}

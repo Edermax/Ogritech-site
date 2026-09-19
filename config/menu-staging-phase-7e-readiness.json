@@ -1,0 +1,79 @@
+{
+  "version": "2026-09-16",
+  "status": "ready_for_authorized_synthetic_staging_homologation",
+  "product": "Ogritech Cardápio",
+  "assessmentOnly": true,
+  "executionAuthorized": false,
+  "remoteChangesPerformed": false,
+  "productionAuthorized": false,
+  "currentState": {
+    "localMigrationCount": 60,
+    "stagingMigrationCountRecorded": 60,
+    "productionMigrationCountRecorded": 36,
+    "productionMigrationsHeld": 24,
+    "menuMigrations": [
+      "menu_catalog_core",
+      "menu_cart_orders",
+      "menu_self_service_onboarding",
+      "menu_assistant_foundation",
+      "menu_ai_staging_controls",
+      "menu_ai_staging_inference",
+      "fix_menu_ai_staging_telemetry_authorization",
+      "allow_menu_ai_service_private_schema"
+    ],
+    "menuMigrationsAlreadyRecordedInStaging": true,
+    "frontendPublishedForMenuHomologation": false,
+    "syntheticDemoBusinessPresent": false,
+    "publicAssistantMode": "deterministic",
+    "externalAiEnabled": false
+  },
+  "supabaseCompatibility": {
+    "cliVersion": "2.116.0",
+    "postgresMajorVersion": 17,
+    "explicitDataApiGrantsRequired": true,
+    "rlsAndPoliciesRequiredForEveryExposedTable": true,
+    "securityInvokerRequiredForExposedViews": true,
+    "deprecatedLogsAllDependencyAllowed": false,
+    "realtimeSchemaMutationAllowed": false
+  },
+  "requiredPreflightGates": [
+    "new_explicit_authorization_for_staging_execution",
+    "remote_schema_drift_check_before_any_migration",
+    "snapshot_existing_staging_state",
+    "explicit_grants_and_rls_allow_deny_tests",
+    "synthetic_dot_invalid_identities_only",
+    "deterministic_assistant_only",
+    "external_ai_kill_switch_on_and_limits_zero",
+    "tenant_isolation_and_order_idempotency_tests",
+    "cleanup_plan_validated_before_fixture_creation"
+  ],
+  "prohibitedDuringHomologation": [
+    "production_changes",
+    "real_business_or_customer_data",
+    "whatsapp_sms_or_email_messages",
+    "paid_ai_calls",
+    "unreviewed_migration_reapplication",
+    "persistent_demo_fixture_after_window"
+  ],
+  "acceptanceCriteria": {
+    "segments": 4,
+    "desktopAndMobile": true,
+    "orderCreatedExactlyOnce": true,
+    "publicTrackingStatus": "Recebido",
+    "crossTenantAccessEvents": 0,
+    "priceDivergences": 0,
+    "criticalErrors": 0,
+    "residualSyntheticRecordsAfterCleanup": 0
+  },
+  "rollbackOrder": [
+    "close_public_test_entrypoint",
+    "disable_demo_business",
+    "revoke_test_sessions",
+    "remove_synthetic_orders_and_catalog",
+    "remove_synthetic_business",
+    "verify_zero_residual_records",
+    "preserve_audit_evidence_without_personal_data"
+  ],
+  "nextPhase": "7F",
+  "nextPhaseRequiresExplicitAuthorization": true
+}

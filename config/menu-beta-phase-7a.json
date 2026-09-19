@@ -1,0 +1,96 @@
+{
+  "version": "2026-09-10",
+  "status": "prepared_not_executed",
+  "product": "Ogritech Cardápio",
+  "environment": "local",
+  "realBusinesses": false,
+  "realCustomers": false,
+  "productionAuthorized": false,
+  "externalMessagesAuthorized": false,
+  "whatsappAuthorized": false,
+  "paidAiAuthorized": false,
+  "assistantMode": "deterministic",
+  "fixtures": [
+    {
+      "segment": "pizzeria",
+      "templateCode": "pizzeria",
+      "businessName": "Pizzaria Horizonte — demonstração",
+      "slug": "beta-pizzaria-horizonte",
+      "contactEmail": "pizzaria@beta.invalid",
+      "catalogChecks": ["pizza fracionada", "tamanhos", "sabores", "bordas", "adicionais"],
+      "sampleItems": ["Pizza Marguerita", "Pizza Calabresa", "Refrigerante"]
+    },
+    {
+      "segment": "snack_bar",
+      "templateCode": "snack-bar",
+      "businessName": "Lanches da Praça — demonstração",
+      "slug": "beta-lanches-praca",
+      "contactEmail": "lanches@beta.invalid",
+      "catalogChecks": ["ponto da carne", "remoção de ingredientes", "combos", "adicionais"],
+      "sampleItems": ["X-Salada", "Hambúrguer Artesanal", "Batata Frita"]
+    },
+    {
+      "segment": "restaurant",
+      "templateCode": "restaurant",
+      "businessName": "Sabor Caseiro — demonstração",
+      "slug": "beta-sabor-caseiro",
+      "contactEmail": "restaurante@beta.invalid",
+      "catalogChecks": ["marmitas por tamanho", "acompanhamentos", "disponibilidade por horário", "entrega e retirada"],
+      "sampleItems": ["Marmita Executiva", "Prato do Dia", "Suco Natural"]
+    },
+    {
+      "segment": "confectionery",
+      "templateCode": "confectionery",
+      "businessName": "Doce Encontro — demonstração",
+      "slug": "beta-doce-encontro",
+      "contactEmail": "doces@beta.invalid",
+      "catalogChecks": ["venda por unidade", "tamanho", "peso", "encomenda e agendamento"],
+      "sampleItems": ["Bolo de Chocolate", "Brigadeiro", "Kit Festa"]
+    }
+  ],
+  "participantSlots": [
+    { "code": "OPERADOR-01", "role": "proprietário do negócio fictício", "identityRequiredNow": false },
+    { "code": "CLIENTE-01", "role": "consumidor em celular", "identityRequiredNow": false },
+    { "code": "CLIENTE-02", "role": "consumidor em celular", "identityRequiredNow": false },
+    { "code": "OBSERVADOR-01", "role": "observador Ogritech", "identityRequiredNow": false }
+  ],
+  "journeys": [
+    { "code": "OWNER-SETUP", "actor": "OPERADOR-01", "tasks": ["contratar solução fictícia", "aplicar template", "personalizar identidade", "configurar catálogo e entrega", "criar pedido de teste", "revisar e publicar localmente"] },
+    { "code": "CUSTOMER-ORDER", "actor": "CLIENTE-01", "tasks": ["abrir cardápio sem cadastro", "encontrar produto", "configurar opções", "revisar total", "criar pedido fictício", "consultar acompanhamento"] },
+    { "code": "ASSISTANT", "actor": "CLIENTE-02", "tasks": ["buscar produto no assistente determinístico", "abrir sugestão", "revisar carrinho", "confirmar ação manualmente"] },
+    { "code": "SELF-SERVICE-EXIT", "actor": "OPERADOR-01", "tasks": ["exportar dados fictícios", "despublicar cardápio", "cancelar solução", "confirmar que outras soluções permanecem inalteradas"] }
+  ],
+  "acceptance": {
+    "segmentsCompleted": 4,
+    "criticalIncidents": 0,
+    "minimumTaskCompletionPercent": 90,
+    "minimumAverageEaseScore": 8,
+    "maximumJavascriptErrors": 0,
+    "crossTenantAccessEvents": 0,
+    "duplicateOrders": 0,
+    "priceDivergences": 0,
+    "cleanupRequired": true
+  },
+  "stopConditions": [
+    "cross_tenant_data_access",
+    "client_controlled_price",
+    "duplicate_order",
+    "order_without_confirmation",
+    "external_ai_call",
+    "external_message",
+    "unrecoverable_cancellation_failure"
+  ],
+  "cleanup": {
+    "required": true,
+    "steps": [
+      "unpublish_all_fixture_menus",
+      "cancel_all_fixture_orders",
+      "export_required_evidence_without_personal_data",
+      "remove_fixture_subscriptions_and_businesses",
+      "clear_local_browser_state",
+      "verify_zero_fixture_slugs_and_active_orders"
+    ],
+    "retain": ["anonymized_scores", "task_results", "screenshots_without_personal_data", "incident_ids"],
+    "successCondition": "zero_fixture_businesses_and_active_orders"
+  }
+}

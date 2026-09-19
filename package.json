@@ -5,6 +5,7 @@
   "scripts": {
     "check": "node tests/static-checks.mjs",
     "check:agenda": "node --test tests/agenda-readiness.test.mjs",
+    "check:multiproduct": "node --test tests/multiproduct-foundation-contract.test.mjs",
     "check:onboarding": "node scripts/validate-agenda-onboarding.mjs",
     "check:operations": "node scripts/validate-operational-readiness.mjs",
     "test:agenda-bot": "node scripts/agenda-bot.mjs",
@@ -18,8 +19,21 @@
     "test:auth-bot": "node scripts/auth-login-bot.mjs",
     "test:contact-bot": "node scripts/contact-lead-bot.mjs",
     "test:commercial-bot": "node scripts/commercial-journeys-bot.mjs",
+    "test:menu-ai-eval": "node scripts/menu-ai-evaluate.mjs",
+    "check:menu-ai-pilot": "node scripts/menu-ai-pilot-readiness.mjs",
+    "test:menu-ai-openai": "node scripts/menu-ai-openai-pilot.mjs",
+    "test:menu-ai-openai-suite": "node scripts/menu-ai-openai-pilot.mjs --suite",
+    "assess:menu-ai-openai": "node scripts/menu-ai-pilot-assess.mjs",
+    "test:menu-ai-hybrid-pilot": "node scripts/menu-ai-hybrid-pilot.mjs",
+    "test:menu-beta-browser": "node scripts/menu-beta-browser.mjs",
+    "start:menu-beta-human": "node scripts/menu-beta-human-server.mjs",
+    "check:menu-staging-readiness": "node scripts/menu-staging-readiness.mjs",
+    "test:menu-staging-7f": "node scripts/menu-staging-phase-7f-browser.mjs",
+    "check:menu-private-pilot": "node scripts/menu-private-pilot-readiness.mjs",
+    "check:menu-private-pilot-intake": "node scripts/menu-private-pilot-intake.mjs",
     "test": "node --test tests/*.test.mjs",
     "validate": "npm run check && npm run audit:migrations && npm test",
+    "billing:preflight": "powershell -ExecutionPolicy Bypass -File scripts/deploy-ogritech-billing.ps1",
     "validate:agenda-pilot": "npm run validate && npm run test:agenda-bot"
   },
   "engines": {
@@ -28,5 +42,8 @@
   "packageManager": "npm@11.16.0",
   "devDependencies": {
     "supabase": "^2.116.0"
+  },
+  "dependencies": {
+    "zod": "^4.6.1"
   }
 }

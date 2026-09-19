@@ -1,0 +1,23 @@
+{
+  "version": "2026-09-19",
+  "status": "repository_consolidation_in_progress",
+  "phase": "7K-A",
+  "product": "Ogritech Cardápio",
+  "pilotCode": "PILOTO-CARDAPIO-01",
+  "currentOperationalPhase": "7J",
+  "environment": "staging",
+  "productionAuthorized": false,
+  "paidAiEnabled": false,
+  "automaticMessages": false,
+  "automaticRenewal": false,
+  "generatedOutputsVersioned": false,
+  "privatePersonalDataVersioned": false,
+  "objectives": [
+    "classify_pending_repository_changes",
+    "exclude_generated_local_evidence_from_public_git",
+    "remove_personal_operator_names_from_public_documents",
+    "reconcile_current_pilot_status",
+    "validate_and_commit_coherent_change_sets"
+  ],
+  "nextPhase": "7K-B"
+}

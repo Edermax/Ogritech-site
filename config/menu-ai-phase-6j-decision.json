@@ -1,0 +1,42 @@
+{
+  "version": "2026-09-10",
+  "decision": "keep_optional_fallback",
+  "publicActivation": false,
+  "provider": "openai",
+  "model": "gpt-5.6-luna",
+  "serviceTier": "default",
+  "routing": {
+    "deterministicFirst": true,
+    "modelOnlyForAmbiguousMessages": true,
+    "criticalActionsAllowed": false,
+    "humanConfirmationRequired": true
+  },
+  "latency": {
+    "hybridJourneyP95Ms": 2500,
+    "modelRouteDiagnosticP95Ms": 6000,
+    "providerTimeoutMs": 6000
+  },
+  "rejectedForNow": [
+    {
+      "option": "gpt-5.6-terra-or-sol",
+      "reason": "higher_token_price_without_measured_latency_benefit_for_this_classifier"
+    },
+    {
+      "option": "fast-or-priority-service-tier",
+      "reason": "bounded_phase_6k_pilot_confirmed_priority_but_did_not_meet_the_latency_target_reliably"
+    },
+    {
+      "option": "third-party-provider",
+      "reason": "new_vendor_security_privacy_billing_and_operational_surface_not_justified_by_current_scope"
+    }
+  ],
+  "nextGate": {
+    "requiresExplicitAuthorization": false,
+    "authorizedAt": "2026-09-10",
+    "completedAt": "2026-09-10",
+    "maximumPaidCallsProposal": 5,
+    "maximumSpendBrlProposal": 1,
+    "production": false,
+    "realUsers": false
+  }
+}

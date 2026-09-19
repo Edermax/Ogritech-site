@@ -1,0 +1,19 @@
+{
+  "version": "2026-09-10",
+  "status": "passed_local_browser",
+  "environment": "local-only",
+  "dataMode": "in-memory synthetic fixtures",
+  "segments": 4,
+  "viewports": ["desktop", "mobile"],
+  "scenarios": 8,
+  "passed": 8,
+  "failed": 0,
+  "javascriptErrors": 0,
+  "externalCalls": 0,
+  "remoteDatabaseCalls": 0,
+  "paidAiCalls": 0,
+  "humanParticipants": 0,
+  "publicReleaseApproved": false,
+  "evidence": "outputs/menu-beta-7b/report.json",
+  "cleanup": "browser_contexts_closed_and_fixture_state_discarded"
+}

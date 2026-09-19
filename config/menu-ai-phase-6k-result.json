@@ -1,0 +1,26 @@
+{
+  "version": "2026-09-10",
+  "status": "completed_not_approved",
+  "environment": "staging",
+  "provider": "openai",
+  "model": "gpt-5.6-luna",
+  "requestedServiceTier": "priority",
+  "confirmedServiceTier": "priority",
+  "calls": 5,
+  "maximumCalls": 5,
+  "maximumSpendBrl": 1,
+  "latenciesMs": [6210, 2645, 2998, 2271, 2502],
+  "medianLatencyMs": 2645,
+  "p95LatencyMs": 6210,
+  "targetP95LatencyMs": 2500,
+  "estimatedMaximumSpendBrl": 0.00804,
+  "publicActivation": false,
+  "finalState": {
+    "serviceTier": "default",
+    "globalHybridEnabled": false,
+    "globalKillSwitch": true,
+    "maximumCalls": 0,
+    "maximumCostCents": 0,
+    "demoBusinessRemoved": true
+  }
+}

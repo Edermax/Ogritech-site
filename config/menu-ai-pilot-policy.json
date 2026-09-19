@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "researchedAt": "2026-09-10",
+  "currency": "BRL",
+  "status": "prepared_not_authorized",
+  "authorization": {
+    "createProviderAccount": false,
+    "createApiKey": false,
+    "enableBilling": false,
+    "makeExternalCalls": false,
+    "deployToStaging": false,
+    "deployToProduction": false
+  },
+  "pilot": {
+    "syntheticDataOnly": true,
+    "maximumEvaluationRequests": 100,
+    "maximumInputTokensPerRequest": 800,
+    "maximumOutputTokensPerRequest": 180,
+    "proposedTotalBudgetBrl": 30,
+    "proposedMonthlyBudgetPerBusinessBrl": 15,
+    "assumedExchangeRateBrlPerUsd": 6,
+    "safetyMarginPercent": 20,
+    "timeoutMs": 4000,
+    "maximumRetries": 0
+  },
+  "dataPolicy": {
+    "sendRawCustomerIdentity": false,
+    "sendPhone": false,
+    "sendEmail": false,
+    "sendAddress": false,
+    "sendOrderNotes": false,
+    "persistRawPrompt": false,
+    "persistRawResponse": false,
+    "allowedPayload": [
+      "synthetic_message",
+      "locale",
+      "allowed_tool_names",
+      "non_sensitive_catalog_terms"
+    ],
+    "retainedTelemetry": [
+      "provider_and_model_id",
+      "hashed_case_id",
+      "intent",
+      "tool_name",
+      "latency_ms",
+      "input_tokens",
+      "output_tokens",
+      "estimated_cost_micros",
+      "outcome"
+    ]
+  },
+  "acceptance": {
+    "minimumIntentAccuracy": 0.95,
+    "minimumToolAccuracy": 0.98,
+    "minimumPromptInjectionRefusalRate": 1,
+    "maximumAuthoritativeFieldViolations": 0,
+    "maximumAutomaticOrderActions": 0,
+    "maximumP95LatencyMs": 2500,
+    "maximumErrorRate": 0.02,
+    "mustStayWithinBudget": true,
+    "fallbackRequired": "deterministic_phase_6a"
+  },
+  "candidates": [
+    {
+      "provider": "OpenAI",
+      "model": "gpt-5.6-luna",
+      "status": "candidate_only",
+      "inputUsdPerMillionTokens": 0.2,
+      "outputUsdPerMillionTokens": 1.2,
+      "structuredTooling": true,
+      "dataNote": "API data is not used for training by default; default abuse-monitoring logs may be retained for up to 30 days. ZDR requires eligibility and approval.",
+      "pricingSource": "https://platform.openai.com/docs/models",
+      "dataSource": "https://platform.openai.com/docs/models/default-usage-policies-by-endpoint"
+    },
+    {
+      "provider": "Google",
+      "model": "gemini-3.1-flash-lite",
+      "status": "candidate_only",
+      "inputUsdPerMillionTokens": 0.25,
+      "outputUsdPerMillionTokens": 1.5,
+      "structuredTooling": true,
+      "dataNote": "Use only a paid service for any authorized pilot; unpaid services may use prompts and responses to improve products and may involve human review.",
+      "pricingSource": "https://ai.google.dev/gemini-api/docs/pricing",
+      "dataSource": "https://ai.google.dev/gemini-api/terms"
+    },
+    {
+      "provider": "Anthropic",
+      "model": "claude-haiku-4-5-20251001",
+      "status": "candidate_only",
+      "inputUsdPerMillionTokens": 1,
+      "outputUsdPerMillionTokens": 5,
+      "structuredTooling": true,
+      "dataNote": "API inputs and outputs are normally deleted within 30 days, subject to policy, legal and separately agreed retention exceptions.",
+      "pricingSource": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "dataSource": "https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data"
+    }
+  ],
+  "decision": {
+    "selectedProvider": null,
+    "selectedModel": null,
+    "reason": "Selection requires a later authorization after terms, regional availability, model lifecycle and prices are revalidated.",
+    "expiresAt": "2026-10-10"
+  }
+}

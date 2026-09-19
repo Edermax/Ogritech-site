@@ -1,0 +1,26 @@
+{
+  "version": "2026-09-10",
+  "status": "deterministic_default_ai_disabled",
+  "product": "Ogritech Cardápio",
+  "publicMode": "deterministic",
+  "publicAI": false,
+  "externalModelPrepared": true,
+  "externalModelEnabled": false,
+  "externalCallsAuthorized": false,
+  "criticalActionsByModel": false,
+  "productionAuthorized": false,
+  "billingImpact": "none",
+  "decisionReasons": [
+    "priority_p95_latency_above_public_target",
+    "priority_price_premium_not_justified",
+    "deterministic_mode_covers_public_catalog_and_cart_assistance"
+  ],
+  "reactivationRequirements": [
+    "new_explicit_authorization",
+    "current_cost_and_latency_validation",
+    "business_opt_in",
+    "consumer_notice",
+    "financial_limits",
+    "global_kill_switch"
+  ]
+}

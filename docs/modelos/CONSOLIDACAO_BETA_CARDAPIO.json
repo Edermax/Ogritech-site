@@ -1,0 +1,35 @@
+{
+  "sessionCode": "BETA-CARDAPIO-YYYYMMDD-01",
+  "environment": "local-only",
+  "startedAt": null,
+  "finishedAt": null,
+  "participantCodes": ["OPERADOR-01", "CLIENTE-01", "CLIENTE-02"],
+  "segments": {
+    "pizzeria": { "completed": false, "tasksAttempted": 0, "tasksCompleted": 0, "easeScores": [] },
+    "snack_bar": { "completed": false, "tasksAttempted": 0, "tasksCompleted": 0, "easeScores": [] },
+    "restaurant": { "completed": false, "tasksAttempted": 0, "tasksCompleted": 0, "easeScores": [] },
+    "confectionery": { "completed": false, "tasksAttempted": 0, "tasksCompleted": 0, "easeScores": [] }
+  },
+  "totals": {
+    "tasksAttempted": 0,
+    "tasksCompleted": 0,
+    "taskCompletionPercent": 0,
+    "averageEaseScore": 0,
+    "javascriptErrors": 0,
+    "criticalIncidents": 0,
+    "crossTenantAccessEvents": 0,
+    "duplicateOrders": 0,
+    "priceDivergences": 0
+  },
+  "cleanup": {
+    "menusUnpublished": false,
+    "ordersClosed": false,
+    "fixturesRemoved": false,
+    "browserStateCleared": false,
+    "zeroFixtureSlugsVerified": false,
+    "passed": false
+  },
+  "decision": "not_evaluated",
+  "blockingIncidentIds": [],
+  "anonymizedFindings": []
+}

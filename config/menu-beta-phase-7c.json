@@ -1,0 +1,54 @@
+{
+  "version": "2026-09-10",
+  "status": "human_beta_materials_prepared_not_scheduled",
+  "product": "Ogritech Cardápio",
+  "environment": "local-only",
+  "participantsContacted": false,
+  "participantIdentitiesCollected": false,
+  "sessionScheduled": false,
+  "remoteEnvironmentAuthorized": false,
+  "externalMessagesAuthorized": false,
+  "paidAiAuthorized": false,
+  "participantCodes": ["OPERADOR-01", "CLIENTE-01", "CLIENTE-02"],
+  "observerCode": "OBSERVADOR-01",
+  "maximumSessionMinutes": 90,
+  "facilitation": {
+    "helpDuringTasks": false,
+    "readInstructionsVerbatim": true,
+    "recordDirectQuotes": false,
+    "recordPersonalData": false,
+    "screenRecordingDefault": false,
+    "participantMayStopAnytime": true
+  },
+  "scoreFields": [
+    "task_status",
+    "completion_seconds",
+    "ease_score_0_to_10",
+    "needed_help",
+    "observed_issue_code",
+    "anonymized_note"
+  ],
+  "acceptance": {
+    "segmentsCompleted": 4,
+    "criticalIncidents": 0,
+    "minimumTaskCompletionPercent": 90,
+    "minimumAverageEaseScore": 8,
+    "maximumJavascriptErrors": 0,
+    "crossTenantAccessEvents": 0,
+    "duplicateOrders": 0,
+    "priceDivergences": 0,
+    "cleanupRequired": true
+  },
+  "artifacts": {
+    "facilitatorGuide": "docs/BETA_HUMANO_CARDAPIO_EXECUCAO.md",
+    "individualForm": "docs/modelos/FICHA_AVALIACAO_BETA_CARDAPIO.md",
+    "consolidationForm": "docs/modelos/CONSOLIDACAO_BETA_CARDAPIO.json"
+  },
+  "executionRequires": [
+    "new_explicit_authorization",
+    "private_participant_assignment",
+    "session_window",
+    "local_environment_preflight",
+    "verbal_participant_consent"
+  ]
+}
