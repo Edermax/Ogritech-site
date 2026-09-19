@@ -111,7 +111,7 @@ function renderBusinesses() {
     $("businessTableBody").innerHTML = filtered.map((business) => {
         const meta = SEGMENTS[business.segment] || SEGMENTS.Outro;
         return `<tr><td><button class="business-link" data-action="detail" data-id="${business.id}"><span style="--segment-color:${meta.color}">${meta.icon}</span><strong>${escapeHtml(business.name)}</strong></button></td>
-        <td>${escapeHtml(business.segment)}</td><td>${escapeHtml(business.contact_name)}</td><td><span class="origin-badge">${escapeHtml(business.origin)}</span></td>
+        <td>${escapeHtml(business.segment)}</td><td>${escapeHtml(business.contact_name)}</td><td><strong>${escapeHtml(business.phone || "Telefone pendente")}</strong><br><small>${escapeHtml(business.owner_email || "E-mail pendente")}</small></td><td><span class="origin-badge">${escapeHtml(business.origin)}</span></td>
         <td><span class="plan-badge">${escapeHtml(business.plan)}</span></td><td>${money.format(business.monthly_fee)}</td><td><span class="${business.status === "Ativo" ? "active-badge" : "suspended-badge"}">${escapeHtml(business.status)}</span></td>
         <td><div class="admin-row-actions"><button data-action="operate" data-id="${business.id}">Operar</button><button data-action="edit" data-id="${business.id}">Editar</button><button class="danger" data-action="delete" data-id="${business.id}">Arquivar</button></div></td></tr>`;
     }).join("");
@@ -318,6 +318,7 @@ async function saveRefund(event) {
 function openBusinessForm(business = null) {
     $("businessForm").reset(); $("businessFormMessage").textContent = ""; $("businessId").value = business?.id || "";
     $("businessModalTitle").textContent = business ? "Editar negócio" : "Cadastrar novo negócio";
+    $("businessEmail").required = !business;
     if (business) {
         $("businessName").value = business.name; $("businessSegment").value = business.segment; $("businessOwner").value = business.contact_name;
         $("businessEmail").value = business.owner_email || ""; $("businessPhone").value = business.phone || ""; $("businessPlan").value = business.plan;
@@ -340,7 +341,9 @@ function syncPlanPrice() { const option = $("businessPlan").selectedOptions[0]; 
 
 async function saveBusiness(event) {
     event.preventDefault(); const id = $("businessId").value;
-    const payload = { name: $("businessName").value.trim(), segment: $("businessSegment").value, contact_name: $("businessOwner").value.trim(), owner_email: $("businessEmail").value.trim().toLowerCase(), phone: $("businessPhone").value.trim() || null, plan: $("businessPlan").value, monthly_fee: Number($("businessPrice").value), origin: $("businessOrigin").value, notes: $("businessNotes").value.trim() || null };
+    const ownerEmail = $("businessEmail").value.trim().toLowerCase();
+    if (!id && !ownerEmail) { $("businessFormMessage").textContent = "Informe o e-mail para convidar o responsável pelo novo negócio."; $("businessFormMessage").className = "form-message error"; return; }
+    const payload = { name: $("businessName").value.trim(), segment: $("businessSegment").value, contact_name: $("businessOwner").value.trim(), owner_email: ownerEmail || null, phone: $("businessPhone").value.trim() || null, plan: $("businessPlan").value, monthly_fee: Number($("businessPrice").value), origin: $("businessOrigin").value, notes: $("businessNotes").value.trim() || null };
     if (!id) payload.invite_status = "Pendente";
     $("saveBusinessButton").disabled = true; $("businessFormMessage").textContent = "Salvando...";
     let error;

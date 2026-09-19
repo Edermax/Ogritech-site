@@ -74,10 +74,10 @@
                         <button type="button" class="cyan-button" id="newBusinessButton">+ Novo negócio</button>
                     </div>
                 </div>
-                <p class="demo-notice">Todos os cadastros atuais são fictícios e existem somente para demonstração e validação da plataforma.</p>
+                <p class="demo-notice">Esta carteira reúne demonstrações e pilotos privados. Clique no nome do negócio para conferir contato e cadastro, ou use “Operar” para acessar o painel daquele estabelecimento.</p>
                 <div class="business-table-wrap">
                     <table class="business-table">
-                        <thead><tr><th>Negócio</th><th>Segmento</th><th>Responsável</th><th>Origem</th><th>Plano</th><th>Mensalidade</th><th>Status</th><th>Ações</th></tr></thead>
+                        <thead><tr><th>Negócio</th><th>Segmento</th><th>Responsável</th><th>Contato</th><th>Origem</th><th>Plano</th><th>Mensalidade</th><th>Status</th><th>Ações</th></tr></thead>
                         <tbody id="businessTableBody"></tbody>
                     </table>
                 </div>
@@ -130,6 +130,7 @@
 
             <section class="platform-panel" id="users">
                 <div class="platform-section-title business-heading"><div><p class="platform-kicker">ACESSOS</p><h2>Usuários dos negócios</h2></div><div class="business-controls"><select id="userBusinessFilter" aria-label="Filtrar usuários por negócio"></select><button type="button" class="cyan-button" id="newUserButton">+ Adicionar usuário</button></div></div>
+                <p class="demo-notice">Esta seção mostra somente pessoas que receberam acesso ao sistema. Para abrir o painel da Diniz Doces, vá a <a href="#businesses">Negócios</a> e escolha “Operar”.</p>
                 <div class="business-table-wrap"><table class="business-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Negócio</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody id="usersTableBody"></tbody></table></div>
                 <div class="empty-state hidden" id="usersEmpty"><strong>Nenhum usuário encontrado.</strong><span>Adicione gestores, funcionários ou clientes finais.</span></div>
             </section>
@@ -148,7 +149,7 @@
                     <label>Nome do negócio<input id="businessName" required maxlength="100"></label>
                     <label>Segmento<select id="businessSegment" required></select></label>
                     <label>Responsável<input id="businessOwner" required maxlength="100"></label>
-                    <label>E-mail do responsável<input id="businessEmail" type="email" required maxlength="160"></label>
+                    <label>E-mail do responsável<input id="businessEmail" type="email" maxlength="160" placeholder="Pode ser informado depois no piloto"></label>
                     <label>Telefone<input id="businessPhone" type="tel" maxlength="30"></label>
                     <label>Plano<select id="businessPlan" required></select></label>
                     <label>Mensalidade<input id="businessPrice" type="number" min="0" step="0.01" required></label>
