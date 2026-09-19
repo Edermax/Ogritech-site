@@ -17,7 +17,7 @@ const base = {
   supplied_preference: "WhatsApp",
   supplied_business_type: "Barbearia simulada",
   supplied_employee_range: "2 a 5",
-  supplied_customer_source: "Google",
+  supplied_customer_source: "Site",
   supplied_current_solution: "Não",
   supplied_current_tool: "",
   supplied_interests: ["Agenda online"],

@@ -37,10 +37,10 @@
   let hasInteracted = false;
 
   const topics = {
-    planos: "Os planos são definidos conforme a operação e o número de profissionais. Envie seus dados para receber os valores adequados ao seu estabelecimento.",
-    teste: "A Ogritech Agenda poderá oferecer período gratuito de teste conforme a condição comercial vigente. Confirmamos a disponibilidade no primeiro contato.",
+    planos: "A Ogritech Agenda custa R$ 97 por mês. Você também pode pagar a cada 3 meses com 3% de desconto, a cada 6 meses com 5%, ou anualmente com 10%. <a href='/contratar/'>Começar agora</a>.",
+    teste: "Todo CNPJ elegível recebe uma única avaliação gratuita de 14 dias. Não há cobrança durante o teste e você pode cancelar sem falar com atendentes. <a href='/contratar/'>Iniciar teste</a>.",
     beneficios: "A Ogritech Agenda reúne agenda, equipe, serviços, histórico e relacionamento com clientes, com atendimento focado em agendamentos.",
-    pagamento: "As formas de pagamento são apresentadas na proposta. O cancelamento não tem taxa; eventuais condições do plano são informadas antes da contratação.",
+    pagamento: "Aceitamos cartão recorrente e Pix. Não oferecemos boleto nem Pix Automático. O cancelamento é feito pela própria conta e o acesso continua até o fim do período pago.",
     contato: "Você pode solicitar retorno por ligação telefônica, WhatsApp ou e-mail. Escolha o canal e informe seus dados."
   };
 
