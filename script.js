@@ -190,7 +190,15 @@ function applyBusinessCustomization() {
         backToShowcase.classList.remove("hidden");
     }
 
-    if (businessConfig.key === "barbearia") {
+    const isDinizBusiness = businessConfig.name?.trim().toLocaleLowerCase("pt-BR") === "diniz doces";
+    if (isDinizBusiness) {
+        tenantLogo.src = "../assets/diniz-doces/logo.jpg";
+        tenantLogo.alt = "Logo da Diniz Doces";
+        tenantLogo.classList.remove("hidden");
+        tenantIcon.classList.add("hidden");
+    } else if (businessConfig.key === "barbearia") {
+        tenantLogo.src = "Logo-japa.jpeg";
+        tenantLogo.alt = "Logo da empresa";
         tenantLogo.classList.remove("hidden");
         tenantIcon.classList.add("hidden");
     } else {

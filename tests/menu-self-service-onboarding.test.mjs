@@ -160,6 +160,18 @@ test("retoma os dados salvos, mostra progresso acessível e revisão com valores
   assert.match(review, /Dinheiro, Crédito/);
 });
 
+test("cardápio publicado simplifica a configuração sem esconder a opção de despublicar", async () => {
+  const state = fixture();
+  state.menu.published = true;
+  const page = browser(state);
+  await page.load();
+  assert.equal(page.element("menuSettingsForm").classList.contains("hidden"), true);
+  assert.equal(page.element("menuReviewDetails").open, false);
+  assert.equal(page.element("menuPublicationButton").textContent, "Despublicar cardápio");
+  assert.equal(page.element("menuPublicationButton").classList.contains("hidden"), false);
+  assert.match(html, /id="menuPublicationButton"[^]*id="menuReloadButton"[^]*<\/div>/);
+});
+
 test("pedidos de teste ficam identificados e não recebem ações operacionais", async () => {
   const page = browser();
   await page.load();

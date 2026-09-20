@@ -54,8 +54,22 @@ test("cardápio aceita quantidade mínima e acréscimos unitários definidos no 
   assert.match(script, /data-quantity-select/);
   assert.match(script, /step="1"/);
   assert.match(script, /Math\.ceil\(Number\(item\.minimum_quantity\)/);
-  assert.match(script, /entry\.quantity \+= quantity/);
+  assert.match(script, /entry\.quantity = Math\.min\(entry\.maximumQuantity, entry\.quantity \+ quantity\)/);
   assert.match(script, /price\.amount \* quantity/);
+});
+
+test("carrinho permite revisar, alterar quantidade e remover antes do envio", async () => {
+  const [html, script] = await Promise.all([
+    readFile(new URL("cardapio/index.html", root), "utf8"),
+    readFile(new URL("cardapio/cardapio.js", root), "utf8")
+  ]);
+  for (const id of ["cartReviewButton", "cartReview", "cartItems", "continueShoppingButton", "proceedCheckoutButton"]) assert.match(html, new RegExp(`id="${id}"`));
+  assert.match(script, /data-cart-increase/);
+  assert.match(script, /data-cart-decrease/);
+  assert.match(script, /data-cart-remove/);
+  assert.match(script, /entry\.quantity > entry\.minimumQuantity/);
+  assert.match(script, /cart\.delete\(signature\)/);
+  assert.match(script, /pendingRequestId = null; updateCart\(\)/);
 });
 
 test("Diniz registra domingo reduzido e doces a partir de 50 unidades", async () => {

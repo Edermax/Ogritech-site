@@ -20,7 +20,7 @@
     <link rel="apple-touch-icon" href="ogritech-brand-symbol.png">
     <link rel="manifest" href="manifest.webmanifest">
     <!-- IMPORTANTE: este é o arquivo CSS separado -->
-    <link rel="stylesheet" href="style.css?v=20260919.4">
+    <link rel="stylesheet" href="style.css?v=20260920.2">
     <link rel="stylesheet" href="action-arrows.css">
 </head>
 <body>
@@ -357,15 +357,15 @@
                         <progress id="menuOnboardingBar" aria-label="Progresso da configuração do cardápio" max="8" value="0"></progress>
                         <p id="menuNextStep" class="section-description" role="status">Carregando suas etapas salvas...</p>
                         <ol id="menuOnboardingChecklist"></ol>
-                        <details open><summary>Confira a configuração salva antes de confirmar a revisão</summary><div id="menuReviewSummary"></div></details>
+                        <details id="menuReviewDetails" open><summary>Confira a configuração salva antes de confirmar a revisão</summary><div id="menuReviewSummary"></div></details>
                         <p class="section-description">O pedido de teste valida um produto do seu catálogo. Ele aparece identificado nos pedidos, sem cobrança real.</p>
                         <p class="menu-lock-notice hidden" id="menuPublishedSetupNotice" role="status">O cardápio está publicado. As etapas de teste e revisão já foram encerradas; use apenas “Despublicar cardápio” caso precise editar a configuração ou o catálogo.</p>
                         <div class="commercial-actions" data-manager-only>
                             <button id="menuTestOrderButton" class="table-button edit" type="button" disabled>Fazer pedido de teste</button>
                             <button id="menuReviewButton" class="table-button edit" type="button" disabled>Conferi os dados: confirmar revisão</button>
                             <button id="menuPublicationButton" class="gold-button" type="button" disabled>Publicar cardápio</button>
+                            <button id="menuReloadButton" class="table-button edit" type="button">Atualizar etapas</button>
                         </div>
-                        <button id="menuReloadButton" class="table-button edit" type="button">Atualizar etapas</button>
                         <p class="form-message" id="menuOnboardingMessage" role="status" aria-live="polite"></p>
                     </article>
                     <article class="panel module-panel" id="menuAssistantSettingsPanel"><div class="panel-header"><div><p class="eyebrow">ASSISTENTE DO CARDÁPIO · PADRÃO</p><h2>Ajuda para escolher no cardápio</h2><p class="section-description">Ative o assistente padrão, que consulta somente o catálogo cadastrado. Ele não usa IA paga, não inventa preços e nunca envia pedidos sem confirmação do cliente.</p></div></div><form id="menuAssistantSettingsForm" class="commercial-form" data-manager-only><label class="settings-toggle"><input id="menuAssistantEnabled" type="checkbox"><span>Exibir assistente no cardápio publicado</span></label><div class="form-row"><label>Interações por mês<input id="menuAssistantMonthlyLimit" type="number" min="0" max="100000" value="1000" required></label><label>Interações por sessão/hora<input id="menuAssistantSessionLimit" type="number" min="1" max="100" value="20" required></label></div><p id="menuAssistantUsage" class="section-description">Uso local: 0 interações; custo estimado R$ 0,00.</p><p id="menuAssistantSettingsMessage" class="form-message" role="status"></p><button class="gold-button" type="submit">Salvar assistente</button></form><details><summary>Simular custo de uma futura IA</summary><p class="section-description">Planejamento por estabelecimento. Informe suas próprias premissas; nenhum fornecedor será conectado e nenhum valor representa proposta comercial.</p><form id="menuAiCostForm" class="commercial-form"><div class="form-row"><label>Interações/mês<input id="menuAiCostInteractions" type="number" min="0" value="1000"></label><label>Margem de segurança (%)<input id="menuAiCostMargin" type="number" min="0" value="20"></label></div><div class="form-row"><label>Tokens de entrada/interação<input id="menuAiCostInputTokens" type="number" min="0" value="500"></label><label>Tokens de saída/interação<input id="menuAiCostOutputTokens" type="number" min="0" value="150"></label></div><div class="form-row"><label>Entrada por milhão (US$)<input id="menuAiCostInputPrice" type="number" min="0" step="0.000001" value="0"></label><label>Saída por milhão (US$)<input id="menuAiCostOutputPrice" type="number" min="0" step="0.000001" value="0"></label></div><label>Câmbio informado (R$/US$)<input id="menuAiCostExchange" type="number" min="0" step="0.0001" value="0"></label><button class="table-button edit" type="submit">Calcular cenário</button><p id="menuAiCostResult" class="form-message" role="status">Preencha preços e câmbio para simular. O assistente padrão não gera consumo de IA.</p></form></details></article>
@@ -598,7 +598,7 @@
 
     <!-- JavaScript principal do dashboard -->
     <script src="script.js?v=20260919.1"></script>
-    <script src="commercial-admin.js?v=20260919.6"></script>
+    <script src="commercial-admin.js?v=20260920.1"></script>
     <script src="subscription-admin.js"></script>
     <script src="pwa.js?v=20260831.2"></script>
 </body>

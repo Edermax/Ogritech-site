@@ -81,7 +81,9 @@
         byId("menuPublishedSetupNotice")?.classList.toggle("hidden", !published);
         byId("menuSettingsLockNotice")?.classList.toggle("hidden", !published);
         byId("menuCatalogLockNotice")?.classList.toggle("hidden", !published);
+        byId("menuSettingsForm")?.classList.toggle("hidden", published);
         byId("menuItemForm")?.classList.toggle("hidden", published);
+        if (byId("menuReviewDetails")) byId("menuReviewDetails").open = !published;
     }
 
     const menuError = (error) => {

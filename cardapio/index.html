@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' https://cdn.jsdelivr.net;style-src 'self';img-src 'self' data: https:;connect-src 'self' http://127.0.0.1:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co https://viacep.com.br;object-src 'none';base-uri 'self';form-action 'self'">
   <title>Cardápio | Ogritech</title>
   <link rel="stylesheet" href="../commercial-public.css">
-  <link rel="stylesheet" href="catalog.css?v=20260918h">
+  <link rel="stylesheet" href="catalog.css?v=20260920b">
   <link rel="icon" href="../ogritech-favicon.ico">
 </head>
 <body>
@@ -15,11 +15,16 @@
     <nav class="public-nav"><a href="../"><img src="../ogritech-header-logo.png" alt="Ogritech"></a></nav>
     <section id="loading" class="public-hero"><p>Carregando cardápio...</p></section>
     <div id="content" class="hidden">
-      <header class="public-hero menu-hero"><small>ENCOMENDAS ONLINE</small><h1 id="menuTitle"></h1><p id="menuDescription"></p><div class="menu-hero-trust"><span>Pedido direto</span><span>Confirmação humana</span><span>Sem taxa de aplicativo</span></div></header>
+      <header class="public-hero menu-hero"><div id="menuBrandLockup" class="menu-brand-lockup hidden"><img id="menuBrandLogo" alt=""><span>Confeitaria artesanal</span></div><small>ENCOMENDAS ONLINE</small><h1 id="menuTitle"></h1><p id="menuDescription"></p><div class="menu-hero-trust"><span>Pedido direto</span><span>Confirmação humana</span><span>Sem taxa de aplicativo</span></div></header>
       <aside class="public-card menu-store-info"><div><small>ATENDIMENTO</small><p id="menuHours"></p></div><div><small>PAGAMENTO</small><p id="menuPayments"></p></div></aside>
       <nav id="categoryNav" class="category-nav" aria-label="Categorias do cardápio"></nav>
       <div id="catalog"></div>
-      <div id="cartBar" class="cart-bar hidden"><span><strong id="cartCount">0</strong> itens · <strong id="cartTotal">R$ 0</strong></span><button id="checkoutButton" class="public-button">Finalizar pedido</button></div>
+      <div id="cartBar" class="cart-bar hidden"><span><strong id="cartCount">0</strong> itens · <strong id="cartTotal">R$ 0</strong></span><div class="cart-bar-actions"><button id="cartReviewButton" class="public-button secondary" type="button">Revisar itens</button><button id="checkoutButton" class="public-button" type="button">Finalizar pedido</button></div></div>
+      <section id="cartReview" class="public-card cart-review hidden" aria-labelledby="cartReviewTitle">
+        <div class="cart-review-heading"><div><small>SEU PEDIDO</small><h2 id="cartReviewTitle">Revise os itens</h2></div><button id="closeCartReview" class="cart-review-close" type="button" aria-label="Fechar revisão do carrinho">×</button></div>
+        <div id="cartItems" class="cart-items" aria-live="polite"></div>
+        <div class="cart-review-footer"><div><span>Total estimado</span><strong id="cartReviewTotal">R$ 0</strong></div><div class="cart-review-actions"><button id="continueShoppingButton" class="public-button secondary" type="button">Continuar escolhendo</button><button id="proceedCheckoutButton" class="public-button" type="button">Preencher dados</button></div></div>
+      </section>
       <article id="checkout" class="public-card hidden">
         <h2 id="checkoutTitle">Finalizar pedido</h2>
         <form id="orderForm" class="public-form">
@@ -61,6 +66,6 @@
   </aside>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="../supabase-config.js"></script>
-  <script src="cardapio.js?v=20260918h"></script>
+  <script src="cardapio.js?v=20260920b"></script>
 </body>
 </html>

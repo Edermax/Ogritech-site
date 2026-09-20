@@ -1,5 +1,6 @@
 (() => {
   const $ = (id) => document.getElementById(id), slug = new URLSearchParams(location.search).get("empresa") || "";
+  const isDinizMenu = slug === "diniz-doces-previa-7d1";
   const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }), cart = new Map(), prices = new Map();
   let page = null, pendingRequestId = null;
   const createUuid = () => globalThis.crypto?.randomUUID?.() || "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => { const value = Math.floor(Math.random() * 16); return (char === "x" ? value : (value & 3) | 8).toString(16); });
@@ -39,6 +40,17 @@
     return rows.length ? `Como referência aproximada: ${rows.join("; ")}. O rendimento pode variar conforme o corte e o tipo de recheio.` : "A quantidade de pessoas pode variar conforme o corte. Confirme o rendimento com o estabelecimento.";
   }
   const applyVisualIdentity = (identity) => { if (identity?.customized !== true) return; if (/^#[0-9a-f]{6}$/i.test(identity.accent_color || "")) document.documentElement.style.setProperty("--accent", identity.accent_color); };
+  const dinizIllustration = (category, item, itemIndex) => {
+    if (!isDinizMenu) return null;
+    const label = `${category?.name || ""} ${item?.name || ""}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    if (/retangular/.test(label)) return { src: "../assets/diniz-doces/bolo-retangular.png", alt: "Bolo retangular decorado da Diniz Doces" };
+    if (/redond/.test(label)) return { src: "../assets/diniz-doces/bolo-redondo.png", alt: "Bolo redondo decorado da Diniz Doces" };
+    if (/(brigadeiro|doces? tradicionais)/.test(label)) return { src: "../assets/diniz-doces/brigadeiros.png", alt: "Brigadeiros da Diniz Doces" };
+    if (/bolos? de corte/.test(label) && itemIndex < 2) return itemIndex === 0
+      ? { src: "../assets/diniz-doces/bolo-redondo.png", alt: "Bolo redondo decorado da Diniz Doces" }
+      : { src: "../assets/diniz-doces/bolo-retangular.png", alt: "Bolo retangular decorado da Diniz Doces" };
+    return null;
+  };
   const deliveryZoneLabel = (zone) => Number(zone.fee) === 0 && zone.code === "bolo-agendado" ? `${clean(zone.name)} · taxa calculada após informar o endereço` : `${clean(zone.name)} · ${money.format(zone.fee)}`;
   const estimatedUnitPrice = (entry) => entry.price + entry.selections.reduce((sum, item) => sum + item.price_delta * item.quantity, 0);
   const localDateTimeValue = (date) => {
@@ -71,8 +83,17 @@
     } catch { message.textContent = "Não foi possível consultar o CEP agora. Preencha o endereço manualmente."; }
     finally { button.disabled = false; }
   }
-  function updateCart() { let count = 0, total = 0, hasQuote = false; cart.forEach((entry) => { count += entry.quantity; total += entry.quantity * estimatedUnitPrice(entry); hasQuote ||= entry.isQuote; }); $("cartCount").textContent = count; $("cartTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total); $("checkoutButton").textContent = hasQuote ? "Revisar solicitação" : "Finalizar pedido"; $("checkoutTitle").textContent = hasQuote ? "Enviar solicitação para análise" : "Finalizar pedido"; $("orderSubmitButton").textContent = hasQuote ? "Enviar solicitação" : "Enviar pedido"; $("cartBar").classList.toggle("hidden", !count); updateSchedulingRequirement(); }
-  function addConfigured(price, selections = [], quantity = 1) { const signature = `${price.id}:${selections.map((item) => `${item.menu_option_id}x${item.quantity}`).sort().join(",")}`; const entry = cart.get(signature) || { menu_item_price_id: price.id, name: price.item.name, price: price.amount, quantity: 0, selections, isQuote: isQuoteItem(price.item), leadTimeHours: price.item.lead_time_hours }; entry.quantity += quantity; cart.set(signature, entry); pendingRequestId = null; updateCart(); }
+  function renderCartReview(total, hasQuote) {
+    $("cartItems").innerHTML = [...cart.entries()].map(([signature, entry]) => {
+      const selectionLabel = entry.selections.map((selection) => selection.name).filter(Boolean).join(", ");
+      const variation = [displayPriceLabel(entry.label), selectionLabel].filter(Boolean).join(" · ");
+      const decrementDisabled = entry.quantity <= entry.minimumQuantity ? " disabled" : "";
+      return `<article class="cart-item" data-cart-item="${clean(signature)}"><div class="cart-item-copy"><strong>${clean(entry.name)}</strong>${variation ? `<span>${clean(variation)}</span>` : ""}<small>${money.format(estimatedUnitPrice(entry))} por unidade</small></div><div class="cart-item-controls"><div class="cart-quantity" aria-label="Quantidade de ${clean(entry.name)}"><button type="button" data-cart-decrease="${clean(signature)}" aria-label="Diminuir quantidade"${decrementDisabled}>−</button><output aria-live="polite">${entry.quantity}</output><button type="button" data-cart-increase="${clean(signature)}" aria-label="Aumentar quantidade">+</button></div><strong>${money.format(entry.quantity * estimatedUnitPrice(entry))}</strong><button class="cart-remove" type="button" data-cart-remove="${clean(signature)}">Remover</button></div></article>`;
+    }).join("");
+    $("cartReviewTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total);
+  }
+  function updateCart() { let count = 0, total = 0, hasQuote = false; cart.forEach((entry) => { count += entry.quantity; total += entry.quantity * estimatedUnitPrice(entry); hasQuote ||= entry.isQuote; }); $("cartCount").textContent = count; $("cartTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total); $("checkoutButton").textContent = hasQuote ? "Continuar solicitação" : "Finalizar pedido"; $("checkoutTitle").textContent = hasQuote ? "Enviar solicitação para análise" : "Finalizar pedido"; $("orderSubmitButton").textContent = hasQuote ? "Enviar solicitação" : "Enviar pedido"; $("cartBar").classList.toggle("hidden", !count); renderCartReview(total, hasQuote); if (!count) { $("cartReview").classList.add("hidden"); $("checkout").classList.add("hidden"); } updateSchedulingRequirement(); }
+  function addConfigured(price, selections = [], quantity = 1) { const signature = `${price.id}:${selections.map((item) => `${item.menu_option_id}x${item.quantity}`).sort().join(",")}`; const entry = cart.get(signature) || { menu_item_price_id: price.id, name: price.item.name, label: price.label, price: price.amount, quantity: 0, minimumQuantity: Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1)), maximumQuantity: price.item.maximum_quantity == null ? 100 : Math.floor(Number(price.item.maximum_quantity)), selections, isQuote: isQuoteItem(price.item), leadTimeHours: price.item.lead_time_hours }; entry.quantity = Math.min(entry.maximumQuantity, entry.quantity + quantity); cart.set(signature, entry); pendingRequestId = null; updateCart(); }
   function configure(price, quantity = 1) {
     const groups = price.item.option_groups || []; if (!groups.length) return addConfigured(price, [], quantity);
     $("configuratorTitle").textContent = price.item.name;
@@ -121,31 +142,51 @@
     const reply = data.intent === "greeting" ? "Posso ajudar a encontrar bolos, doces, recheios, informações de pagamento ou a estimar o rendimento por peso. O que você gostaria de saber?" : data.reply;
     assistantMessage(reply); assistantControls(data); input.focus();
   });
-  $("configuratorForm").addEventListener("submit", (event) => { event.preventDefault(); const selections = []; for (const fieldset of $("configuratorGroups").querySelectorAll("fieldset")) { const checked = [...fieldset.querySelectorAll("input:checked")]; if (checked.length < Number(fieldset.dataset.min) || checked.length > Number(fieldset.dataset.max)) { $("configuratorMessage").textContent = "Confira a quantidade de escolhas obrigatórias."; return; } checked.forEach((input) => selections.push({ menu_option_id: input.value, quantity: 1, price_delta: Number(input.dataset.price) })); } addConfigured(prices.get($("configurator").dataset.priceId), selections, Number($("configurator").dataset.quantity) || 1); $("configurator").close(); });
+  $("configuratorForm").addEventListener("submit", (event) => { event.preventDefault(); const selections = []; for (const fieldset of $("configuratorGroups").querySelectorAll("fieldset")) { const checked = [...fieldset.querySelectorAll("input:checked")]; if (checked.length < Number(fieldset.dataset.min) || checked.length > Number(fieldset.dataset.max)) { $("configuratorMessage").textContent = "Confira a quantidade de escolhas obrigatórias."; return; } checked.forEach((input) => selections.push({ menu_option_id: input.value, quantity: 1, price_delta: Number(input.dataset.price), name: input.nextElementSibling?.textContent?.trim() || "" })); } addConfigured(prices.get($("configurator").dataset.priceId), selections, Number($("configurator").dataset.quantity) || 1); $("configurator").close(); });
   $("closeConfigurator").addEventListener("click", () => $("configurator").close());
   async function init() {
     const { data, error } = await supabaseClient.rpc("public_menu", { target_slug: slug }); if (error || !data) { $("loading").innerHTML = "<h1>Cardápio indisponível</h1><p>Confira o endereço ou tente novamente.</p>"; return; }
     page = data; applyVisualIdentity(data.menu.visual_identity); document.title = `${data.menu.title} | Ogritech`; $("menuTitle").textContent = data.menu.title; $("menuDescription").textContent = data.menu.description; $("menuDescription").classList.toggle("hidden", !data.menu.description?.trim());
+    if (isDinizMenu) { $("menuBrandLogo").src = "../assets/diniz-doces/logo.jpg"; $("menuBrandLogo").alt = "Diniz Doces"; $("menuBrandLockup").classList.remove("hidden"); }
     const paymentNames = {pix:"Pix",cash:"Dinheiro",credit_card:"Cartão de crédito",debit_card:"Cartão de débito"}, hours = data.menu.weekly_hours;
     $("menuPayments").textContent = `Pagamento combinado com o estabelecimento: ${(data.menu.payment_methods || []).map((code) => paymentNames[code] || code).join(", ")}.`;
     $("menuHours").textContent = formatHours(hours);
     $("fulfillment").innerHTML = (data.menu.accepts_pickup ? '<option value="pickup">Retirada</option>' : "") + (data.menu.accepts_delivery ? '<option value="delivery">Entrega</option>' : "");
     const zones = data.delivery_zones || []; $("deliveryZone").innerHTML = '<option value="">Selecione sua região</option>' + zones.map((zone) => `<option value="${zone.code}">${deliveryZoneLabel(zone)}</option>`).join(""); updateFulfillmentFields();
     $("categoryNav").innerHTML = data.categories.map((category, index) => `<a href="#${categoryId(index)}">${clean(category.name)}</a>`).join("");
-    $("catalog").innerHTML = data.categories.map((category, categoryIndex) => `<section id="${categoryId(categoryIndex)}" class="catalog-section"><header class="catalog-section-heading"><small>EXPLORE</small><h2>${clean(category.name)}</h2><p>${clean(category.description)}</p></header><div class="catalog-items">${category.items.map((item) => {
+    $("catalog").innerHTML = data.categories.map((category, categoryIndex) => `<section id="${categoryId(categoryIndex)}" class="catalog-section"><header class="catalog-section-heading"><small>EXPLORE</small><h2>${clean(category.name)}</h2><p>${clean(category.description)}</p></header><div class="catalog-items">${category.items.map((item, itemIndex) => {
       const records = item.prices.map((record) => { const amount = Number(record.promotional_price ?? record.price); prices.set(record.id, { ...record, amount, item }); return { ...record, amount }; });
       const quote = isQuoteItem(item), first = records[0], minimumQuantity = Math.max(1, Math.ceil(Number(item.minimum_quantity) || 1)), maximumQuantity = item.maximum_quantity == null ? "" : Math.floor(Number(item.maximum_quantity)), customQuantity = minimumQuantity > 1;
       const quantityPicker = customQuantity ? `<label class="menu-quantity-picker"><span>Quantidade (mínimo ${minimumQuantity})</span><input type="number" inputmode="numeric" min="${minimumQuantity}"${maximumQuantity ? ` max="${maximumQuantity}"` : ""} step="1" value="${minimumQuantity}" data-quantity-select="${item.id}"></label>` : "";
       const initialPrice = customQuantity ? `${minimumQuantity} unidades · ${money.format(first.amount * minimumQuantity)}` : (quote ? `A partir de ${money.format(first.amount)}` : money.format(first.amount));
       const pricePicker = records.length ? `<label class="menu-price-picker"><span>${weightPickerLabel(records, quote)}</span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(displayPriceLabel(record.label))}</option>`).join("")}</select></label>${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button class="public-button" data-add-selected="${item.id}">${quote ? "Solicitar análise" : ((item.option_groups || []).length ? "Escolha os sabores" : "Adicionar")}</button></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
-      return `<article class="menu-item-card" data-item="${item.id}">${item.image_url ? `<img class="menu-item-image" src="${clean(item.image_url)}" alt="">` : `<div class="menu-item-placeholder" aria-hidden="true"><small>Feito por encomenda</small></div>`}<div class="menu-item-content"><div class="menu-item-heading"><h3>${clean(item.name)}</h3>${quote ? '<span class="menu-item-badge">Sob consulta</span>' : ((item.option_groups || []).length ? '<span class="menu-item-badge">Personalizável</span>' : "")}</div><p>${clean(item.description)}</p>${pricePicker}</div></article>`;
+      const illustration = dinizIllustration(category, item, itemIndex), media = item.image_url
+        ? `<div class="menu-item-media"><img class="menu-item-image" src="${clean(item.image_url)}" alt=""></div>`
+        : illustration
+          ? `<div class="menu-item-media"><img class="menu-item-image" src="${illustration.src}" alt="${illustration.alt}"><span class="menu-image-note">Imagem ilustrativa</span></div>`
+          : `<div class="menu-item-placeholder" aria-hidden="true"><small>Feito por encomenda</small></div>`;
+      return `<article class="menu-item-card" data-item="${item.id}">${media}<div class="menu-item-content"><div class="menu-item-heading"><h3>${clean(item.name)}</h3>${quote ? '<span class="menu-item-badge">Sob consulta</span>' : ((item.option_groups || []).length ? '<span class="menu-item-badge">Personalizável</span>' : "")}</div><p>${clean(item.description)}</p>${pricePicker}</div></article>`;
     }).join("")}</div></section>`).join("");
     const refreshSelectedPrice = (itemId) => { const select = $("catalog").querySelector(`[data-price-select="${itemId}"]`), quantityInput = $("catalog").querySelector(`[data-quantity-select="${itemId}"]`), price = prices.get(select.value), output = $("catalog").querySelector(`[data-selected-price="${itemId}"]`), quantity = quantityInput ? Number(quantityInput.value) : 1; output.textContent = quantityInput ? `${quantity} unidades · ${money.format(price.amount * quantity)}` : `${isQuoteItem(price.item) ? "A partir de " : ""}${money.format(price.amount)}`; };
     $("catalog").querySelectorAll("[data-price-select]").forEach((select) => select.addEventListener("change", () => refreshSelectedPrice(select.dataset.priceSelect)));
     $("catalog").querySelectorAll("[data-quantity-select]").forEach((input) => input.addEventListener("input", () => { if (!input.validity.valid) return; refreshSelectedPrice(input.dataset.quantitySelect); }));
     $("catalog").querySelectorAll("[data-add-selected]").forEach((button) => button.addEventListener("click", () => { const itemId = button.dataset.addSelected, select = $("catalog").querySelector(`[data-price-select="${itemId}"]`), quantityInput = $("catalog").querySelector(`[data-quantity-select="${itemId}"]`); if (quantityInput && !quantityInput.reportValidity()) return; configure(prices.get(select.value), quantityInput ? Number(quantityInput.value) : 1); })); $("loading").classList.add("hidden"); $("content").classList.remove("hidden"); initAssistant();
   }
-  $("checkoutButton").addEventListener("click", () => { $("checkout").classList.remove("hidden"); $("checkout").scrollIntoView({ behavior: "smooth" }); });
+  const openCartReview = () => { if (!cart.size) return; $("cartReview").classList.remove("hidden"); $("cartReview").scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const openCheckout = () => { if (!cart.size) return; $("cartReview").classList.remove("hidden"); $("checkout").classList.remove("hidden"); $("checkout").scrollIntoView({ behavior: "smooth", block: "start" }); };
+  $("cartReviewButton").addEventListener("click", openCartReview);
+  $("checkoutButton").addEventListener("click", openCheckout);
+  $("proceedCheckoutButton").addEventListener("click", openCheckout);
+  $("continueShoppingButton").addEventListener("click", () => { $("cartReview").classList.add("hidden"); $("categoryNav").scrollIntoView({ behavior: "smooth", block: "start" }); });
+  $("closeCartReview").addEventListener("click", () => { $("cartReview").classList.add("hidden"); $("cartReviewButton").focus(); });
+  $("cartItems").addEventListener("click", (event) => {
+    const action = event.target.closest("[data-cart-increase],[data-cart-decrease],[data-cart-remove]"); if (!action) return;
+    const signature = action.dataset.cartIncrease || action.dataset.cartDecrease || action.dataset.cartRemove, entry = cart.get(signature); if (!entry) return;
+    if (action.dataset.cartRemove) cart.delete(signature);
+    else if (action.dataset.cartIncrease && entry.quantity < entry.maximumQuantity) entry.quantity += 1;
+    else if (action.dataset.cartDecrease && entry.quantity > entry.minimumQuantity) entry.quantity -= 1;
+    pendingRequestId = null; updateCart();
+  });
   $("fulfillment").addEventListener("change", updateFulfillmentFields);
   $("lookupCepButton").addEventListener("click", lookupCep);
   $("deliveryCep").addEventListener("input", (event) => { const digits = event.target.value.replace(/\D/g, "").slice(0, 8); event.target.value = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits; $("cepMessage").textContent = ""; });
