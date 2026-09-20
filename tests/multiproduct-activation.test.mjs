@@ -33,5 +33,6 @@ test("painel do negócio oculta solução não contratada e abre a primeira solu
   assert.match(html,/id="menuOrdersPanel"/);
   assert.match(commercial,/view\.prepend\(health\)/);
   assert.match(commercial,/health\.after\(orders\)/);
+  assert.match(commercial,/received: "Recebido"/);
   assert.deepEqual([...script.matchAll(/(?:landing|orcamentos|cardapio):\s*"(pages|quotes|menu)"/g)].map((item)=>item[1]),["pages","quotes","menu"]);
 });
