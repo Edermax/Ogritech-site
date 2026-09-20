@@ -31,7 +31,7 @@ test("painel do negócio oculta solução não contratada e abre a primeira solu
   assert.match(script,/showSection\(defaultSection\)/);
   assert.match(script,/if \(activeProductCodes\.has\("agenda"\)\)/);
   assert.match(html,/id="menuOrdersPanel"/);
-  assert.match(commercial,/view\.prepend\(health\)/);
+  assert.match(commercial,/tabs\.after\(health\)/);
   assert.match(commercial,/health\.after\(orders\)/);
   assert.match(commercial,/received: "Recebido"/);
   assert.match(html,/data-menu-workspace="operation"/);

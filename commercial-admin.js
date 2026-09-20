@@ -42,11 +42,11 @@
     }
 
     function prioritizeMenuOperations() {
-        const view = byId("menuView");
+        const tabs = byId("menuWorkspaceTabs");
         const health = byId("menuPilotMetricsPanel");
         const orders = byId("menuOrdersPanel");
-        if (!view || !health || !orders || typeof view.prepend !== "function" || typeof health.after !== "function") return;
-        view.prepend(health);
+        if (!tabs || !health || !orders || typeof tabs.after !== "function" || typeof health.after !== "function") return;
+        tabs.after(health);
         health.after(orders);
     }
 
