@@ -19,6 +19,17 @@
     let menuSettingsDirty = false;
     let menuLoadVersion = 0;
 
+    function prioritizeMenuOperations() {
+        const view = byId("menuView");
+        const health = byId("menuPilotMetricsPanel");
+        const orders = byId("menuOrdersPanel");
+        if (!view || !health || !orders || typeof view.prepend !== "function" || typeof health.after !== "function") return;
+        view.prepend(health);
+        health.after(orders);
+    }
+
+    prioritizeMenuOperations();
+
     function updateMenuControls() {
         const unavailable = menuBusy || !menuDataReady;
         const editable = !unavailable && !menuRecord?.published;

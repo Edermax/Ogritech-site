@@ -20,10 +20,18 @@ test("painel master administra produtos isoladamente", async () => {
   assert.match(sql,/create function public\.platform_set_product_subscription[^]*?security invoker/i);
 });
 
-test("painel do negócio bloqueia solução não contratada", async () => {
+test("painel do negócio oculta solução não contratada e abre a primeira solução ativa", async () => {
   const script = await readFile(new URL("script.js",root),"utf8");
+  const html = await readFile(new URL("painel/index.html",root),"utf8");
+  const commercial = await readFile(new URL("commercial-admin.js",root),"utf8");
   assert.match(script,/business_product_catalog/);
-  assert.match(script,/product-locked/);
+  assert.match(script,/solution-hidden/);
   assert.match(script,/dataset\.productAllowed === "false"/);
+  assert.match(script,/activeProductCodes\.has\("menu"\) \? "cardapio"/);
+  assert.match(script,/showSection\(defaultSection\)/);
+  assert.match(script,/if \(activeProductCodes\.has\("agenda"\)\)/);
+  assert.match(html,/id="menuOrdersPanel"/);
+  assert.match(commercial,/view\.prepend\(health\)/);
+  assert.match(commercial,/health\.after\(orders\)/);
   assert.deepEqual([...script.matchAll(/(?:landing|orcamentos|cardapio):\s*"(pages|quotes|menu)"/g)].map((item)=>item[1]),["pages","quotes","menu"]);
 });

@@ -69,21 +69,45 @@ const employeeProfessional =
 const pageTitle = document.getElementById("page-title");
 const menuItems = document.querySelectorAll(".menu-item");
 const PRODUCT_SECTION_CODES = { agenda: "agenda", landing: "pages", orcamentos: "quotes", cardapio: "menu" };
+const AGENDA_SECTIONS = new Set(["dashboard", "clientes", "agenda", "servicos", "profissionais", "financeiro", "configuracoes"]);
+let activeProductCodes = new Set();
 
 async function applyProductAccess() {
-    if (IS_DEMO || !BARBERSHOP_ID) return;
+    if (IS_DEMO || !BARBERSHOP_ID) return "dashboard";
     const { data, error } = await supabaseClient.rpc("business_product_catalog", { target_barbershop_id: BARBERSHOP_ID });
     if (error) throw error;
     const access = new Map((Array.isArray(data) ? data : []).map((item) => [item.code, Boolean(item.subscribed) && ["trial", "active", "grace_period"].includes(item.status)]));
+    activeProductCodes = new Set([...access].filter(([, allowed]) => allowed).map(([code]) => code));
+    const agendaAllowed = activeProductCodes.has("agenda");
     menuItems.forEach((item) => {
         const productCode = PRODUCT_SECTION_CODES[item.dataset.section];
-        if (!productCode) return;
-        const allowed = access.get(productCode) === true;
+        const allowed = productCode ? access.get(productCode) === true : !AGENDA_SECTIONS.has(item.dataset.section) || agendaAllowed;
         item.dataset.productAllowed = String(allowed);
-        item.classList.toggle("product-locked", !allowed);
+        item.classList.toggle("solution-hidden", !allowed);
         item.setAttribute("aria-disabled", String(!allowed));
-        if (!allowed) item.title = "Solução não contratada para este negócio";
+        if (!allowed) item.title = "";
     });
+    document.body.classList.toggle("single-product-panel", !agendaAllowed);
+    document.querySelector(".notification-center")?.classList.toggle("solution-hidden", !agendaAllowed);
+    openAppointmentButton?.classList.toggle("solution-hidden", !agendaAllowed);
+    if (!agendaAllowed) {
+        businessConfig.key = "cardapio";
+        businessConfig.segment = "Comércio e alimentação";
+        businessConfig.icon = "☷";
+        businessConfig.color = "#11bfe3";
+        businessConfig.services = [];
+        businessConfig.professionals = [];
+        applyBusinessCustomization();
+    }
+    const defaultSection = agendaAllowed ? "dashboard"
+        : activeProductCodes.has("menu") ? "cardapio"
+        : activeProductCodes.has("pages") ? "landing"
+        : activeProductCodes.has("quotes") ? "orcamentos"
+        : null;
+    if (!defaultSection) throw new Error("Nenhuma solução ativa para este negócio.");
+    menuItems.forEach((item) => item.classList.toggle("active", item.dataset.section === defaultSection));
+    showSection(defaultSection);
+    return defaultSection;
 }
 
 const dashboardView = document.getElementById("dashboardView");
@@ -520,9 +544,12 @@ appointmentForm.addEventListener("submit", async (event) => {
 const titles = {
     dashboard: "Dashboard",
     clientes: "Clientes",
-    agenda: "Agenda",
+    agenda: "Ogritech Agenda",
     servicos: "Serviços",
     profissionais: "Profissionais",
+    landing: "Ogritech Páginas",
+    orcamentos: "Ogritech Orçamentos",
+    cardapio: "Ogritech Cardápio",
     financeiro: "Financeiro",
     configuracoes: "Configurações"
 };
@@ -1798,19 +1825,23 @@ async function initializeOperationalDashboard() {
     if (savedSettings.name) businessConfig.name = savedSettings.name;
     if (savedSettings.segment) businessConfig.segment = savedSettings.segment;
     if (!BARBERSHOP_ID) return;
-    await loadOperationalData();
-    await applyProductAccess();
-    await refreshNotifications();
-    updateClientCount();
-    renderClients();
-    renderDashboardAgenda();
-    renderBusinessIndicators();
-    renderPrivacyRequests();
-    renderAgenda();
-    renderServices();
-    renderProfessionals();
-    renderPlanCapacity();
-    renderFinancial();
+    const defaultSection = await applyProductAccess();
+    if (activeProductCodes.has("agenda")) {
+        await loadOperationalData();
+        await refreshNotifications();
+        updateClientCount();
+        renderClients();
+        renderDashboardAgenda();
+        renderBusinessIndicators();
+        renderPrivacyRequests();
+        renderAgenda();
+        renderServices();
+        renderProfessionals();
+        renderPlanCapacity();
+        renderFinancial();
+    } else if (defaultSection === "cardapio") {
+        window.loadMenuAdmin?.();
+    }
 }
 
 initializeOperationalDashboard().catch((error) => reportDataError("carregar os dados", error));

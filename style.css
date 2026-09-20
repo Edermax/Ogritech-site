@@ -1776,3 +1776,5 @@ textarea:focus {
     opacity: .48;
     cursor: not-allowed;
 }
+.solution-hidden { display: none !important; }
+.single-product-panel .topbar-actions { justify-content: flex-end; }
