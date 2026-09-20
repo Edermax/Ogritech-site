@@ -32,6 +32,7 @@ function fixture() {
 
 function browser(state = fixture(), options = {}) {
   const elements = new Map();
+  const orderButtons = new Map();
   const calls = [];
   const selections = [];
   function element(id) {
@@ -44,6 +45,20 @@ function browser(state = fixture(), options = {}) {
         setAttribute(name, value) { this.attributes[name] = value; },
         querySelectorAll(selector) {
           if (selector === "input,select,textarea,button") return formControls[id] || [];
+          if (selector === "input,button") return formControls[id] || [];
+          if (id === "menuOrdersList" && selector === "[data-order]") {
+            const matches = [...this.innerHTML.matchAll(/data-order-status="([^"]+)" data-order="([^"]+)"/g)];
+            const visible = new Set(matches.map((match) => `${match[2]}:${match[1]}`));
+            for (const key of orderButtons.keys()) if (!visible.has(key)) orderButtons.delete(key);
+            return matches.map((match) => {
+              const key = `${match[2]}:${match[1]}`;
+              if (!orderButtons.has(key)) orderButtons.set(key, {
+                dataset: { orderStatus: match[1], order: match[2] }, disabled: false, handlers: {},
+                addEventListener(name, callback) { this.handlers[name] = callback; }
+              });
+              return orderButtons.get(key);
+            });
+          }
           return [];
         },
         reset() {}, scrollIntoView() {}
@@ -56,7 +71,8 @@ function browser(state = fixture(), options = {}) {
   const formControls = {
     menuSettingsForm: ["menuTitle", "menuSlug", "menuDescription", "menuMinimum", "menuDeliveryFee", "menuAcceptsDelivery", "menuPrimaryColor", "menuAccentColor", "menuOpensAt", "menuClosesAt", "menuZoneCode", "menuZoneName", "menuZoneFee", "menuZoneMinimum"].map(element).concat(payments, weekdays),
     menuItemForm: ["menuCategoryName", "menuItemName", "menuItemPrice"].map(element),
-    menuTemplateForm: ["menuTemplateCode", "menuTemplateSlug"].map(element)
+    menuTemplateForm: ["menuTemplateCode", "menuTemplateSlug"].map(element),
+    menuAssistantSettingsForm: ["menuAssistantEnabled", "menuAssistantMonthlyLimit", "menuAssistantSessionLimit"].map(element)
   };
   const tableResult = (table) => {
     if (options.tableResult) return options.tableResult(table, state);
@@ -64,10 +80,20 @@ function browser(state = fixture(), options = {}) {
   };
   const supabaseClient = {
     from(table) {
+      const request = { table, filters: {}, update: null };
       const query = {
         select(columns) { selections.push({ table, columns }); return query; },
-        eq() { return query; }, order() { return query; }, limit() { return query; }, maybeSingle() { return query; },
-        then(resolve, reject) { return Promise.resolve(tableResult(table)).then(resolve, reject); }
+        update(payload) { request.update = payload; return query; },
+        eq(column, value) { request.filters[column] = value; return query; }, order() { return query; }, limit() { return query; }, maybeSingle() { return query; }, single() { return query; },
+        then(resolve, reject) {
+          if (table === "menu_orders" && request.update) {
+            calls.push({ name: "update_menu_order", args: request });
+            const order = state.orders.find((entry) => entry.id === request.filters.id);
+            const result = options.updateError ? { data: null, error: options.updateError } : order ? { data: Object.assign(order, request.update), error: null } : { data: null, error: { code: "PGRST116" } };
+            return Promise.resolve(result).then(resolve, reject);
+          }
+          return Promise.resolve(tableResult(table)).then(resolve, reject);
+        }
       };
       return query;
     },
@@ -97,7 +123,12 @@ function browser(state = fixture(), options = {}) {
   return {
     element, state, calls, selections, payments, weekdays,
     load: () => context.window.loadMenuAdmin(),
-    fire: (id, name = "click") => element(id).handlers[name]?.({ preventDefault() {}, target: element(id) })
+    fire: (id, name = "click") => element(id).handlers[name]?.({ preventDefault() {}, target: element(id) }),
+    fireOrder: (id, status) => {
+      const button = orderButtons.get(`${id}:${status}`);
+      return button?.handlers.click?.({ preventDefault() {}, target: button });
+    },
+    orderButton: (id, status) => orderButtons.get(`${id}:${status}`)
   };
 }
 
@@ -108,7 +139,7 @@ test("onboarding explica a autonomia, o suporte opcional e os limites operaciona
   assert.match(html, /não bloqueiam automaticamente os pedidos fora do expediente/);
   assert.match(html, /id="menuOnboardingBar" aria-label=/);
   assert.match(html, /id="menuPublicationButton"[^>]+disabled/);
-  assert.doesNotMatch(source, /menuPublished/);
+  assert.doesNotMatch(source, /["']menuPublished["']/);
 });
 
 test("retoma os dados salvos, mostra progresso acessível e revisão com valores realmente disponíveis", async () => {
@@ -137,6 +168,72 @@ test("pedidos de teste ficam identificados e não recebem ações operacionais",
   assert.match(orders, /Pedido de teste, sem cobrança real/);
   assert.doesNotMatch(orders, /data-order="test-order"/);
   assert.match(orders, /data-order="real-order"/);
+  assert.match(orders, /data-order-status="confirmed"/);
+  assert.doesNotMatch(orders, /data-order-status="completed"[^]*data-order="real-order"/);
+});
+
+test("operação permite atualizar a lista de pedidos sem alterar nenhum pedido", async () => {
+  const page = browser();
+  await page.load();
+  const before = page.selections.filter((entry) => entry.table === "menu_orders").length;
+  await page.fire("menuOrdersReload");
+  assert.equal(page.selections.filter((entry) => entry.table === "menu_orders").length, before + 1);
+  assert.match(page.element("menuOperationMessage").textContent, /Pedidos atualizados/);
+  assert.equal(page.calls.filter((call) => call.name === "update_menu_order").length, 0);
+});
+
+test("salvar assistente bloqueia clique duplicado e sempre libera os controles", async () => {
+  let complete;
+  const pending = new Promise((resolve) => { complete = resolve; });
+  const page = browser(fixture(), { rpc: async (name) => {
+    if (name === "save_menu_assistant_settings") {
+      await pending;
+      return { data: {}, error: null };
+    }
+    if (name === "menu_assistant_admin_settings") return { data: { enabled: true, monthly_interaction_limit: 100, per_session_hourly_limit: 20 }, error: null };
+    if (name === "menu_pilot_metrics") return { data: {}, error: null };
+    return { data: {}, error: null };
+  } });
+  await page.load();
+  await new Promise((resolve) => setImmediate(resolve));
+  const first = page.fire("menuAssistantSettingsForm", "submit");
+  const second = page.fire("menuAssistantSettingsForm", "submit");
+  assert.equal(page.element("menuAssistantMonthlyLimit").disabled, true);
+  complete();
+  await Promise.all([first, second]);
+  assert.equal(page.calls.filter((call) => call.name === "save_menu_assistant_settings").length, 1);
+  assert.equal(page.element("menuAssistantMonthlyLimit").disabled, false);
+  assert.match(page.element("menuAssistantSettingsMessage").textContent, /Assistente ativado/);
+});
+
+test("pedido mostra uma ação por etapa e confirma a atualização na própria aba de operação", async () => {
+  const state = fixture();
+  state.orders[1].status = "received";
+  const page = browser(state);
+  await page.load();
+  assert.ok(page.orderButton("real-order", "confirmed"));
+  assert.equal(page.orderButton("real-order", "completed"), undefined);
+  await page.fireOrder("real-order", "confirmed");
+  assert.equal(state.orders[1].status, "confirmed");
+  assert.match(page.element("menuOperationMessage").textContent, /Pedido confirmado/);
+  assert.ok(page.orderButton("real-order", "completed"));
+  assert.equal(page.orderButton("real-order", "confirmed"), undefined);
+  await page.fireOrder("real-order", "completed");
+  assert.equal(state.orders[1].status, "completed");
+  assert.match(page.element("menuOperationMessage").textContent, /Pedido concluído/);
+  assert.equal(page.orderButton("real-order", "completed"), undefined);
+  assert.equal(page.calls.filter((call) => call.name === "update_menu_order").length, 2);
+});
+
+test("falha ao atualizar pedido aparece na aba de operação e preserva a ação", async () => {
+  const state = fixture();
+  state.orders[1].status = "received";
+  const page = browser(state, { updateError: { code: "PGRST116" } });
+  await page.load();
+  await page.fireOrder("real-order", "confirmed");
+  assert.equal(state.orders[1].status, "received");
+  assert.match(page.element("menuOperationMessage").textContent, /não foi encontrado ou já mudou de situação/);
+  assert.ok(page.orderButton("real-order", "confirmed"));
 });
 
 test("duplo clique gera somente um pedido de teste e aguarda o estado atualizado do servidor", async () => {
@@ -234,6 +331,10 @@ test("cardápio publicado bloqueia edição e pode ser despublicado explicitamen
   await page.load();
   assert.equal(page.element("menuTitle").disabled, true);
   assert.equal(page.element("menuTestOrderButton").disabled, true);
+  assert.equal(page.element("menuTestOrderButton").classList.contains("hidden"), true);
+  assert.equal(page.element("menuSettingsLockNotice").classList.contains("hidden"), false);
+  assert.equal(page.element("menuCatalogLockNotice").classList.contains("hidden"), false);
+  assert.equal(page.element("menuItemForm").classList.contains("hidden"), true);
   assert.equal(page.element("menuPublicationButton").textContent, "Despublicar cardápio");
   assert.equal(page.element("menuPublicLink").href, "https://local.invalid/cardapio/?empresa=pizzaria-centro");
   await page.fire("menuPublicationButton");

@@ -16,6 +16,8 @@
     const menuOrderStatusLabels = { received: "Recebido", confirmed: "Confirmado", completed: "Concluído", cancelled: "Cancelado", rejected: "Recusado" };
     const menuWeekdayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
     let menuBusy = false;
+    let menuMetricsBusy = false;
+    let menuAssistantBusy = false;
     let menuDataReady = false;
     let menuSettingsDirty = false;
     let menuLoadVersion = 0;
@@ -69,11 +71,23 @@
         byId("menuPublicationButton").textContent = menuRecord?.published ? "Despublicar cardápio" : "Publicar cardápio";
         byId("menuPublicationButton").disabled = unavailable || menuSettingsDirty || (!menuRecord?.published && menuOnboarding?.next_step !== "ready");
         byId("menuReloadButton").disabled = menuBusy;
+        byId("menuOrdersReload").disabled = unavailable;
+        byId("menuPilotMetricsReload").disabled = menuMetricsBusy;
+        byId("menuAssistantSettingsForm")?.querySelectorAll("input,button").forEach((input) => { input.disabled = menuAssistantBusy; });
+        byId("menuOrdersList")?.querySelectorAll("[data-order]").forEach((button) => { button.disabled = unavailable; });
+        const published = Boolean(menuRecord?.published);
+        byId("menuTestOrderButton")?.classList.toggle("hidden", published);
+        byId("menuReviewButton")?.classList.toggle("hidden", published);
+        byId("menuPublishedSetupNotice")?.classList.toggle("hidden", !published);
+        byId("menuSettingsLockNotice")?.classList.toggle("hidden", !published);
+        byId("menuCatalogLockNotice")?.classList.toggle("hidden", !published);
+        byId("menuItemForm")?.classList.toggle("hidden", published);
     }
 
     const menuError = (error) => {
         if (error?.code === "42501") return "Você precisa de acesso de gestor e do Ogritech Cardápio ativo para concluir esta ação.";
         if (error?.code === "23505") return "Este endereço público já está em uso. Escolha outro e salve novamente.";
+        if (error?.code === "PGRST116") return "O pedido não foi encontrado ou já mudou de situação. Atualize a lista e tente novamente.";
         if (["22023", "23514"].includes(error?.code)) return error.message || "Confira os campos e as etapas pendentes.";
         return "Não foi possível concluir a operação. Confira sua conexão e tente novamente. Sua configuração salva foi preservada.";
     };
@@ -251,16 +265,25 @@
     }
 
     async function loadMenuPilotMetrics() {
-        if (!BARBERSHOP_ID || IS_DEMO) return;
+        if (!BARBERSHOP_ID || IS_DEMO || menuMetricsBusy) return;
+        menuMetricsBusy = true;
+        updateMenuControls();
         notify(byId("menuPilotMetricsMessage"), "Atualizando indicadores...");
-        const { data, error } = await supabaseClient.rpc("menu_pilot_metrics", {
-            target_barbershop_id: BARBERSHOP_ID,
-            target_started_at: null,
-            target_ends_at: null,
-            target_max_consumers: 25,
-            target_max_orders: 100
-        });
-        renderMenuPilotMetrics(data, error);
+        try {
+            const { data, error } = await supabaseClient.rpc("menu_pilot_metrics", {
+                target_barbershop_id: BARBERSHOP_ID,
+                target_started_at: null,
+                target_ends_at: null,
+                target_max_consumers: 25,
+                target_max_orders: 100
+            });
+            renderMenuPilotMetrics(data, error);
+        } catch (error) {
+            renderMenuPilotMetrics(null, error);
+        } finally {
+            menuMetricsBusy = false;
+            updateMenuControls();
+        }
     }
 
     byId("menuAiCostForm")?.addEventListener("submit", (event) => {
@@ -338,8 +361,16 @@
             const categories = [...(menu?.menu_categories || [])].sort((a, b) => a.sort_order - b.sort_order);
             renderMenuReview(menu, categories);
             byId("menuCatalogList").innerHTML = categories.map((category) => `<article><strong>${escapeHtml(category.name)}${category.active ? "" : " · categoria inativa"}</strong>${(category.menu_items || []).map((item) => `<p>${escapeHtml(item.name)}${item.active && item.available ? "" : " · indisponível"} — ${(item.menu_item_prices || []).filter((price) => price.active).map((price) => formatMoney.format(Number(price.promotional_price ?? price.price))).join(" / ") || "Sem preço ativo"}</p>`).join("")}</article>`).join("") || "<p class='section-description'>Nenhum item cadastrado.</p>";
-            byId("menuOrdersList").innerHTML = ordersError ? `<p role="status">${escapeHtml(menuError(ordersError))} Use “Atualizar etapas” para recarregar os pedidos.</p>` : (orders || []).map((order) => `<article><header><div><strong>#${escapeHtml(order.public_reference)} · ${escapeHtml(order.customer_name)}</strong><p>${formatMoney.format(Number(order.total_amount))}${order.is_test ? " · Pedido de teste, sem cobrança real" : ""}</p></div><span class="commercial-badge">${order.is_test ? "Teste concluído" : escapeHtml(menuOrderStatusLabels[order.status] || "Em processamento")}</span></header>${!order.is_test && !["completed", "cancelled", "rejected"].includes(order.status) ? `<div class="commercial-actions"><button class="table-button edit" data-order-status="confirmed" data-order="${order.id}">Confirmar</button><button class="table-button edit" data-order-status="completed" data-order="${order.id}">Concluir</button></div>` : ""}</article>`).join("") || "<p class='section-description'>Nenhum pedido recebido.</p>";
-            byId("menuOrdersList").querySelectorAll("[data-order]").forEach((button) => button.addEventListener("click", () => runMenuAction("menuOnboardingMessage", "Atualizando pedido...", () => supabaseClient.from("menu_orders").update({ status: button.dataset.orderStatus, [button.dataset.orderStatus === "completed" ? "completed_at" : "confirmed_at"]: new Date().toISOString() }).eq("id", button.dataset.order).eq("barbershop_id", BARBERSHOP_ID), "Pedido atualizado.")));
+            byId("menuOrdersList").innerHTML = ordersError ? `<p role="status">${escapeHtml(menuError(ordersError))} Use “Atualizar etapas” para recarregar os pedidos.</p>` : (orders || []).map((order) => {
+                const status = order.status === "pending" ? "received" : order.status;
+                const action = status === "received" ? { next: "confirmed", label: "Confirmar" } : status === "confirmed" ? { next: "completed", label: "Concluir" } : null;
+                return `<article><header><div><strong>#${escapeHtml(order.public_reference)} · ${escapeHtml(order.customer_name)}</strong><p>${formatMoney.format(Number(order.total_amount))}${order.is_test ? " · Pedido de teste, sem cobrança real" : ""}</p></div><span class="commercial-badge">${order.is_test ? "Teste concluído" : escapeHtml(menuOrderStatusLabels[status] || "Em processamento")}</span></header>${!order.is_test && action ? `<div class="commercial-actions"><button type="button" class="table-button edit" data-order-status="${action.next}" data-order="${order.id}">${action.label}</button></div>` : ""}</article>`;
+            }).join("") || "<p class='section-description'>Nenhum pedido recebido.</p>";
+            byId("menuOrdersList").querySelectorAll("[data-order]").forEach((button) => button.addEventListener("click", () => {
+                const completing = button.dataset.orderStatus === "completed";
+                const timestamp = completing ? "completed_at" : "confirmed_at";
+                return runMenuAction("menuOperationMessage", completing ? "Concluindo pedido..." : "Confirmando pedido...", () => supabaseClient.from("menu_orders").update({ status: button.dataset.orderStatus, [timestamp]: new Date().toISOString() }).eq("id", button.dataset.order).eq("barbershop_id", BARBERSHOP_ID).select("id,status").single(), completing ? "Pedido concluído." : "Pedido confirmado. Quando estiver pronto, use “Concluir”.");
+            }));
             loadMenuAssistantAdmin().catch(() => notify(byId("menuAssistantSettingsMessage"), "O assistente está temporariamente indisponível; o restante do Cardápio continua funcionando.", true));
             loadMenuPilotMetrics().catch((metricsError) => renderMenuPilotMetrics(null, metricsError));
             return true;
@@ -368,13 +399,23 @@
 
     byId("menuAssistantSettingsForm")?.addEventListener("submit", async (event) => {
         event.preventDefault();
+        if (menuAssistantBusy) return;
         const monthly = Number(byId("menuAssistantMonthlyLimit").value), session = Number(byId("menuAssistantSessionLimit").value);
         if (!Number.isInteger(monthly) || monthly < 0 || monthly > 100000 || !Number.isInteger(session) || session < 1 || session > 100) return notify(byId("menuAssistantSettingsMessage"), "Use limites inteiros dentro das faixas informadas.", true);
+        menuAssistantBusy = true;
+        updateMenuControls();
         notify(byId("menuAssistantSettingsMessage"), "Salvando assistente...");
-        const { error } = await supabaseClient.rpc("save_menu_assistant_settings", { target_barbershop_id: BARBERSHOP_ID, target_enabled: byId("menuAssistantEnabled").checked, target_monthly_limit: monthly, target_session_limit: session });
-        if (error) return notify(byId("menuAssistantSettingsMessage"), menuError(error), true);
-        await loadMenuAssistantAdmin();
-        notify(byId("menuAssistantSettingsMessage"), byId("menuAssistantEnabled").checked ? "Assistente ativado. Ele continuará sem modelo externo até nova autorização." : "Assistente desativado no cardápio público.");
+        try {
+            const { error } = await supabaseClient.rpc("save_menu_assistant_settings", { target_barbershop_id: BARBERSHOP_ID, target_enabled: byId("menuAssistantEnabled").checked, target_monthly_limit: monthly, target_session_limit: session });
+            if (error) return notify(byId("menuAssistantSettingsMessage"), menuError(error), true);
+            await loadMenuAssistantAdmin();
+            notify(byId("menuAssistantSettingsMessage"), byId("menuAssistantEnabled").checked ? "Assistente ativado. Ele continuará sem modelo externo até nova autorização." : "Assistente desativado no cardápio público.");
+        } catch (error) {
+            notify(byId("menuAssistantSettingsMessage"), menuError(error), true);
+        } finally {
+            menuAssistantBusy = false;
+            updateMenuControls();
+        }
     });
 
     byId("menuSettingsForm")?.addEventListener("input", () => {
@@ -388,6 +429,19 @@
         if (menuSettingsDirty) return notify(byId("menuOnboardingMessage"), "Salve suas alterações antes de atualizar as etapas.", true);
         notify(byId("menuOnboardingMessage"), "Atualizando etapas...");
         if (await loadMenuAdmin()) notify(byId("menuOnboardingMessage"), "Etapas atualizadas com a configuração salva.");
+    });
+    byId("menuOrdersReload")?.addEventListener("click", async () => {
+        if (menuBusy || !menuDataReady) return;
+        menuBusy = true;
+        updateMenuControls();
+        notify(byId("menuOperationMessage"), "Atualizando pedidos...");
+        try {
+            const refreshed = await loadMenuAdmin();
+            notify(byId("menuOperationMessage"), refreshed ? "Pedidos atualizados." : "Não foi possível atualizar os pedidos. Tente novamente.", !refreshed);
+        } finally {
+            menuBusy = false;
+            updateMenuControls();
+        }
     });
     byId("menuPilotMetricsReload")?.addEventListener("click", loadMenuPilotMetrics);
     byId("menuTestOrderButton")?.addEventListener("click", () => {

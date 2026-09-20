@@ -1802,11 +1802,17 @@ textarea:focus {
 #menuPilotMetricsPanel .stat-card { min-height:132px; padding:18px; border-radius:13px; background:linear-gradient(145deg,rgba(8,185,211,.08),rgba(255,255,255,.025)); }
 #menuPilotMetricsPanel .stat-card strong { color:var(--cyan-light); font-size:clamp(22px,3vw,30px); }
 #menuPilotMetricsMessage:not(:empty) { margin-top:12px; padding:10px 12px; border-radius:9px; color:#8de3b7; background:rgba(105,194,141,.07); }
+#menuPilotMetricsMessage.error { color:#f3a5a5; background:rgba(224,111,111,.08); }
+.menu-lock-notice { margin:16px 0 4px; padding:12px 14px; border:1px solid rgba(229,189,103,.24); border-radius:10px; color:#e7cf96; background:rgba(229,189,103,.07); line-height:1.55; }
+.menu-action-feedback { min-height:0; margin:14px 0 0; padding:0; color:#8de3b7; }
+.menu-action-feedback:not(:empty) { padding:10px 12px; border:1px solid rgba(105,194,141,.18); border-radius:9px; background:rgba(105,194,141,.07); }
+.menu-action-feedback.error:not(:empty) { color:#f3a5a5; border-color:rgba(224,111,111,.22); background:rgba(224,111,111,.08); }
 #menuOrdersList { grid-template-columns:repeat(2,minmax(0,1fr)); }
 #menuOrdersList article { min-height:132px; padding:18px; border-color:rgba(255,255,255,.09); background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.018)); }
 #menuOrdersList article header strong { color:#f2fafb; font-size:13px; line-height:1.45; }
 #menuOrdersList .commercial-actions { margin-top:6px; }
 #menuOrdersList .table-button { min-height:36px; padding:8px 13px; }
+#menuOrdersList .table-button:disabled,#menuOrdersReload:disabled,#menuPilotMetricsReload:disabled,#menuAssistantSettingsForm button:disabled { opacity:.55; cursor:wait; }
 #menuAiStagingPreparation { display:none; }
 #menuOnboardingPanel progress { width:100%; height:8px; margin:4px 0 14px; accent-color:var(--cyan); }
 #menuOnboardingChecklist { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:16px 0 18px; list-style:none; }
