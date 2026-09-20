@@ -17,8 +17,6 @@ Plataforma de gestão para negócios de atendimento.
 - recuperação de senha;
 - banco PostgreSQL com RLS;
 - painel administrativo e área do cliente;
-- vitrine comercial com demonstrações adaptadas a dez segmentos em `demonstracoes.html`;
-- acessos demonstrativos de gestor, funcionário e cliente personalizados por segmento;
 - clientes e agenda persistidos no Supabase, com isolamento por empresa via RLS;
 - `localStorage` reservado aos ambientes demonstrativos e à importação única de dados antigos.
 

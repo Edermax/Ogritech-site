@@ -1,5 +1,4 @@
 User-agent: *
-Allow: /demonstracoes.html
 Disallow: /admin.html
 Disallow: /cliente.html
 

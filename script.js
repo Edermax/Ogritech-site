@@ -185,9 +185,6 @@ function applyBusinessCustomization() {
         backToShowcase.href = "admin.html";
         backToShowcase.textContent = "← Voltar ao painel master";
         backToShowcase.classList.remove("hidden");
-    } else if (IS_DEMO && backToShowcase) {
-        backToShowcase.href = `demonstracoes.html?segmento=${encodeURIComponent(businessConfig.key)}`;
-        backToShowcase.classList.remove("hidden");
     }
 
     const isDinizBusiness = businessConfig.name?.trim().toLocaleLowerCase("pt-BR") === "diniz doces";
