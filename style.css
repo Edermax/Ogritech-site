@@ -1778,3 +1778,55 @@ textarea:focus {
 }
 .solution-hidden { display: none !important; }
 .single-product-panel .topbar-actions { justify-content: flex-end; }
+
+/* Área operacional do Ogritech Cardápio */
+.single-product-panel .main-content { padding:clamp(22px,3vw,42px); }
+.single-product-panel .topbar,#menuView { width:min(100%,1240px); margin-left:auto; margin-right:auto; }
+#menuView { display:grid; gap:18px; }
+#menuView.hidden,.menu-workspace-hidden { display:none !important; }
+#menuView .module-panel { min-height:0; }
+.menu-workspace-header { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:22px 24px; border:1px solid rgba(57,212,232,.22); border-radius:16px; background:linear-gradient(135deg,rgba(8,185,211,.13),rgba(8,185,211,.035) 55%,rgba(255,255,255,.02)); box-shadow:0 16px 45px rgba(0,0,0,.18); }
+.menu-workspace-header h2 { font-size:clamp(20px,2.4vw,28px); }
+.menu-workspace-header .section-description { max-width:680px; line-height:1.55; }
+.menu-workspace-header-actions { display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+.menu-operation-status { display:inline-flex; align-items:center; gap:8px; min-height:34px; padding:7px 11px; border:1px solid rgba(105,194,141,.28); border-radius:999px; color:#8de3b7; background:rgba(105,194,141,.08); font-size:11px; font-weight:800; white-space:nowrap; }
+.menu-operation-status::before { content:""; width:7px; height:7px; border-radius:50%; background:#65d39b; box-shadow:0 0 10px rgba(101,211,155,.8); }
+.menu-operation-status[data-state="draft"] { color:#e5bd67; border-color:rgba(229,189,103,.28); background:rgba(229,189,103,.08); }
+.menu-operation-status[data-state="draft"]::before { background:#e5bd67; box-shadow:none; }
+.menu-workspace-tabs { display:flex; gap:8px; padding:6px; border:1px solid var(--border); border-radius:13px; background:#0c1012; overflow-x:auto; }
+.menu-workspace-tab { min-height:40px; padding:9px 18px; border:0; border-radius:9px; color:#8b999d; background:transparent; font-weight:800; cursor:pointer; white-space:nowrap; }
+.menu-workspace-tab:hover { color:#dffaff; background:rgba(8,185,211,.07); }
+.menu-workspace-tab.active { color:#031114; background:linear-gradient(135deg,var(--cyan-light),var(--cyan)); box-shadow:0 8px 24px rgba(8,185,211,.18); }
+#menuPilotMetricsPanel,#menuOrdersPanel { padding:clamp(20px,2.5vw,28px); border-radius:16px; background:linear-gradient(145deg,#12191b,#0e1214); }
+#menuPilotMetricsPanel .stats-grid { grid-template-columns:repeat(4,minmax(0,1fr)); margin:18px 0; }
+#menuPilotMetricsPanel .stat-card { min-height:132px; padding:18px; border-radius:13px; background:linear-gradient(145deg,rgba(8,185,211,.08),rgba(255,255,255,.025)); }
+#menuPilotMetricsPanel .stat-card strong { color:var(--cyan-light); font-size:clamp(22px,3vw,30px); }
+#menuPilotMetricsMessage:not(:empty) { margin-top:12px; padding:10px 12px; border-radius:9px; color:#8de3b7; background:rgba(105,194,141,.07); }
+#menuOrdersList { grid-template-columns:repeat(2,minmax(0,1fr)); }
+#menuOrdersList article { min-height:132px; padding:18px; border-color:rgba(255,255,255,.09); background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.018)); }
+#menuOrdersList article header strong { color:#f2fafb; font-size:13px; line-height:1.45; }
+#menuOrdersList .commercial-actions { margin-top:6px; }
+#menuOrdersList .table-button { min-height:36px; padding:8px 13px; }
+#menuAiStagingPreparation { display:none; }
+#menuOnboardingPanel progress { width:100%; height:8px; margin:4px 0 14px; accent-color:var(--cyan); }
+
+@media(max-width:900px){
+    #menuPilotMetricsPanel .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    #menuOrdersList { grid-template-columns:1fr; }
+}
+@media(max-width:720px){
+    .single-product-panel .main-content { padding:18px 14px 28px; }
+    .single-product-panel .topbar { margin-bottom:20px; }
+    .single-product-panel .topbar-actions { align-items:flex-end; }
+    .menu-workspace-header { align-items:flex-start; flex-direction:column; padding:19px; }
+    .menu-workspace-header-actions { width:100%; justify-content:flex-start; }
+    .menu-workspace-tabs { position:sticky; top:0; z-index:20; }
+    #menuPilotMetricsPanel .clients-toolbar { margin-bottom:12px; }
+    #menuPilotMetricsPanel .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    #menuPilotMetricsPanel .stat-card { min-height:118px; padding:15px; }
+}
+@media(max-width:430px){
+    .menu-workspace-tab { flex:1; padding:9px 12px; font-size:11px; }
+    #menuPilotMetricsPanel .stats-grid { grid-template-columns:1fr; }
+    #menuPilotMetricsPanel .stat-card { min-height:0; }
+}

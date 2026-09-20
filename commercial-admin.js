@@ -19,6 +19,27 @@
     let menuDataReady = false;
     let menuSettingsDirty = false;
     let menuLoadVersion = 0;
+    const menuWorkspaceGroups = {
+        operation: ["menuPilotMetricsPanel", "menuOrdersPanel"],
+        settings: ["menuOnboardingPanel", "menuAssistantSettingsPanel", "menuSettingsPanel"],
+        catalog: ["menuTemplatePanel", "menuCatalogWorkspace"]
+    };
+
+    function selectMenuWorkspace(workspace) {
+        const selected = menuWorkspaceGroups[workspace] ? workspace : "operation";
+        document.querySelectorAll("[data-menu-workspace]").forEach((button) => {
+            const active = button.dataset.menuWorkspace === selected;
+            button.classList.toggle("active", active);
+            button.setAttribute("aria-selected", String(active));
+        });
+        Object.entries(menuWorkspaceGroups).forEach(([group, ids]) => ids.forEach((id) => byId(id)?.classList.toggle("menu-workspace-hidden", group !== selected)));
+    }
+
+    function setupMenuWorkspace() {
+        document.querySelectorAll("[data-menu-workspace]").forEach((button) => button.addEventListener("click", () => selectMenuWorkspace(button.dataset.menuWorkspace)));
+        byId("menuAssistantSettingsPanel")?.querySelectorAll("details").forEach((details) => { details.open = false; });
+        selectMenuWorkspace("operation");
+    }
 
     function prioritizeMenuOperations() {
         const view = byId("menuView");
@@ -30,6 +51,7 @@
     }
 
     prioritizeMenuOperations();
+    setupMenuWorkspace();
 
     function updateMenuControls() {
         const unavailable = menuBusy || !menuDataReady;
@@ -299,10 +321,17 @@
             byId("menuOnboardingChecklist").innerHTML = Object.entries(menuStepLabels).map(([code, label]) => `<li${onboarding?.next_step === code ? ' aria-current="step"' : ""}><span aria-hidden="true">${checks[code] ? "✓" : "○"}</span> ${escapeHtml(label)} — ${checks[code] ? "concluído" : "pendente"}</li>`).join("");
             byId("menuNextStep").textContent = menu?.published ? "Seu cardápio está publicado. Para alterar a configuração ou o catálogo, despublique e revise novamente." : onboarding?.next_step === "ready" ? "Revisão concluída. Você decide quando publicar seu cardápio." : `Próxima etapa: ${menuStepLabels[onboarding?.next_step] || menuStepLabels.segment}. Salve a configuração para retomar de onde parou.`;
             const link = byId("menuPublicLink");
+            const operationLink = byId("menuOperationPublicLink");
+            const operationStatus = byId("menuOperationStatus");
             if (menu?.published) {
                 link.href = ogritechEnvironmentUrl(`/cardapio/?empresa=${encodeURIComponent(menu.slug)}`);
                 link.classList.remove("hidden");
+                operationLink.href = link.href;
+                operationLink.classList.remove("hidden");
             } else link.classList.add("hidden");
+            if (!menu?.published) operationLink.classList.add("hidden");
+            operationStatus.textContent = menu?.published ? "Cardápio publicado" : "Cardápio não publicado";
+            operationStatus.setAttribute("data-state", menu?.published ? "published" : "draft");
             const categories = [...(menu?.menu_categories || [])].sort((a, b) => a.sort_order - b.sort_order);
             renderMenuReview(menu, categories);
             byId("menuCatalogList").innerHTML = categories.map((category) => `<article><strong>${escapeHtml(category.name)}${category.active ? "" : " · categoria inativa"}</strong>${(category.menu_items || []).map((item) => `<p>${escapeHtml(item.name)}${item.active && item.available ? "" : " · indisponível"} — ${(item.menu_item_prices || []).filter((price) => price.active).map((price) => formatMoney.format(Number(price.promotional_price ?? price.price))).join(" / ") || "Sem preço ativo"}</p>`).join("")}</article>`).join("") || "<p class='section-description'>Nenhum item cadastrado.</p>";
