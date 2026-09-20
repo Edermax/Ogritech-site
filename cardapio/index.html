@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' https://cdn.jsdelivr.net;style-src 'self';img-src 'self' data: https:;connect-src 'self' http://127.0.0.1:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co https://viacep.com.br;object-src 'none';base-uri 'self';form-action 'self'">
   <title>Cardápio | Ogritech</title>
   <link rel="stylesheet" href="../commercial-public.css">
-  <link rel="stylesheet" href="catalog.css?v=20260920b">
+  <link rel="stylesheet" href="catalog.css?v=20260920c">
   <link rel="icon" href="../ogritech-favicon.ico">
 </head>
 <body>
@@ -37,6 +37,9 @@
             <label>CEP <span class="cep-search-row"><input id="deliveryCep" name="delivery_cep" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000"><button id="lookupCepButton" class="public-button secondary" type="button">Buscar CEP</button></span></label>
             <p id="cepMessage" class="public-message" aria-live="polite"></p>
             <label>Endereço completo <textarea id="deliveryAddress" name="address" maxlength="1000" autocomplete="street-address" placeholder="Rua, número, complemento, bairro, cidade e estado"></textarea></label>
+            <button id="calculateDeliveryButton" class="public-button secondary hidden" type="button">Calcular entrega</button>
+            <p id="deliveryProviderNotice" class="public-message delivery-provider-notice hidden">O endereço será consultado no serviço de mapas somente para calcular a rota e a taxa.</p>
+            <aside id="deliveryQuote" class="delivery-quote hidden" aria-live="polite"><small>ENTREGA CALCULADA AUTOMATICAMENTE</small><strong id="deliveryQuoteValue"></strong><span id="deliveryQuoteDetail"></span></aside>
           </div>
           <label id="scheduledForLabel">Data e horário desejados <span id="scheduledForHint">(opcional)</span><input id="scheduledFor" name="scheduled_for" type="datetime-local"></label>
           <label>Observações<textarea name="notes" maxlength="2000"></textarea></label>
@@ -46,6 +49,7 @@
           <button id="orderSubmitButton" class="public-button">Enviar pedido</button>
         </form>
       </article>
+      <article id="orderSuccess" class="public-card order-success hidden" aria-live="polite"></article>
     </div>
   </main>
   <dialog id="configurator" class="public-card configurator">
@@ -66,6 +70,6 @@
   </aside>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="../supabase-config.js"></script>
-  <script src="cardapio.js?v=20260920b"></script>
+  <script src="cardapio.js?v=20260920d"></script>
 </body>
 </html>

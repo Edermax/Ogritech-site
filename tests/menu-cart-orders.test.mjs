@@ -81,16 +81,41 @@ test("Diniz registra domingo reduzido e doces a partir de 50 unidades", async ()
 });
 
 test("entrega exige CEP e endereço com preenchimento assistido", async () => {
-  const [html, script] = await Promise.all([
+  const [html, script, deliveryFunction, deliveryMigration] = await Promise.all([
     readFile(new URL("cardapio/index.html", root), "utf8"),
-    readFile(new URL("cardapio/cardapio.js", root), "utf8")
+    readFile(new URL("cardapio/cardapio.js", root), "utf8"),
+    readFile(new URL("supabase/functions/cep-lookup/index.ts", root), "utf8"),
+    readFile(new URL("supabase/migrations/20260920184240_enable_diniz_geoapify_delivery.sql", root), "utf8")
   ]);
   assert.match(html, /id="deliveryCep"/);
   assert.match(html, /id="deliveryAddress"/);
   assert.match(html, /https:\/\/viacep\.com\.br/);
   assert.match(script, /deliveryCep"\)\.required = delivery/);
   assert.match(script, /deliveryAddress"\)\.required = delivery/);
-  assert.match(script, /deliveryZone"\)\.required = delivery && hasZones/);
-  assert.match(script, /functions\.invoke\("cep-lookup", \{ body: \{ cep \} \}\)/);
+  assert.match(script, /deliveryZone"\)\.required = delivery && hasZones && !isDinizMenu/);
+  assert.match(html, /id="deliveryQuote"/);
+  assert.match(html, /id="calculateDeliveryButton"/);
+  assert.match(script, /functions\.invoke\("cep-lookup", \{ body: \{ cep, target_slug: slug \} \}\)/);
+  assert.match(script, /body: \{ cep, target_slug: slug, address \}/);
+  assert.match(script, /!form\.get\("delivery_zone"\)/);
+  assert.match(script, /Rota estimada/);
   assert.match(script, /cep: String\(form\.get\("delivery_cep"\)/);
+  assert.match(deliveryFunction, /GEOAPIFY_API_KEY/);
+  assert.match(deliveryFunction, /api\.geoapify\.com\/v1\/geocode\/search/);
+  assert.match(deliveryFunction, /api\.geoapify\.com\/v1\/routing/);
+  assert.match(deliveryFunction, /diniz-auto-\$\{billingDistance\}km/);
+  assert.match(deliveryMigration, /generate_series\(1, 50\)/);
+  assert.match(deliveryMigration, /round\(kilometer \* 1\.25, 2\)/);
+});
+
+test("sucesso do pedido preserva o código e encaminha a Diniz ao WhatsApp", async () => {
+  const [html, script] = await Promise.all([
+    readFile(new URL("cardapio/index.html", root), "utf8"),
+    readFile(new URL("cardapio/cardapio.js", root), "utf8")
+  ]);
+  assert.match(html, /id="orderSuccess"/);
+  assert.match(script, /const dinizWhatsapp = "5516991596865"/);
+  assert.match(script, /Código \$\{clean\(formattedCode\)\}/);
+  assert.match(script, /window\.location\.assign\(whatsappUrl\)/);
+  assert.match(script, /menu-checkout-active/);
 });

@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-09-19",
+  "auditedAt": "2026-09-20",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -64,7 +64,10 @@
       "fix_menu_ai_staging_telemetry_authorization",
       "allow_menu_ai_service_private_schema",
       "diniz_sunday_hours_and_sweets_quantity",
-      "menu_private_pilot_metrics"
+      "menu_private_pilot_metrics",
+      "diniz_automatic_delivery_distance",
+      "restore_diniz_delivery_zones_after_geocode_validation",
+      "enable_diniz_geoapify_delivery"
     ],
     "remoteVersionAliases": {
       "platform_contact_leads": "20260901214935",
@@ -184,6 +187,18 @@
       {
         "name": "menu_private_pilot_metrics",
         "reason": "Métricas agregadas da Fase 7K-B permanecem restritas ao staging durante o piloto privado; produção exige decisão pós-piloto."
+      },
+      {
+        "name": "diniz_automatic_delivery_distance",
+        "reason": "Cálculo automático da entrega da Diniz precisa ser homologado com CEPs reais no staging antes de qualquer promoção para produção."
+      },
+      {
+        "name": "restore_diniz_delivery_zones_after_geocode_validation",
+        "reason": "Reversão de segurança mantém as regras anteriores após a fonte gratuita falhar na validação da distância; produção não recebe o experimento."
+      },
+      {
+        "name": "enable_diniz_geoapify_delivery",
+        "reason": "Integração Geoapify e faixas automáticas permanecem restritas ao staging até homologar rotas reais da Diniz; produção exige autorização separada."
       }
     ]
   }
