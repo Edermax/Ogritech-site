@@ -36,7 +36,10 @@
     }
 
     function setupMenuWorkspace() {
-        document.querySelectorAll("[data-menu-workspace]").forEach((button) => button.addEventListener("click", () => selectMenuWorkspace(button.dataset.menuWorkspace)));
+        document.querySelectorAll("[data-menu-workspace]").forEach((button) => button.addEventListener("click", () => {
+            selectMenuWorkspace(button.dataset.menuWorkspace);
+            byId("menuWorkspaceTabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }));
         byId("menuAssistantSettingsPanel")?.querySelectorAll("details").forEach((details) => { details.open = false; });
         selectMenuWorkspace("operation");
     }
