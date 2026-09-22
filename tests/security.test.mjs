@@ -24,6 +24,17 @@ test("console administrativo interrompe operação quando Auth e perfis divergem
   assert.match(source, /const delays = \[0, 300, 900\]/);
 });
 
+test("redefinição administrativa de senha é restrita e não devolve a credencial", async () => {
+  const edge = await readFile(new URL("../supabase/functions/platform-users/index.ts", import.meta.url), "utf8");
+  const admin = await readFile(new URL("../admin.js", import.meta.url), "utf8");
+  assert.match(edge, /action === "reset_password"/);
+  assert.match(edge, /validTemporaryPassword/);
+  assert.match(edge, /credential_reset: true/);
+  assert.doesNotMatch(edge, /reply\(\{ ok: true, temporary/);
+  assert.match(admin, /Gerar senha temporária/);
+  assert.match(admin, /crypto\.getRandomValues/);
+});
+
 test("frontend seleciona local, staging e produção explicitamente", async () => {
   const [config, headers, admin] = await Promise.all([
     readFile(new URL("supabase-config.js", root), "utf8"),

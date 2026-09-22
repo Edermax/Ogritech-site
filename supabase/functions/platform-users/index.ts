@@ -11,6 +11,7 @@ const reply = (body: unknown, status: number, origin: string | null) => new Resp
 const clean = (value: unknown, max = 150) => typeof value === "string" ? value.trim().slice(0, max) : "";
 const validUuid = (value: unknown) => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value) ? value : "";
 const validEmail = (value: string) => value.length <= 320 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+const validTemporaryPassword = (value: unknown) => typeof value === "string" && value.length >= 12 && value.length <= 128 && /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value) && /[^A-Za-z0-9]/.test(value);
 const roles = new Set(["owner", "admin", "employee", "client"]);
 
 Deno.serve(async (request) => {
@@ -158,6 +159,19 @@ Deno.serve(async (request) => {
         throw error;
       }
       await audit(true, userId, { role, barbershop_id: shopId });
+      return reply({ ok: true }, 200, origin);
+    }
+
+    if (action === "reset_password") {
+      const userId = validUuid(body.user_id), temporaryPassword = typeof body.temporary_password === "string" ? body.temporary_password : "";
+      if (!userId || !validTemporaryPassword(temporaryPassword)) return reply({ error: "Usuário ou senha temporária inválidos" }, 400, origin);
+      const { data: protectedUser } = await admin.from("platform_admins").select("user_id").eq("user_id", userId).maybeSingle();
+      if (protectedUser) return reply({ error: "A senha do acesso master não pode ser redefinida por esta ação" }, 400, origin);
+      const { data: profile, error: profileError } = await admin.from("profiles").select("id,active").eq("id", userId).single();
+      if (profileError || !profile?.active) return reply({ error: "Usuário indisponível" }, 400, origin);
+      const { error: authError } = await admin.auth.admin.updateUserById(userId, { password: temporaryPassword });
+      if (authError) throw authError;
+      await audit(true, userId, { credential_reset: true });
       return reply({ ok: true }, 200, origin);
     }
 
