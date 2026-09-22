@@ -45,14 +45,14 @@
     if (!isDinizMenu) return null;
     const label = `${category?.name || ""} ${item?.name || ""}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     const illustrations = [
-      { match: /bolo de corte.*recheios tradicionais/, src: "bolo-redondo-rosa.jpg", alt: "Bolo redondo branco com detalhes rosa da Diniz Doces" },
-      { match: /bolo de corte.*r\$ 78/, src: "bolo-chocolate-morango.jpg", alt: "Bolo de chocolate com morangos da Diniz Doces" },
-      { match: /bolo de corte.*r\$ 80/, src: "bolo-chocolate-granulado.jpg", alt: "Bolo de chocolate com granulado da Diniz Doces" },
+      { match: /bolo de corte.*ninho com nutella/, src: "bolo-chocolate-granulado.jpg", alt: "Bolo de chocolate decorado produzido pela Diniz Doces" },
+      { match: /bolo de corte/, src: "bolo-de-corte.jpg", alt: "Fatias de bolo de corte produzidas pela Diniz Doces" },
       { match: /bolo personalizado retangular/, src: "bolo-retangular-caramelo.jpg", alt: "Bolo retangular decorado da Diniz Doces" },
       { match: /bolo personalizado redondo/, src: "bolo-redondo.png", alt: "Bolo redondo decorado da Diniz Doces" },
       { match: /doces tradicionais/, src: "doces-sortidos.jpg", alt: "Seleção de doces da Diniz Doces" },
       { match: /doces especiais/, src: "brigadeiros.png", alt: "Brigadeiros da Diniz Doces" },
-      { match: /pirulito/, src: "pirulito-personalizado.jpg", alt: "Pirulito personalizado produzido pela Diniz Doces" },
+      { match: /pao de mel/, src: "pao-de-mel.jpg", alt: "Pão de mel personalizado produzido pela Diniz Doces" },
+      { match: /pirulito/, src: "pirulito.jpg", alt: "Pirulito personalizado produzido pela Diniz Doces" },
     ];
     const selected = illustrations.find(({ match }) => match.test(label));
     if (selected) return { ...selected, src: `../assets/diniz-doces/${selected.src}` };
@@ -179,7 +179,8 @@
   $("closeConfigurator").addEventListener("click", () => $("configurator").close());
   async function init() {
     const { data, error } = await supabaseClient.rpc("public_menu", { target_slug: slug }); if (error || !data) { $("loading").innerHTML = "<h1>Cardápio indisponível</h1><p>Confira o endereço ou tente novamente.</p>"; return; }
-    page = data; applyVisualIdentity(data.menu.visual_identity); document.title = `${data.menu.title} | Ogritech`; $("menuTitle").textContent = data.menu.title; $("menuDescription").textContent = data.menu.description; $("menuDescription").classList.toggle("hidden", !data.menu.description?.trim());
+    const menuTitle = isDinizMenu ? data.menu.title.replace(/\s*[—-]\s*piloto privado\s*$/i, "").trim() : data.menu.title;
+    page = data; applyVisualIdentity(data.menu.visual_identity); document.title = `${menuTitle} | Ogritech`; $("menuTitle").textContent = menuTitle; $("menuDescription").textContent = data.menu.description; $("menuDescription").classList.toggle("hidden", !data.menu.description?.trim());
     if (isDinizMenu) { $("menuBrandLogo").src = "../assets/diniz-doces/logo.jpg"; $("menuBrandLogo").alt = "Diniz Doces"; $("menuBrandLockup").classList.remove("hidden"); $("calculateDeliveryButton").classList.remove("hidden"); $("deliveryProviderNotice").classList.remove("hidden"); }
     const paymentNames = {pix:"Pix",cash:"Dinheiro",credit_card:"Cartão de crédito",debit_card:"Cartão de débito"}, hours = data.menu.weekly_hours;
     $("menuPayments").textContent = `Pagamento combinado com o estabelecimento: ${(data.menu.payment_methods || []).map((code) => paymentNames[code] || code).join(", ")}.`;
