@@ -30,6 +30,7 @@ test("redefinição administrativa de senha é restrita e não devolve a credenc
   assert.match(edge, /action === "reset_password"/);
   assert.match(edge, /validTemporaryPassword/);
   assert.match(edge, /credential_reset: true/);
+  assert.match(edge, /password: temporaryPassword, email_confirm: true/);
   assert.doesNotMatch(edge, /reply\(\{ ok: true, temporary/);
   assert.match(admin, /Gerar senha temporária/);
   assert.match(admin, /crypto\.getRandomValues/);

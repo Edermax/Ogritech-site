@@ -169,7 +169,7 @@ Deno.serve(async (request) => {
       if (protectedUser) return reply({ error: "A senha do acesso master não pode ser redefinida por esta ação" }, 400, origin);
       const { data: profile, error: profileError } = await admin.from("profiles").select("id,active").eq("id", userId).single();
       if (profileError || !profile?.active) return reply({ error: "Usuário indisponível" }, 400, origin);
-      const { error: authError } = await admin.auth.admin.updateUserById(userId, { password: temporaryPassword });
+      const { error: authError } = await admin.auth.admin.updateUserById(userId, { password: temporaryPassword, email_confirm: true });
       if (authError) throw authError;
       await audit(true, userId, { credential_reset: true });
       return reply({ ok: true }, 200, origin);
