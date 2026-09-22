@@ -264,12 +264,23 @@
         </div>
     </div>
 
+    <div class="platform-modal hidden" id="temporaryPasswordModal" role="dialog" aria-modal="true" aria-labelledby="temporaryPasswordTitle">
+        <div class="platform-modal-card compact-card">
+            <button type="button" class="modal-close" data-close-modal aria-label="Fechar">×</button>
+            <p class="platform-kicker">ACESSO TEMPORÁRIO</p><h2 id="temporaryPasswordTitle">Senha temporária gerada</h2>
+            <p class="modal-description">Copie esta senha agora. Ela não será exibida novamente após fechar esta janela.</p>
+            <label class="full-field">Senha temporária<input id="temporaryPasswordValue" type="text" readonly autocomplete="off"></label>
+            <button type="button" class="cyan-button full" id="copyTemporaryPassword">Copiar senha</button>
+            <p class="form-message" id="temporaryPasswordMessage" aria-live="polite"></p>
+        </div>
+    </div>
+
     <div class="admin-loading" id="adminLoading">Validando acesso seguro...</div>
     <footer class="app-legal-links"><a href="mailto:suporte@ogritech.com.br">Suporte</a><a href="mailto:financeiro@ogritech.com.br">Financeiro</a><a href="mailto:privacidade@ogritech.com.br">Privacidade</a></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
     <script src="supabase-config.js"></script>
-    <script src="admin.js?v=20260922.1"></script>
+    <script src="admin.js?v=20260922.2"></script>
     <script src="pwa.js?v=20260831.2"></script>
 </body>
 </html>

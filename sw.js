@@ -1,4 +1,4 @@
-const CACHE_NAME = "ogritech-shell-v11";
+const CACHE_NAME = "ogritech-shell-v12";
 const APP_SHELL = [
   "./", "./login/", "./painel/", "./login.html", "./cliente.html", "./style.css",
   "./auth.js", "./script.js", "./commercial-admin.js", "./cliente.js", "./login.js", "./business-config.js",

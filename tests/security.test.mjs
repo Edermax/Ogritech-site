@@ -33,6 +33,9 @@ test("redefinição administrativa de senha é restrita e não devolve a credenc
   assert.doesNotMatch(edge, /reply\(\{ ok: true, temporary/);
   assert.match(admin, /Gerar senha temporária/);
   assert.match(admin, /crypto\.getRandomValues/);
+  assert.match(admin, /showTemporaryPassword\(temporaryPassword\)/);
+  const adminHtml = await readFile(new URL("../admin.html", import.meta.url), "utf8");
+  assert.match(adminHtml, /id="temporaryPasswordValue"/);
 });
 
 test("frontend seleciona local, staging e produção explicitamente", async () => {
@@ -51,7 +54,7 @@ test("frontend seleciona local, staging e produção explicitamente", async () =
   assert.match(admin, /checkPlatformAdminWithRetry/);
   const adminHtml = await readFile(new URL("admin.html", root), "utf8");
   assert.match(adminHtml, /https:\/\/fuesdztsvrkkgnbqhcxi\.supabase\.co/);
-  assert.match(adminHtml, /admin\.js\?v=20260922\.1/);
+  assert.match(adminHtml, /admin\.js\?v=20260922\.2/);
   assert.match(admin, /functions\.invoke\("platform-users", \{ body: \{ action: "list" \} \}\)/);
   assert.doesNotMatch(admin, /map\(\(profile\) => \(\{ \.\.\.profile, email: "" \}\)\)/);
 });
