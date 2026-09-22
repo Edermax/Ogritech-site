@@ -51,7 +51,7 @@ test("frontend seleciona local, staging e produção explicitamente", async () =
   assert.match(admin, /checkPlatformAdminWithRetry/);
   const adminHtml = await readFile(new URL("admin.html", root), "utf8");
   assert.match(adminHtml, /https:\/\/fuesdztsvrkkgnbqhcxi\.supabase\.co/);
-  assert.match(adminHtml, /admin\.js\?v=20260827\.1/);
+  assert.match(adminHtml, /admin\.js\?v=20260922\.1/);
   assert.match(admin, /functions\.invoke\("platform-users", \{ body: \{ action: "list" \} \}\)/);
   assert.doesNotMatch(admin, /map\(\(profile\) => \(\{ \.\.\.profile, email: "" \}\)\)/);
 });
