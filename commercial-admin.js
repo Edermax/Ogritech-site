@@ -244,8 +244,8 @@
         }
         const orders = Number(metrics.orders_count || 0);
         const consumers = Number(metrics.consumers_count || 0);
-        byId("menuMetricOrders").textContent = `${orders} de ${Number(metrics.limits?.maximum_orders || 100)}`;
-        byId("menuMetricConsumers").textContent = `${consumers} de ${Number(metrics.limits?.maximum_consumers || 25)}`;
+        byId("menuMetricOrders").textContent = `${orders} de ${Number(metrics.limits?.maximum_orders || 15)}`;
+        byId("menuMetricConsumers").textContent = `${consumers} de ${Number(metrics.limits?.maximum_consumers || 7)}`;
         byId("menuMetricDuplicates").textContent = String(Number(metrics.possible_duplicate_groups || 0));
         byId("menuMetricPrices").textContent = String(Number(metrics.price_divergences || 0));
         byId("menuMetricOrdersLimit").textContent = `${Number(metrics.orders_usage_percent || 0).toLocaleString("pt-BR")} % do limite do piloto`;
@@ -276,8 +276,8 @@
                 target_barbershop_id: BARBERSHOP_ID,
                 target_started_at: null,
                 target_ends_at: null,
-                target_max_consumers: 25,
-                target_max_orders: 100
+                target_max_consumers: 7,
+                target_max_orders: 15
             });
             renderMenuPilotMetrics(data, error);
         } catch (error) {
