@@ -7,10 +7,10 @@
   "remoteChangesPerformed": false,
   "productionAuthorized": false,
   "currentState": {
-    "localMigrationCount": 60,
-    "stagingMigrationCountRecorded": 60,
+    "localMigrationCount": 65,
+    "stagingMigrationCountRecorded": 65,
     "productionMigrationCountRecorded": 36,
-    "productionMigrationsHeld": 24,
+    "productionMigrationsHeld": 29,
     "menuMigrations": [
       "menu_catalog_core",
       "menu_cart_orders",

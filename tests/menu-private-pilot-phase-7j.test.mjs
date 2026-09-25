@@ -40,3 +40,23 @@ test("fase 7K-A consolida a base sem ampliar o piloto", async () => {
   assert.equal(consolidation.privatePersonalDataVersioned, false);
   assert.equal(consolidation.nextPhase, "7K-B");
 });
+
+test("fase 7K-C encerra o piloto ao atingir o limite autorizado", async () => {
+  const closure = await readJson("config/menu-private-pilot-phase-7k-c-closure.json");
+  assert.equal(closure.status, "private_pilot_closed_in_staging");
+  assert.deepEqual(closure.limits, { businesses: 1, maximumConsumers: 7, maximumOrders: 15 });
+  assert.equal(closure.finalMetrics.orders, 15);
+  assert.equal(closure.finalMetrics.consumers, 4);
+  assert.equal(closure.finalMetrics.possibleDuplicateGroups, 0);
+  assert.equal(closure.finalMetrics.priceDivergences, 0);
+  assert.equal(closure.finalMetrics.missingConsent, 0);
+  assert.equal(closure.privateExportGenerated, true);
+  assert.equal(closure.privateExportVersioned, false);
+  assert.equal(closure.publicTokensExported, false);
+  assert.equal(closure.menuUnpublished, true);
+  assert.equal(closure.publicEntryBlocked, true);
+  assert.equal(closure.monitorAutomationDeleted, true);
+  assert.equal(closure.automaticRenewal, false);
+  assert.equal(closure.productionAuthorized, false);
+  assert.equal(closure.legitimateDataDeleted, false);
+});
