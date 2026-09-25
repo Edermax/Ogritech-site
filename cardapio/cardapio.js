@@ -251,11 +251,10 @@
     pendingRequestId = null;
     const publicCode = String(data.reference || "").replace(/[^a-z0-9]/gi, "").toUpperCase().slice(0, 8), formattedCode = publicCode.length > 4 ? `${publicCode.slice(0, 4)}-${publicCode.slice(4)}` : publicCode;
     const trackingUrl = ogritechEnvironmentUrl(`/pedido/?referencia=${encodeURIComponent(data.reference)}&token=${encodeURIComponent(data.token)}&empresa=${encodeURIComponent(slug)}`);
-    const whatsappUrl = isDinizMenu ? `https://wa.me/${dinizWhatsapp}?text=${encodeURIComponent(`Olá! Fiz o pedido ${formattedCode} pelo cardápio da Diniz Doces. Acompanhamento: ${trackingUrl}`)}` : "";
+    const whatsappUrl = isDinizMenu ? `https://wa.me/${dinizWhatsapp}?text=${encodeURIComponent(`Olá! Meu pedido é ${formattedCode}. Gostaria de confirmar os dados e combinar o pagamento diretamente com a Diniz Doces.`)}` : "";
     cart.clear(); $("cartBar").classList.add("hidden"); $("cartReview").classList.add("hidden"); $("checkout").classList.add("hidden");
-    $("orderSuccess").innerHTML = `<small>PEDIDO ENVIADO</small><h2>Código ${clean(formattedCode)}</h2><p>Seu pedido foi registrado. Agora você será levado ao WhatsApp da Diniz Doces para continuar o atendimento.</p><a class="public-button" href="${clean(whatsappUrl || trackingUrl)}">${whatsappUrl ? "Falar com a Diniz por WhatsApp" : "Acompanhar pedido"}</a><a href="${clean(trackingUrl)}">Acompanhar o pedido no site</a>`;
+    $("orderSuccess").innerHTML = `<div class="order-success-heading"><span class="order-success-mark" aria-hidden="true">✓</span><div><small>PEDIDO REGISTRADO</small><h2>Recebemos sua solicitação</h2></div></div><div class="order-code-box"><span>Código do pedido</span><strong>${clean(formattedCode)}</strong></div><aside class="order-payment-alert"><strong>Pagamento ainda pendente</strong><p>Envie uma mensagem à Diniz Doces com o código <b>${clean(formattedCode)}</b> para confirmar os dados e combinar o pagamento diretamente com o estabelecimento. O pedido só será confirmado após essa conferência.</p></aside><div class="order-success-actions">${whatsappUrl ? `<a class="public-button order-whatsapp-action" href="${clean(whatsappUrl)}" target="_blank" rel="noopener noreferrer">Enviar código pelo WhatsApp</a>` : ""}<a class="public-button secondary" href="${clean(trackingUrl)}">Acompanhar pedido no site</a></div><p class="order-success-note">O WhatsApp será aberto somente se você escolher essa opção, em uma nova aba.</p>`;
     $("orderSuccess").classList.remove("hidden"); $("orderSuccess").scrollIntoView({ behavior: "smooth", block: "center" }); event.target.reset();
-    if (whatsappUrl) window.setTimeout(() => window.location.assign(whatsappUrl), 1200);
   });
   init();
 })();

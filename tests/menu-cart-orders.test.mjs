@@ -108,14 +108,20 @@ test("entrega exige CEP e endereço com preenchimento assistido", async () => {
   assert.match(deliveryMigration, /round\(kilometer \* 1\.25, 2\)/);
 });
 
-test("sucesso do pedido preserva o código e encaminha a Diniz ao WhatsApp", async () => {
-  const [html, script] = await Promise.all([
+test("sucesso preserva o pedido, não redireciona e orienta o pagamento no WhatsApp", async () => {
+  const [html, script, tracking] = await Promise.all([
     readFile(new URL("cardapio/index.html", root), "utf8"),
-    readFile(new URL("cardapio/cardapio.js", root), "utf8")
+    readFile(new URL("cardapio/cardapio.js", root), "utf8"),
+    readFile(new URL("pedido/pedido.js", root), "utf8")
   ]);
   assert.match(html, /id="orderSuccess"/);
   assert.match(script, /const dinizWhatsapp = "5516991596865"/);
-  assert.match(script, /Código \$\{clean\(formattedCode\)\}/);
-  assert.match(script, /window\.location\.assign\(whatsappUrl\)/);
+  assert.match(script, /Código do pedido/);
+  assert.match(script, /Pagamento ainda pendente/);
+  assert.match(script, /target="_blank" rel="noopener noreferrer"/);
+  assert.doesNotMatch(script, /window\.location\.assign\(whatsappUrl\)/);
+  assert.match(tracking, /Pagamento pendente/);
+  assert.match(tracking, /combinar o pagamento diretamente/);
+  assert.match(tracking, /Esta página continuará disponível para acompanhamento/);
   assert.match(script, /menu-checkout-active/);
 });
