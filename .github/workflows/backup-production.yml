@@ -50,8 +50,32 @@ jobs:
           supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/data.sql \
             --use-copy --data-only \
             --schema public,private
+          {
+            echo 'revoke execute on all functions in schema public from public, anon, authenticated, service_role;'
+            echo 'revoke execute on all functions in schema private from public, anon, authenticated, service_role;'
+            psql "$SUPABASE_DB_URL" --no-psqlrc --tuples-only --no-align --variable ON_ERROR_STOP=1 <<'SQL'
+          select format(
+            'grant %s on function %I.%I(%s) to %s%s;',
+            upper(acl.privilege_type),
+            namespace.nspname,
+            procedure.proname,
+            pg_get_function_identity_arguments(procedure.oid),
+            case when acl.grantee = 0 then 'PUBLIC' else quote_ident(grantee.rolname) end,
+            case when acl.is_grantable then ' with grant option' else '' end
+          )
+          from pg_proc procedure
+          join pg_namespace namespace on namespace.oid = procedure.pronamespace
+          cross join lateral aclexplode(coalesce(procedure.proacl, acldefault('f', procedure.proowner))) acl
+          left join pg_roles grantee on grantee.oid = acl.grantee
+          where namespace.nspname in ('public', 'private')
+            and (acl.grantee = 0 or grantee.rolname in ('anon', 'authenticated', 'service_role'))
+          order by namespace.nspname, procedure.proname, acl.grantee, acl.privilege_type;
+          SQL
+          } > backup/function-acl.sql
           test -s backup/schema.sql
           test -s backup/data.sql
+          test -s backup/function-acl.sql
+          grep -q 'transition_appointment_status' backup/function-acl.sql
           if grep -Eiq '^COPY[[:space:]]+("?auth"?|"?storage"?)\.' backup/data.sql; then
             echo "Managed auth/storage data was not excluded" >&2
             exit 1

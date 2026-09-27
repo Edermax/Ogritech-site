@@ -12,6 +12,17 @@ test("backup diário publica e resolve incidente operacional", async () => {
   assert.match(workflow, /production-backup/);
   assert.match(workflow, /Falha no backup diário de produção/);
   assert.match(workflow, /state: "closed"/);
+  assert.match(workflow, /function-acl\.sql/);
+  assert.match(workflow, /aclexplode/);
+  assert.match(workflow, /revoke execute on all functions in schema public/);
+});
+
+test("restauração reaplica ACLs e separa baseline do Cardápio promovido", async () => {
+  const workflow = await load(".github/workflows/restore-drill.yml");
+  assert.match(workflow, /--file restored\/backup\/function-acl\.sql/);
+  assert.match(workflow, /expect_menu_schema/);
+  assert.match(workflow, /EXPECT_MENU_SCHEMA/);
+  assert.match(workflow, /menu-cart-orders\.test\.sql/);
 });
 
 test("workflows usam gerações atuais das Actions de artefato", async () => {

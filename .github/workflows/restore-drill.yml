@@ -13,6 +13,11 @@ on:
         required: true
         default: ogritech-production-20260830T204344Z
         type: string
+      expect_menu_schema:
+        description: Require Cardápio schema and pgTAP suites after its production promotion
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   actions: read
@@ -31,6 +36,7 @@ jobs:
     env:
       BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
       LOCAL_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      EXPECT_MENU_SCHEMA: ${{ inputs.expect_menu_schema }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
@@ -83,6 +89,7 @@ jobs:
           test -s restored/backup/roles.sql
           test -s restored/backup/schema.sql
           test -s restored/backup/data.sql
+          test -s restored/backup/function-acl.sql
           if grep -Eiq '^COPY[[:space:]]+("?auth"?|"?storage"?)\.' restored/backup/data.sql; then
             echo "Backup contains managed auth/storage data" >&2
             exit 1
@@ -121,6 +128,7 @@ jobs:
             --file restored/backup/schema.sql \
             --command 'SET session_replication_role = replica' \
             --file restored/backup/data.sql \
+            --file restored/backup/function-acl.sql \
             --dbname "$LOCAL_DB_URL"
 
       - name: Verify restored schema, RLS and database tests
@@ -156,16 +164,45 @@ jobs:
             if to_regprocedure('public.public_create_appointment(text,uuid,uuid,date,time without time zone,text,text,text,boolean,text)') is null then
               raise exception 'Critical public_create_appointment RPC is missing';
             end if;
+
           end
           $$;
           SQL
 
-          supabase test db \
-            --workdir restore-drill \
-            --db-url "$LOCAL_DB_URL" \
+          tests=(
             "$GITHUB_WORKSPACE/supabase/tests/database/appointment-operations.test.sql" \
             "$GITHUB_WORKSPACE/supabase/tests/database/staging-functional.test.sql" \
             "$GITHUB_WORKSPACE/supabase/tests/database/staging-operations.test.sql"
+          )
+          if [[ "$EXPECT_MENU_SCHEMA" == "true" ]]; then
+            psql "$LOCAL_DB_URL" --variable ON_ERROR_STOP=1 <<'SQL'
+          do $$
+          begin
+            if to_regclass('public.online_menus') is null
+              or to_regclass('public.menu_items') is null
+              or to_regclass('public.menu_orders') is null
+              or to_regclass('public.menu_order_items') is null then
+              raise exception 'Critical Ogritech Cardápio tables are missing';
+            end if;
+            if not exists (
+              select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+              where n.nspname = 'public' and p.proname = 'public_create_menu_order'
+            ) then
+              raise exception 'Critical public_create_menu_order RPC is missing';
+            end if;
+          end
+          $$;
+          SQL
+            tests+=(
+              "$GITHUB_WORKSPACE/supabase/tests/database/multiproduct-foundation.test.sql"
+              "$GITHUB_WORKSPACE/supabase/tests/database/multiproduct-activation.test.sql"
+              "$GITHUB_WORKSPACE/supabase/tests/database/menu-catalog-core.test.sql"
+              "$GITHUB_WORKSPACE/supabase/tests/database/menu-cart-orders.test.sql"
+              "$GITHUB_WORKSPACE/supabase/tests/database/menu-self-service-onboarding.test.sql"
+              "$GITHUB_WORKSPACE/supabase/tests/database/commercial-self-service-lifecycle.test.sql"
+            )
+          fi
+          supabase test db --workdir restore-drill --db-url "$LOCAL_DB_URL" "${tests[@]}"
 
       - name: Remove decrypted files
         if: always()
