@@ -7,16 +7,16 @@
   "decision": "BLOCKED_PENDING_REVIEW",
   "localReplay": {
     "status": "PASSED",
-    "migrationCount": 68,
-    "testFiles": 48,
-    "assertions": 179,
+    "migrationCount": 69,
+    "testFiles": 49,
+    "assertions": 180,
     "evidence": "docs/evidencias/cardapio-replay-limpo-producao-2026-09-27.md"
   },
   "productionDryRun": {
     "status": "NEEDS_REFRESH",
     "executedAt": "2026-09-27",
     "command": "supabase db push --dry-run --include-all --linked",
-    "migrationCount": 30,
+    "migrationCount": 31,
     "remoteChangesPerformed": false,
     "evidence": "docs/evidencias/cardapio-dry-run-producao-2026-09-27.md"
   },
@@ -31,7 +31,8 @@
     "menu_assistant_foundation",
     "menu_self_service_catalog_editor",
     "menu_catalog_order_and_delivery_zones",
-    "menu_catalog_draft_publication"
+    "menu_catalog_draft_publication",
+    "menu_trial_self_service"
   ],
   "classifications": {
     "shared_hardening": [
@@ -61,7 +62,8 @@
       "menu_assistant_foundation",
       "menu_self_service_catalog_editor",
       "menu_catalog_order_and_delivery_zones",
-      "menu_catalog_draft_publication"
+      "menu_catalog_draft_publication",
+      "menu_trial_self_service"
     ],
     "ai_staging_disabled": [
       "menu_ai_staging_controls",

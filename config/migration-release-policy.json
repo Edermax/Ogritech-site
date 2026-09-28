@@ -70,7 +70,8 @@
       "enable_diniz_geoapify_delivery",
       "menu_self_service_catalog_editor",
       "menu_catalog_order_and_delivery_zones",
-      "menu_catalog_draft_publication"
+      "menu_catalog_draft_publication",
+      "menu_trial_self_service"
     ],
     "remoteVersionAliases": {
       "platform_contact_leads": "20260901214935",
@@ -210,6 +211,10 @@
       {
         "name": "menu_catalog_draft_publication",
         "reason": "Rascunho independente e promoção atômica do catálogo permanecem retidos até homologação concorrente com pedidos sintéticos no staging."
+      },
+      {
+        "name": "menu_trial_self_service",
+        "reason": "Teste gratuito e preço comercial do Cardápio aguardam homologação completa do cadastro, convite e acesso no staging antes da produção."
       }
     ]
   }
