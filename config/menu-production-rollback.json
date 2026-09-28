@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-27",
+  "product": "Ogritech Cardápio",
+  "rollbackTarget": {
+    "ref": "7d6626b98698b49baf1e45ecc3b1d6562736152b",
+    "source": "last_committed_repository_state_before_production_release_work",
+    "verifiedAsCurrentProduction": false,
+    "requiredFiles": [
+      "index.html",
+      "cardapio/index.html",
+      "cardapio/cardapio.js",
+      "pedido/index.html",
+      "pedido/pedido.js",
+      "painel/index.html"
+    ]
+  },
+  "entryControl": {
+    "closeBeforeRollback": true,
+    "preserveExistingOrderTracking": true,
+    "reopenOnlyAfterHealthCheck": true
+  },
+  "database": {
+    "downMigrationsAllowed": false,
+    "strategy": "forward_only_additive_correction",
+    "restoreAllowedOnlyFor": ["confirmed_data_loss", "confirmed_data_corruption"],
+    "restoreRequires": ["incident_commander_approval", "fresh_backup_identity", "isolated_restore_validation"]
+  },
+  "orderedSteps": [
+    "declare_no_go_and_record_incident",
+    "close_new_menu_orders",
+    "preserve_existing_order_tracking",
+    "redeploy_immutable_previous_frontend_ref",
+    "verify_public_health_and_security_headers",
+    "verify_existing_order_tracking",
+    "apply_additive_database_correction_if_required",
+    "restore_backup_only_for_confirmed_loss_or_corruption",
+    "observe_monitor_window",
+    "record_decision_before_reopening"
+  ],
+  "stopConditions": [
+    "rollback_ref_not_verified_as_current_production",
+    "backup_identity_missing",
+    "cross_tenant_access",
+    "existing_order_tracking_broken",
+    "data_loss_or_corruption_scope_unknown",
+    "monitor_alert_unresolved"
+  ],
+  "localRehearsal": {
+    "status": "PREPARED",
+    "remoteChangesPerformed": false,
+    "productionRehearsalRequired": true
+  }
+}

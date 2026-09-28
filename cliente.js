@@ -1,5 +1,5 @@
 /* =========================================================
-   OGRITECH - ÁREA DO CLIENTE DA BARBEARIA
+   OGRITECH - ÁREA DO CLIENTE
    ETAPA 5: Agenda integrada.
 
    Contas reais compartilham a agenda via Supabase.
@@ -487,7 +487,7 @@ clientAppointmentForm.addEventListener(
         renderClientAppointments();
 
         alert(
-            "Agendamento solicitado. Aguarde a confirmação da barbearia."
+            "Agendamento solicitado. Aguarde a confirmação do estabelecimento."
         );
     }
 );

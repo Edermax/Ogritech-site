@@ -21,6 +21,9 @@
     let menuDataReady = false;
     let menuSettingsDirty = false;
     let menuLoadVersion = 0;
+    let menuCatalogCategories = [];
+    let menuCatalogDraftDirty = false;
+    let menuImageRemoveRequested = false;
     const menuWorkspaceGroups = {
         operation: ["menuPilotMetricsPanel", "menuOrdersPanel"],
         settings: ["menuOnboardingPanel", "menuAssistantSettingsPanel", "menuSettingsPanel"],
@@ -60,15 +63,17 @@
 
     function updateMenuControls() {
         const unavailable = menuBusy || !menuDataReady;
-        const editable = !unavailable && !menuRecord?.published;
+        const settingsEditable = !unavailable && !menuRecord?.published;
+        const catalogEditable = !unavailable && Boolean(menuRecord) && !menuSettingsDirty;
         for (const id of ["menuSettingsForm", "menuItemForm", "menuTemplateForm"]) {
+            const editable = id === "menuItemForm" ? catalogEditable : settingsEditable;
             byId(id)?.querySelectorAll("input,select,textarea,button").forEach((input) => { input.disabled = !editable || (id !== "menuSettingsForm" && menuSettingsDirty); });
             byId(id)?.setAttribute("aria-busy", String(menuBusy));
         }
         byId("menuOnboardingPanel")?.setAttribute("aria-busy", String(menuBusy));
         byId("menuTestOrderButton").disabled = unavailable || menuSettingsDirty || !menuRecord || menuRecord.published || !["test_order", "review", "ready"].includes(menuOnboarding?.next_step);
         byId("menuReviewButton").disabled = unavailable || menuSettingsDirty || !menuOnboarding?.checks?.test_order || Boolean(menuOnboarding?.checks?.review) || Boolean(menuRecord?.published);
-        byId("menuPublicationButton").textContent = menuRecord?.published ? "Despublicar cardápio" : "Publicar cardápio";
+        byId("menuPublicationButton").textContent = menuRecord?.published && menuCatalogDraftDirty ? "Publicar alterações" : menuRecord?.published ? "Despublicar cardápio" : "Publicar cardápio";
         byId("menuPublicationButton").disabled = unavailable || menuSettingsDirty || (!menuRecord?.published && menuOnboarding?.next_step !== "ready");
         byId("menuReloadButton").disabled = menuBusy;
         byId("menuOrdersReload").disabled = unavailable;
@@ -81,8 +86,9 @@
         byId("menuPublishedSetupNotice")?.classList.toggle("hidden", !published);
         byId("menuSettingsLockNotice")?.classList.toggle("hidden", !published);
         byId("menuCatalogLockNotice")?.classList.toggle("hidden", !published);
+        if (published && byId("menuCatalogLockNotice")) byId("menuCatalogLockNotice").textContent = menuCatalogDraftDirty ? "Há alterações em rascunho. Clientes continuam vendo a versão anterior até você usar “Publicar alterações”." : "Você pode editar produtos com segurança: as mudanças ficarão em rascunho e não interromperão os pedidos.";
         byId("menuSettingsForm")?.classList.toggle("hidden", published);
-        byId("menuItemForm")?.classList.toggle("hidden", published);
+        byId("menuItemForm")?.classList.remove("hidden");
         if (byId("menuReviewDetails")) byId("menuReviewDetails").open = !published;
     }
 
@@ -135,6 +141,96 @@
             ["Cores", `${menu.visual_identity?.primary_color || "—"} e ${menu.visual_identity?.accent_color || "—"}`]
         ];
         byId("menuReviewSummary").innerHTML = `<dl>${rows.map(([label, value]) => `<dt><strong>${escapeHtml(label)}</strong></dt><dd>${escapeHtml(value)}</dd>`).join("")}</dl>`;
+    }
+
+    const menuImagePathFromUrl = (url) => {
+        const marker = "/storage/v1/object/public/menu-images/";
+        const index = String(url || "").indexOf(marker);
+        return index < 0 ? "" : decodeURIComponent(String(url).slice(index + marker.length));
+    };
+
+    function addMenuPriceRow(value = {}) {
+        const row = document.createElement("div");
+        row.className = "menu-editor-row menu-price-row";
+        row.innerHTML = `<label>Variação<input data-price-label maxlength="80" value="${escapeHtml(value.label || "Padrão")}" required></label><label>Preço<input data-price-value type="number" min="0" step="0.01" value="${escapeHtml(value.price ?? "")}" required></label><label>Promocional<input data-price-promo type="number" min="0" step="0.01" value="${escapeHtml(value.promotional_price ?? "")}" placeholder="Opcional"></label><button class="table-button" data-remove-row type="button">Remover</button>`;
+        byId("menuPriceRows").append(row);
+    }
+
+    function addMenuOptionRow(container, value = {}) {
+        const row = document.createElement("div");
+        row.className = "menu-editor-row menu-option-row";
+        row.innerHTML = `<label>Opção<input data-option-name maxlength="120" value="${escapeHtml(value.name || "")}" required></label><label>Acréscimo<input data-option-price type="number" min="0" step="0.01" value="${escapeHtml(value.price_delta ?? 0)}" required></label><label>Máximo<input data-option-maximum type="number" min="1" max="100" step="1" value="${escapeHtml(value.maximum_quantity ?? 1)}" required></label><button class="table-button" data-remove-row type="button">Remover</button>`;
+        container.append(row);
+    }
+
+    function addMenuOptionGroup(value = {}) {
+        const group = document.createElement("section");
+        group.className = "menu-option-group-editor";
+        group.innerHTML = `<div class="form-row"><label>Nome do grupo<input data-group-name maxlength="100" value="${escapeHtml(value.name || "")}" required></label><label>Seleção<select data-group-type><option value="multiple">Múltipla</option><option value="single">Única</option><option value="removal">Remoção</option></select></label></div><div class="form-row"><label>Mínimo<input data-group-min type="number" min="0" max="50" value="${escapeHtml(value.minimum_selections ?? 0)}"></label><label>Máximo<input data-group-max type="number" min="1" max="50" value="${escapeHtml(value.maximum_selections ?? 1)}"></label><label>Grátis<input data-group-free type="number" min="0" max="50" value="${escapeHtml(value.free_selections ?? 0)}"></label></div><div class="menu-option-rows"></div><div class="commercial-actions"><button class="table-button edit" data-add-option type="button">+ Opção</button><button class="table-button" data-remove-group type="button">Remover grupo</button></div>`;
+        group.querySelector("[data-group-type]").value = value.selection_type || "multiple";
+        const options = group.querySelector(".menu-option-rows");
+        (value.options?.length ? value.options : [{}]).forEach((option) => addMenuOptionRow(options, option));
+        byId("menuOptionGroupRows").append(group);
+    }
+
+    function addMenuDeliveryZoneRow(value = {}) {
+        const row=document.createElement("div"); row.className="menu-delivery-zone-row menu-option-group-editor";
+        row.innerHTML=`<div class="form-row"><label>Código<input data-zone-code pattern="[a-z0-9](?:[a-z0-9]|_|-){1,31}" maxlength="32" value="${escapeHtml(value.code||"")}" placeholder="centro" required></label><label>Nome da região<input data-zone-name maxlength="120" value="${escapeHtml(value.name||"")}" placeholder="Centro" required></label></div><div class="form-row"><label>Taxa<input data-zone-fee type="number" min="0" step="0.01" value="${escapeHtml(value.fee??0)}" required></label><label>Pedido mínimo<input data-zone-minimum type="number" min="0" step="0.01" value="${escapeHtml(value.minimum_order??0)}" required></label></div><button class="table-button" data-remove-zone type="button">Remover região</button>`;
+        byId("menuDeliveryZoneRows").append(row);
+    }
+
+    function setupMenuDeliveryZoneEditor() {
+        const fieldset=byId("menuDeliveryZoneFields"); if(!fieldset || byId("menuDeliveryZoneRows") || typeof document.createElement!=="function") return;
+        fieldset.innerHTML='<legend>Regiões de entrega</legend><p class="section-description">Cadastre todas as regiões atendidas. O pedido usará a taxa escolhida e o maior valor entre o mínimo geral e o mínimo da região.</p><div id="menuDeliveryZoneRows" class="menu-editor-rows"></div><button id="menuAddDeliveryZone" class="table-button edit" type="button">+ Adicionar região</button>';
+        byId("menuAddDeliveryZone").addEventListener("click",()=>addMenuDeliveryZoneRow());
+        byId("menuDeliveryZoneRows").addEventListener("click",(event)=>{ if(event.target.closest("[data-remove-zone]")) event.target.closest(".menu-delivery-zone-row").remove(); });
+    }
+
+    function resetMenuItemEditor() {
+        byId("menuItemForm").reset();
+        byId("menuItemId").value = ""; byId("menuCategoryId").value = ""; byId("menuItemImageUrl").value = ""; byId("menuItemImagePath").value = "";
+        byId("menuItemUnit").value = "unidade"; byId("menuItemMinimum").value = "1"; byId("menuItemLeadTime").value = "0";
+        byId("menuItemActive").checked = true; byId("menuItemAvailable").checked = true; menuImageRemoveRequested = false;
+        byId("menuPriceRows").innerHTML = ""; byId("menuOptionGroupRows").innerHTML = ""; addMenuPriceRow();
+        byId("menuItemImagePreview").classList.add("hidden"); byId("menuItemImagePreview").querySelector("img").removeAttribute("src");
+        byId("menuItemSubmit").textContent = "Salvar produto"; byId("menuItemCancel").classList.add("hidden");
+    }
+
+    function editMenuCatalogItem(categoryId, itemId) {
+        const category = menuCatalogCategories.find((entry) => entry.id === categoryId);
+        const item = category?.menu_items?.find((entry) => entry.id === itemId);
+        if (!item) return;
+        resetMenuItemEditor();
+        byId("menuItemId").value = item.id; byId("menuCategoryId").value = category.id; byId("menuCategoryName").value = category.name;
+        byId("menuItemName").value = item.name; byId("menuItemDescription").value = item.description || ""; byId("menuItemType").value = item.item_type || "simple";
+        byId("menuItemUnit").value = item.unit_label || "unidade"; byId("menuItemMinimum").value = item.minimum_quantity ?? 1; byId("menuItemMaximum").value = item.maximum_quantity ?? "";
+        byId("menuItemLeadTime").value = item.lead_time_hours ?? 0; byId("menuItemActive").checked = item.active !== false; byId("menuItemAvailable").checked = item.available !== false;
+        byId("menuItemImageUrl").value = item.image_url || ""; byId("menuItemImagePath").value = menuImagePathFromUrl(item.image_url);
+        if (item.image_url) { byId("menuItemImagePreview").querySelector("img").src = item.image_url; byId("menuItemImagePreview").classList.remove("hidden"); }
+        byId("menuPriceRows").innerHTML = ""; (item.menu_item_prices || []).forEach(addMenuPriceRow); if (!item.menu_item_prices?.length) addMenuPriceRow();
+        byId("menuOptionGroupRows").innerHTML = "";
+        (item.menu_item_option_groups || []).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map((link)=>link.menu_option_groups).filter(Boolean).forEach((group)=>addMenuOptionGroup({...group,options:(group.menu_options||[]).filter((option)=>option.available)}));
+        byId("menuItemSubmit").textContent = "Atualizar produto"; byId("menuItemCancel").classList.remove("hidden");
+        byId("menuItemForm").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    const menuDraftPayload = () => ({ categories: menuCatalogCategories });
+
+    async function savePublishedMenuDraft() {
+        return supabaseClient.rpc("save_menu_catalog_draft", { target_barbershop_id: BARBERSHOP_ID, draft_payload: menuDraftPayload() });
+    }
+
+    async function moveMenuCatalogEntry(kind,id,direction) {
+        if(kind==="category"){
+            const index=menuCatalogCategories.findIndex((entry)=>entry.id===id), target=index+direction; if(index<0||target<0||target>=menuCatalogCategories.length)return;
+            [menuCatalogCategories[index],menuCatalogCategories[target]]=[menuCatalogCategories[target],menuCatalogCategories[index]];
+        } else {
+            const category=menuCatalogCategories.find((entry)=>entry.menu_items?.some((item)=>item.id===id)); if(!category)return;
+            const index=category.menu_items.findIndex((item)=>item.id===id),target=index+direction;if(target<0||target>=category.menu_items.length)return;
+            [category.menu_items[index],category.menu_items[target]]=[category.menu_items[target],category.menu_items[index]];
+        }
+        const categoryIds=menuCatalogCategories.map((entry)=>entry.id),itemIds=menuCatalogCategories.flatMap((entry)=>entry.menu_items||[]).map((item)=>item.id);
+        await runMenuAction("menuItemMessage","Salvando ordem...",()=>menuRecord?.published?savePublishedMenuDraft():supabaseClient.rpc("reorder_menu_catalog",{target_barbershop_id:BARBERSHOP_ID,category_ids:categoryIds,item_ids:itemIds}),menuRecord?.published?"Ordem salva no rascunho. Publique as alterações quando terminar.":"Ordem do catálogo atualizada.");
     }
 
     async function loadLandingAdmin() {
@@ -305,16 +401,23 @@
         updateMenuControls();
         try {
             const [{ data: menu, error }, { data: orders, error: ordersError }, { data: templates, error: templateError }, { data: onboarding, error: onboardingError }] = await Promise.all([
-                supabaseClient.from("online_menus").select("*,menu_delivery_zones(code,name,fee,minimum_order,active),menu_categories(id,name,active,sort_order,menu_items(id,name,active,available,menu_item_prices(id,label,price,promotional_price,active)))").eq("barbershop_id", BARBERSHOP_ID).maybeSingle(),
+                supabaseClient.from("online_menus").select("*,menu_delivery_zones(code,name,fee,minimum_order,active),menu_categories(id,name,description,active,sort_order,menu_items(id,name,description,image_url,item_type,unit_label,minimum_quantity,maximum_quantity,lead_time_hours,active,available,sort_order,menu_item_prices(id,label,price,promotional_price,active,sort_order),menu_item_option_groups(sort_order,menu_option_groups(id,name,selection_type,minimum_selections,maximum_selections,free_selections,active,menu_options(id,name,price_delta,maximum_quantity,available,sort_order)))))").eq("barbershop_id", BARBERSHOP_ID).maybeSingle(),
                 supabaseClient.from("menu_orders").select("id,public_reference,customer_name,fulfillment_type,status,total_amount,created_at,is_test").eq("barbershop_id", BARBERSHOP_ID).order("created_at", { ascending: false }).limit(100),
                 supabaseClient.from("menu_catalog_templates").select("code,name,description,segment,definition").eq("active", true).order("name"),
                 supabaseClient.rpc("menu_onboarding_status", { target_barbershop_id: BARBERSHOP_ID })
             ]);
             if (loadVersion !== menuLoadVersion) return false;
             if (error || templateError || onboardingError) throw error || templateError || onboardingError;
+            let draftStatus = null;
+            if (menu?.published) {
+                const draftResult = await supabaseClient.rpc("menu_catalog_draft_status", { target_barbershop_id: BARBERSHOP_ID });
+                if (draftResult.error) throw draftResult.error;
+                draftStatus = draftResult.data;
+            }
             menuTemplates = templates || [];
             menuOnboarding = onboarding;
             menuRecord = menu;
+            menuCatalogDraftDirty = Boolean(draftStatus?.exists);
             menuDataReady = true;
             menuSettingsDirty = false;
             byId("menuTemplateCode").innerHTML = '<option value="">Selecione</option>' + menuTemplates.map((template) => `<option value="${escapeHtml(template.code)}">${escapeHtml(template.name)}</option>`).join("");
@@ -333,12 +436,9 @@
             byId("menuOpensAt").value = hours.opens_at || "10:00";
             byId("menuClosesAt").value = hours.closes_at || "22:00";
             document.querySelectorAll(".menu-weekday").forEach((input) => { input.checked = (hours.weekdays || []).map(Number).includes(Number(input.value)); });
-            const zone = (menu?.menu_delivery_zones || []).find((entry) => entry.active) || {};
-            byId("menuZoneCode").value = zone.code || "";
-            byId("menuZoneCode").readOnly = Boolean(zone.code);
-            byId("menuZoneName").value = zone.name || "";
-            byId("menuZoneFee").value = zone.fee ?? menu?.delivery_fee ?? 0;
-            byId("menuZoneMinimum").value = zone.minimum_order ?? menu?.minimum_order ?? 0;
+            const zones = (menu?.menu_delivery_zones || []).filter((entry)=>entry.active);
+            if(typeof document.createElement==="function"&&byId("menuDeliveryZoneRows")){ byId("menuDeliveryZoneRows").innerHTML=""; (zones.length?zones:[{fee:menu?.delivery_fee??0,minimum_order:menu?.minimum_order??0}]).forEach(addMenuDeliveryZoneRow); }
+            else { const zone=zones[0]||{}; if(byId("menuZoneCode")){ byId("menuZoneCode").value=zone.code||""; byId("menuZoneName").value=zone.name||""; byId("menuZoneFee").value=zone.fee??menu?.delivery_fee??0; byId("menuZoneMinimum").value=zone.minimum_order??menu?.minimum_order??0; } }
             byId("menuDeliveryZoneFields").classList.toggle("hidden", !menu?.accepts_delivery);
             const checks = onboarding?.checks || {};
             const progress = `${onboarding?.completed_count || 0} de ${onboarding?.total_count || 8} etapas concluídas`;
@@ -347,7 +447,7 @@
             byId("menuOnboardingBar").max = onboarding?.total_count || 8;
             byId("menuOnboardingBar").setAttribute("aria-valuetext", progress);
             byId("menuOnboardingChecklist").innerHTML = Object.entries(menuStepLabels).map(([code, label]) => `<li${onboarding?.next_step === code ? ' aria-current="step"' : ""}><span aria-hidden="true">${checks[code] ? "✓" : "○"}</span> ${escapeHtml(label)} — ${checks[code] ? "concluído" : "pendente"}</li>`).join("");
-            byId("menuNextStep").textContent = menu?.published ? "Seu cardápio está publicado. Para alterar a configuração ou o catálogo, despublique e revise novamente." : onboarding?.next_step === "ready" ? "Revisão concluída. Você decide quando publicar seu cardápio." : `Próxima etapa: ${menuStepLabels[onboarding?.next_step] || menuStepLabels.segment}. Salve a configuração para retomar de onde parou.`;
+            byId("menuNextStep").textContent = menu?.published ? (menuCatalogDraftDirty ? "O cardápio público continua ativo. Há alterações de catálogo em rascunho aguardando publicação." : "Seu cardápio está publicado. Você pode preparar alterações de catálogo em rascunho sem interromper os pedidos.") : onboarding?.next_step === "ready" ? "Revisão concluída. Você decide quando publicar seu cardápio." : `Próxima etapa: ${menuStepLabels[onboarding?.next_step] || menuStepLabels.segment}. Salve a configuração para retomar de onde parou.`;
             const link = byId("menuPublicLink");
             const operationLink = byId("menuOperationPublicLink");
             const operationStatus = byId("menuOperationStatus");
@@ -360,9 +460,29 @@
             if (!menu?.published) operationLink.classList.add("hidden");
             operationStatus.textContent = menu?.published ? "Cardápio publicado" : "Cardápio não publicado";
             operationStatus.setAttribute("data-state", menu?.published ? "published" : "draft");
-            const categories = [...(menu?.menu_categories || [])].sort((a, b) => a.sort_order - b.sort_order);
+            const categories = [...(draftStatus?.payload?.categories || menu?.menu_categories || [])].sort((a, b) => a.sort_order - b.sort_order);
+            menuCatalogCategories = categories;
+            byId("menuCategorySuggestions").innerHTML = categories.map((category) => `<option value="${escapeHtml(category.name)}"></option>`).join("");
             renderMenuReview(menu, categories);
-            byId("menuCatalogList").innerHTML = categories.map((category) => `<article><strong>${escapeHtml(category.name)}${category.active ? "" : " · categoria inativa"}</strong>${(category.menu_items || []).map((item) => `<p>${escapeHtml(item.name)}${item.active && item.available ? "" : " · indisponível"} — ${(item.menu_item_prices || []).filter((price) => price.active).map((price) => formatMoney.format(Number(price.promotional_price ?? price.price))).join(" / ") || "Sem preço ativo"}</p>`).join("")}</article>`).join("") || "<p class='section-description'>Nenhum item cadastrado.</p>";
+            byId("menuCatalogList").innerHTML = categories.map((category) => `<article><header><strong>${escapeHtml(category.name)}${category.active ? "" : " · categoria inativa"}</strong><div class="commercial-actions"><small>${(category.menu_items || []).length} produto(s)</small><button class="table-button" type="button" data-move-category="${category.id}" data-direction="-1" aria-label="Mover categoria para cima">↑</button><button class="table-button" type="button" data-move-category="${category.id}" data-direction="1" aria-label="Mover categoria para baixo">↓</button></div></header>${(category.menu_items || []).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map((item) => `<div class="menu-catalog-editor-item">${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="">` : '<span class="menu-catalog-no-image" aria-hidden="true">Sem foto</span>'}<div><strong>${escapeHtml(item.name)}</strong><p>${escapeHtml(item.description || "Sem descrição")}</p><small>${item.active && item.available ? "Disponível" : "Indisponível"} · ${(item.menu_item_prices || []).filter((price) => price.active).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map((price) => `${escapeHtml(price.label)}: ${formatMoney.format(Number(price.promotional_price ?? price.price))}`).join(" · ") || "Sem preço ativo"}</small></div><div class="commercial-actions"><button class="table-button" type="button" data-move-menu-item="${item.id}" data-direction="-1" aria-label="Mover produto para cima">↑</button><button class="table-button" type="button" data-move-menu-item="${item.id}" data-direction="1" aria-label="Mover produto para baixo">↓</button><button class="table-button edit" type="button" data-edit-menu-item="${item.id}" data-category-id="${category.id}">Editar</button><button class="table-button" type="button" data-delete-menu-item="${item.id}" data-category-id="${category.id}">Excluir</button></div></div>`).join("") || '<p class="section-description">Categoria vazia.</p>'}</article>`).join("") || "<p class='section-description'>Nenhum item cadastrado.</p>";
+            byId("menuCatalogList").querySelectorAll("[data-edit-menu-item]").forEach((button)=>button.addEventListener("click",()=>editMenuCatalogItem(button.dataset.categoryId,button.dataset.editMenuItem)));
+            byId("menuCatalogList").querySelectorAll("[data-delete-menu-item]").forEach((button)=>button.addEventListener("click",async()=>{
+                if (!confirm("Excluir este produto e seus preços e adicionais? Esta ação não pode ser desfeita.")) return;
+                const category=menuCatalogCategories.find((entry)=>entry.id===button.dataset.categoryId), item=category?.menu_items?.find((entry)=>entry.id===button.dataset.deleteMenuItem);
+                await runMenuAction("menuItemMessage","Excluindo produto...",async()=>{
+                    if(menuRecord?.published){
+                        category.menu_items=category.menu_items.filter((entry)=>entry.id!==button.dataset.deleteMenuItem);
+                        menuCatalogCategories=menuCatalogCategories.filter((entry)=>entry.menu_items?.length);
+                        return savePublishedMenuDraft();
+                    }
+                    const result=await supabaseClient.rpc("delete_menu_catalog_item",{target_barbershop_id:BARBERSHOP_ID,target_item_id:button.dataset.deleteMenuItem});
+                    if(result.error) return result;
+                    const path=menuImagePathFromUrl(item?.image_url); if(path) await supabaseClient.storage.from("menu-images").remove([path]);
+                    return result;
+                },menuRecord?.published?"Produto removido do rascunho. O catálogo público não mudou.":"Produto excluído.");
+            }));
+            byId("menuCatalogList").querySelectorAll("[data-move-category]").forEach((button)=>button.addEventListener("click",()=>moveMenuCatalogEntry("category",button.dataset.moveCategory,Number(button.dataset.direction))));
+            byId("menuCatalogList").querySelectorAll("[data-move-menu-item]").forEach((button)=>button.addEventListener("click",()=>moveMenuCatalogEntry("item",button.dataset.moveMenuItem,Number(button.dataset.direction))));
             byId("menuOrdersList").innerHTML = ordersError ? `<p role="status">${escapeHtml(menuError(ordersError))} Use “Atualizar etapas” para recarregar os pedidos.</p>` : (orders || []).map((order) => {
                 const status = order.status === "pending" ? "received" : order.status;
                 const action = status === "received" ? { next: "confirmed", label: "Confirmar" } : status === "confirmed" ? { next: "completed", label: "Concluir" } : null;
@@ -391,12 +511,14 @@
         event.preventDefault();
         if (menuRecord?.published) return;
         const acceptsDelivery=byId("menuAcceptsDelivery").checked;
-        const settings={slug:byId("menuSlug").value.trim().toLowerCase(),title:byId("menuTitle").value.trim(),description:byId("menuDescription").value.trim(),minimum_order:Number(byId("menuMinimum").value||0),delivery_fee:Number(byId("menuDeliveryFee").value||0),accepts_delivery:acceptsDelivery,accepts_pickup:byId("menuAcceptsPickup").checked,visual_identity:{primary_color:byId("menuPrimaryColor").value,accent_color:byId("menuAccentColor").value},payment_methods:[...document.querySelectorAll(".menu-payment:checked")].map((input)=>input.value),weekdays:[...document.querySelectorAll(".menu-weekday:checked")].map((input)=>Number(input.value)),opens_at:byId("menuOpensAt").value,closes_at:byId("menuClosesAt").value,delivery_zone:acceptsDelivery?{code:byId("menuZoneCode").value.trim().toLowerCase(),name:byId("menuZoneName").value.trim(),fee:Number(byId("menuZoneFee").value||0),minimum_order:Number(byId("menuZoneMinimum").value||0)}:null};
+        const zones=typeof document.createElement==="function"&&byId("menuDeliveryZoneRows")?[...byId("menuDeliveryZoneRows").querySelectorAll(".menu-delivery-zone-row")].map((row)=>({code:row.querySelector("[data-zone-code]").value.trim().toLowerCase(),name:row.querySelector("[data-zone-name]").value.trim(),fee:Number(row.querySelector("[data-zone-fee]").value||0),minimum_order:Number(row.querySelector("[data-zone-minimum]").value||0)})):(byId("menuZoneCode")?[{code:byId("menuZoneCode").value.trim().toLowerCase(),name:byId("menuZoneName").value.trim(),fee:Number(byId("menuZoneFee").value||0),minimum_order:Number(byId("menuZoneMinimum").value||0)}]:[]);
+        const firstZone=zones[0]||null;
+        const settings={slug:byId("menuSlug").value.trim().toLowerCase(),title:byId("menuTitle").value.trim(),description:byId("menuDescription").value.trim(),minimum_order:Number(byId("menuMinimum").value||0),delivery_fee:Number(byId("menuDeliveryFee").value||0),accepts_delivery:acceptsDelivery,accepts_pickup:byId("menuAcceptsPickup").checked,visual_identity:{primary_color:byId("menuPrimaryColor").value,accent_color:byId("menuAccentColor").value},payment_methods:[...document.querySelectorAll(".menu-payment:checked")].map((input)=>input.value),weekdays:[...document.querySelectorAll(".menu-weekday:checked")].map((input)=>Number(input.value)),opens_at:byId("menuOpensAt").value,closes_at:byId("menuClosesAt").value,delivery_zone:acceptsDelivery?firstZone:null};
         if (!settings.accepts_pickup && !acceptsDelivery) return notify(byId("menuMessage"), "Ative a retirada, a entrega ou as duas opções.", true);
         if (!settings.payment_methods.length) return notify(byId("menuMessage"), "Selecione ao menos uma forma de pagamento.", true);
         if (!settings.weekdays.length || !settings.opens_at || settings.opens_at >= settings.closes_at) return notify(byId("menuMessage"), "Escolha os dias e um horário de encerramento posterior à abertura, no mesmo dia.", true);
-        if (acceptsDelivery && (!settings.delivery_zone.code || !settings.delivery_zone.name)) return notify(byId("menuMessage"), "Preencha o código e o nome da região de entrega.", true);
-        await runMenuAction("menuMessage", "Salvando configuração...", () => supabaseClient.rpc("save_menu_onboarding_settings", { target_barbershop_id: BARBERSHOP_ID, settings }), "Configuração salva. Confira as etapas e faça o pedido de teste quando estiver pronto.");
+        if (acceptsDelivery && (!zones.length || zones.some((zone)=>!zone.code||!zone.name))) return notify(byId("menuMessage"), "Cadastre ao menos uma região completa para entrega.", true);
+        await runMenuAction("menuMessage", "Salvando configuração...", async()=>{ const saved=await supabaseClient.rpc("save_menu_onboarding_settings", { target_barbershop_id: BARBERSHOP_ID, settings }); if(saved.error)return saved; return supabaseClient.rpc("save_menu_delivery_zones",{target_barbershop_id:BARBERSHOP_ID,zones:acceptsDelivery?zones:[]}); }, "Configuração salva. Confira as etapas e faça o pedido de teste quando estiver pronto.");
     });
 
     byId("menuAssistantSettingsForm")?.addEventListener("submit", async (event) => {
@@ -456,6 +578,9 @@
     });
     byId("menuPublicationButton")?.addEventListener("click", () => {
         if (byId("menuPublicationButton").disabled) return;
+        if (menuRecord?.published && menuCatalogDraftDirty) {
+            return runMenuAction("menuOnboardingMessage", "Publicando alterações do catálogo...", () => supabaseClient.rpc("publish_menu_catalog_draft", { target_barbershop_id: BARBERSHOP_ID }), "Alterações publicadas de forma atômica. O cardápio permaneceu disponível durante a troca.");
+        }
         const shouldPublish = !menuRecord?.published;
         return runMenuAction("menuOnboardingMessage", shouldPublish ? "Publicando cardápio..." : "Despublicando cardápio...", () => supabaseClient.rpc("set_menu_publication", { target_barbershop_id: BARBERSHOP_ID, should_publish: shouldPublish }), shouldPublish ? "Cardápio publicado. Seu link está disponível no painel." : "Cardápio despublicado. Você pode ajustar e publicar novamente após a revisão.");
     });
@@ -470,32 +595,63 @@
         }), "Estrutura criada. Personalize a configuração e adicione seus produtos para continuar.");
     });
 
+    byId("menuAddPrice")?.addEventListener("click",()=>addMenuPriceRow({label:"",price:""}));
+    byId("menuAddOptionGroup")?.addEventListener("click",()=>addMenuOptionGroup());
+    byId("menuItemCancel")?.addEventListener("click",resetMenuItemEditor);
+    byId("menuPriceRows")?.addEventListener("click",(event)=>{ if(event.target.closest("[data-remove-row]") && byId("menuPriceRows").children.length>1) event.target.closest(".menu-editor-row").remove(); });
+    byId("menuOptionGroupRows")?.addEventListener("click",(event)=>{
+        const group=event.target.closest(".menu-option-group-editor"); if(!group) return;
+        if(event.target.closest("[data-add-option]")) addMenuOptionRow(group.querySelector(".menu-option-rows"));
+        if(event.target.closest("[data-remove-row]") && group.querySelectorAll(".menu-option-row").length>1) event.target.closest(".menu-option-row").remove();
+        if(event.target.closest("[data-remove-group]")) group.remove();
+    });
+    byId("menuItemImage")?.addEventListener("change",()=>{
+        const file=byId("menuItemImage").files?.[0]; if(!file) return;
+        if(!["image/jpeg","image/png","image/webp"].includes(file.type) || file.size>5*1024*1024){ byId("menuItemImage").value=""; return notify(byId("menuItemMessage"),"Use uma imagem JPEG, PNG ou WebP de até 5 MB.",true); }
+        const preview=byId("menuItemImagePreview"); preview.querySelector("img").src=URL.createObjectURL(file); preview.classList.remove("hidden"); menuImageRemoveRequested=false;
+    });
+    byId("menuItemImageRemove")?.addEventListener("click",()=>{
+        byId("menuItemImage").value=""; byId("menuItemImageUrl").value=""; byId("menuItemImagePreview").classList.add("hidden"); menuImageRemoveRequested=true;
+    });
+
     byId("menuItemForm")?.addEventListener("submit", async (event) => {
         event.preventDefault();
         if (!menuRecord) return notify(byId("menuItemMessage"), "Escolha um modelo de cardápio antes de adicionar itens.", true);
-        if (menuRecord.published || menuSettingsDirty) return;
-        await runMenuAction("menuItemMessage", "Adicionando item...", async () => {
-            const categoryName = byId("menuCategoryName").value.trim();
-            const found = await supabaseClient.from("menu_categories").select("id").eq("menu_id", menuRecord.id).eq("name", categoryName).maybeSingle();
-            if (found.error) throw found.error;
-            let category = found.data;
-            if (!category) {
-                const created = await supabaseClient.from("menu_categories").insert({ barbershop_id: BARBERSHOP_ID, menu_id: menuRecord.id, name: categoryName }).select("id").single();
-                if (created.error) throw created.error;
-                category = created.data;
+        if (menuSettingsDirty) return;
+        await runMenuAction("menuItemMessage", byId("menuItemId").value ? "Atualizando produto..." : "Adicionando produto...", async () => {
+            const previousPath=byId("menuItemImagePath").value, file=byId("menuItemImage").files?.[0]; let uploadedPath="", imageUrl=menuImageRemoveRequested?"":byId("menuItemImageUrl").value;
+            if(file){
+                const extension={"image/jpeg":"jpg","image/png":"png","image/webp":"webp"}[file.type]; uploadedPath=`${BARBERSHOP_ID}/${crypto.randomUUID()}.${extension}`;
+                const uploaded=await supabaseClient.storage.from("menu-images").upload(uploadedPath,file,{contentType:file.type,cacheControl:"31536000",upsert:false});
+                if(uploaded.error) return uploaded;
+                imageUrl=supabaseClient.storage.from("menu-images").getPublicUrl(uploadedPath).data.publicUrl;
             }
-            const createdItem = await supabaseClient.from("menu_items").insert({ barbershop_id: BARBERSHOP_ID, category_id: category.id, name: byId("menuItemName").value.trim(), item_type: byId("menuItemType").value }).select("id").single();
-            if (createdItem.error) throw createdItem.error;
-            const price = await supabaseClient.from("menu_item_prices").insert({ barbershop_id: BARBERSHOP_ID, menu_item_id: createdItem.data.id, label: byId("menuPriceLabel").value.trim() || "Padrão", price: Number(byId("menuItemPrice").value) });
-            if (price.error) {
-                await supabaseClient.from("menu_items").delete().eq("id", createdItem.data.id);
-                throw price.error;
+            const prices=[...byId("menuPriceRows").querySelectorAll(".menu-price-row")].map((row)=>({label:row.querySelector("[data-price-label]").value.trim(),price:Number(row.querySelector("[data-price-value]").value),promotional_price:row.querySelector("[data-price-promo]").value===""?null:Number(row.querySelector("[data-price-promo]").value)}));
+            const optionGroups=[...byId("menuOptionGroupRows").querySelectorAll(".menu-option-group-editor")].map((group)=>({name:group.querySelector("[data-group-name]").value.trim(),selection_type:group.querySelector("[data-group-type]").value,minimum_selections:Number(group.querySelector("[data-group-min]").value||0),maximum_selections:Number(group.querySelector("[data-group-max]").value||1),free_selections:Number(group.querySelector("[data-group-free]").value||0),options:[...group.querySelectorAll(".menu-option-row")].map((row)=>({name:row.querySelector("[data-option-name]").value.trim(),price_delta:Number(row.querySelector("[data-option-price]").value||0),maximum_quantity:Number(row.querySelector("[data-option-maximum]").value||1)}))}));
+            const payload={id:byId("menuItemId").value||null,category_id:byId("menuCategoryId").value||null,category_name:byId("menuCategoryName").value.trim(),name:byId("menuItemName").value.trim(),description:byId("menuItemDescription").value.trim(),image_url:imageUrl,item_type:byId("menuItemType").value,unit_label:byId("menuItemUnit").value.trim(),minimum_quantity:Number(byId("menuItemMinimum").value),maximum_quantity:byId("menuItemMaximum").value===""?null:Number(byId("menuItemMaximum").value),lead_time_hours:Number(byId("menuItemLeadTime").value||0),active:byId("menuItemActive").checked,available:byId("menuItemAvailable").checked,prices,option_groups:optionGroups};
+            if(menuRecord.published){
+                let category=menuCatalogCategories.find((entry)=>entry.id===payload.category_id) || menuCatalogCategories.find((entry)=>entry.name.toLowerCase()===payload.category_name.toLowerCase());
+                if(!category){ category={id:crypto.randomUUID(),name:payload.category_name,active:true,sort_order:(menuCatalogCategories.length+1)*10,menu_items:[]}; menuCatalogCategories.push(category); }
+                category.name=payload.category_name;
+                const draftItem={id:payload.id||crypto.randomUUID(),name:payload.name,description:payload.description,image_url:payload.image_url,item_type:payload.item_type,unit_label:payload.unit_label,minimum_quantity:payload.minimum_quantity,maximum_quantity:payload.maximum_quantity,lead_time_hours:payload.lead_time_hours,active:payload.active,available:payload.available,sort_order:((category.menu_items||[]).length+1)*10,menu_item_prices:prices.map((price,index)=>({...price,active:true,sort_order:(index+1)*10})),menu_item_option_groups:optionGroups.map((group,index)=>({sort_order:(index+1)*10,menu_option_groups:{...group,active:true,menu_options:group.options.map((option,optionIndex)=>({...option,available:true,sort_order:(optionIndex+1)*10}))}}))};
+                const priorCategory=menuCatalogCategories.find((entry)=>entry.menu_items?.some((item)=>item.id===draftItem.id));
+                if(priorCategory) priorCategory.menu_items=priorCategory.menu_items.filter((item)=>item.id!==draftItem.id);
+                category.menu_items=category.menu_items||[]; const existingIndex=category.menu_items.findIndex((item)=>item.id===draftItem.id);
+                if(existingIndex>=0){ draftItem.sort_order=category.menu_items[existingIndex].sort_order; category.menu_items[existingIndex]=draftItem; } else category.menu_items.push(draftItem);
+                menuCatalogCategories=menuCatalogCategories.filter((entry)=>entry.menu_items?.length);
+                const result=await savePublishedMenuDraft();
+                if(result.error){ if(uploadedPath) await supabaseClient.storage.from("menu-images").remove([uploadedPath]); return result; }
+                resetMenuItemEditor(); return result;
             }
-            event.target.reset();
-            byId("menuPriceLabel").value = "Padrão";
-            return price;
-        }, "Item adicionado. Confira o catálogo e as etapas pendentes.");
+            const result=await supabaseClient.rpc("save_menu_catalog_item",{target_barbershop_id:BARBERSHOP_ID,payload});
+            if(result.error){ if(uploadedPath) await supabaseClient.storage.from("menu-images").remove([uploadedPath]); return result; }
+            if(previousPath && previousPath!==uploadedPath && (uploadedPath || menuImageRemoveRequested)) await supabaseClient.storage.from("menu-images").remove([previousPath]);
+            resetMenuItemEditor(); return result;
+        }, menuRecord.published?"Produto salvo no rascunho. O catálogo público não mudou; publique quando terminar.":"Produto salvo. Confira o catálogo e as etapas pendentes.");
     });
+
+    setupMenuDeliveryZoneEditor();
+    if (byId("menuPriceRows") && typeof document.createElement === "function") resetMenuItemEditor();
 
     window.loadLandingAdmin = loadLandingAdmin;
     window.loadQuotesAdmin = loadQuotesAdmin;

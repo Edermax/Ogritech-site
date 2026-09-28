@@ -32,7 +32,17 @@ if (JSON.stringify(names) !== JSON.stringify(stagingNames)) {
 
 const baselineIndex = names.indexOf(policy.production.appliedThrough);
 if (baselineIndex < 0) throw new Error(`Baseline de produção desconhecido: ${policy.production.appliedThrough}`);
-const pendingNames = names.slice(baselineIndex + 1);
+const tailNames = names.slice(baselineIndex + 1);
+const appliedOutOfOrder = policy.production.appliedOutOfOrder ?? [];
+const duplicateApplied = appliedOutOfOrder.filter((name, index) => appliedOutOfOrder.indexOf(name) !== index);
+if (duplicateApplied.length) {
+  throw new Error(`Migrations aplicadas fora de ordem duplicadas: ${[...new Set(duplicateApplied)].join(", ")}`);
+}
+const unknownApplied = appliedOutOfOrder.filter((name) => !tailNames.includes(name));
+if (unknownApplied.length) {
+  throw new Error(`Migrations fora de ordem não pertencem à cauda local: ${unknownApplied.join(", ")}`);
+}
+const pendingNames = tailNames.filter((name) => !appliedOutOfOrder.includes(name));
 const heldNames = policy.production.heldMigrations.map(({ name }) => name);
 if (JSON.stringify(pendingNames) !== JSON.stringify(heldNames)) {
   throw new Error(
@@ -46,5 +56,6 @@ for (const item of policy.production.heldMigrations) {
 
 console.log(
   `OK: ${names.length} migrations classificadas; staging=${stagingNames.length}; ` +
-  `produção=${baselineIndex + 1} aplicadas + ${heldNames.length} retidas.`
+  `produção=${baselineIndex + 1 + appliedOutOfOrder.length} aplicadas ` +
+  `(${baselineIndex + 1} contíguas + ${appliedOutOfOrder.length} fora de ordem) + ${heldNames.length} retidas.`
 );

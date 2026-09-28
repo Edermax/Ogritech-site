@@ -1,5 +1,5 @@
 /* =========================================================
-   OGRITECH - PAINEL DA BARBEARIA
+   OGRITECH - PAINEL DO NEGÓCIO
    ETAPA 5: Agenda integrada.
 
    Nesta etapa:

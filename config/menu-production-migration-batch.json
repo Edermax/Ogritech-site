@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-28",
+  "baseline": "move_profile_rls_helpers_private",
+  "strategy": "contiguous_tail",
+  "authorized": false,
+  "decision": "BLOCKED_PENDING_REVIEW",
+  "localReplay": {
+    "status": "PASSED",
+    "migrationCount": 68,
+    "testFiles": 48,
+    "assertions": 179,
+    "evidence": "docs/evidencias/cardapio-replay-limpo-producao-2026-09-27.md"
+  },
+  "productionDryRun": {
+    "status": "NEEDS_REFRESH",
+    "executedAt": "2026-09-27",
+    "command": "supabase db push --dry-run --include-all --linked",
+    "migrationCount": 30,
+    "remoteChangesPerformed": false,
+    "evidence": "docs/evidencias/cardapio-dry-run-producao-2026-09-27.md"
+  },
+  "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
+  "requiredMenuMigrations": [
+    "multiproduct_foundation",
+    "multiproduct_activation",
+    "menu_catalog_core",
+    "menu_cart_orders",
+    "menu_self_service_onboarding",
+    "commercial_self_service_lifecycle",
+    "menu_assistant_foundation",
+    "menu_self_service_catalog_editor",
+    "menu_catalog_order_and_delivery_zones",
+    "menu_catalog_draft_publication"
+  ],
+  "classifications": {
+    "shared_hardening": [
+      "platform_contact_leads",
+      "deny_platform_contact_attempt_reads",
+      "index_remaining_foreign_keys",
+      "remove_legacy_rls_policies"
+    ],
+    "agenda_or_identity": [
+      "add_appointment_reassignment_offers",
+      "link_public_bookings_to_client_auth",
+      "enforce_plan_capacity",
+      "fix_plan_capacity_access",
+      "harden_authenticated_booking_actions"
+    ],
+    "commercial_callbacks_and_billing": [
+      "ogritech_billing_self_service",
+      "billing_lifecycle_automation"
+    ],
+    "menu_release_required": [
+      "multiproduct_foundation",
+      "multiproduct_activation",
+      "menu_catalog_core",
+      "menu_cart_orders",
+      "menu_self_service_onboarding",
+      "commercial_self_service_lifecycle",
+      "menu_assistant_foundation",
+      "menu_self_service_catalog_editor",
+      "menu_catalog_order_and_delivery_zones",
+      "menu_catalog_draft_publication"
+    ],
+    "ai_staging_disabled": [
+      "menu_ai_staging_controls",
+      "menu_ai_staging_inference",
+      "fix_menu_ai_staging_telemetry_authorization",
+      "allow_menu_ai_service_private_schema"
+    ],
+    "private_pilot_observability": [
+      "menu_private_pilot_metrics"
+    ],
+    "tenant_specific_diniz": [
+      "diniz_sunday_hours_and_sweets_quantity",
+      "diniz_automatic_delivery_distance",
+      "restore_diniz_delivery_zones_after_geocode_validation",
+      "enable_diniz_geoapify_delivery"
+    ]
+  },
+  "releaseConditions": [
+    "Every migration in the contiguous tail receives an explicit production disposition.",
+    "Tenant-specific migrations are proven no-op when their synthetic tenant is absent.",
+    "AI controls remain disabled and the kill switch remains active.",
+    "A clean replay and the full database suite pass on the exact release commit.",
+    "Production dry-run lists exactly the reviewed tail. Must be refreshed for the current 30-migration tail before authorization.",
+    "Fresh encrypted backup and Cardápio restore drill pass before db push.",
+    "Postgres 15.19/17.11 checks for ltree, btree_gist, legacy pgcrypto and custom operators are recorded.",
+    "Security and performance advisors have no unaccepted critical finding.",
+    "Technical and business owners explicitly authorize the release window."
+  ]
+}

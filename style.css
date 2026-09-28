@@ -1062,7 +1062,7 @@ textarea:focus {
     z-index: 50;
 }
 
-/* Marca da barbearia. */
+/* Marca do negócio. */
 .client-brand {
     display: flex;
     align-items: center;
@@ -1816,3 +1816,5 @@ textarea:focus {
     #menuPilotMetricsPanel .stats-grid { grid-template-columns:1fr; }
     #menuPilotMetricsPanel .stat-card { min-height:0; }
 }
+.menu-product-editor fieldset{display:grid;gap:14px;padding:18px;border:1px solid var(--border,#273238);border-radius:14px}.menu-editor-rows{display:grid;gap:12px}.menu-editor-row{display:grid;grid-template-columns:minmax(140px,1.5fr) repeat(2,minmax(110px,1fr)) auto;gap:10px;align-items:end}.menu-option-group-editor{display:grid;gap:12px;padding:16px;border:1px solid rgba(8,185,211,.25);border-radius:12px;background:rgba(8,185,211,.035)}.menu-option-rows{display:grid;gap:10px}.menu-image-preview{display:flex;align-items:center;gap:16px}.menu-image-preview img{width:112px;height:84px;border-radius:10px;object-fit:cover;border:1px solid var(--border,#273238)}.menu-catalog-editor-list article{display:grid;gap:12px}.menu-catalog-editor-list article>header{display:flex;align-items:center;justify-content:space-between;gap:16px}.menu-catalog-editor-item{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:12px}.menu-catalog-editor-item>img,.menu-catalog-no-image{width:72px;height:58px;border-radius:9px;object-fit:cover}.menu-catalog-no-image{display:grid;place-items:center;background:rgba(255,255,255,.045);color:#879095;font-size:9px;text-transform:uppercase}.menu-catalog-editor-item p{margin:4px 0;color:#aeb4b7}.menu-catalog-editor-item small{color:#879095}
+@media(max-width:760px){.menu-editor-row{grid-template-columns:1fr}.menu-catalog-editor-item{grid-template-columns:58px minmax(0,1fr)}.menu-catalog-editor-item>img,.menu-catalog-no-image{width:58px;height:52px}.menu-catalog-editor-item>.commercial-actions{grid-column:1/-1}}

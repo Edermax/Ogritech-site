@@ -5,7 +5,8 @@ declare
   target_menu public.online_menus;
 begin
   select * into target_menu from public.online_menus where slug = 'diniz-doces-previa-7d1';
-  if target_menu.id is null then raise exception 'Cardápio da Diniz não encontrado'; end if;
+  -- Produção e instalações limpas não possuem a empresa privada do piloto.
+  if target_menu.id is null then return; end if;
 
   update public.online_menus set published = false, published_at = null where id = target_menu.id;
   delete from public.menu_delivery_zones where menu_id = target_menu.id;

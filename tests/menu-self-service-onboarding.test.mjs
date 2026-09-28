@@ -331,10 +331,11 @@ test("falha ao retomar bloqueia publicação até atualizar com sucesso", async 
   assert.equal(page.element("menuPublicationButton").disabled, false);
 });
 
-test("cardápio publicado bloqueia edição e pode ser despublicado explicitamente", async () => {
+test("cardápio publicado protege a configuração, permite rascunho e pode ser despublicado explicitamente", async () => {
   const state = fixture();
   state.menu.published = true;
   const page = browser(state, { rpc: async (name, args) => {
+    if (name === "menu_catalog_draft_status") return { data: { exists: false }, error: null };
     assert.equal(name, "set_menu_publication");
     assert.equal(args.should_publish, false);
     state.menu.published = false;
@@ -346,7 +347,8 @@ test("cardápio publicado bloqueia edição e pode ser despublicado explicitamen
   assert.equal(page.element("menuTestOrderButton").classList.contains("hidden"), true);
   assert.equal(page.element("menuSettingsLockNotice").classList.contains("hidden"), false);
   assert.equal(page.element("menuCatalogLockNotice").classList.contains("hidden"), false);
-  assert.equal(page.element("menuItemForm").classList.contains("hidden"), true);
+  assert.equal(page.element("menuItemForm").classList.contains("hidden"), false);
+  assert.equal(page.element("menuItemName").disabled, false);
   assert.equal(page.element("menuPublicationButton").textContent, "Despublicar cardápio");
   assert.equal(page.element("menuPublicLink").href, "https://local.invalid/cardapio/?empresa=pizzaria-centro");
   await page.fire("menuPublicationButton");

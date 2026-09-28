@@ -54,3 +54,4 @@
 - Preferir migrations aditivas e compatíveis com a versão anterior do frontend.
 - Em falha, restaurar a versão anterior do frontend e pausar novas gravações se houver incompatibilidade.
 - Não reverter migration destrutivamente; criar migration corretiva e restaurar backup quando necessário.
+- Para o Cardápio, seguir `docs/CARDAPIO_ROLLBACK_PRODUCAO.md` e validar o contrato com `npm run rehearse:menu-production-rollback` antes da janela.

@@ -11,7 +11,7 @@ const output = join(root, "outputs", "menu-beta-7b");
 await mkdir(output, { recursive: true });
 const plan = JSON.parse(await readFile(join(root, "config/menu-beta-phase-7a.json"), "utf8"));
 const source = await readFile(join(root, "cardapio/index.html"), "utf8");
-const html = source.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, (tag) => tag.includes('src="cardapio.js"') ? tag : "");
+const html = source.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, (tag) => tag.includes('src="cardapio.js') ? tag : "");
 const edgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
 await access(edgePath);
 
@@ -61,7 +61,11 @@ try {
       }, { menuFixture: menu, expectedPriceId: priceId, itemName: product });
 
       await page.goto(`${origin}/cardapio/?empresa=${fixture.slug}`, { waitUntil: "networkidle" });
-      await page.waitForFunction(() => !document.getElementById("content").classList.contains("hidden"));
+      try {
+        await page.waitForFunction(() => !document.getElementById("content").classList.contains("hidden"));
+      } catch (error) {
+        throw new Error(`Cardápio não abriu em ${fixture.segment}/${viewport.name}: ${errors.join(" | ") || "sem erro capturado"}`, { cause: error });
+      }
       assert.match(await page.locator("#menuTitle").innerText(), /demonstração/);
       assert.match(await page.locator("#catalog").innerText(), new RegExp(product));
       assert.equal(await page.locator("#menuAssistant").isVisible(), true);
@@ -69,20 +73,26 @@ try {
       await page.locator("#menuAssistantInput").fill(`Tem ${product}?`);
       await page.locator('#menuAssistantForm button[type="submit"]').click();
       await page.waitForFunction(() => document.querySelector(".assistant-suggestion"));
-      assert.equal(await page.locator("#cartCount").innerText(), "0");
+      assert.equal(await page.locator("#cartCount").textContent(), "0");
       await page.locator(".assistant-suggestion button").click();
       await page.locator("#configuratorGroups input").first().check();
       await page.locator('#configuratorForm button[type="submit"]').click();
-      assert.equal(await page.locator("#cartCount").innerText(), "1");
+      await page.waitForFunction(() => Number(document.getElementById("cartCount")?.textContent || 0) > 0);
+      assert.equal(await page.locator("#cartCount").textContent(), "1", `Carrinho inesperado em ${fixture.segment}/${viewport.name}: ${errors.join(" | ")}`);
       await page.locator("#menuAssistantClose").click();
       await page.locator("#checkoutButton").click();
+      await page.locator('[name="fulfillment"]').selectOption("pickup");
       await page.locator('[name="name"]').fill("Cliente Fictício");
       await page.locator('[name="phone"]').fill("11999990000");
       await page.locator('[name="email"]').fill("cliente@beta.invalid");
       await page.locator('[name="privacy"]').check();
-      await page.locator("#orderForm button").click();
-      await page.waitForFunction(() => document.getElementById("orderMessage").textContent.includes("Pedido recebido"));
-      assert.equal(await page.locator("#cartCount").innerText(), "0");
+      await page.locator('#orderForm button[type="submit"],#orderSubmitButton').first().click();
+      try { await page.waitForFunction(() => {
+        const success = document.getElementById("orderSuccess");
+        return success && !success.classList.contains("hidden") && success.textContent.includes("Recebemos sua solicitação");
+      }); }
+      catch(error){ throw new Error(`Pedido não concluiu em ${fixture.segment}/${viewport.name}: ${await page.locator("#orderMessage").innerText()} | chamadas=${JSON.stringify(await page.evaluate(()=>window.__betaCalls))} | ${errors.join(" | ")}`,{cause:error}); }
+      assert.equal(await page.locator("#cartCount").textContent(), "0");
       const layout = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: innerWidth }));
       assert.ok(layout.content <= layout.viewport + 1, `Overflow em ${fixture.segment}/${viewport.name}: ${JSON.stringify(layout)}`);
       assert.deepEqual(errors, [], `Erros no navegador em ${fixture.segment}/${viewport.name}`);

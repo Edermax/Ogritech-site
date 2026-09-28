@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-09-20",
+    "auditedAt": "2026-09-28",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -67,7 +67,10 @@
       "menu_private_pilot_metrics",
       "diniz_automatic_delivery_distance",
       "restore_diniz_delivery_zones_after_geocode_validation",
-      "enable_diniz_geoapify_delivery"
+      "enable_diniz_geoapify_delivery",
+      "menu_self_service_catalog_editor",
+      "menu_catalog_order_and_delivery_zones",
+      "menu_catalog_draft_publication"
     ],
     "remoteVersionAliases": {
       "platform_contact_leads": "20260901214935",
@@ -83,6 +86,10 @@
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "move_profile_rls_helpers_private",
+    "appliedOutOfOrder": [
+      "assistant_callback_requests",
+      "assistant_email_callbacks"
+    ],
     "heldMigrations": [
       {
         "name": "platform_contact_leads",
@@ -119,14 +126,6 @@
       {
         "name": "harden_authenticated_booking_actions",
         "reason": "Correção de cancelamento autenticado e confirmação de telefone validada no staging; acompanha lote de identidade ainda não autorizado para produção."
-      },
-      {
-        "name": "assistant_callback_requests",
-        "reason": "Formulário e fila de consentimento aguardam validação no staging e credenciais do provedor oficial de WhatsApp antes da produção."
-      },
-      {
-        "name": "assistant_email_callbacks",
-        "reason": "Retorno por e-mail aguarda validação no staging, autenticação do domínio e credencial do provedor de entrega antes da produção."
       },
       {
         "name": "ogritech_billing_self_service",
@@ -199,6 +198,18 @@
       {
         "name": "enable_diniz_geoapify_delivery",
         "reason": "Integração Geoapify e faixas automáticas permanecem restritas ao staging até homologar rotas reais da Diniz; produção exige autorização separada."
+      },
+      {
+        "name": "menu_self_service_catalog_editor",
+        "reason": "Editor completo, upload de imagens e gravação atômica do catálogo permanecem retidos até validação do fluxo de rascunho e promoção controlada no staging."
+      },
+      {
+        "name": "menu_catalog_order_and_delivery_zones",
+        "reason": "Ordenação do catálogo e múltiplas regiões de entrega permanecem retidas até homologação transacional e visual no staging."
+      },
+      {
+        "name": "menu_catalog_draft_publication",
+        "reason": "Rascunho independente e promoção atômica do catálogo permanecem retidos até homologação concorrente com pedidos sintéticos no staging."
       }
     ]
   }

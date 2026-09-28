@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "product": "Ogritech Cardápio",
+  "environment": "production",
+  "updatedAt": "2026-09-27",
+  "releaseAuthorized": false,
+  "gates": [
+    {
+      "id": "legal_review",
+      "label": "Termos de Uso e Política de Privacidade revisados",
+      "status": "BLOCKED_HUMAN",
+      "evidence": ["termos.html", "privacidade.html", "docs/JURIDICO_HANDOFF_CHECKLIST.md"],
+      "remaining": "Preencher dados societários e obter aprovação formal de profissional jurídico."
+    },
+    {
+      "id": "commercial_definition",
+      "label": "Preço, implantação e período de teste definidos",
+      "status": "BLOCKED_HUMAN",
+      "evidence": ["config/operational-readiness.json"],
+      "remaining": "Registrar preço, taxa de implantação, duração do teste, cobrança e emissão fiscal aprovados."
+    },
+    {
+      "id": "support_and_incidents",
+      "label": "Suporte e responsáveis por incidentes ativos",
+      "status": "BLOCKED_HUMAN",
+      "evidence": ["docs/SLA_SUPORTE_ESCALONAMENTO.md", "docs/lgpd/PLANO_RESPOSTA_INCIDENTES.md"],
+      "remaining": "Nomear titulares e substitutos, testar canais e executar exercícios S1 e S2."
+    },
+    {
+      "id": "backup_restore",
+      "label": "Backup e restauração verificados para o Cardápio",
+      "status": "PARTIAL",
+      "evidence": [".github/workflows/backup-production.yml", ".github/workflows/restore-drill.yml", "docs/evidencias/cardapio-backup-restauracao-pre-lancamento-2026-09-27.md"],
+      "remaining": "Ponto de retorno pré-lançamento restaurado com ACLs e 72 testes. Após promover o Cardápio, repetir backup/restauração com expect_menu_schema=true para validar tabelas, pedidos e idempotência."
+    },
+    {
+      "id": "database_promotion",
+      "label": "Migrations promovidas de forma controlada",
+      "status": "PARTIAL",
+      "evidence": ["config/migration-release-policy.json", "config/menu-production-migration-batch.json", "scripts/menu-production-migration-batch.mjs", "docs/evidencias/cardapio-replay-limpo-producao-2026-09-27.md", "docs/evidencias/cardapio-inventario-producao-readonly-2026-09-27.md", "docs/evidencias/cardapio-dry-run-producao-2026-09-27.md"],
+      "remaining": "Replay limpo, 451 asserções, inventário remoto, Advisors, dry-run exato e ponto de retorno pré-lançamento concluídos. Ainda faltam aceite formal dos achados, responsáveis e autorização GO da janela antes da promoção real."
+    },
+    {
+      "id": "application_publication",
+      "label": "Frontend e funções necessários publicados",
+      "status": "NOT_STARTED",
+      "evidence": ["supabase/functions", ".github/workflows/validate.yml"],
+      "remaining": "Definir commit imutável, inventário de funções, segredos e origens; publicar após o banco e executar health check."
+    },
+    {
+      "id": "production_synthetic_test",
+      "label": "Jornada sintética completa aprovada em produção",
+      "status": "NOT_STARTED",
+      "evidence": ["docs/evidencias/fase-7f-homologacao-staging-cardapio-2026-09-16.md"],
+      "remaining": "Executar empresa sintética isolada, desktop e celular, validar preços, idempotência, isolamento e limpeza total."
+    },
+    {
+      "id": "lifecycle_test",
+      "label": "Exportação, despublicação e cancelamento aprovados",
+      "status": "NEEDS_FRESH_EVIDENCE",
+      "evidence": ["docs/evidencias/fase-7i-previa-privada-cardapio-2026-09-17.md", "scripts/subscription-center-ui-smoke.mjs"],
+      "remaining": "Repetir a jornada na empresa sintética de produção e provar que as outras soluções não foram alteradas."
+    },
+    {
+      "id": "production_monitor",
+      "label": "Disponibilidade e criação de pedidos monitoradas",
+      "status": "PARTIAL",
+      "evidence": [".github/workflows/monitor-production.yml", "scripts/monitor-production.mjs", "tests/monitor-production.test.mjs"],
+      "remaining": "Configurar MENU_HEALTH_URL em produção e testar a abertura e a resolução do incidente com falha controlada."
+    },
+    {
+      "id": "rollback_rehearsal",
+      "label": "Rollback documentado e ensaiado",
+      "status": "PARTIAL",
+      "evidence": ["docs/CARDAPIO_ROLLBACK_PRODUCAO.md", "config/menu-production-rollback.json", "scripts/menu-production-rollback-rehearsal.mjs", "tests/menu-production-rollback.test.mjs"],
+      "remaining": "Confirmar o hash efetivamente publicado, ensaiar fechamento e republicação no host, validar acompanhamento de pedido e observar uma janela do monitor."
+    }
+  ]
+}

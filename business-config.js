@@ -1,5 +1,6 @@
 /* Perfis demonstrativos dos segmentos atendidos pela Ogritech. */
 window.OGRITECH_BUSINESSES = {
+    servicos: { name: "Negócio de demonstração", segment: "Serviços", icon: "◆", color: "#6de2f2", owner: "Marina Costa", employee: "Carlos", client: "João Silva", clientLabel: "Cliente", clientPlural: "Clientes", hero: "Seu próximo atendimento começa aqui.", revenue: 4850, ticket: 78, professionals: ["Carlos", "Rafael"], services: [["Atendimento inicial",45,"Atendimento personalizado para sua necessidade."],["Atendimento completo",75,"Serviço completo com acompanhamento profissional."],["Avaliação",35,"Avaliação inicial e orientação personalizada."],["Sessão especializada",120,"Atendimento especializado e personalizado."]] },
     barbearia: { name: "Japa na Barba", segment: "Barbearia", icon: "✂", color: "#6de2f2", owner: "Marina Costa", employee: "Carlos", client: "João Silva", clientLabel: "Cliente", clientPlural: "Clientes", hero: "Seu próximo visual começa aqui.", revenue: 4850, ticket: 78, professionals: ["Carlos", "Rafael"], services: [["Corte masculino",45,"Corte tradicional ou moderno."],["Corte + Barba",75,"Combo completo para renovar o visual."],["Barba",35,"Acabamento e alinhamento da barba."],["Platinado",120,"Transformação completa do visual."]] },
     salao: { name: "Studio Bella Forma", segment: "Salão de beleza", icon: "✦", color: "#d67ae4", owner: "Camila Rocha", employee: "Fernanda", client: "Mariana Alves", clientLabel: "Cliente", clientPlural: "Clientes", hero: "Realce sua beleza e reserve seu momento.", revenue: 21950, ticket: 153, professionals: ["Camila", "Fernanda", "Aline"], services: [["Corte feminino",120,"Corte personalizado para seu estilo."],["Escova",70,"Finalização com brilho e movimento."],["Coloração",240,"Cor e tratamento profissional."],["Hidratação",95,"Cuidado profundo para os fios."]] },
     manicure: { name: "Nail Art Boutique", segment: "Manicure e esmalteria", icon: "◇", color: "#ef8eb6", owner: "Bianca Souza", employee: "Lívia", client: "Ana Clara", clientLabel: "Cliente", clientPlural: "Clientes", hero: "Unhas impecáveis começam com seu horário reservado.", revenue: 11420, ticket: 92, professionals: ["Bianca", "Lívia", "Nayara"], services: [["Mão e pé",65,"Cuidado completo para mãos e pés."],["Alongamento em gel",160,"Alongamento resistente e natural."],["Manutenção de gel",95,"Renovação e acabamento do gel."],["Spa dos pés",75,"Relaxamento e hidratação profunda."]] },
@@ -13,8 +14,8 @@ window.OGRITECH_BUSINESSES = {
 };
 
 window.getOgritechBusiness = function () {
-    const key = sessionStorage.getItem("japaDemoSegment") || "barbearia";
-    return { key, ...(window.OGRITECH_BUSINESSES[key] || window.OGRITECH_BUSINESSES.barbearia) };
+    const key = sessionStorage.getItem("japaDemoSegment") || "servicos";
+    return { key, ...(window.OGRITECH_BUSINESSES[key] || window.OGRITECH_BUSINESSES.servicos) };
 };
 
 window.applyOgritechBusinessTheme = function (business) {
