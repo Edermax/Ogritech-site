@@ -80,6 +80,22 @@ Deno.serve(async (request) => {
   if (!url || !key) return reply({ error: { code: "service_unavailable" } }, 503, origin);
   const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 
+  if ((json as { action?: string }).action === "trial_readiness") {
+    const product = z.enum(["agenda", "menu"]).safeParse((json as { product?: unknown }).product);
+    if (!product.success) return reply({ error: { code: "invalid_input" } }, 422, origin);
+    const termsVersion = Deno.env.get("BILLING_TERMS_VERSION") || "";
+    const termsHash = Deno.env.get("BILLING_TERMS_SHA256") || "";
+    const signupAccess = await admin.rpc("backend_billing_store_ready");
+    if (signupAccess.error || signupAccess.data !== true) {
+      console.error("trial_readiness.billing_signups", { code: signupAccess.error?.code, message: signupAccess.error?.message });
+      return reply({ error: { code: "signup_store_unavailable" } }, 503, origin);
+    }
+    const { data: catalog } = await admin.from("saas_plans").select("id,platform_products!inner(code)").eq("platform_products.code", product.data).eq("code", "foundation").eq("active", true).maybeSingle();
+    if (!catalog) return reply({ error: { code: "product_catalog_unavailable" } }, 503, origin);
+    if (!termsVersion || !/^[0-9a-f]{64}$/.test(termsHash)) return reply({ error: { code: "terms_not_configured" } }, 503, origin);
+    return reply({ data: { ready: true, product: product.data } }, 200, origin);
+  }
+
   if ((json as { action?: string }).action === "start_trial") {
     const parsed = StartBody.safeParse(json);
     if (!parsed.success) return reply({ error: { code: "invalid_input", fields: parsed.error.flatten().fieldErrors } }, 422, origin);
@@ -97,23 +113,26 @@ Deno.serve(async (request) => {
     if (!(await verifyTurnstile(input.turnstile_token, ip))) return reply({ error: { code: "challenge_failed" } }, 403, origin);
     const cycle = quote(input.cycle, input.product), token = crypto.randomUUID() + crypto.randomUUID(), tokenHash = await sha256(token);
     const trialEndsAt = new Date(Date.now() + 14 * 86_400_000).toISOString();
-    const { data: signup, error: signupError } = await admin.schema("private").from("billing_signups").insert({
+    const { data: signupId, error: signupError } = await admin.rpc("backend_billing_signup_create", { payload: {
       product_code: input.product, tax_document: cnpj, business_name: clean(input.business_name), responsible_name: clean(input.responsible_name),
       email: input.email, phone, segment: clean(input.segment), cycle: input.cycle, payment_method: input.payment_method,
       base_monthly_cents: cycle.base_monthly_cents, cycle_months: cycle.months, discount_bps: cycle.discount_bps, total_cents: cycle.total_cents,
       terms_version: termsVersion, management_token_hash: tokenHash, trial_ends_at: trialEndsAt,
-    }).select("id").single();
+    } });
     if (signupError?.code === "23505") return reply({ error: { code: "trial_already_used", message: "Este CNPJ já utilizou o teste gratuito." } }, 409, origin);
-    if (signupError || !signup) return reply({ error: { code: "signup_failed" } }, 500, origin);
-    const rollback = async () => { await admin.schema("private").from("billing_signups").delete().eq("id", signup.id); };
+    if (signupError || !signupId) {
+      console.error("start_trial.billing_signup", { code: signupError?.code, message: signupError?.message });
+      return reply({ error: { code: "signup_failed" } }, 500, origin);
+    }
+    const rollback = async () => { await admin.rpc("backend_billing_signup_delete", { target_signup_id: signupId }); };
     try {
       const { data: shop, error: shopError } = await admin.from("barbershops").insert({ name: clean(input.business_name), segment: clean(input.segment), active: true }).select("id").single();
       if (shopError) throw shopError;
       const productName = input.product === "menu" ? "Cardápio" : "Agenda";
       const { data: client, error: clientError } = await admin.from("saas_clients").insert({ name: clean(input.business_name), segment: clean(input.segment), contact_name: clean(input.responsible_name), owner_email: input.email, phone, origin: `Contratação self-service — ${productName}`, plan: productName, monthly_fee: cycle.base_monthly_cents / 100, status: "Ativo", invite_status: "Pendente", barbershop_id: shop.id }).select("id").single();
       if (clientError) { await admin.from("barbershops").delete().eq("id", shop.id); throw clientError; }
-      await admin.schema("private").from("billing_signups").update({ barbershop_id: shop.id, saas_client_id: client.id }).eq("id", signup.id);
-      await admin.schema("private").from("billing_term_acceptances").insert({ signup_id: signup.id, terms_version: termsVersion, terms_sha256: termsHash, recurring_authorized: input.payment_method === "card", privacy_accepted: true, ip_address: ip || null, user_agent: (request.headers.get("user-agent") || "").slice(0, 500) });
+      await admin.rpc("backend_billing_signup_link", { target_signup_id: signupId, target_barbershop_id: shop.id, target_saas_client_id: client.id });
+      await admin.rpc("backend_billing_accept_terms", { payload: { signup_id: signupId, terms_version: termsVersion, terms_sha256: termsHash, recurring_authorized: input.payment_method === "card", ip_address: ip || "", user_agent: (request.headers.get("user-agent") || "").slice(0, 500) } });
       const appUrl = Deno.env.get("PUBLIC_APP_URL") || "https://ogritech.com.br";
       const invitation = await admin.auth.admin.inviteUserByEmail(input.email, { data: { full_name: clean(input.responsible_name), product: input.product }, redirectTo: `${appUrl}/update-password.html?primeiro_acesso=${input.product}` });
       if (invitation.error) throw invitation.error;
@@ -128,7 +147,7 @@ Deno.serve(async (request) => {
         if (subscription.error) throw subscription.error;
       }
       await admin.from("saas_clients").update({ invite_status: "Enviado" }).eq("id", client.id);
-      await admin.schema("private").from("billing_outbox").insert({ signup_id: signup.id, event_type: "trial_started", payload: { email: input.email, management_token: token, product: input.product } });
+      await admin.rpc("backend_billing_enqueue", { target_signup_id: signupId, target_event_type: "trial_started", target_payload: { email: input.email, management_token: token, product: input.product } });
     } catch (error) { await rollback(); console.error(error); return reply({ error: { code: "provisioning_failed" } }, 500, origin); }
 
     const appUrl = Deno.env.get("PUBLIC_APP_URL") || "https://ogritech.com.br";
@@ -137,13 +156,13 @@ Deno.serve(async (request) => {
       if (input.payment_method === "card") {
         const planId = providerPlanId;
         if (planId) {
-          const response = await fetch("https://api.mercadopago.com/preapproval", { method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ preapproval_plan_id: planId, payer_email: input.email, external_reference: `signup:${signup.id}`, back_url: `${appUrl}/contratar/?retorno=mercadopago`, notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercado-pago-webhook` }) });
+          const response = await fetch("https://api.mercadopago.com/preapproval", { method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ preapproval_plan_id: planId, payer_email: input.email, external_reference: `signup:${signupId}`, back_url: `${appUrl}/contratar/?retorno=mercadopago`, notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercado-pago-webhook` }) });
           const result = await response.json(); if (response.ok) { checkoutUrl = result.init_point || ""; providerId = result.id || ""; }
         }
       }
     }
-    await admin.schema("private").from("billing_signups").update(input.payment_method === "card" ? { provider_plan_id: providerPlanId, provider_subscription_id: providerId || null } : {}).eq("id", signup.id);
-    return reply({ data: { signup_id: signup.id, product: input.product, management_token: token, trial_ends_at: trialEndsAt, login_url: `${appUrl}/login/?produto=${input.product}&primeiro_acesso=1`, checkout_url: checkoutUrl || null, pix, billing_configured: input.payment_method === "pix" || Boolean(providerId), quote: cycle } }, 201, origin);
+    if (input.payment_method === "card") await admin.rpc("backend_billing_signup_provider_update", { target_signup_id: signupId, target_plan_id: providerPlanId, target_subscription_id: providerId });
+    return reply({ data: { signup_id: signupId, product: input.product, management_token: token, trial_ends_at: trialEndsAt, login_url: `${appUrl}/login/?produto=${input.product}&primeiro_acesso=1`, checkout_url: checkoutUrl || null, pix, billing_configured: input.payment_method === "pix" || Boolean(providerId), quote: cycle } }, 201, origin);
   }
 
   const parsed = ManageBody.safeParse(json);

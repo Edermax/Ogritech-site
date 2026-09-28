@@ -71,7 +71,8 @@
       "menu_self_service_catalog_editor",
       "menu_catalog_order_and_delivery_zones",
       "menu_catalog_draft_publication",
-      "menu_trial_self_service"
+      "menu_trial_self_service",
+      "billing_private_backend_rpcs"
     ],
     "remoteVersionAliases": {
       "platform_contact_leads": "20260901214935",
@@ -215,6 +216,10 @@
       {
         "name": "menu_trial_self_service",
         "reason": "Teste gratuito e preço comercial do Cardápio aguardam homologação completa do cadastro, convite e acesso no staging antes da produção."
+      },
+      {
+        "name": "billing_private_backend_rpcs",
+        "reason": "RPCs privadas do backend acompanham a homologação do cadastro self-service em staging antes da produção."
       }
     ]
   }

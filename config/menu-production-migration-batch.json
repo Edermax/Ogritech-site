@@ -7,7 +7,7 @@
   "decision": "BLOCKED_PENDING_REVIEW",
   "localReplay": {
     "status": "PASSED",
-    "migrationCount": 69,
+    "migrationCount": 70,
     "testFiles": 49,
     "assertions": 180,
     "evidence": "docs/evidencias/cardapio-replay-limpo-producao-2026-09-27.md"
@@ -16,7 +16,7 @@
     "status": "NEEDS_REFRESH",
     "executedAt": "2026-09-27",
     "command": "supabase db push --dry-run --include-all --linked",
-    "migrationCount": 31,
+    "migrationCount": 32,
     "remoteChangesPerformed": false,
     "evidence": "docs/evidencias/cardapio-dry-run-producao-2026-09-27.md"
   },
@@ -32,7 +32,8 @@
     "menu_self_service_catalog_editor",
     "menu_catalog_order_and_delivery_zones",
     "menu_catalog_draft_publication",
-    "menu_trial_self_service"
+    "menu_trial_self_service",
+    "billing_private_backend_rpcs"
   ],
   "classifications": {
     "shared_hardening": [
@@ -63,7 +64,8 @@
       "menu_self_service_catalog_editor",
       "menu_catalog_order_and_delivery_zones",
       "menu_catalog_draft_publication",
-      "menu_trial_self_service"
+      "menu_trial_self_service",
+      "billing_private_backend_rpcs"
     ],
     "ai_staging_disabled": [
       "menu_ai_staging_controls",
