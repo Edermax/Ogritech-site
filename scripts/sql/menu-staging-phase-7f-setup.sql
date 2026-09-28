@@ -9,7 +9,7 @@ begin
   if not exists(select 1 from private.menu_ai_environment_controls where environment='staging' and hybrid_enabled=false and kill_switch=true and maximum_calls=0 and maximum_cost_cents=0) then
     raise exception 'Os controles de IA do staging não estão fechados';
   end if;
-  if (select count(*) from supabase_migrations.schema_migrations) <> 60 then
+  if (select count(*) from supabase_migrations.schema_migrations) <> 68 then
     raise exception 'Drift de migrations detectado no staging';
   end if;
 end $$;

@@ -46,10 +46,16 @@ try {
       page.on("pageerror", (error) => errors.push(error.message));
       page.on("console", (entry) => { if (entry.type() === "error") errors.push(entry.text()); });
       page.on("response", (response) => responses.push({ url: response.url(), status: response.status() }));
-      await page.goto(`${baseUrl}/cardapio/?empresa=${slug}&env=staging`, { waitUntil: "networkidle" });
-      await page.waitForFunction(() => !document.getElementById("content").classList.contains("hidden"));
+      await page.goto(`${baseUrl}/cardapio/?empresa=${slug}&env=staging`, { waitUntil: "domcontentloaded" });
+      try { await page.waitForFunction(() => !document.getElementById("content").classList.contains("hidden")); }
+      catch (error) {
+        const diagnostic = await page.evaluate(() => ({ loading: document.getElementById("loading")?.textContent, contentHidden: document.getElementById("content")?.classList.contains("hidden"), body: document.body.innerText.slice(0, 1200) }));
+        throw new Error(`Staging não carregou em ${segment.code}/${viewport.name}: ${JSON.stringify(diagnostic)} | respostas=${JSON.stringify(responses.filter(({ status }) => status >= 400))} | erros=${errors.join(" | ")}`, { cause: error });
+      }
       assert.equal(await page.locator("#ogritechStagingBadge").innerText(), "STAGING — DADOS DE TESTE");
       assert.match(await page.locator("#menuTitle").innerText(), /homologação sintética/);
+      try { await page.waitForFunction(() => !document.getElementById("menuAssistant").classList.contains("hidden")); }
+      catch (error) { throw new Error(`Assistente indisponível em ${segment.code}/${viewport.name}: respostas=${JSON.stringify(responses.filter(({ url }) => url.includes("assistant_status")))} | erros=${errors.join(" | ")}`, { cause: error }); }
       assert.equal(await page.locator("#menuAssistant").isVisible(), true);
       await page.locator("#menuAssistantToggle").click();
       await page.locator("#menuAssistantInput").fill(`Tem ${segment.product}?`);
@@ -57,8 +63,8 @@ try {
       await page.waitForFunction(() => document.querySelectorAll(".assistant-message").length >= 3);
       await page.locator("#menuAssistantClose").click();
       const card = page.locator(".menu-item-card").filter({ hasText: segment.product });
-      await card.locator("[data-add]").click();
-      assert.equal(await page.locator("#cartCount").innerText(), "1");
+      await card.locator("[data-add-selected]").click();
+      assert.equal(await page.locator("#cartCount").textContent(), "1");
       await page.locator("#checkoutButton").click();
       const ordinal = results.length + 1;
       await page.locator('[name="name"]').fill(`Cliente Sintético ${ordinal}`);
@@ -66,10 +72,10 @@ try {
       await page.locator('[name="email"]').fill(`cliente-${ordinal}@fase7f.invalid`);
       await page.locator('[name="privacy"]').check();
       await page.locator("#orderSubmitButton").click();
-      await page.waitForFunction(() => document.getElementById("orderMessage").textContent.includes("Pedido recebido"));
-      const trackingUrl = await page.locator("#orderMessage a").getAttribute("href");
+      await page.waitForFunction(() => !document.getElementById("orderSuccess").classList.contains("hidden"));
+      const trackingUrl = await page.locator("#orderSuccess a[href*='/pedido/']").getAttribute("href");
       assert.match(trackingUrl, /env=staging/);
-      await page.goto(trackingUrl, { waitUntil: "networkidle" });
+      await page.goto(trackingUrl, { waitUntil: "domcontentloaded" });
       await page.waitForFunction(() => document.body.textContent.includes("Recebido"));
       assert.match(await page.locator("body").innerText(), new RegExp(`R\\$\\s*${segment.price.toFixed(2).replace(".", "[,.]")}`));
       const layout = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: innerWidth }));

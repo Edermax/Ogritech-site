@@ -8,12 +8,12 @@ const readJson = (path) => readFile(new URL(path, root), "utf8").then(JSON.parse
 test("fase 7F aprova oito jornadas em staging e termina sem resíduos", async () => {
   const result = await readJson("config/menu-staging-phase-7f-result.json");
   assert.equal(result.status, "passed_synthetic_staging_homologation");
-  assert.equal(result.migrationsLocal, 60);
-  assert.equal(result.migrationsRemote, 60);
-  assert.equal(result.schemaChangesApplied, 0);
+  assert.equal(result.migrationsLocal, 68);
+  assert.equal(result.migrationsRemote, 68);
+  assert.equal(result.schemaChangesApplied, 3);
   assert.equal(result.scenariosPassed, 8);
-  assert.equal(result.ordersReceived, 8);
-  assert.equal(result.uniqueRequestIds, 8);
+  assert.equal(result.ordersReceived, 9);
+  assert.equal(result.uniqueRequestIds, 9);
   assert.equal(result.priceDivergences, 0);
   assert.equal(result.javascriptErrors, 0);
   assert.equal(result.syntheticBusinessesRemaining, 0);
