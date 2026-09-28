@@ -21,3 +21,14 @@ test("jornada do Cardápio inicia teste gratuito e provisiona o produto correto"
   assert.match(migration, /unique\(product_code,tax_document\)/);
   assert.match(migration, /product_code='menu' and base_monthly_cents=4990/);
 });
+
+test("painel autenticado substitui sessão demonstrativa e não fixa a Diniz", async () => {
+  const [auth, dashboard, panel] = await Promise.all([
+    read("auth.js"), read("script.js"), read("painel/index.html")
+  ]);
+  assert.match(auth, /const \{ data: \{ session \}, error: sessionError \} = await supabaseClient\.auth\.getSession\(\)/);
+  assert.match(auth, /if \(!session && sessionStorage\.getItem\("japaDemo"\) === "true"\)/);
+  assert.match(auth, /function saveVerifiedSession[\s\S]*removeItem\("japaDemo"\)/);
+  assert.match(dashboard, /menuWorkspaceTitle\.textContent = `Operação de \$\{businessConfig\.name\}`/);
+  assert.doesNotMatch(panel, /Operação da Diniz Doces/);
+});

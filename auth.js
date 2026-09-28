@@ -43,6 +43,8 @@ async function showAuthenticationError(message) {
 }
 
 function saveVerifiedSession(user, profile) {
+    sessionStorage.removeItem("japaDemo");
+    sessionStorage.removeItem("japaDemoSegment");
     sessionStorage.setItem("japaAuth", "true");
     sessionStorage.setItem("japaRole", profile.role);
     sessionStorage.setItem("japaUserName", profile.full_name);
@@ -84,7 +86,17 @@ function renderUser(profile) {
 }
 
 async function initializeAuthenticatedPage() {
-    if (sessionStorage.getItem("japaDemo") === "true") {
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+
+    if (sessionError) {
+        await showAuthenticationError("Não foi possível validar sua sessão. Atualize a página para tentar novamente.");
+        return;
+    }
+
+    // Uma sessão real sempre prevalece sobre marcadores locais de demonstração.
+    // Isso evita abrir uma empresa demonstrativa após convite, recuperação de senha
+    // ou login realizado em uma aba que ainda tinha sessionStorage antigo.
+    if (!session && sessionStorage.getItem("japaDemo") === "true") {
         const role = sessionStorage.getItem("japaRole");
         const profile = {
             role,
@@ -110,13 +122,6 @@ async function initializeAuthenticatedPage() {
             clearLocalSession();
             window.location.replace(environmentUrl("login/"));
         });
-        return;
-    }
-
-    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-
-    if (sessionError) {
-        await showAuthenticationError("Não foi possível validar sua sessão. Atualize a página para tentar novamente.");
         return;
     }
 
