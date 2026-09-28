@@ -8,6 +8,19 @@ const submitButton = loginForm.querySelector('button[type="submit"]');
 const forgotPasswordButton = document.getElementById("forgotPasswordButton");
 const togglePasswordButton = document.getElementById("togglePasswordButton");
 
+const loginParameters = new URLSearchParams(window.location.search);
+if (loginParameters.get("reset_demo") === "1") {
+    [
+        "japaAuth", "japaRole", "japaUserName", "japaUserRole",
+        "japaUserEmail", "japaUserId", "japaBarbershopId", "japaDemo",
+        "japaDemoSegment", "ogritechOperationalSession"
+    ].forEach((key) => sessionStorage.removeItem(key));
+    loginParameters.delete("reset_demo");
+    const cleanLoginUrl = new URL(window.location.href);
+    cleanLoginUrl.search = loginParameters.toString();
+    window.history.replaceState({}, document.title, cleanLoginUrl);
+}
+
 togglePasswordButton.addEventListener("click", () => {
     const isVisible = passwordInput.type === "text";
     passwordInput.type = isVisible ? "password" : "text";

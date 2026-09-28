@@ -23,12 +23,14 @@ test("jornada do Cardápio inicia teste gratuito e provisiona o produto correto"
 });
 
 test("painel autenticado substitui sessão demonstrativa e não fixa a Diniz", async () => {
-  const [auth, dashboard, panel] = await Promise.all([
-    read("auth.js"), read("script.js"), read("painel/index.html")
+  const [auth, login, dashboard, panel] = await Promise.all([
+    read("auth.js"), read("login.js"), read("script.js"), read("painel/index.html")
   ]);
   assert.match(auth, /const \{ data: \{ session \}, error: sessionError \} = await supabaseClient\.auth\.getSession\(\)/);
   assert.match(auth, /if \(!session && sessionStorage\.getItem\("japaDemo"\) === "true"\)/);
   assert.match(auth, /function saveVerifiedSession[\s\S]*removeItem\("japaDemo"\)/);
   assert.match(dashboard, /menuWorkspaceTitle\.textContent = `Operação de \$\{businessConfig\.name\}`/);
   assert.doesNotMatch(panel, /Operação da Diniz Doces/);
+  assert.match(login, /loginParameters\.get\("reset_demo"\) === "1"/);
+  assert.match(login, /sessionStorage\.removeItem\(key\)/);
 });
