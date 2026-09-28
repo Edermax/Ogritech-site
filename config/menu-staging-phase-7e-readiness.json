@@ -7,11 +7,11 @@
   "remoteChangesPerformed": false,
   "productionAuthorized": false,
   "currentState": {
-    "localMigrationCount": 70,
-    "stagingMigrationCountRecorded": 70,
+    "localMigrationCount": 71,
+    "stagingMigrationCountRecorded": 71,
     "productionMigrationCountRecorded": 38,
     "productionMigrationsAppliedOutOfOrder": 2,
-    "productionMigrationsHeld": 32,
+    "productionMigrationsHeld": 33,
     "menuMigrations": [
       "menu_catalog_core",
       "menu_cart_orders",
@@ -25,7 +25,8 @@
       "menu_catalog_order_and_delivery_zones",
       "menu_catalog_draft_publication",
       "menu_trial_self_service",
-      "billing_private_backend_rpcs"
+      "billing_private_backend_rpcs",
+      "fix_menu_trial_plan_sync"
     ],
     "menuMigrationsAlreadyRecordedInStaging": true,
     "frontendPublishedForMenuHomologation": false,

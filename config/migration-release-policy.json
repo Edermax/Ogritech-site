@@ -72,7 +72,8 @@
       "menu_catalog_order_and_delivery_zones",
       "menu_catalog_draft_publication",
       "menu_trial_self_service",
-      "billing_private_backend_rpcs"
+      "billing_private_backend_rpcs",
+      "fix_menu_trial_plan_sync"
     ],
     "remoteVersionAliases": {
       "platform_contact_leads": "20260901214935",
@@ -220,6 +221,10 @@
       {
         "name": "billing_private_backend_rpcs",
         "reason": "RPCs privadas do backend acompanham a homologação do cadastro self-service em staging antes da produção."
+      },
+      {
+        "name": "fix_menu_trial_plan_sync",
+        "reason": "Correção do plano e isolamento do trigger legado da Agenda aguardam homologação do cadastro em staging."
       }
     ]
   }
