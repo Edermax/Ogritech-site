@@ -23,8 +23,8 @@ test("jornada do Cardápio inicia teste gratuito e provisiona o produto correto"
 });
 
 test("painel autenticado rejeita sessão demonstrativa e oferece cadastro real", async () => {
-  const [auth, login, loginPage, dashboard, panel] = await Promise.all([
-    read("auth.js"), read("login.js"), read("login/index.html"), read("script.js"), read("painel/index.html")
+  const [auth, login, loginPage, dashboard, commercial, panel] = await Promise.all([
+    read("auth.js"), read("login.js"), read("login/index.html"), read("script.js"), read("commercial-admin.js"), read("painel/index.html")
   ]);
   assert.match(auth, /const \{ data: \{ session \}, error: sessionError \} = await supabaseClient\.auth\.getSession\(\)/);
   assert.match(auth, /hadLegacyDemo \? "criar-cardapio\/" : "login\/"/);
@@ -37,4 +37,7 @@ test("painel autenticado rejeita sessão demonstrativa e oferece cadastro real",
   assert.match(loginPage, /Criar meu cardápio grátis/);
   assert.match(loginPage, /14 dias grátis/);
   assert.match(loginPage, /R\$ 49,90 por mês/);
+  assert.match(commercial, /businessConfig\.name = menu\.title/);
+  assert.match(commercial, /!menu\?\.template_code \|\| onboarding\?\.next_step === "catalog"/);
+  assert.match(commercial, /selectMenuWorkspace\("settings"\)/);
 });

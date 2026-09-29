@@ -417,6 +417,10 @@
             menuTemplates = templates || [];
             menuOnboarding = onboarding;
             menuRecord = menu;
+            if (menu?.title && businessConfig.name === "Seu negócio") {
+                businessConfig.name = menu.title;
+                applyBusinessCustomization();
+            }
             menuCatalogDraftDirty = Boolean(draftStatus?.exists);
             menuDataReady = true;
             menuSettingsDirty = false;
@@ -493,6 +497,9 @@
                 const timestamp = completing ? "completed_at" : "confirmed_at";
                 return runMenuAction("menuOperationMessage", completing ? "Concluindo pedido..." : "Confirmando pedido...", () => supabaseClient.from("menu_orders").update({ status: button.dataset.orderStatus, [timestamp]: new Date().toISOString() }).eq("id", button.dataset.order).eq("barbershop_id", BARBERSHOP_ID).select("id,status").single(), completing ? "Pedido concluído." : "Pedido confirmado. Quando estiver pronto, use “Concluir”.");
             }));
+            if (menu?.published) selectMenuWorkspace("operation");
+            else if (!menu?.template_code || onboarding?.next_step === "catalog") selectMenuWorkspace("catalog");
+            else selectMenuWorkspace("settings");
             loadMenuAssistantAdmin().catch(() => notify(byId("menuAssistantSettingsMessage"), "O assistente está temporariamente indisponível; o restante do Cardápio continua funcionando.", true));
             loadMenuPilotMetrics().catch((metricsError) => renderMenuPilotMetrics(null, metricsError));
             return true;
