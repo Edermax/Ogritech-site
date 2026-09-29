@@ -140,6 +140,17 @@ test("onboarding explica a autonomia, o suporte opcional e os limites operaciona
   assert.match(html, /id="menuOnboardingBar" aria-label=/);
   assert.match(html, /id="menuPublicationButton"[^>]+disabled/);
   assert.doesNotMatch(source, /["']menuPublished["']/);
+  assert.match(html, /O modelo organiza categorias e cores, mas mantém o nome cadastrado da sua empresa/);
+});
+
+test("entrega desligada desativa os campos ocultos e não bloqueia a validação nativa", async () => {
+  const state = fixture();
+  state.menu.accepts_delivery = false;
+  state.menu.menu_delivery_zones = [];
+  const page = browser(state);
+  await page.load();
+  assert.equal(page.element("menuDeliveryZoneFields").classList.contains("hidden"), true);
+  assert.equal(page.element("menuDeliveryZoneFields").disabled, true);
 });
 
 test("retoma os dados salvos, mostra progresso acessível e revisão com valores realmente disponíveis", async () => {

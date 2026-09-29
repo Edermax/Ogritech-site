@@ -194,6 +194,14 @@
         byId("menuDeliveryZoneRows").addEventListener("click",(event)=>{ if(event.target.closest("[data-remove-zone]")) event.target.closest(".menu-delivery-zone-row").remove(); });
     }
 
+    function updateMenuDeliveryZoneAvailability() {
+        const fieldset = byId("menuDeliveryZoneFields");
+        if (!fieldset) return;
+        const acceptsDelivery = Boolean(byId("menuAcceptsDelivery")?.checked);
+        fieldset.classList.toggle("hidden", !acceptsDelivery);
+        fieldset.disabled = !acceptsDelivery;
+    }
+
     function resetMenuItemEditor() {
         byId("menuItemForm").reset();
         byId("menuItemId").value = ""; byId("menuCategoryId").value = ""; byId("menuItemImageUrl").value = ""; byId("menuItemImagePath").value = "";
@@ -451,7 +459,7 @@
             const zones = (menu?.menu_delivery_zones || []).filter((entry)=>entry.active);
             if(typeof document.createElement==="function"&&byId("menuDeliveryZoneRows")){ byId("menuDeliveryZoneRows").innerHTML=""; (zones.length?zones:[{fee:menu?.delivery_fee??0,minimum_order:menu?.minimum_order??0}]).forEach(addMenuDeliveryZoneRow); }
             else { const zone=zones[0]||{}; if(byId("menuZoneCode")){ byId("menuZoneCode").value=zone.code||""; byId("menuZoneName").value=zone.name||""; byId("menuZoneFee").value=zone.fee??menu?.delivery_fee??0; byId("menuZoneMinimum").value=zone.minimum_order??menu?.minimum_order??0; } }
-            byId("menuDeliveryZoneFields").classList.toggle("hidden", !menu?.accepts_delivery);
+            updateMenuDeliveryZoneAvailability();
             const checks = onboarding?.checks || {};
             const progress = `${onboarding?.completed_count || 0} de ${onboarding?.total_count || 8} etapas concluídas`;
             byId("menuOnboardingProgress").textContent = progress;
@@ -562,7 +570,7 @@
         byId("menuNextStep").textContent = "Há alterações ainda não salvas. Salve a configuração antes de continuar com o catálogo, o teste e a revisão.";
         updateMenuControls();
     });
-    byId("menuAcceptsDelivery")?.addEventListener("change", () => byId("menuDeliveryZoneFields").classList.toggle("hidden", !byId("menuAcceptsDelivery").checked));
+    byId("menuAcceptsDelivery")?.addEventListener("change", updateMenuDeliveryZoneAvailability);
     byId("menuReloadButton")?.addEventListener("click", async () => {
         if (menuBusy) return;
         if (menuSettingsDirty) return notify(byId("menuOnboardingMessage"), "Salve suas alterações antes de atualizar as etapas.", true);
