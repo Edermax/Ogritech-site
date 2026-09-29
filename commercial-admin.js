@@ -24,6 +24,7 @@
     let menuCatalogCategories = [];
     let menuCatalogDraftDirty = false;
     let menuImageRemoveRequested = false;
+    let menuWorkspaceNavigationBound = false;
     const menuWorkspaceGroups = {
         operation: ["menuPilotMetricsPanel", "menuOrdersPanel"],
         settings: ["menuOnboardingPanel", "menuAssistantSettingsPanel", "menuSettingsPanel"],
@@ -41,10 +42,16 @@
     }
 
     function setupMenuWorkspace() {
-        document.querySelectorAll("[data-menu-workspace]").forEach((button) => button.addEventListener("click", () => {
-            selectMenuWorkspace(button.dataset.menuWorkspace);
-            byId("menuWorkspaceTabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }));
+        const tabs = byId("menuWorkspaceTabs");
+        if (!menuWorkspaceNavigationBound && tabs) {
+            tabs.addEventListener("click", (event) => {
+                const button = event.target.closest?.("[data-menu-workspace]");
+                if (!button) return;
+                selectMenuWorkspace(button.dataset.menuWorkspace);
+                tabs.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+            menuWorkspaceNavigationBound = true;
+        }
         byId("menuAssistantSettingsPanel")?.querySelectorAll("details").forEach((details) => { details.open = false; });
         selectMenuWorkspace("operation");
     }

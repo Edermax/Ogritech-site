@@ -40,4 +40,7 @@ test("painel autenticado rejeita sessão demonstrativa e oferece cadastro real",
   assert.match(commercial, /businessConfig\.name = menu\.title/);
   assert.match(commercial, /!menu\?\.template_code \|\| onboarding\?\.next_step === "catalog"/);
   assert.match(commercial, /selectMenuWorkspace\("settings"\)/);
+  assert.match(commercial, /tabs\.addEventListener\("click"/);
+  assert.match(commercial, /event\.target\.closest\?\.\("\[data-menu-workspace\]"\)/);
+  assert.match(commercial, /menuWorkspaceNavigationBound = true/);
 });
