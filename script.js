@@ -48,6 +48,7 @@ const currentRole = sessionStorage.getItem("japaRole") || "owner";
 const currentUserName = sessionStorage.getItem("japaUserName") || "Administrador";
 const businessConfig = window.getOgritechBusiness();
 if (!IS_DEMO) {
+    businessConfig.name = "Seu negócio";
     businessConfig.revenue = 0;
     businessConfig.ticket = 0;
 }

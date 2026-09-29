@@ -93,41 +93,10 @@ async function initializeAuthenticatedPage() {
         return;
     }
 
-    // Uma sessão real sempre prevalece sobre marcadores locais de demonstração.
-    // Isso evita abrir uma empresa demonstrativa após convite, recuperação de senha
-    // ou login realizado em uma aba que ainda tinha sessionStorage antigo.
-    if (!session && sessionStorage.getItem("japaDemo") === "true") {
-        const role = sessionStorage.getItem("japaRole");
-        const profile = {
-            role,
-            full_name: sessionStorage.getItem("japaUserName") || "Visitante",
-            barbershop_id: sessionStorage.getItem("japaBarbershopId")
-        };
-
-        if (role === "client") {
-            window.location.replace(environmentUrl("cliente.html"));
-            return;
-        }
-
-        if (!profile.barbershop_id || !["owner", "employee"].includes(role)) {
-            clearLocalSession();
-            window.location.replace(environmentUrl("login/"));
-            return;
-        }
-
-        await waitForDocument();
-        renderUser(profile);
-        document.documentElement.style.visibility = "visible";
-        document.getElementById("logoutButton")?.addEventListener("click", () => {
-            clearLocalSession();
-            window.location.replace(environmentUrl("login/"));
-        });
-        return;
-    }
-
     if (!session) {
+        const hadLegacyDemo = sessionStorage.getItem("japaDemo") === "true";
         clearLocalSession();
-        window.location.replace(environmentUrl("login/"));
+        window.location.replace(environmentUrl(hadLegacyDemo ? "criar-cardapio/" : "login/"));
         return;
     }
 

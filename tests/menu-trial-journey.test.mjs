@@ -22,15 +22,19 @@ test("jornada do Cardápio inicia teste gratuito e provisiona o produto correto"
   assert.match(migration, /product_code='menu' and base_monthly_cents=4990/);
 });
 
-test("painel autenticado substitui sessão demonstrativa e não fixa a Diniz", async () => {
-  const [auth, login, dashboard, panel] = await Promise.all([
-    read("auth.js"), read("login.js"), read("script.js"), read("painel/index.html")
+test("painel autenticado rejeita sessão demonstrativa e oferece cadastro real", async () => {
+  const [auth, login, loginPage, dashboard, panel] = await Promise.all([
+    read("auth.js"), read("login.js"), read("login/index.html"), read("script.js"), read("painel/index.html")
   ]);
   assert.match(auth, /const \{ data: \{ session \}, error: sessionError \} = await supabaseClient\.auth\.getSession\(\)/);
-  assert.match(auth, /if \(!session && sessionStorage\.getItem\("japaDemo"\) === "true"\)/);
+  assert.match(auth, /hadLegacyDemo \? "criar-cardapio\/" : "login\/"/);
   assert.match(auth, /function saveVerifiedSession[\s\S]*removeItem\("japaDemo"\)/);
   assert.match(dashboard, /menuWorkspaceTitle\.textContent = `Operação de \$\{businessConfig\.name\}`/);
   assert.doesNotMatch(panel, /Operação da Diniz Doces/);
-  assert.match(login, /loginParameters\.get\("reset_demo"\) === "1"/);
+  assert.doesNotMatch(login, /window\.location\.replace\(window\.ogritechEnvironmentUrl\(role === "client"/);
   assert.match(login, /sessionStorage\.removeItem\(key\)/);
+  assert.match(panel, /Seu negócio/);
+  assert.match(loginPage, /Criar meu cardápio grátis/);
+  assert.match(loginPage, /14 dias grátis/);
+  assert.match(loginPage, /R\$ 49,90 por mês/);
 });

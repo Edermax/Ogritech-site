@@ -9,7 +9,8 @@ const forgotPasswordButton = document.getElementById("forgotPasswordButton");
 const togglePasswordButton = document.getElementById("togglePasswordButton");
 
 const loginParameters = new URLSearchParams(window.location.search);
-if (loginParameters.get("reset_demo") === "1") {
+const hadLegacyDemo = sessionStorage.getItem("japaDemo") === "true";
+if (hadLegacyDemo || loginParameters.get("reset_demo") === "1") {
     [
         "japaAuth", "japaRole", "japaUserName", "japaUserRole",
         "japaUserEmail", "japaUserId", "japaBarbershopId", "japaDemo",
@@ -57,11 +58,6 @@ async function destinationFor(role) {
 }
 
 async function restoreExistingSession() {
-    if (sessionStorage.getItem("japaDemo") === "true") {
-        const role = sessionStorage.getItem("japaRole");
-        window.location.replace(window.ogritechEnvironmentUrl(role === "client" ? "cliente.html" : "painel/"));
-        return;
-    }
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) return;
 
