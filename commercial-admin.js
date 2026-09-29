@@ -40,16 +40,17 @@
         });
         Object.entries(menuWorkspaceGroups).forEach(([group, ids]) => ids.forEach((id) => byId(id)?.classList.toggle("menu-workspace-hidden", group !== selected)));
     }
-
     function setupMenuWorkspace() {
         const tabs = byId("menuWorkspaceTabs");
         if (!menuWorkspaceNavigationBound && tabs) {
-            tabs.addEventListener("click", (event) => {
+            const activateWorkspace = (event) => {
                 const button = event.target.closest?.("[data-menu-workspace]");
                 if (!button) return;
                 selectMenuWorkspace(button.dataset.menuWorkspace);
                 tabs.scrollIntoView({ behavior: "smooth", block: "start" });
-            });
+            };
+            tabs.addEventListener("pointerdown", activateWorkspace);
+            tabs.addEventListener("click", activateWorkspace);
             menuWorkspaceNavigationBound = true;
         }
         byId("menuAssistantSettingsPanel")?.querySelectorAll("details").forEach((details) => { details.open = false; });
