@@ -64,5 +64,8 @@ test("demonstração oferece confeitaria, pizzaria e marmitaria em carrossel ace
 
 test("home encaminha a oferta do Cardápio para a landing dedicada", () => {
   assert.match(home, /href="\/cardapio-digital\/"[\s\S]*Ogritech Cardápio/);
+  assert.match(home, /Ogritech Cardápio<\/span><b class="availability-badge">Disponível em breve<\/b>/);
+  assert.match(home, /Ogritech Agenda<\/span><b class="availability-badge">Em breve<\/b>/);
+  assert.doesNotMatch(home, /availability-badge is-available/);
   assert.match(sitemap, /https:\/\/ogritech\.com\.br\/cardapio-digital\//);
 });
