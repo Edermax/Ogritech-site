@@ -1,15 +1,21 @@
-/* Títulos com contorno: ritmo vertical consistente e seguro no celular. */
+/* Destaques editoriais: serifada sólida, sem o contorno que colidia no celular. */
 h1 em,
 h2 em {
   display: inline-block;
   max-width: 100%;
-  font-family: Arial, Helvetica, sans-serif;
-  font-weight: 700;
-  font-style: normal;
-  line-height: 1;
-  letter-spacing: -0.025em;
+  font-family: Georgia, "Times New Roman", Times, serif !important;
+  font-weight: 400 !important;
+  font-style: italic !important;
+  line-height: 1.12 !important;
+  letter-spacing: 0 !important;
+  color: var(--cyan-light, #42d9ed) !important;
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: normal !important;
   text-wrap: balance;
-  -webkit-text-stroke-width: 0.8px;
+  text-rendering: optimizeLegibility;
+  -webkit-text-stroke-width: 0 !important;
+  -webkit-text-stroke-color: transparent !important;
 }
 
 @media (max-width: 600px) {
@@ -36,9 +42,15 @@ h2 em {
 
   h1 em,
   h2 em {
-    line-height: 1.12;
-    letter-spacing: -0.015em;
-    -webkit-text-stroke-width: 0.7px;
+    width: auto;
+    max-width: 100%;
+    font-size: 0.84em !important;
+    line-height: 1.18 !important;
+    letter-spacing: 0 !important;
+    overflow-wrap: anywhere;
+    white-space: normal !important;
+    -webkit-text-stroke-width: 0 !important;
+    -webkit-text-stroke-color: transparent !important;
   }
 
   .hero h1 em {
