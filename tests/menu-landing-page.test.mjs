@@ -69,3 +69,11 @@ test("home encaminha a oferta do Cardápio para a landing dedicada", () => {
   assert.doesNotMatch(home, /availability-badge is-available/);
   assert.match(sitemap, /https:\/\/ogritech\.com\.br\/cardapio-digital\//);
 });
+
+test("home mantém Agenda indisponível e apresenta o plano do Cardápio com hierarquia", () => {
+  assert.doesNotMatch(home, /Quero transformar meu negócio/);
+  assert.doesNotMatch(home, /Testar grátis por 14 dias — R\$ 97\/mês/);
+  assert.doesNotMatch(home, /Conhecer a agenda online/);
+  assert.match(home, /class="solution-unavailable" role="status"/);
+  assert.match(home, /Plano Ogritech Cardápio[\s\S]*R\$ 49,90[\s\S]*14 dias grátis/);
+});
