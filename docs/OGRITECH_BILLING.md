@@ -8,6 +8,14 @@
 - cartão recorrente ou Pix; boleto, Pix Automático e Point não são aceitos;
 - termos padronizados, aceite auditável e cancelamento self-service.
 
+### Cardápio
+
+- 14 dias gratuitos sem cartão;
+- escolha feita no painel após o início do teste;
+- mensal por R$ 49,90 ou anual por R$ 499,00;
+- Pix por vencimento ou cartão com renovação automática autorizada expressamente;
+- ausência de pagamento suspende novos pedidos sem apagar imediatamente catálogo e configurações.
+
 ## Sequência operacional implementada
 
 1. O checkout valida CNPJ, telefone, periodicidade e os aceites.
@@ -24,6 +32,7 @@
 
 1. Criar quatro planos no Mercado Pago, todos com 14 dias grátis e frequências mensal, trimestral, semestral e anual.
 2. Cadastrar os IDs como `MP_PLAN_*_ID` e as demais variáveis do `.env.example` nos Secrets do Supabase. Nunca versionar valores reais.
+   Para o Cardápio, cadastrar também `MP_MENU_MONTHLY_ID` e `MP_MENU_ANNUAL_ID` com os valores próprios da oferta.
 3. Configurar o webhook do Mercado Pago em `https://<project-ref>.supabase.co/functions/v1/mercado-pago-webhook` para pagamentos, assinaturas e pagamentos autorizados.
 4. Execute primeiro o preflight, sem publicar: `npm run billing:preflight -- -ProjectRef <ref-staging> -SecretsFile <arquivo-local.env>`.
 5. O staging atual possui aliases históricos de oito migrations. Na primeira execução, publique com `-Apply -RepairMigrationHistory`; o reparo altera somente o registro de versões, usando o mapeamento auditado em `config/migration-release-policy.json`. Nas execuções seguintes, use apenas `-Apply`.

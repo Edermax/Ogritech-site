@@ -45,3 +45,18 @@ test("painel autenticado rejeita sessão demonstrativa e oferece cadastro real",
   assert.match(commercial, /event\.target\.closest\?\.\("\[data-menu-workspace\]"\)/);
   assert.match(commercial, /menuWorkspaceNavigationBound = true/);
 });
+
+test("cliente define pagamento do Cardápio somente após iniciar o teste", async () => {
+  const [page, panel, billing] = await Promise.all([
+    read("criar-cardapio/index.html"), read("subscription-admin.js"), read("supabase/functions/ogritech-billing/index.ts")
+  ]);
+  for (const text of ["Você escolhe como continuar", "R$ 499,00", "Pix", "Cartão", "Nenhuma cobrança acontece automaticamente"]) assert.match(page, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.match(panel, /data-payment-method/);
+  assert.match(panel, /data-recurring-authorization/);
+  assert.match(panel, /action: "choose_payment"/);
+  assert.match(billing, /ChoosePaymentBody/);
+  assert.match(billing, /MP_MENU_\$\{input\.cycle\.toUpperCase\(\)\}_ID/);
+  assert.match(billing, /product === "menu" && cycle === "annual"[\s\S]*total_cents: 49_900/);
+  assert.match(billing, /profile\.role !== "owner"/);
+  assert.match(billing, /recurring_authorization_required/);
+});

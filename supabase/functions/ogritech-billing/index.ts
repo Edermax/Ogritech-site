@@ -13,7 +13,7 @@ const allowedOrigins = (Deno.env.get("ALLOWED_ORIGINS") || "https://ogritech.com
 const clean = (value: string) => value.trim().replace(/\s+/g, " ");
 const reply = (body: unknown, status: number, origin: string | null) => new Response(JSON.stringify(body), { status, headers: {
   "Access-Control-Allow-Origin": origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
-  "Access-Control-Allow-Headers": "apikey, content-type, x-management-token",
+  "Access-Control-Allow-Headers": "apikey, authorization, content-type, x-management-token",
   "Access-Control-Allow-Methods": "POST, OPTIONS", "Content-Type": "application/json; charset=utf-8",
   "X-Content-Type-Options": "nosniff", "Cache-Control": "no-store", "Vary": "Origin",
 }});
@@ -30,6 +30,11 @@ const StartBody = z.object({
   website: z.string().max(0).optional().default(""), turnstile_token: z.string().max(2048).optional().default(""),
 });
 const ManageBody = z.object({ action: z.enum(["status", "cancel"]), reason: z.string().trim().max(300).optional() });
+const ChoosePaymentBody = z.object({
+  action: z.literal("choose_payment"), product: z.literal("menu"), barbershop_id: z.string().uuid(),
+  cycle: z.enum(["monthly", "annual"]), payment_method: z.enum(["card", "pix"]),
+  recurring_authorized: z.boolean(),
+});
 
 function serviceKey() {
   const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -52,6 +57,8 @@ async function sha256(value: string) {
 }
 function quote(cycle: keyof typeof CYCLES, product: keyof typeof PRODUCT_PRICES = "agenda") {
   const rule = CYCLES[cycle], base = PRODUCT_PRICES[product], subtotal = base * rule.months;
+  if (product === "menu" && cycle === "annual") return { base_monthly_cents: base, months: 12, discount_bps: 1667,
+    subtotal_cents: subtotal, total_cents: 49_900 };
   return { base_monthly_cents: base, months: rule.months, discount_bps: rule.discountBps,
     subtotal_cents: subtotal, total_cents: Math.round(subtotal * (10_000 - rule.discountBps) / 10_000) };
 }
@@ -79,6 +86,62 @@ Deno.serve(async (request) => {
   const url = Deno.env.get("SUPABASE_URL") || "", key = serviceKey();
   if (!url || !key) return reply({ error: { code: "service_unavailable" } }, 503, origin);
   const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+
+  if ((json as { action?: string }).action === "choose_payment") {
+    const parsed = ChoosePaymentBody.safeParse(json);
+    if (!parsed.success) return reply({ error: { code: "invalid_input", fields: parsed.error.flatten().fieldErrors } }, 422, origin);
+    const bearer = request.headers.get("authorization") || "";
+    if (!bearer.toLowerCase().startsWith("bearer ")) return reply({ error: { code: "unauthorized" } }, 401, origin);
+    const { data: authData, error: authError } = await admin.auth.getUser(bearer.slice(7));
+    if (authError || !authData.user) return reply({ error: { code: "unauthorized" } }, 401, origin);
+    const input = parsed.data;
+    const { data: profile } = await admin.from("profiles").select("role,active,barbershop_id").eq("id", authData.user.id).maybeSingle();
+    if (!profile?.active || profile.role !== "owner" || profile.barbershop_id !== input.barbershop_id) {
+      return reply({ error: { code: "forbidden" } }, 403, origin);
+    }
+    if (input.payment_method === "card" && !input.recurring_authorized) {
+      return reply({ error: { code: "recurring_authorization_required", message: "Autorize a cobrança recorrente para continuar com cartão." } }, 422, origin);
+    }
+    const { data: signup } = await admin.schema("private").from("billing_signups")
+      .select("id,email,trial_ends_at,status,saas_client_id").eq("barbershop_id", input.barbershop_id).eq("product_code", "menu")
+      .in("status", ["trial_active", "payment_pending", "past_due"]).maybeSingle();
+    if (!signup) return reply({ error: { code: "billing_signup_not_found" } }, 404, origin);
+    const chosen = quote(input.cycle, "menu"), accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN") || "";
+    const planId = input.payment_method === "card" ? Deno.env.get(`MP_MENU_${input.cycle.toUpperCase()}_ID`) || "" : "";
+    if (input.payment_method === "card" && (!accessToken || !planId)) {
+      return reply({ error: { code: "billing_not_configured", message: "O pagamento por cartão ainda não está disponível. Escolha Pix ou tente novamente mais tarde." } }, 503, origin);
+    }
+    let checkoutUrl = "", providerId = "";
+    if (input.payment_method === "card") {
+      const appUrl = Deno.env.get("PUBLIC_APP_URL") || "https://ogritech.com.br";
+      const response = await fetch("https://api.mercadopago.com/preapproval", { method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({
+        preapproval_plan_id: planId, payer_email: signup.email, external_reference: `signup:${signup.id}`,
+        back_url: `${appUrl}/painel/?pagamento=retorno`, notification_url: `${url}/functions/v1/mercado-pago-webhook`,
+      }) });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.init_point || !result.id) {
+        console.error("choose_payment.mercado_pago", { status: response.status, signup_id: signup.id });
+        return reply({ error: { code: "provider_unavailable", message: "Não foi possível abrir o pagamento por cartão agora." } }, 502, origin);
+      }
+      checkoutUrl = result.init_point; providerId = result.id;
+    }
+    const { error: signupUpdateError } = await admin.schema("private").from("billing_signups").update({
+      cycle: input.cycle, payment_method: input.payment_method, base_monthly_cents: chosen.base_monthly_cents,
+      cycle_months: chosen.months, discount_bps: chosen.discount_bps, total_cents: chosen.total_cents,
+      provider_plan_id: planId || null, provider_subscription_id: providerId || null,
+      status: input.payment_method === "card" ? "payment_pending" : "trial_active",
+    }).eq("id", signup.id);
+    if (signupUpdateError) return reply({ error: { code: "billing_update_failed" } }, 500, origin);
+    await admin.schema("private").from("billing_term_acceptances").update({ recurring_authorized: input.payment_method === "card" }).eq("signup_id", signup.id);
+    const { data: customer } = await admin.from("billing_customers").update({ payment_method: input.payment_method === "card" ? "credit_card" : "pix", provider_subscription_id: providerId || null }).eq("saas_client_id", signup.saas_client_id).select("id").single();
+    const { data: menuProduct } = await admin.from("platform_products").select("id").eq("code", "menu").single();
+    if (!customer || !menuProduct) return reply({ error: { code: "billing_update_failed" } }, 500, origin);
+    await admin.from("platform_subscriptions").update({ billing_cycle: input.cycle, base_amount: chosen.base_monthly_cents / 100, next_billing_on: signup.trial_ends_at.slice(0, 10) })
+      .eq("billing_customer_id", customer.id).eq("product_id", menuProduct.id);
+    await admin.from("platform_billing_audit_log").insert({ actor_id: authData.user.id, action: "billing.payment_method_selected", entity_type: "billing_signup", entity_id: signup.id,
+      details: { product: "menu", cycle: input.cycle, payment_method: input.payment_method, recurring_authorized: input.payment_method === "card" } });
+    return reply({ data: { cycle: input.cycle, payment_method: input.payment_method, total_cents: chosen.total_cents, checkout_url: checkoutUrl || null, trial_ends_at: signup.trial_ends_at } }, 200, origin);
+  }
 
   if ((json as { action?: string }).action === "trial_readiness") {
     const product = z.enum(["agenda", "menu"]).safeParse((json as { product?: unknown }).product);
