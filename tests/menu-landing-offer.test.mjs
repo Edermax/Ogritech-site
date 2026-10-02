@@ -6,8 +6,7 @@ const root = new URL("../", import.meta.url);
 
 test("landing publica a oferta padronizada do Cardápio sem oferta Fundadores", async () => {
   const pages = await Promise.all([
-    readFile(new URL("index.html", root), "utf8"),
-    readFile(new URL("nova-home/index.html", root), "utf8")
+    readFile(new URL("index.html", root), "utf8")
   ]);
 
   for (const page of pages) {

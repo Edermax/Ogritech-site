@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-27",
+  "updatedAt": "2026-10-02",
   "product": "Ogritech Cardápio",
   "rollbackTarget": {
-    "ref": "7d6626b98698b49baf1e45ecc3b1d6562736152b",
-    "source": "last_committed_repository_state_before_production_release_work",
-    "verifiedAsCurrentProduction": false,
+    "ref": "52ab0265385ca9607af421eb9016b048f83b47ca",
+    "source": "last_successful_pages_release_before_billing_backend_bridge",
+    "verifiedAsCurrentProduction": true,
     "requiredFiles": [
       "index.html",
       "cardapio/index.html",
