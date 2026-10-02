@@ -41,3 +41,22 @@ test("painel delega a escolha de cobrança ao endpoint autenticado", async () =>
   assert.match(script, /recurring_authorized: recurringAuthorized/);
   assert.match(script, /billingSelectionEnabled = true/);
 });
+
+test("fim do teste abre uma recuperação autenticada e preserva o Cardápio", async () => {
+  const [page, script, auth, billing, lifecycle, email] = await Promise.all([
+    readFile(new URL("../assinatura/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../assinatura/assinatura.js", import.meta.url), "utf8"),
+    readFile(new URL("../auth.js", import.meta.url), "utf8"),
+    readFile(new URL("../supabase/functions/ogritech-billing/index.ts", import.meta.url), "utf8"),
+    readFile(new URL("../supabase/functions/billing-lifecycle/index.ts", import.meta.url), "utf8"),
+    readFile(new URL("../supabase/functions/billing-email-dispatch/index.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /Seu catálogo, suas fotos e seus pedidos continuam preservados/);
+  assert.match(script, /action: "billing_status"/);
+  assert.match(script, /pix\.qr_code/);
+  assert.match(auth, /environmentUrl\("assinatura\/"\)/);
+  assert.match(billing, /back_url: `\$\{appUrl\}\/assinatura\/\?pagamento=retorno`/);
+  assert.match(billing, /BillingStatusBody/);
+  assert.match(lifecycle, /Renovação Ogritech Cardápio/);
+  assert.match(email, /productName = signup\.product_code === "menu"/);
+});

@@ -37,7 +37,7 @@ Deno.serve(async (request) => {
     const response = await fetch("https://api.mercadopago.com/v1/payments", {
       method: "POST",
       headers: { Authorization: `Bearer ${mpToken}`, "Content-Type": "application/json", "X-Idempotency-Key": externalReference },
-      body: JSON.stringify({ transaction_amount: signup.total_cents / 100, description: "Renovação Ogritech Agenda", payment_method_id: "pix", payer: { email: signup.email }, external_reference: externalReference, date_of_expiration: expiresAt, notification_url: `${url}/functions/v1/mercado-pago-webhook`, metadata: { signup_id: signup.id } }),
+      body: JSON.stringify({ transaction_amount: signup.total_cents / 100, description: "Renovação Ogritech Cardápio", payment_method_id: "pix", payer: { email: signup.email }, external_reference: externalReference, date_of_expiration: expiresAt, notification_url: `${url}/functions/v1/mercado-pago-webhook`, metadata: { signup_id: signup.id } }),
     });
     const payment = await response.json().catch(() => ({}));
     if (!response.ok || !payment.id) continue;

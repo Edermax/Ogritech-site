@@ -142,18 +142,40 @@ async function initializeAuthenticatedPage() {
         return;
     }
 
+    // Ao chegar pelo login, estes dados já foram gravados antes da navegação.
+    // Em uma abertura direta (nova aba, restauração do navegador etc.), o
+    // Supabase pode ter sessão persistida enquanto o sessionStorage está vazio.
+    // Só esse segundo caso precisa recarregar, pois script.js lê o contexto do
+    // estabelecimento durante sua própria avaliação.
+    const operationalSessionKey = `${session.user.id}:${profile.role}:${profile.barbershop_id}`;
+    const hasCurrentOperationalContext =
+        sessionStorage.getItem("japaAuth") === "true" &&
+        sessionStorage.getItem("japaUserId") === session.user.id &&
+        sessionStorage.getItem("japaRole") === profile.role &&
+        sessionStorage.getItem("japaBarbershopId") === profile.barbershop_id &&
+        sessionStorage.getItem("ogritechOperationalSession") === operationalSessionKey;
+
     saveVerifiedSession(session.user, profile);
+    sessionStorage.setItem("ogritechOperationalSession", operationalSessionKey);
+
+    if (profile.role === "owner" && location.pathname.includes("/painel")) {
+        const { data: billingResult } = await supabaseClient.functions.invoke("ogritech-billing", {
+            body: { action: "billing_status", product: "menu", barbershop_id: profile.barbershop_id }
+        });
+        const billing = billingResult?.data;
+        const boundaryExpired = billing?.boundary && new Date(billing.boundary) <= new Date();
+        if (["past_due", "cancelled"].includes(billing?.status) || (billing?.status === "payment_pending" && boundaryExpired)) {
+            window.location.replace(environmentUrl("assinatura/"));
+            return;
+        }
+    }
 
     if (profile.role === "client") {
         window.location.replace(environmentUrl("cliente.html"));
         return;
     }
 
-    // script.js lê o estabelecimento ao iniciar. Recarregue no máximo uma vez
-    // quando a sessão operacional mudar, evitando ciclos de atualização.
-    const operationalSessionKey = `${session.user.id}:${profile.role}:${profile.barbershop_id}`;
-    if (sessionStorage.getItem("ogritechOperationalSession") !== operationalSessionKey) {
-        sessionStorage.setItem("ogritechOperationalSession", operationalSessionKey);
+    if (!hasCurrentOperationalContext) {
         window.location.reload();
         return;
     }

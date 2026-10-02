@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <base href="../">
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:54321 http://localhost:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co wss://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co wss://mvzcoaiiwytycdqcvydf.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#071416">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <style>html{visibility:hidden}</style>
+    <title>Assinatura do Cardápio | Ogritech</title>
+    <link rel="icon" href="ogritech-favicon.ico" sizes="any">
+    <link rel="stylesheet" href="assinatura/assinatura.css">
+</head>
+<body>
+    <header class="billing-header">
+        <a href="./" aria-label="Página inicial da Ogritech"><img src="ogritech-brand-symbol.png" alt="" width="42" height="42"><span>OGRITECH</span></a>
+        <button id="logoutButton" class="text-button" type="button">Sair</button>
+    </header>
+    <main class="billing-shell">
+        <section class="billing-intro" aria-labelledby="billingTitle">
+            <p class="eyebrow">OGRITECH CARDÁPIO</p>
+            <h1 id="billingTitle">Mantenha seu cardápio disponível.</h1>
+            <p id="billingSummary">Estamos consultando sua assinatura com segurança.</p>
+            <div class="status-card" aria-live="polite">
+                <span id="billingStatus" class="status-pill">Carregando</span>
+                <strong id="billingDeadline">Aguarde um instante…</strong>
+                <p>Seu catálogo, suas fotos e seus pedidos continuam preservados mesmo durante uma pendência.</p>
+            </div>
+        </section>
+
+        <section class="billing-card" aria-labelledby="paymentTitle">
+            <div>
+                <p class="eyebrow">CONTINUIDADE</p>
+                <h2 id="paymentTitle">Escolha como deseja continuar</h2>
+                <p>Nenhuma cobrança retroativa será feita. A liberação acontece automaticamente após a confirmação.</p>
+            </div>
+            <form id="billingForm">
+                <label>Periodicidade
+                    <select id="billingCycle">
+                        <option value="monthly">Mensal · R$ 49,90</option>
+                        <option value="annual">Anual · R$ 499,00</option>
+                    </select>
+                </label>
+                <label>Forma de pagamento
+                    <select id="paymentMethod">
+                        <option value="pix">Pix a cada vencimento</option>
+                        <option value="card">Cartão com renovação automática</option>
+                    </select>
+                </label>
+                <label id="recurringLabel" class="check-row hidden"><input id="recurringAuthorization" type="checkbox"><span>Autorizo a cobrança recorrente no cartão após o período gratuito.</span></label>
+                <button id="paymentButton" class="primary-button" type="submit">Definir forma de pagamento</button>
+            </form>
+
+            <div id="pixPanel" class="pix-panel hidden">
+                <p class="eyebrow">PIX PARA RENOVAÇÃO</p>
+                <h3>Copie o código Pix</h3>
+                <textarea id="pixCode" readonly aria-label="Código Pix copia e cola"></textarea>
+                <button id="copyPixButton" class="secondary-button" type="button">Copiar código Pix</button>
+                <small id="pixExpiration"></small>
+            </div>
+
+            <p id="billingMessage" class="billing-message" role="status"></p>
+            <div class="billing-actions">
+                <a id="backToMenu" class="secondary-button hidden" href="painel/?secao=cardapio">Voltar ao Cardápio</a>
+                <a href="mailto:suporte@ogritech.com.br">Preciso de ajuda</a>
+            </div>
+        </section>
+    </main>
+    <footer><a href="termos.html">Termos de Uso</a><a href="privacidade.html">Privacidade</a></footer>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+    <script src="supabase-config.js"></script>
+    <script src="assinatura/assinatura.js"></script>
+</body>
+</html>

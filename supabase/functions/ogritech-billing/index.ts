@@ -35,6 +35,9 @@ const ChoosePaymentBody = z.object({
   cycle: z.enum(["monthly", "annual"]), payment_method: z.enum(["card", "pix"]),
   recurring_authorized: z.boolean(),
 });
+const BillingStatusBody = z.object({
+  action: z.literal("billing_status"), product: z.literal("menu"), barbershop_id: z.string().uuid(),
+});
 
 function serviceKey() {
   const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -87,6 +90,34 @@ Deno.serve(async (request) => {
   if (!url || !key) return reply({ error: { code: "service_unavailable" } }, 503, origin);
   const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 
+  if ((json as { action?: string }).action === "billing_status") {
+    const parsed = BillingStatusBody.safeParse(json);
+    if (!parsed.success) return reply({ error: { code: "invalid_input" } }, 422, origin);
+    const bearer = request.headers.get("authorization") || "";
+    if (!bearer.toLowerCase().startsWith("bearer ")) return reply({ error: { code: "unauthorized" } }, 401, origin);
+    const { data: authData, error: authError } = await admin.auth.getUser(bearer.slice(7));
+    if (authError || !authData.user) return reply({ error: { code: "unauthorized" } }, 401, origin);
+    const { data: profile } = await admin.from("profiles").select("role,active,barbershop_id").eq("id", authData.user.id).maybeSingle();
+    if (!profile?.active || profile.role !== "owner" || profile.barbershop_id !== parsed.data.barbershop_id) {
+      return reply({ error: { code: "forbidden" } }, 403, origin);
+    }
+    const { data: signup } = await admin.schema("private").from("billing_signups")
+      .select("id,cycle,payment_method,total_cents,status,trial_ends_at,access_until,payment_requested_at,provider_subscription_id")
+      .eq("barbershop_id", parsed.data.barbershop_id).eq("product_code", "menu").maybeSingle();
+    if (!signup) return reply({ data: null }, 200, origin);
+    const { data: pixEvent } = await admin.schema("private").from("billing_outbox")
+      .select("payload").eq("signup_id", signup.id).like("event_type", "pix_requested_%").order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const boundary = signup.access_until || signup.trial_ends_at;
+    const remainingMs = new Date(boundary).getTime() - Date.now();
+    return reply({ data: {
+      cycle: signup.cycle, payment_method: signup.payment_method, total_cents: signup.total_cents,
+      status: signup.status, trial_ends_at: signup.trial_ends_at, access_until: signup.access_until,
+      boundary, days_remaining: Math.max(0, Math.ceil(remainingMs / 86_400_000)),
+      payment_requested: Boolean(signup.payment_requested_at), subscription_created: Boolean(signup.provider_subscription_id),
+      pix: pixEvent?.payload?.qr_code ? { qr_code: String(pixEvent.payload.qr_code), expires_at: String(pixEvent.payload.expires_at || "") } : null,
+    } }, 200, origin);
+  }
+
   if ((json as { action?: string }).action === "choose_payment") {
     const parsed = ChoosePaymentBody.safeParse(json);
     if (!parsed.success) return reply({ error: { code: "invalid_input", fields: parsed.error.flatten().fieldErrors } }, 422, origin);
@@ -116,7 +147,7 @@ Deno.serve(async (request) => {
       const appUrl = Deno.env.get("PUBLIC_APP_URL") || "https://ogritech.com.br";
       const response = await fetch("https://api.mercadopago.com/preapproval", { method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({
         preapproval_plan_id: planId, payer_email: signup.email, external_reference: `signup:${signup.id}`,
-        back_url: `${appUrl}/painel/?pagamento=retorno`, notification_url: `${url}/functions/v1/mercado-pago-webhook`,
+        back_url: `${appUrl}/assinatura/?pagamento=retorno`, notification_url: `${url}/functions/v1/mercado-pago-webhook`,
       }) });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result.init_point || !result.id) {

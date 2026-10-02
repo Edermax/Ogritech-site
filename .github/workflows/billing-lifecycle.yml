@@ -1,0 +1,37 @@
+name: Billing lifecycle
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: billing-lifecycle-production
+  cancel-in-progress: false
+
+jobs:
+  renewals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Process trials, renewals and access boundaries
+        env:
+          BILLING_CRON_SECRET: ${{ secrets.BILLING_CRON_SECRET }}
+        run: |
+          test -n "$BILLING_CRON_SECRET"
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "x-cron-secret: $BILLING_CRON_SECRET" \
+            https://mvzcoaiiwytycdqcvydf.supabase.co/functions/v1/billing-lifecycle
+
+      - name: Dispatch billing notifications
+        env:
+          BILLING_CRON_SECRET: ${{ secrets.BILLING_CRON_SECRET }}
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "x-cron-secret: $BILLING_CRON_SECRET" \
+            https://mvzcoaiiwytycdqcvydf.supabase.co/functions/v1/billing-email-dispatch
