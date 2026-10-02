@@ -101,12 +101,8 @@ Deno.serve(async (request) => {
     if (!profile?.active || profile.role !== "owner" || profile.barbershop_id !== parsed.data.barbershop_id) {
       return reply({ error: { code: "forbidden" } }, 403, origin);
     }
-    const { data: signup } = await admin.schema("private").from("billing_signups")
-      .select("id,cycle,payment_method,total_cents,status,trial_ends_at,access_until,payment_requested_at,provider_subscription_id")
-      .eq("barbershop_id", parsed.data.barbershop_id).eq("product_code", "menu").maybeSingle();
+    const { data: signup } = await admin.rpc("backend_billing_status", { target_barbershop_id: parsed.data.barbershop_id, target_product_code: "menu" });
     if (!signup) return reply({ data: null }, 200, origin);
-    const { data: pixEvent } = await admin.schema("private").from("billing_outbox")
-      .select("payload").eq("signup_id", signup.id).like("event_type", "pix_requested_%").order("created_at", { ascending: false }).limit(1).maybeSingle();
     const boundary = signup.access_until || signup.trial_ends_at;
     const remainingMs = new Date(boundary).getTime() - Date.now();
     return reply({ data: {
@@ -114,7 +110,7 @@ Deno.serve(async (request) => {
       status: signup.status, trial_ends_at: signup.trial_ends_at, access_until: signup.access_until,
       boundary, days_remaining: Math.max(0, Math.ceil(remainingMs / 86_400_000)),
       payment_requested: Boolean(signup.payment_requested_at), subscription_created: Boolean(signup.provider_subscription_id),
-      pix: pixEvent?.payload?.qr_code ? { qr_code: String(pixEvent.payload.qr_code), expires_at: String(pixEvent.payload.expires_at || "") } : null,
+      pix: signup.pix_payload?.qr_code ? { qr_code: String(signup.pix_payload.qr_code), expires_at: String(signup.pix_payload.expires_at || "") } : null,
     } }, 200, origin);
   }
 
@@ -133,9 +129,7 @@ Deno.serve(async (request) => {
     if (input.payment_method === "card" && !input.recurring_authorized) {
       return reply({ error: { code: "recurring_authorization_required", message: "Autorize a cobrança recorrente para continuar com cartão." } }, 422, origin);
     }
-    const { data: signup } = await admin.schema("private").from("billing_signups")
-      .select("id,email,trial_ends_at,status,saas_client_id").eq("barbershop_id", input.barbershop_id).eq("product_code", "menu")
-      .in("status", ["trial_active", "payment_pending", "past_due"]).maybeSingle();
+    const { data: signup } = await admin.rpc("backend_billing_choose_payment_lookup", { target_barbershop_id: input.barbershop_id });
     if (!signup) return reply({ error: { code: "billing_signup_not_found" } }, 404, origin);
     const chosen = quote(input.cycle, "menu"), accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN") || "";
     const planId = input.payment_method === "card" ? Deno.env.get(`MP_MENU_${input.cycle.toUpperCase()}_ID`) || "" : "";
@@ -156,14 +150,14 @@ Deno.serve(async (request) => {
       }
       checkoutUrl = result.init_point; providerId = result.id;
     }
-    const { error: signupUpdateError } = await admin.schema("private").from("billing_signups").update({
+    const { error: signupUpdateError } = await admin.rpc("backend_billing_choose_payment_update", { target_signup_id: signup.id, payload: {
       cycle: input.cycle, payment_method: input.payment_method, base_monthly_cents: chosen.base_monthly_cents,
       cycle_months: chosen.months, discount_bps: chosen.discount_bps, total_cents: chosen.total_cents,
-      provider_plan_id: planId || null, provider_subscription_id: providerId || null,
+      provider_plan_id: planId || "", provider_subscription_id: providerId || "",
       status: input.payment_method === "card" ? "payment_pending" : "trial_active",
-    }).eq("id", signup.id);
+      recurring_authorized: input.payment_method === "card",
+    } });
     if (signupUpdateError) return reply({ error: { code: "billing_update_failed" } }, 500, origin);
-    await admin.schema("private").from("billing_term_acceptances").update({ recurring_authorized: input.payment_method === "card" }).eq("signup_id", signup.id);
     const { data: customer } = await admin.from("billing_customers").update({ payment_method: input.payment_method === "card" ? "credit_card" : "pix", provider_subscription_id: providerId || null }).eq("saas_client_id", signup.saas_client_id).select("id").single();
     const { data: menuProduct } = await admin.from("platform_products").select("id").eq("code", "menu").single();
     if (!customer || !menuProduct) return reply({ error: { code: "billing_update_failed" } }, 500, origin);
@@ -264,7 +258,7 @@ Deno.serve(async (request) => {
   const token = request.headers.get("x-management-token") || "";
   if (token.length < 60) return reply({ error: { code: "unauthorized" } }, 401, origin);
   const tokenHash = await sha256(token);
-  const { data: signup } = await admin.schema("private").from("billing_signups").select("id,business_name,email,cycle,payment_method,total_cents,status,trial_ends_at,access_until,provider_subscription_id,provider_payment_id").eq("management_token_hash", tokenHash).maybeSingle();
+  const { data: signup } = await admin.from("backend_billing_signups").select("id,business_name,email,cycle,payment_method,total_cents,status,trial_ends_at,access_until,provider_subscription_id,provider_payment_id").eq("management_token_hash", tokenHash).maybeSingle();
   if (!signup) return reply({ error: { code: "not_found" } }, 404, origin);
   if (parsed.data.action === "status") return reply({ data: signup }, 200, origin);
   if (!["cancelled"].includes(signup.status)) {
@@ -273,8 +267,8 @@ Deno.serve(async (request) => {
     if (mpToken && signup.provider_payment_id) await fetch(`https://api.mercadopago.com/v1/payments/${signup.provider_payment_id}`, { method: "PUT", headers: { Authorization: `Bearer ${mpToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ status: "cancelled" }) });
     const accessUntil = signup.access_until || signup.trial_ends_at;
     const nextStatus = signup.status === "active" && new Date(accessUntil) > new Date() ? "cancel_at_period_end" : "cancelled";
-    await admin.schema("private").from("billing_signups").update({ status: nextStatus, cancelled_at: new Date().toISOString(), cancel_reason: parsed.data.reason || null, access_until: accessUntil }).eq("id", signup.id);
-    await admin.schema("private").from("billing_outbox").upsert({ signup_id: signup.id, event_type: "cancellation_requested", payload: { access_until: accessUntil } }, { onConflict: "signup_id,event_type" });
+    await admin.from("backend_billing_signups").update({ status: nextStatus, cancelled_at: new Date().toISOString(), cancel_reason: parsed.data.reason || null, access_until: accessUntil }).eq("id", signup.id);
+    await admin.rpc("backend_billing_enqueue_once", { target_signup_id: signup.id, target_event_type: "cancellation_requested", target_payload: { access_until: accessUntil } });
     return reply({ data: { status: nextStatus, access_until: accessUntil } }, 200, origin);
   }
   return reply({ data: { status: signup.status, access_until: signup.access_until || signup.trial_ends_at } }, 200, origin);

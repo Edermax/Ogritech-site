@@ -24,11 +24,11 @@ Deno.serve(async (request) => {
   let pixCreated = 0, suspended = 0, finalized = 0;
 
   // Pix não é cobrado no início: o QR é emitido automaticamente 48 h antes do fim do acesso.
-  const { data: pixDue, error: pixDueError } = await admin.schema("private").from("billing_signups")
-    .select("id,email,total_cents,cycle_months,trial_ends_at,access_until,status,barbershop_id")
-    .eq("payment_method", "pix").in("status", ["trial_active", "active"])
-    .is("payment_requested_at", null).lte("trial_ends_at", pixWindow).limit(100);
-  if (pixDueError) return new Response("pix query failed", { status: 500 });
+  const { data: pixDue, error: pixDueError } = await admin.rpc("backend_billing_lifecycle_pix_due", { target_cutoff: pixWindow });
+  if (pixDueError) {
+    console.error("billing_lifecycle.pix_query", { code: pixDueError.code, message: pixDueError.message });
+    return new Response(`pix query failed:${pixDueError.code || "unknown"}`, { status: 500 });
+  }
   for (const signup of pixDue || []) {
     const periodEnd = signup.access_until || signup.trial_ends_at;
     if (new Date(periodEnd) > new Date(pixWindow)) continue;
@@ -41,24 +41,18 @@ Deno.serve(async (request) => {
     });
     const payment = await response.json().catch(() => ({}));
     if (!response.ok || !payment.id) continue;
-    const { error: intentError } = await admin.schema("private").from("billing_payment_intents").insert({ signup_id: signup.id, purpose: signup.status === "trial_active" ? "initial" : "renewal", amount_cents: signup.total_cents, provider_payment_id: String(payment.id), external_reference: externalReference, expires_at: expiresAt });
+    const { error: intentError } = await admin.rpc("backend_billing_lifecycle_record_pix", { target_signup_id: signup.id, payload: { purpose: signup.status === "trial_active" ? "initial" : "renewal", amount_cents: signup.total_cents, provider_payment_id: String(payment.id), external_reference: externalReference, expires_at: expiresAt, qr_code: payment.point_of_interaction?.transaction_data?.qr_code || "" } });
     if (intentError) continue;
-    await admin.schema("private").from("billing_signups").update({ provider_payment_id: String(payment.id), payment_requested_at: now.toISOString(), status: "payment_pending" }).eq("id", signup.id);
-    await admin.schema("private").from("billing_outbox").upsert({ signup_id: signup.id, event_type: `pix_requested_${payment.id}`, payload: { qr_code: payment.point_of_interaction?.transaction_data?.qr_code || "", expires_at: expiresAt } }, { onConflict: "signup_id,event_type" });
     pixCreated++;
   }
 
-  const { data: expired, error: expiredError } = await admin.schema("private").from("billing_signups")
-    .select("id,status,trial_ends_at,access_until,barbershop_id")
-    .in("status", ["trial_active", "payment_pending", "active", "cancel_at_period_end"]).limit(500);
+  const { data: expired, error: expiredError } = await admin.rpc("backend_billing_lifecycle_expired");
   if (expiredError) return new Response("expiry query failed", { status: 500 });
   for (const signup of expired || []) {
     const boundary = signup.access_until || signup.trial_ends_at;
     if (new Date(boundary) > now) continue;
     const cancelled = signup.status === "cancel_at_period_end";
-    await admin.schema("private").from("billing_signups").update({ status: cancelled ? "cancelled" : "past_due", suspended_at: now.toISOString() }).eq("id", signup.id);
-    if (signup.barbershop_id) await admin.schema("private").rpc("billing_set_business_access", { target_barbershop_id: signup.barbershop_id, enabled: false });
-    await admin.schema("private").from("billing_outbox").upsert({ signup_id: signup.id, event_type: cancelled ? "cancellation_effective" : "access_suspended", payload: { access_until: boundary } }, { onConflict: "signup_id,event_type" });
+    await admin.rpc("backend_billing_lifecycle_suspend", { target_signup_id: signup.id, target_cancelled: cancelled, target_boundary: boundary });
     cancelled ? finalized++ : suspended++;
   }
 

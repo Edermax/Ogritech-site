@@ -41,24 +41,17 @@ Deno.serve(async (request) => {
     const resource = await resourceResponse.json();
     const reference = String(resource.external_reference || resource.metadata?.signup_id || "");
     const signupId = reference.match(/[0-9a-f]{8}-[0-9a-f-]{27,}/i)?.[0] || "";
-    let query = admin.schema("private").from("billing_signups").select("id,saas_client_id,cycle_months,trial_ends_at,access_until,status");
     const subscriptionId = String(resource.preapproval_id || resource.subscription_id || "");
-    query = signupId ? query.eq("id", signupId) : (isSubscription || subscriptionId) ? query.eq("provider_subscription_id", subscriptionId || dataId) : query.eq("provider_payment_id", dataId);
-    const { data: signup } = await query.maybeSingle();
+    const { data: signup } = await admin.rpc("backend_billing_webhook_lookup", { target_signup_id: signupId || null, target_subscription_id: (isSubscription || subscriptionId) ? subscriptionId || dataId : "", target_payment_id: dataId });
     if (signup) {
       const approved = ["approved", "authorized", "processed"].includes(String(resource.status));
       if (approved && !isSubscription) {
         const start = Math.max(Date.now(), new Date(signup.trial_ends_at).getTime(), signup.access_until ? new Date(signup.access_until).getTime() : 0);
         const end = new Date(start); end.setUTCMonth(end.getUTCMonth() + Number(signup.cycle_months));
-        await admin.schema("private").from("billing_signups").update({ status: "active", access_until: end.toISOString(), payment_requested_at: null, suspended_at: null }).eq("id", signup.id);
-        await admin.schema("private").from("billing_payment_intents").update({ status: "approved", paid_at: new Date().toISOString() }).eq("provider_payment_id", dataId);
+        await admin.rpc("backend_billing_webhook_apply", { target_signup_id: signup.id, target_payment_id: dataId, target_status: "approved", target_access_until: end.toISOString() });
         if (signup.saas_client_id) await admin.from("saas_clients").update({ status: "Ativo" }).eq("id", signup.saas_client_id);
-        const { data: current } = await admin.schema("private").from("billing_signups").select("barbershop_id").eq("id", signup.id).single();
-        if (current?.barbershop_id) await admin.schema("private").rpc("billing_set_business_access", { target_barbershop_id: current.barbershop_id, enabled: true });
-        await admin.schema("private").from("billing_outbox").upsert({ signup_id: signup.id, event_type: `payment_approved_${dataId}`, payload: { payment_id: dataId } }, { onConflict: "signup_id,event_type" });
       } else if (["rejected", "cancelled", "refunded", "charged_back"].includes(String(resource.status))) {
-        await admin.schema("private").from("billing_payment_intents").update({ status: resource.status === "rejected" ? "rejected" : "cancelled" }).eq("provider_payment_id", dataId);
-        if (isSubscription && resource.status === "cancelled") await admin.schema("private").from("billing_signups").update({ status: "cancel_at_period_end", cancelled_at: new Date().toISOString() }).eq("id", signup.id);
+        await admin.rpc("backend_billing_webhook_apply", { target_signup_id: signup.id, target_payment_id: dataId, target_status: isSubscription && resource.status === "cancelled" ? "subscription_cancelled" : String(resource.status), target_access_until: null });
       }
     }
     await admin.from("platform_billing_events").update({ processed_at: new Date().toISOString(), payload: { notification: body, resource } }).eq("provider", "mercado_pago").eq("provider_event_id", eventId);

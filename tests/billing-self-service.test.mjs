@@ -40,9 +40,12 @@ test("ciclo de vida automatiza Pix, suspensão e liberação", async () => {
   const lifecycle = await read("supabase/functions/billing-lifecycle/index.ts");
   const webhook = await read("supabase/functions/mercado-pago-webhook/index.ts");
   const checkout = await read("supabase/functions/ogritech-billing/index.ts");
-  for (const marker of ["48 * 60 * 60", "payment_pending", "billing_set_business_access", "access_suspended"]) assert.ok(lifecycle.includes(marker), marker);
-  assert.match(webhook, /payment_requested_at: null/);
-  assert.match(webhook, /enabled: true/);
+  const bridge = await read("supabase/migrations/20261002195500_billing_explicit_backend_rpcs.sql");
+  for (const marker of ["48 * 60 * 60", "backend_billing_lifecycle_record_pix", "backend_billing_lifecycle_suspend"]) assert.ok(lifecycle.includes(marker), marker);
+  assert.match(bridge, /payment_requested_at=null/);
+  assert.match(bridge, /billing_set_business_access\(business_id,true\)/);
+  assert.match(bridge, /access_suspended/);
+  assert.match(webhook, /backend_billing_webhook_apply/);
   assert.doesNotMatch(checkout, /payment_method_id: "pix"/);
   assert.match(checkout, /billing_not_configured/);
 });

@@ -73,7 +73,10 @@
       "menu_catalog_draft_publication",
       "menu_trial_self_service",
       "billing_private_backend_rpcs",
-      "fix_menu_trial_plan_sync"
+      "fix_menu_trial_plan_sync",
+      "billing_service_role_bridge",
+      "grant_billing_bridge_schema_usage",
+      "billing_explicit_backend_rpcs"
     ],
     "remoteVersionAliases": {
       "platform_contact_leads": "20260901214935",
@@ -91,7 +94,23 @@
     "appliedThrough": "move_profile_rls_helpers_private",
     "appliedOutOfOrder": [
       "assistant_callback_requests",
-      "assistant_email_callbacks"
+      "assistant_email_callbacks",
+      "enforce_plan_capacity",
+      "fix_plan_capacity_access",
+      "ogritech_billing_self_service",
+      "billing_lifecycle_automation",
+      "multiproduct_foundation",
+      "multiproduct_activation",
+      "menu_catalog_core",
+      "menu_cart_orders",
+      "menu_self_service_onboarding",
+      "commercial_self_service_lifecycle",
+      "menu_trial_self_service",
+      "billing_private_backend_rpcs",
+      "fix_menu_trial_plan_sync",
+      "billing_service_role_bridge",
+      "grant_billing_bridge_schema_usage",
+      "billing_explicit_backend_rpcs"
     ],
     "heldMigrations": [
       {
@@ -119,48 +138,8 @@
         "reason": "Login por SMS e área do cliente permanecem retidos até configurar credenciais dos provedores e validar a jornada no staging."
       },
       {
-        "name": "enforce_plan_capacity",
-        "reason": "Limites comerciais de usuários, profissionais e serviços permanecem retidos até validação completa no staging e autorização do lote de produção."
-      },
-      {
-        "name": "fix_plan_capacity_access",
-        "reason": "Correção de acesso acompanha o lote de limites de planos no staging."
-      },
-      {
         "name": "harden_authenticated_booking_actions",
         "reason": "Correção de cancelamento autenticado e confirmação de telefone validada no staging; acompanha lote de identidade ainda não autorizado para produção."
-      },
-      {
-        "name": "ogritech_billing_self_service",
-        "reason": "Contratação self-service aguarda credenciais sandbox, planos Mercado Pago, hash dos termos, webhook e homologação integral no staging."
-      },
-      {
-        "name": "billing_lifecycle_automation",
-        "reason": "Automação de renovação, suspensão e liberação acompanha a homologação integral do Ogritech Billing no staging."
-      },
-      {
-        "name": "multiproduct_foundation",
-        "reason": "Fundação multiproduto permanece exclusivamente local até replay limpo, validação de segurança e autorização separada para qualquer ambiente remoto."
-      },
-      {
-        "name": "multiproduct_activation",
-        "reason": "Ativação multiproduto e bloqueios de interface permanecem locais até homologação específica e autorização de staging."
-      },
-      {
-        "name": "menu_catalog_core",
-        "reason": "Núcleo universal e templates do Cardápio permanecem locais até validação do catálogo e autorização separada de staging."
-      },
-      {
-        "name": "menu_cart_orders",
-        "reason": "Carrinho, pedidos e idempotência do Cardápio permanecem locais até homologação funcional e autorização separada de staging."
-      },
-      {
-        "name": "menu_self_service_onboarding",
-        "reason": "Onboarding, pedido de teste e publicação autônoma do Cardápio permanecem locais até homologação da jornada e autorização separada de staging."
-      },
-      {
-        "name": "commercial_self_service_lifecycle",
-        "reason": "Gestão autônoma de assinaturas, módulos e exportação permanece local até homologação comercial, jurídica e autorização separada de staging."
       },
       {
         "name": "menu_assistant_foundation",
@@ -213,18 +192,6 @@
       {
         "name": "menu_catalog_draft_publication",
         "reason": "Rascunho independente e promoção atômica do catálogo permanecem retidos até homologação concorrente com pedidos sintéticos no staging."
-      },
-      {
-        "name": "menu_trial_self_service",
-        "reason": "Teste gratuito e preço comercial do Cardápio aguardam homologação completa do cadastro, convite e acesso no staging antes da produção."
-      },
-      {
-        "name": "billing_private_backend_rpcs",
-        "reason": "RPCs privadas do backend acompanham a homologação do cadastro self-service em staging antes da produção."
-      },
-      {
-        "name": "fix_menu_trial_plan_sync",
-        "reason": "Correção do plano e isolamento do trigger legado da Agenda aguardam homologação do cadastro em staging."
       }
     ]
   }
