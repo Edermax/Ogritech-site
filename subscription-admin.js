@@ -1,7 +1,7 @@
 (() => {
     const byId = (id) => document.getElementById(id);
     const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-    const billingSelectionEnabled = window.OGRITECH_ENV !== "production";
+    const billingSelectionEnabled = true;
     let center = null;
     let busy = false;
 

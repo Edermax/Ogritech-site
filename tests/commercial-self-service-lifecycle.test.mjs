@@ -39,5 +39,5 @@ test("painel delega a escolha de cobrança ao endpoint autenticado", async () =>
   assert.match(script, /Cartão com renovação automática/);
   assert.match(script, /supabaseClient\.functions\.invoke\("ogritech-billing"/);
   assert.match(script, /recurring_authorized: recurringAuthorized/);
-  assert.match(script, /billingSelectionEnabled = window\.OGRITECH_ENV !== "production"/);
+  assert.match(script, /billingSelectionEnabled = true/);
 });
