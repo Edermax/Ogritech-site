@@ -81,7 +81,14 @@ test("auditoria diária detecta drift real de schema sem bloquear o backup", asy
   assert.match(workflow, /supabase db query --db-url/);
   assert.match(workflow, /production-schema-drift/);
   assert.match(sql, /supabase_migrations\.schema_migrations/);
+  assert.match(sql, /actual <> 55/);
+  assert.match(sql, /billing_rejected_email_event/);
   assert.match(sql, /not c\.relrowsecurity/);
   assert.match(sql, /has_function_privilege\('anon'/);
   assert.doesNotMatch(backup, /audit-production-schema\.sql/);
+});
+
+test("monitor de staging obtém o commit imutável usado no ensaio de rollback", async () => {
+  const workflow = await load(".github/workflows/monitor-agenda-staging.yml");
+  assert.match(workflow, /actions\/checkout@v5[\s\S]*?fetch-depth: 0/);
 });

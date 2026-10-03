@@ -6,14 +6,14 @@ declare
     latest_name text;
 begin
     select count(*) into actual from supabase_migrations.schema_migrations;
-    if actual <> 36 then
-        raise exception 'Unexpected production migration count: %, expected 36', actual;
+    if actual <> 55 then
+        raise exception 'Unexpected production migration count: %, expected 55', actual;
     end if;
 
     select name into latest_name
     from supabase_migrations.schema_migrations
     order by version::numeric desc limit 1;
-    if latest_name is distinct from 'move_profile_rls_helpers_private' then
+    if latest_name is distinct from 'billing_rejected_email_event' then
         raise exception 'Unexpected production migration baseline: %', latest_name;
     end if;
 
