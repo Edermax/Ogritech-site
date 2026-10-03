@@ -43,10 +43,11 @@ test("painel delega a escolha de cobrança ao endpoint autenticado", async () =>
 });
 
 test("fim do teste abre uma recuperação autenticada e preserva o Cardápio", async () => {
-  const [page, script, auth, billing, lifecycle, email, emailTemplate] = await Promise.all([
+  const [page, script, auth, login, billing, lifecycle, email, emailTemplate] = await Promise.all([
     readFile(new URL("../assinatura/index.html", import.meta.url), "utf8"),
     readFile(new URL("../assinatura/assinatura.js", import.meta.url), "utf8"),
     readFile(new URL("../auth.js", import.meta.url), "utf8"),
+    readFile(new URL("../login.js", import.meta.url), "utf8"),
     readFile(new URL("../supabase/functions/ogritech-billing/index.ts", import.meta.url), "utf8"),
     readFile(new URL("../supabase/functions/billing-lifecycle/index.ts", import.meta.url), "utf8"),
     readFile(new URL("../supabase/functions/billing-email-dispatch/index.ts", import.meta.url), "utf8"),
@@ -56,9 +57,13 @@ test("fim do teste abre uma recuperação autenticada e preserva o Cardápio", a
   assert.match(script, /action: "billing_status"/);
   assert.match(script, /pix\.qr_code/);
   assert.match(auth, /environmentUrl\("assinatura\/"\)/);
+  assert.match(login, /role === "owner" && requestedDestination === "assinatura"/);
+  assert.match(login, /ogritechEnvironmentUrl\("assinatura\/"\)/);
   assert.match(billing, /back_url: `\$\{appUrl\}\/assinatura\/\?pagamento=retorno`/);
   assert.match(billing, /BillingStatusBody/);
   assert.match(lifecycle, /Renovação Ogritech Cardápio/);
   assert.match(email, /renderBillingEmail/);
   assert.match(emailTemplate, /productName\s*=\s*signup\.product_code\s*===\s*"menu"/);
+  assert.match(emailTemplate, /subscriptionUrl=signup\.product_code==="menu"\?"https:\/\/ogritech\.com\.br\/login\/\?destino=assinatura"/);
+  assert.match(emailTemplate, /ctaLabel:"Regularizar pagamento",ctaUrl:subscriptionUrl/);
 });

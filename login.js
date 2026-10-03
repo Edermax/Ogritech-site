@@ -9,6 +9,7 @@ const forgotPasswordButton = document.getElementById("forgotPasswordButton");
 const togglePasswordButton = document.getElementById("togglePasswordButton");
 
 const loginParameters = new URLSearchParams(window.location.search);
+const requestedDestination = loginParameters.get("destino");
 const hadLegacyDemo = sessionStorage.getItem("japaDemo") === "true";
 if (hadLegacyDemo || loginParameters.get("reset_demo") === "1") {
     [
@@ -54,6 +55,9 @@ function saveLocalSession(user, profile) {
 async function destinationFor(role) {
     const { data: isPlatformAdmin } = await supabaseClient.rpc("is_platform_admin");
     if (isPlatformAdmin) return window.ogritechEnvironmentUrl("admin.html");
+    if (role === "owner" && requestedDestination === "assinatura") {
+        return window.ogritechEnvironmentUrl("assinatura/");
+    }
     return window.ogritechEnvironmentUrl(role === "client" ? "cliente.html" : "painel/");
 }
 
