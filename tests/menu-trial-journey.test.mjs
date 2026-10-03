@@ -34,9 +34,8 @@ test("painel autenticado rejeita sessão demonstrativa e oferece cadastro real",
   assert.doesNotMatch(login, /window\.location\.replace\(window\.ogritechEnvironmentUrl\(role === "client"/);
   assert.match(login, /sessionStorage\.removeItem\(key\)/);
   assert.match(panel, /Seu negócio/);
-  assert.match(loginPage, /Criar meu cardápio grátis/);
-  assert.match(loginPage, /14 dias grátis/);
-  assert.match(loginPage, /R\$ 49,90 por mês/);
+  assert.doesNotMatch(loginPage, /Criar meu cardápio grátis/);
+  assert.doesNotMatch(loginPage, /signup-callout/);
   assert.match(commercial, /businessConfig\.name = menu\.title/);
   assert.match(commercial, /!menu\?\.template_code \|\| onboarding\?\.next_step === "catalog"/);
   assert.match(commercial, /selectMenuWorkspace\("settings"\)/);
