@@ -52,7 +52,10 @@ test("ciclo de vida automatiza Pix, suspensão e liberação", async () => {
 
 test("e-mail entrega gerenciamento e elimina o token da fila", async () => {
   const dispatcher = await read("supabase/functions/billing-email-dispatch/index.ts");
-  assert.match(dispatcher, /management_token/);
+  const template = await read("supabase/functions/_shared/billing-email-template.ts");
+  assert.match(template, /management_token/);
+  assert.match(template, /payment_rejected/);
+  assert.match(template, /Não foi possível confirmar seu pagamento/);
   assert.match(dispatcher, /payload: \{ delivered: true \}/);
-  assert.match(dispatcher, /escapeHtml/);
+  assert.match(template, /escapeHtml/);
 });
