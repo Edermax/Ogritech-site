@@ -36,6 +36,18 @@ test("checkout restringe meios e exige aceites", async () => {
   assert.match(page, /name="recurring_authorized"/);
 });
 
+test("ações de contratação permanecem ocultas durante carregamento e erro", async () => {
+  const page = await read("contratar/index.html");
+  const styles = await read("contratar/contratar.css");
+  const script = await read("contratar/contratar.js");
+  assert.match(page, /id="resultActions" hidden/);
+  assert.match(page, /id="checkoutLink" hidden/);
+  assert.match(styles, /\[hidden\]\{display:none!important\}/);
+  assert.match(script, /resultActions\.hidden=true/);
+  assert.match(script, /resultActions\.hidden=false/);
+  assert.match(script, /Não foi possível carregar sua contratação/);
+});
+
 test("ciclo de vida automatiza Pix, suspensão e liberação", async () => {
   const lifecycle = await read("supabase/functions/billing-lifecycle/index.ts");
   const webhook = await read("supabase/functions/mercado-pago-webhook/index.ts");

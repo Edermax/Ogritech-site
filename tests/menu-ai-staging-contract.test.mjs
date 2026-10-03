@@ -25,7 +25,10 @@ test("contrato de staging falha fechado em todas as camadas", async () => {
 });
 
 test("função valida entrada, origem e PII antes da inferência controlada", async () => {
-  const source = await read("supabase/functions/menu-ai-assistant/index.ts");
+  const [source, sharedContract] = await Promise.all([
+    read("supabase/functions/menu-ai-assistant/index.ts"),
+    read("supabase/functions/_shared/menu-ai-contract.mjs")
+  ]);
   assert.match(source, /\.strict\(\)/);
   assert.match(source, /payload_too_large/);
   assert.match(source, /forbidden_origin/);
@@ -37,7 +40,12 @@ test("função valida entrada, origem e PII antes da inferência controlada", as
   assert.match(source, /deterministic_phase_6a/);
   assert.match(source, /https:\/\/api\.openai\.com\/v1\/responses/);
   assert.match(source, /store:false/);
-  assert.match(source, /max_output_tokens:80/);
+  assert.match(source, /max_output_tokens:MENU_AI_MAX_OUTPUT_TOKENS/);
+  assert.match(source, /instructions:MENU_AI_INSTRUCTIONS/);
+  assert.match(sharedContract, /MENU_AI_MAX_OUTPUT_TOKENS = 80/);
+  assert.match(sharedContract, /MENU_AI_REASONING_EFFORT = "none"/);
+  assert.match(sharedContract, /MENU_AI_VERBOSITY = "low"/);
+  assert.match(sharedContract, /conteúdo não confiável/);
   assert.match(source, /service_tier:Env\.OGRITECH_MENU_AI_SERVICE_TIER/);
   assert.match(source, /processing_tier:payload\.service_tier/);
   assert.match(source, /OGRITECH_MENU_AI_SERVICE_TIER==="priority"\?2:1/);

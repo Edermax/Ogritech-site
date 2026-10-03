@@ -21,7 +21,10 @@ const results = [];
 for (const scenario of suite.cases) {
   try {
     const { response, telemetry } = await hybrid.interpretWithTelemetry({ message: scenario.message, locale: suite.locale, allowedTools: ["catalog_search", "business_info", "open_cart"] });
-    results.push({ caseHash: createHash("sha256").update(scenario.message).digest("hex"), passed: response.intent === scenario.expectedIntent && telemetry.route === scenario.expectedRoute, intent: response.intent, tool: response.tool, route: telemetry.route, latencyMs: telemetry.latencyMs, inputTokens: telemetry.inputTokens, outputTokens: telemetry.outputTokens, outcome: telemetry.outcome });
+    const passed = response.intent === scenario.expectedIntent
+      && telemetry.route === scenario.expectedRoute
+      && (scenario.expectedTool === undefined || response.tool === scenario.expectedTool);
+    results.push({ caseHash: createHash("sha256").update(scenario.message).digest("hex"), passed, intent: response.intent, tool: response.tool, route: telemetry.route, latencyMs: telemetry.latencyMs, inputTokens: telemetry.inputTokens, outputTokens: telemetry.outputTokens, outcome: telemetry.outcome });
   } catch (error) {
     results.push({ caseHash: createHash("sha256").update(scenario.message).digest("hex"), passed: false, intent: null, tool: null, route: scenario.expectedRoute, latencyMs: null, inputTokens: 0, outputTokens: 0, outcome: typeof error?.code === "string" ? error.code : (error?.name || "error") });
   }

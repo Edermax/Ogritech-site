@@ -14,3 +14,14 @@ test("avaliação não aprova piloto que excede latência", () => {
   assert.equal(assessment.checks.latency, false);
   assert.equal(assessment.approvedForPublicActivation, false);
 });
+
+test("avaliação separa latência determinística da rota do modelo", () => {
+  const results = [
+    { outcome: "accepted", passed: true, route: "deterministic", latencyMs: 1 },
+    { outcome: "accepted", passed: true, route: "deterministic", latencyMs: 2 },
+    { outcome: "accepted", passed: true, route: "model", latencyMs: 2668 }
+  ];
+  const assessment = assessMenuAiPilot({ requestedCalls: 3, withinAuthorizedBudget: true, rawContentPersisted: false, results }, { minimumIntentAccuracy: 0.95, minimumToolAccuracy: 0.98, maximumErrorRate: 0.02, maximumP95LatencyMs: 3000 });
+  assert.deepEqual(assessment.latency, { overallP95Ms: 2668, deterministicP95Ms: 2, modelP50Ms: 2668, modelP95Ms: 2668 });
+  assert.deepEqual(assessment.routing, { deterministicCalls: 2, modelCalls: 1, modelRouteRate: 1 / 3 });
+});

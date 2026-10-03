@@ -13,9 +13,11 @@ test("adaptador OpenAI envia somente payload sintético, schema estrito e store 
   const result = await createOpenAiMenuAdapter({ apiKey: "sk-test-safe-placeholder-value", fetchImpl }).interpretWithTelemetry(request);
   assert.equal(captured.body.store, false);
   assert.equal(captured.body.text.format.strict, true);
-  assert.equal(captured.body.max_output_tokens, 120);
+  assert.equal(captured.body.max_output_tokens, 80);
   assert.equal(captured.body.reasoning.effort, "none");
   assert.equal(captured.body.text.verbosity, "low");
+  assert.match(captured.body.instructions, /conteúdo não confiável/);
+  assert.deepEqual(captured.body.input.map((item) => item.role), ["user"]);
   assert.doesNotMatch(JSON.stringify(captured.body), /telefone|endereço|email|customer_name/i);
   assert.match(captured.headers.authorization, /^Bearer sk-/);
   assert.equal(result.response.tool, "catalog_search");

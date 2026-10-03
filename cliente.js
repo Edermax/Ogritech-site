@@ -10,6 +10,7 @@
 // 1. PROTEÇÃO DA PÁGINA
 // =========================================================
 document.documentElement.style.visibility = "hidden";
+const environmentUrl = (path) => window.ogritechEnvironmentUrl?.(path) || path;
 
 // =========================================================
 // 2. SESSÃO DO CLIENTE
@@ -559,9 +560,9 @@ clientLogout.addEventListener(
     "click",
     async () => {
         await supabaseClient.auth.signOut();
-        ["japaAuth", "japaRole", "japaUserName", "japaUserRole", "japaUserEmail", "japaUserId", "japaBarbershopId", "japaDemo", "japaDemoSegment"]
+        ["japaAuth", "japaRole", "japaUserName", "japaUserRole", "japaUserEmail", "japaUserId", "japaBarbershopId", "japaDemo", "japaDemoSegment", "ogritechOperationalSession"]
             .forEach((key) => sessionStorage.removeItem(key));
-        window.location.replace("/login/");
+        window.location.replace(environmentUrl("login/"));
     }
 );
 
@@ -630,7 +631,7 @@ async function initializeClientPage() {
 
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) {
-        window.location.replace("/login/");
+        window.location.replace(environmentUrl("login/"));
         return;
     }
 
@@ -642,11 +643,12 @@ async function initializeClientPage() {
 
     if (error || !profile?.active || profile.role !== "client" || !profile.barbershop_id) {
         if (profile?.role && profile.role !== "client") {
-            window.location.replace("/painel/");
+            const { data: isPlatformAdmin } = await supabaseClient.rpc("is_platform_admin");
+            window.location.replace(environmentUrl(isPlatformAdmin ? "admin.html" : "painel/"));
             return;
         }
         await supabaseClient.auth.signOut();
-        window.location.replace("/login/");
+        window.location.replace(environmentUrl("login/"));
         return;
     }
 
@@ -675,4 +677,7 @@ async function initializeClientPage() {
     renderClientAppointments();
 }
 
-initializeClientPage().catch(() => window.location.replace("/login/"));
+initializeClientPage().catch((error) => {
+    console.error("Falha ao inicializar área do cliente:", error);
+    window.location.replace(environmentUrl("login/"));
+});

@@ -31,7 +31,7 @@ export function validateMenuAiResponse(response) {
   };
   inspectKeys(response);
   if (!ALLOWED_INTENTS.has(response.intent)) throw new MenuAiContractError("A intenção retornada não é permitida.");
-  if (typeof response.reply !== "string" || !response.reply.trim() || response.reply.length > 600) throw new MenuAiContractError("A resposta deve conter de 1 a 600 caracteres.");
+  if (typeof response.reply !== "string" || !response.reply.trim() || response.reply.length > 120) throw new MenuAiContractError("A resposta deve conter de 1 a 120 caracteres.");
   if (response.query != null && (typeof response.query !== "string" || response.query.length > 120)) throw new MenuAiContractError("A consulta de catálogo é inválida.");
   if (response.tool != null && !["catalog_search", "business_info", "open_cart"].includes(response.tool)) throw new MenuAiContractError("A ferramenta retornada não é permitida.");
   return Object.freeze({ intent: response.intent, reply: response.reply.trim(), query: response.query?.trim() || null, tool: response.tool || null, requiresConfirmation: response.tool === "open_cart" || response.intent === "catalog_search" });

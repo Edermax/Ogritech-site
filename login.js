@@ -1,5 +1,7 @@
 /* OGRITECH - AUTENTICAÇÃO COM SUPABASE */
 
+document.documentElement.style.visibility = "hidden";
+
 const loginForm = document.getElementById("loginForm");
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
@@ -50,10 +52,15 @@ function saveLocalSession(user, profile) {
     sessionStorage.setItem("japaUserEmail", user.email || "");
     sessionStorage.setItem("japaUserId", user.id);
     sessionStorage.setItem("japaBarbershopId", profile.barbershop_id);
+    sessionStorage.setItem(
+        "ogritechOperationalSession",
+        `${user.id}:${profile.role}:${profile.barbershop_id}`
+    );
 }
 
 async function destinationFor(role) {
-    const { data: isPlatformAdmin } = await supabaseClient.rpc("is_platform_admin");
+    const { data: isPlatformAdmin, error } = await supabaseClient.rpc("is_platform_admin");
+    if (error) throw error;
     if (isPlatformAdmin) return window.ogritechEnvironmentUrl("admin.html");
     if (role === "owner" && requestedDestination === "assinatura") {
         return window.ogritechEnvironmentUrl("assinatura/");
@@ -62,19 +69,34 @@ async function destinationFor(role) {
 }
 
 async function restoreExistingSession() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) return;
+    try {
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError) throw sessionError;
+        if (!session) {
+            document.documentElement.style.visibility = "visible";
+            return;
+        }
 
-    const { data: profile, error } = await supabaseClient
-        .from("profiles")
-        .select("barbershop_id, full_name, role, active")
-        .eq("id", session.user.id)
-        .single();
+        const { data: profile, error } = await supabaseClient
+            .from("profiles")
+            .select("barbershop_id, full_name, role, active")
+            .eq("id", session.user.id)
+            .single();
 
-    if (error || !profile?.active) return;
+        if (error || !profile?.active) {
+            await supabaseClient.auth.signOut();
+            document.documentElement.style.visibility = "visible";
+            return;
+        }
 
-    saveLocalSession(session.user, profile);
-    window.location.replace(await destinationFor(profile.role));
+        saveLocalSession(session.user, profile);
+        window.location.replace(await destinationFor(profile.role));
+    } catch (error) {
+        console.error("Falha ao restaurar sessão:", error);
+        loginMessage.textContent = "Não foi possível validar sua sessão. Tente novamente.";
+        loginMessage.className = "login-message error";
+        document.documentElement.style.visibility = "visible";
+    }
 }
 
 loginForm.addEventListener("submit", async (event) => {
