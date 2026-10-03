@@ -17,7 +17,7 @@ Deno.serve(async (request) => {
     const { data: signup } = await admin.from("backend_billing_signups").select("business_name,responsible_name,email,cycle,total_cents,trial_ends_at,access_until,product_code").eq("id", job.signup_id).maybeSingle();
     if (!signup) { await admin.from("backend_billing_outbox").update({ processed_at: new Date().toISOString(), last_error: "signup_not_found" }).eq("id", job.id); continue; }
     const email = renderBillingEmail(job.event_type, job.payload || {}, signup);
-    const response = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${resend}`, "Content-Type": "application/json", "Idempotency-Key": job.id }, body: JSON.stringify({ from: "Ogritech <contato@ogritech.com.br>", to: [signup.email], reply_to: "suporte@ogritech.com.br", subject: email.subject, html: email.html }) });
+    const response = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${resend}`, "Content-Type": "application/json", "Idempotency-Key": job.id }, body: JSON.stringify({ from: "Ogritech <contato@ogritech.com.br>", to: [signup.email], reply_to: "suporte@ogritech.com.br", subject: email.subject, html: email.html, text: email.text }) });
     if (response.ok) { sent++; await admin.from("backend_billing_outbox").update({ processed_at: new Date().toISOString(), attempts: job.attempts + 1, last_error: null, payload: { delivered: true } }).eq("id", job.id); }
     else await admin.from("backend_billing_outbox").update({ attempts: job.attempts + 1, available_at: new Date(Date.now() + Math.min(3600, 2 ** job.attempts * 60) * 1000).toISOString(), last_error: `resend_${response.status}` }).eq("id", job.id);
   }

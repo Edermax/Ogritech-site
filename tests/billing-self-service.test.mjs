@@ -56,6 +56,12 @@ test("e-mail entrega gerenciamento e elimina o token da fila", async () => {
   assert.match(template, /management_token/);
   assert.match(template, /payment_rejected/);
   assert.match(template, /Não foi possível confirmar seu pagamento/);
+  assert.match(template, /role="presentation"/);
+  assert.match(template, /max-width:600px/);
+  assert.match(template, /@media only screen and \(max-width:620px\)/);
+  assert.match(template, /alt="Ogritech"/);
+  assert.match(template, /Suporte: suporte@ogritech\.com\.br/);
+  assert.match(dispatcher, /text: email\.text/);
   assert.match(dispatcher, /payload: \{ delivered: true \}/);
   assert.match(template, /escapeHtml/);
 });

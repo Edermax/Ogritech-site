@@ -60,5 +60,5 @@ test("fim do teste abre uma recuperação autenticada e preserva o Cardápio", a
   assert.match(billing, /BillingStatusBody/);
   assert.match(lifecycle, /Renovação Ogritech Cardápio/);
   assert.match(email, /renderBillingEmail/);
-  assert.match(emailTemplate, /productName = signup\.product_code === "menu"/);
+  assert.match(emailTemplate, /productName\s*=\s*signup\.product_code\s*===\s*"menu"/);
 });

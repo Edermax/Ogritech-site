@@ -1,52 +1,34 @@
-type BillingSignup = {
-  business_name: string;
-  responsible_name: string;
-  cycle: string;
-  total_cents: number;
-  trial_ends_at: string;
-  access_until: string | null;
-  product_code: string;
-};
+type BillingSignup = { business_name:string; responsible_name:string; cycle:string; total_cents:number; trial_ends_at:string; access_until:string|null; product_code:string };
+type BillingPayload = Record<string,unknown>;
+type Tone = "info"|"success"|"warning"|"danger"|"neutral";
+type EmailContent = { subject:string; preheader:string; title:string; message:string; detailLabel?:string; detailValue?:string; ctaLabel?:string; ctaUrl?:string; tone:Tone };
 
-type BillingPayload = Record<string, unknown>;
+const BRAND={bg:"#080a0b",surface:"#111719",soft:"#172124",border:"#263438",text:"#f2f4f5",muted:"#a4afb2",cyan:"#39d4e8",cyanDark:"#062f35",logo:"https://ogritech.com.br/ogritech-header-logo.png"};
+const TONES={info:{label:"INFORMAÇÃO",color:"#39d4e8",soft:"#0d3035"},success:{label:"CONFIRMADO",color:"#69c28d",soft:"#153125"},warning:{label:"ATENÇÃO",color:"#e3c35f",soft:"#352f18"},danger:{label:"AÇÃO NECESSÁRIA",color:"#ef9292",soft:"#391f22"},neutral:{label:"ATUALIZAÇÃO",color:"#b7c2c5",soft:"#222b2e"}} as const;
+const money=(cents:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(cents/100);
+const escapeHtml=(value:unknown)=>String(value??"").replace(/[&<>"']/g,(char)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]!);
+const dateTime=(value:string)=>new Date(value).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"});
 
-const money = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
-const escapeHtml = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
-const dateTime = (value: string) => new Date(value).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+function layout(content:EmailContent,recipientName:string){
+  const tone=TONES[content.tone];
+  const detail=content.detailLabel&&content.detailValue?`<tr><td style="padding:0 32px 24px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:separate;background:${BRAND.soft};border:1px solid ${BRAND.border};border-radius:12px"><tr><td style="padding:18px 20px"><span style="display:block;color:${BRAND.muted};font-size:11px;line-height:16px;letter-spacing:.08em;text-transform:uppercase">${escapeHtml(content.detailLabel)}</span><strong style="display:block;margin-top:6px;color:${BRAND.text};font-size:18px;line-height:24px;overflow-wrap:anywhere">${escapeHtml(content.detailValue)}</strong></td></tr></table></td></tr>`:"";
+  const cta=content.ctaLabel&&content.ctaUrl?`<tr><td style="padding:0 32px 28px"><table role="presentation" cellspacing="0" cellpadding="0"><tr><td bgcolor="${BRAND.cyan}" style="border-radius:9px"><a href="${escapeHtml(content.ctaUrl)}" style="display:inline-block;padding:14px 22px;color:#031012;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:800;line-height:18px;text-decoration:none">${escapeHtml(content.ctaLabel)}</a></td></tr></table></td></tr>`:"";
+  const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><title>${escapeHtml(content.subject)}</title><style>@media only screen and (max-width:620px){.email-shell{width:100%!important}.email-pad{padding-left:20px!important;padding-right:20px!important}.email-title{font-size:28px!important;line-height:34px!important}.email-footer-links{display:block!important;margin:10px 0!important}}</style></head><body style="margin:0;padding:0;background:${BRAND.bg};color:${BRAND.text};font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;text-size-adjust:100%"><div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${escapeHtml(content.preheader)}&nbsp;‌&nbsp;‌&nbsp;‌</div><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;background:${BRAND.bg}"><tr><td align="center" style="padding:28px 12px"><table role="presentation" width="600" cellspacing="0" cellpadding="0" class="email-shell" style="width:600px;max-width:600px;border-collapse:separate;overflow:hidden;background:${BRAND.surface};border:1px solid ${BRAND.border};border-radius:16px"><tr><td class="email-pad" style="padding:28px 32px 22px;border-bottom:1px solid ${BRAND.border}"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td><img src="${BRAND.logo}" width="132" alt="Ogritech" style="display:block;width:132px;max-width:100%;height:auto;border:0"></td><td align="right" style="color:${BRAND.muted};font-size:11px;line-height:16px">Gestão inteligente<br>para o seu negócio</td></tr></table></td></tr><tr><td class="email-pad" style="padding:32px 32px 12px"><span style="display:inline-block;padding:6px 9px;background:${tone.soft};border:1px solid ${tone.color};border-radius:999px;color:${tone.color};font-size:10px;font-weight:800;line-height:12px;letter-spacing:.1em">${tone.label}</span><p style="margin:24px 0 8px;color:${BRAND.muted};font-size:14px;line-height:21px">Olá, ${escapeHtml(recipientName)}.</p><h1 class="email-title" style="margin:0;color:${BRAND.text};font-size:34px;line-height:40px;letter-spacing:-.025em">${escapeHtml(content.title)}</h1></td></tr><tr><td class="email-pad" style="padding:8px 32px 24px;color:${BRAND.muted};font-size:16px;line-height:25px">${content.message}</td></tr>${detail}${cta}<tr><td class="email-pad" style="padding:22px 32px;background:${BRAND.cyanDark};border-top:1px solid ${BRAND.border}"><p style="margin:0;color:#cce8ec;font-size:12px;line-height:18px">Precisa de ajuda? Responda a este e-mail ou escreva para <a href="mailto:suporte@ogritech.com.br" style="color:${BRAND.cyan};text-decoration:none">suporte@ogritech.com.br</a>.</p></td></tr><tr><td class="email-pad" style="padding:22px 32px;color:#778589;font-size:11px;line-height:18px"><span>© 2026 Ogritech</span><span class="email-footer-links" style="margin-left:18px"><a href="https://ogritech.com.br/termos.html" style="color:#aab6b9;text-decoration:underline">Termos</a></span><span class="email-footer-links" style="margin-left:18px"><a href="https://ogritech.com.br/login/" style="color:#aab6b9;text-decoration:underline">Acessar Ogritech</a></span><p style="margin:10px 0 0">Mensagem transacional relacionada à sua contratação. Não enviamos sua chave Pix nem dados de pagamento por anexos.</p></td></tr></table></td></tr></table></body></html>`;
+  const text=["OGRITECH",tone.label,"",`Olá, ${recipientName}.`,content.title,content.message.replace(/<[^>]+>/g,"").replace(/&nbsp;/g," ").replace(/&amp;/g,"&"),content.detailLabel&&content.detailValue?`${content.detailLabel}: ${content.detailValue}`:"",content.ctaLabel&&content.ctaUrl?`${content.ctaLabel}: ${content.ctaUrl}`:"","","Suporte: suporte@ogritech.com.br","Termos: https://ogritech.com.br/termos.html","Acessar Ogritech: https://ogritech.com.br/login/"].filter(Boolean).join("\n");
+  return {html,text};
+}
 
-export function renderBillingEmail(eventType: string, payload: BillingPayload, signup: BillingSignup) {
-  const productName = signup.product_code === "menu" ? "Ogritech Cardápio" : "Ogritech Agenda";
-  const greeting = `<p>Olá, ${escapeHtml(signup.responsible_name)}.</p>`;
-  const manageToken = String(payload?.management_token || "");
-  const manageUrl = manageToken
-    ? `https://ogritech.com.br/contratar/#manage=${encodeURIComponent(manageToken)}`
-    : "https://ogritech.com.br/contratar/";
-
-  let subject: string;
-  let html: string;
-
-  if (eventType.startsWith("payment_approved")) {
-    subject = `Pagamento confirmado — ${productName}`;
-    html = `${greeting}<p>Confirmamos o pagamento de <strong>${money(signup.total_cents)}</strong> para ${escapeHtml(signup.business_name)}.</p><p>Seu acesso está ativo até ${dateTime(signup.access_until || signup.trial_ends_at)}.</p>`;
-  } else if (eventType.startsWith("payment_rejected")) {
-    subject = `Não foi possível confirmar seu pagamento — ${productName}`;
-    html = `${greeting}<p>Não conseguimos confirmar o pagamento de <strong>${money(signup.total_cents)}</strong> para ${escapeHtml(signup.business_name)}.</p><p>Revise a forma de pagamento para evitar a suspensão do acesso.</p><p><a href="${manageUrl}">Revisar pagamento</a></p>`;
-  } else if (eventType.startsWith("pix_requested")) {
-    subject = `Seu Pix de renovação — ${productName}`;
-    html = `${greeting}<p>Seu período está perto do fim. Pague <strong>${money(signup.total_cents)}</strong> pelo Pix abaixo para renovar.</p><p style="word-break:break-all">${escapeHtml(payload?.qr_code)}</p>`;
-  } else if (eventType.startsWith("cancellation")) {
-    subject = `Cancelamento confirmado — ${productName}`;
-    html = `${greeting}<p>A renovação foi cancelada. Seu acesso permanece disponível até ${dateTime(signup.access_until || signup.trial_ends_at)}.</p>`;
-  } else if (eventType === "access_suspended") {
-    subject = `Acesso suspenso — ${productName}`;
-    html = `${greeting}<p>O período contratado terminou sem confirmação de pagamento. O acesso foi suspenso e será liberado automaticamente após a aprovação.</p><p><a href="${manageUrl}">Regularizar pagamento</a></p>`;
-  } else {
-    subject = `Seu teste gratuito do ${productName} começou`;
-    html = `${greeting}<p>Seu teste gratuito do <strong>${productName}</strong> para ${escapeHtml(signup.business_name)} começou.</p><p>O teste termina em ${dateTime(signup.trial_ends_at)}. O valor do período escolhido será ${money(signup.total_cents)}.</p><p><a href="${manageUrl}">Gerenciar contratação</a></p>`;
-  }
-
-  return {
-    subject,
-    html: `${html}<p><a href="https://ogritech.com.br/termos.html">Termos aceitos</a> · <a href="https://ogritech.com.br/login/">Acessar Ogritech</a></p>`,
-  };
+export function renderBillingEmail(eventType:string,payload:BillingPayload,signup:BillingSignup){
+  const productName=signup.product_code==="menu"?"Ogritech Cardápio":"Ogritech Agenda";
+  const business=escapeHtml(signup.business_name);
+  const manageToken=String(payload?.management_token||"");
+  const manageUrl=manageToken?`https://ogritech.com.br/contratar/#manage=${encodeURIComponent(manageToken)}`:"https://ogritech.com.br/contratar/";
+  let content:EmailContent;
+  if(eventType.startsWith("payment_approved")) content={subject:`Pagamento confirmado — ${productName}`,preheader:"Pagamento confirmado e acesso atualizado.",title:"Pagamento confirmado",message:`<p style="margin:0">Recebemos o pagamento de <strong style="color:${BRAND.text}">${money(signup.total_cents)}</strong> para ${business}. Seu acesso continua disponível normalmente.</p>`,detailLabel:"Acesso ativo até",detailValue:dateTime(signup.access_until||signup.trial_ends_at),ctaLabel:"Acessar Ogritech",ctaUrl:"https://ogritech.com.br/login/",tone:"success"};
+  else if(eventType.startsWith("payment_rejected")) content={subject:`Não foi possível confirmar seu pagamento — ${productName}`,preheader:"Revise a forma de pagamento para manter o acesso.",title:"Revise seu pagamento",message:`<p style="margin:0">Não conseguimos confirmar o pagamento de <strong style="color:${BRAND.text}">${money(signup.total_cents)}</strong> para ${business}. Atualize a forma de pagamento para evitar a suspensão do acesso.</p>`,detailLabel:"Situação",detailValue:"Pagamento não confirmado",ctaLabel:"Revisar pagamento",ctaUrl:manageUrl,tone:"danger"};
+  else if(eventType.startsWith("pix_requested")) content={subject:`Seu Pix de renovação — ${productName}`,preheader:"O Pix de renovação está disponível.",title:"Seu Pix está disponível",message:`<p style="margin:0">Seu período está perto do fim. Use o código abaixo para renovar o acesso de ${business}. Confirme sempre o destinatário antes de pagar.</p>`,detailLabel:"Valor · Código Pix",detailValue:`${money(signup.total_cents)} · ${String(payload?.qr_code||"")}`,ctaLabel:"Gerenciar contratação",ctaUrl:manageUrl,tone:"warning"};
+  else if(eventType.startsWith("cancellation")) content={subject:`Cancelamento confirmado — ${productName}`,preheader:"Sua renovação foi cancelada.",title:"Renovação cancelada",message:`<p style="margin:0">A renovação de ${business} foi cancelada. Você ainda poderá utilizar os recursos contratados até a data indicada abaixo.</p>`,detailLabel:"Acesso disponível até",detailValue:dateTime(signup.access_until||signup.trial_ends_at),ctaLabel:"Ver minha assinatura",ctaUrl:"https://ogritech.com.br/assinatura/",tone:"neutral"};
+  else if(eventType==="access_suspended") content={subject:`Acesso suspenso — ${productName}`,preheader:"Regularize o pagamento para reativar o acesso.",title:"Seu acesso foi suspenso",message:`<p style="margin:0">O período contratado de ${business} terminou sem confirmação de pagamento. Seus dados continuam preservados e o acesso será reativado após a aprovação.</p>`,detailLabel:"Situação",detailValue:"Aguardando regularização",ctaLabel:"Regularizar pagamento",ctaUrl:manageUrl,tone:"danger"};
+  else content={subject:`Seu teste gratuito do ${productName} começou`,preheader:"Seu teste gratuito já está ativo.",title:"Seu teste gratuito começou",message:`<p style="margin:0">O ${productName} já está disponível para ${business}. Aproveite este período para configurar sua operação e validar a experiência com seus clientes.</p>`,detailLabel:"Teste disponível até",detailValue:dateTime(signup.trial_ends_at),ctaLabel:"Começar configuração",ctaUrl:manageUrl,tone:"info"};
+  return {subject:content.subject,...layout(content,signup.responsible_name)};
 }
