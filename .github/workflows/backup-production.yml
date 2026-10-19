@@ -72,9 +72,12 @@ jobs:
           order by namespace.nspname, procedure.proname, acl.grantee, acl.privilege_type;
           SQL
           } > backup/function-acl.sql
+          psql "$SUPABASE_DB_URL" --no-psqlrc --tuples-only --no-align --variable ON_ERROR_STOP=1 \
+            --file scripts/sql/export-relation-acl.sql > backup/relation-acl.sql
           test -s backup/schema.sql
           test -s backup/data.sql
           test -s backup/function-acl.sql
+          test -s backup/relation-acl.sql
           grep -q 'transition_appointment_status' backup/function-acl.sql
           if grep -Eiq '^COPY[[:space:]]+("?auth"?|"?storage"?)\.' backup/data.sql; then
             echo "Managed auth/storage data was not excluded" >&2
@@ -110,7 +113,7 @@ jobs:
           compression-level: 0
 
       - name: Publish or resolve backup incident
-        if: always()
+        if: always() && github.ref == 'refs/heads/main'
         uses: actions/github-script@v8
         env:
           BACKUP_STATUS: ${{ job.status }}

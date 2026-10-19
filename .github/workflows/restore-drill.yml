@@ -90,6 +90,10 @@ jobs:
           test -s restored/backup/schema.sql
           test -s restored/backup/data.sql
           test -s restored/backup/function-acl.sql
+          test -s restored/backup/relation-acl.sql || {
+            echo "Backup lacks relation ACLs; create a new backup with the corrected exporter" >&2
+            exit 1
+          }
           if grep -Eiq '^COPY[[:space:]]+("?auth"?|"?storage"?)\.' restored/backup/data.sql; then
             echo "Backup contains managed auth/storage data" >&2
             exit 1
@@ -129,6 +133,7 @@ jobs:
             --command 'SET session_replication_role = replica' \
             --file restored/backup/data.sql \
             --file restored/backup/function-acl.sql \
+            --file restored/backup/relation-acl.sql \
             --dbname "$LOCAL_DB_URL"
 
       - name: Verify restored schema, RLS and database tests
