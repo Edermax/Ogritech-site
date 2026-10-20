@@ -28,3 +28,7 @@ Nova migration: `20261020151727_menu_visual_identity_assets.sql`, aplicada somen
 Teste reproduzível: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/menu-branding-staging-smoke.ps1`; ao terminar a inspeção, executar o mesmo comando com `-Cleanup`. O destino é fixo no staging. Chaves administrativas, senha aleatória e sessão ficam somente na memória do processo. A evidência contém apenas IDs/caminhos da fixture e resultados.
 
 O armazenamento de versões antigas fica preservado; esta entrega não faz coleta automática de imagens órfãs. Não há alteração de cobrança, cancelamento de clientes, aceite jurídico ou deploy de produção. A publicação deve seguir os gates e a sequência de revisão já registrados em `CARDAPIO_FOCO_UNICO.md`.
+
+## Complemento de validação no Edge
+
+Retomada na aba externa existente: salvamento, confirmação na página, descarte, publicação e remoção passaram na fixture local com backend simulado. Evidência: `docs/evidencias/cardapio-editor-edge-2026-10-20.jpg`. O seletor automatizado de arquivos foi bloqueado porque a extensão não tem acesso a URLs de arquivo; nenhuma permissão foi ampliada. Upload real continua coberto pelo smoke do staging. A extensão Dark Reader deste perfil altera as cores calculadas, portanto a verificação visual de contraste usa as evidências anteriores e os testes de luminância.
