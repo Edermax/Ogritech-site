@@ -5,8 +5,8 @@ import test from 'node:test';
 const source=await readFile(new URL('../assinatura/assinatura.js',import.meta.url),'utf8');
 function renderer(){
  const elements=new Map();
- const $=id=>{if(!elements.has(id)){const classes=new Set();elements.set(id,{textContent:'',value:'',className:'',classList:{add(c){classes.add(c);},remove(c){classes.delete(c);},toggle(c,on){if(on)classes.add(c);else classes.delete(c);},contains(c){return classes.has(c);}}});}return elements.get(id);};
- const render=runInNewContext(source.slice(source.indexOf('function render(state)'),source.indexOf('async function load()'))+';render',{$,Date,formatDate:value=>value});
+ const $=id=>{if(!elements.has(id)){const classes=new Set();elements.set(id,{removeAttribute(){},textContent:'',value:'',className:'',classList:{add(c){classes.add(c);},remove(c){classes.delete(c);},toggle(c,on){if(on)classes.add(c);else classes.delete(c);},contains(c){return classes.has(c);}}});}return elements.get(id);};
+ const render=runInNewContext(source.slice(source.indexOf('function render(state)'),source.indexOf('async function load()'))+';render',{$,Date,URL,formatDate:value=>value});
  return {render,$};
 }
 const future=new Date(Date.now()+86400000).toISOString();
@@ -44,4 +44,17 @@ test('panel uses only Cardápio and keeps subscription navigation accessible for
  assert.equal(await apply(),'cardapio');assert.deepEqual(shown,['cardapio']);
  assert.equal(items[1].dataset.productAllowed,'true');
  for(const item of items.slice(2))assert.equal(item.dataset.productAllowed,'false');
+});
+
+
+test('expired Pix is hidden and checkout resume accepts only the provider URL',()=>{
+ const {render,$}=renderer();
+ render({...base,status:'payment_pending',pix:{qr_code:'expired-qr',expires_at:new Date(Date.now()-60000).toISOString()}});
+ assert.equal($('pixPanel').classList.contains('hidden'),true);assert.equal($('pixCode').value,'');assert.match($('billingSummary').textContent,/venceu/);
+ render({...base,payment_method:'card',status:'payment_pending',checkout_url:'https://www.mercadopago.com.br/subscriptions/checkout?preapproval_id=fixture'});
+ assert.equal($('resumeCheckout').classList.contains('hidden'),false);
+ for(const checkout_url of ['https://evil.invalid/subscriptions/checkout','javascript:alert(1)','https://www.mercadopago.com.br@evil.invalid/subscriptions/checkout']){
+  render({...base,payment_method:'card',status:'payment_pending',checkout_url});assert.equal($('resumeCheckout').classList.contains('hidden'),true);
+ }
+ render({...base,status:'active'});assert.equal($('resumeCheckout').classList.contains('hidden'),true);
 });

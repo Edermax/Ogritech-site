@@ -73,6 +73,13 @@ async function verifyTurnstile(token: string, ip: string) {
   return result.ok && Boolean((await result.json())?.success);
 }
 
+function safeCheckoutUrl(value: unknown) {
+  try { const target = new URL(String(value || ""));
+    return target.protocol === "https:" && target.hostname === "www.mercadopago.com.br" && !target.username && !target.password
+      && target.pathname.startsWith("/subscriptions/") ? target.href : "";
+  } catch { return ""; }
+}
+
 // Hosted checkout: associated plans require a card token before subscription creation.
 // Keep recurrence on the server and collect the card only on Mercado Pago's page.
 function menuCheckoutPayload(signup: { id: string; email: string; trial_ends_at: string; access_until?: string | null }, cycle: "monthly" | "annual", appUrl: string, backendUrl: string) {
@@ -84,7 +91,7 @@ function menuCheckoutPayload(signup: { id: string; email: string; trial_ends_at:
     payer_email: signup.email, external_reference: `signup:${signup.id}`, status: "pending",
     auto_recurring: { frequency: offer.months, frequency_type: "months", transaction_amount: offer.total_cents / 100,
       currency_id: "BRL", start_date: new Date(start).toISOString() },
-    back_url: `${appUrl}/assinatura/?pagamento=retorno`, notification_url: `${backendUrl}/functions/v1/mercado-pago-webhook`,
+    back_url: `${appUrl}/assinatura/?pagamento=retorno${backendUrl === "https://fuesdztsvrkkgnbqhcxi.supabase.co" ? "&env=staging" : ""}`, notification_url: `${backendUrl}/functions/v1/mercado-pago-webhook`,
   };
 }
 
@@ -116,11 +123,26 @@ Deno.serve(async (request) => {
     if (!profile?.active || profile.role !== "owner" || profile.barbershop_id !== parsed.data.barbershop_id) {
       return reply({ error: { code: "forbidden" } }, 403, origin);
     }
-    const { data: signup } = await admin.rpc("backend_billing_status", { target_barbershop_id: parsed.data.barbershop_id, target_product_code: "menu" });
+    const { data: signup, error: statusError } = await admin.rpc("backend_billing_status", { target_barbershop_id: parsed.data.barbershop_id, target_product_code: "menu" });
+    if (statusError) return reply({ error: { code: "billing_status_unavailable", message: "Não foi possível consultar sua assinatura agora. Tente novamente." } }, 503, origin);
     if (!signup) return reply({ data: null }, 200, origin);
+    let checkoutUrl = "";
+    if (signup.payment_method === "card" && signup.status === "payment_pending" && signup.provider_subscription_id) {
+      const sandbox = url === "https://fuesdztsvrkkgnbqhcxi.supabase.co";
+      const token = Deno.env.get(sandbox ? "MP_MENU_SANDBOX_ACCESS_TOKEN" : "MERCADO_PAGO_ACCESS_TOKEN") || "";
+      if (token) {
+        try {
+          const response = await fetch(`https://api.mercadopago.com/preapproval/${encodeURIComponent(signup.provider_subscription_id)}`, {headers:{Authorization:`Bearer ${token}`},signal:AbortSignal.timeout(10000)});
+          const subscription = await response.json().catch(() => ({}));
+          if (response.ok && String(subscription.id) === String(signup.provider_subscription_id)
+            && subscription.external_reference === `signup:${signup.id}` && subscription.status === "pending") checkoutUrl = safeCheckoutUrl(subscription.init_point);
+        } catch { /* Status remains available even while the provider is unreachable. */ }
+      }
+    }
     const boundary = signup.access_until || signup.trial_ends_at;
     const remainingMs = new Date(boundary).getTime() - Date.now();
     return reply({ data: {
+      checkout_url: checkoutUrl || null,
       cycle: signup.cycle, payment_method: signup.payment_method, total_cents: signup.total_cents,
       status: signup.status, trial_ends_at: signup.trial_ends_at, access_until: signup.access_until,
       boundary, days_remaining: Math.max(0, Math.ceil(remainingMs / 86_400_000)),
@@ -144,7 +166,8 @@ Deno.serve(async (request) => {
     if (input.payment_method === "card" && !input.recurring_authorized) {
       return reply({ error: { code: "recurring_authorization_required", message: "Autorize a cobrança recorrente para continuar com cartão." } }, 422, origin);
     }
-    const { data: signup } = await admin.rpc("backend_billing_choose_payment_lookup", { target_barbershop_id: input.barbershop_id });
+    const { data: signup, error: lookupError } = await admin.rpc("backend_billing_choose_payment_lookup", { target_barbershop_id: input.barbershop_id });
+    if (lookupError) return reply({ error: { code: "billing_status_unavailable" } }, 503, origin);
     if (!signup) return reply({ error: { code: "billing_signup_not_found" } }, 404, origin);
     if ((signup.provider_subscription_id && signup.status !== "cancelled") ||
         (signup.status === "payment_pending" && signup.provider_payment_id)) {
@@ -164,24 +187,24 @@ Deno.serve(async (request) => {
         ...(sandbox ? { notification_url: `${url}/functions/v1/menu-sandbox-webhook` } : {}),
       }) });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok || !result.init_point || !result.id) {
+      if (!response.ok || !safeCheckoutUrl(result.init_point) || !result.id) {
         console.error("choose_payment.mercado_pago", { status: response.status, signup_id: signup.id });
         return reply({ error: { code: "provider_unavailable", message: "Não foi possível abrir o pagamento por cartão agora." } }, 502, origin);
       }
-      checkoutUrl = result.init_point; providerId = result.id;
+      checkoutUrl = safeCheckoutUrl(result.init_point); providerId = result.id;
     }
     const { error: signupUpdateError } = await admin.rpc("backend_billing_choose_payment_update", { target_signup_id: signup.id, payload: {
       cycle: input.cycle, payment_method: input.payment_method, base_monthly_cents: chosen.base_monthly_cents,
       cycle_months: chosen.months, discount_bps: chosen.discount_bps, total_cents: chosen.total_cents,
       provider_plan_id: planId || "", provider_subscription_id: providerId || "",
-      status: input.payment_method === "card" ? "payment_pending" : "trial_active",
+      status: input.payment_method === "card" ? "payment_pending" : (Date.parse(signup.access_until || signup.trial_ends_at) <= Date.now() ? "past_due" : "trial_active"),
       recurring_authorized: input.payment_method === "card",
     } });
     if (signupUpdateError) return reply({ error: { code: "billing_update_failed" } }, 500, origin);
     const { data: customer } = await admin.from("billing_customers").update({ payment_method: input.payment_method === "card" ? "credit_card" : "pix", provider_subscription_id: providerId || null }).eq("saas_client_id", signup.saas_client_id).select("id").single();
     const { data: menuProduct } = await admin.from("platform_products").select("id").eq("code", "menu").single();
     if (!customer || !menuProduct) return reply({ error: { code: "billing_update_failed" } }, 500, origin);
-    const subscriptionUpdate = await admin.from("platform_subscriptions").update({ billing_cycle: input.cycle, base_amount: chosen.base_monthly_cents / 100, next_billing_on: signup.trial_ends_at.slice(0, 10) })
+    const subscriptionUpdate = await admin.from("platform_subscriptions").update({ billing_cycle: input.cycle, base_amount: chosen.base_monthly_cents / 100, next_billing_on: (signup.access_until || signup.trial_ends_at).slice(0, 10) })
       .eq("billing_customer_id", customer.id).eq("product_id", menuProduct.id);
     if (subscriptionUpdate.error) return reply({ error: { code: "billing_update_failed" } }, 500, origin);
     const audit = await admin.from("platform_billing_audit_log").insert({ actor_id: authData.user.id, action: "billing.payment_method_selected", entity_type: "billing_signup", entity_id: signup.id,

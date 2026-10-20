@@ -6,7 +6,7 @@
   "authorized": false,
   "decision": "BLOCKED_PENDING_REVIEW",
   "localReplay": {
-    "status": "PASSED",
+    "status": "NEEDS_REFRESH",
     "mode": "CLEAN_CI_REPLAY",
     "migrationCount": 77,
     "testFiles": 19,
@@ -16,7 +16,7 @@
     "sourceCommit": "2bbf80d364fb88e20affb3c6e16d88297bb3a443"
   },
   "productionDryRun": {
-    "status": "PASSED",
+    "status": "NEEDS_REFRESH",
     "executedAt": "2026-10-20",
     "command": "supabase db push --workdir <isolated-alias-copy> --project-ref mvzcoaiiwytycdqcvydf --include-all --skip-vault --dry-run",
     "migrationCount": 22,
@@ -31,7 +31,8 @@
     "menu_catalog_order_and_delivery_zones",
     "menu_catalog_draft_publication",
     "menu_billing_lifecycle_reliability",
-    "menu_visual_identity_assets"
+    "menu_visual_identity_assets",
+    "menu_pix_expiry_recovery"
   ],
   "classifications": {
     "shared_hardening": [
@@ -52,7 +53,8 @@
       "menu_catalog_order_and_delivery_zones",
       "menu_catalog_draft_publication",
       "menu_billing_lifecycle_reliability",
-      "menu_visual_identity_assets"
+      "menu_visual_identity_assets",
+      "menu_pix_expiry_recovery"
     ],
     "ai_staging_disabled": [
       "menu_ai_staging_controls",

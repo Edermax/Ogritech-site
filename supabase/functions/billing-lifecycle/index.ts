@@ -36,16 +36,27 @@ Deno.serve(async (request) => {
     if (!signupToken || (sandbox && !Deno.env.get("MP_MENU_SANDBOX_WEBHOOK_SECRET"))) { failures++; continue; }
     const periodEnd = signup.access_until || signup.trial_ends_at;
     if (new Date(periodEnd) > new Date(pixWindow)) continue;
-    const externalReference = `signup:${signup.id}:renewal:${new Date(periodEnd).toISOString()}:${signup.total_cents}:${signup.provider_payment_id || "initial"}`;
-    const expiresAt = new Date(Math.max(Date.now() + 72 * 60 * 60 * 1000, new Date(periodEnd).getTime() + 24 * 60 * 60 * 1000)).toISOString();
+    const {data:attempt,error:attemptError} = await admin.rpc("backend_billing_lifecycle_prepare_pix", {target_signup_id:signup.id});
+    if (attemptError) { failures++; continue; }
+    if (!attempt) continue;
+    const externalReference = attempt.external_reference, expiresAt = attempt.expires_at;
     const response = await fetch("https://api.mercadopago.com/v1/payments", {
       method: "POST",
-      headers: { Authorization: `Bearer ${signupToken}`, "Content-Type": "application/json", "X-Idempotency-Key": externalReference },
+      headers: { Authorization: `Bearer ${signupToken}`, "Content-Type": "application/json", "X-Idempotency-Key": attempt.request_id },
       body: JSON.stringify({ transaction_amount: signup.total_cents / 100, description: "Renovação Ogritech Cardápio", payment_method_id: "pix", payer: { email: signup.email }, external_reference: externalReference, date_of_expiration: expiresAt, notification_url: `${url}/functions/v1/${sandbox ? "menu-sandbox-webhook" : "mercado-pago-webhook"}`, metadata: { signup_id: signup.id } }),
     });
     const payment = await response.json().catch(() => ({}));
-    if (!response.ok || !payment.id) { failures++; continue; }
-    const { error: intentError } = await admin.rpc("backend_billing_lifecycle_record_pix", { target_signup_id: signup.id, payload: { purpose: signup.status === "trial_active" ? "initial" : "renewal", amount_cents: signup.total_cents, provider_payment_id: String(payment.id), external_reference: externalReference, expires_at: expiresAt, qr_code: payment.point_of_interaction?.transaction_data?.qr_code || "" } });
+    const qrCode = payment.point_of_interaction?.transaction_data?.qr_code;
+    const expiry = payment.date_of_expiration || expiresAt;
+    if (!response.ok || !/^[a-zA-Z0-9_-]{1,128}$/.test(String(payment.id || ""))
+      || payment.payment_method_id !== "pix" || payment.status !== "pending" || payment.currency_id !== "BRL"
+      || Math.round(Number(payment.transaction_amount) * 100) !== signup.total_cents
+      || typeof qrCode !== "string" || !qrCode || qrCode.length > 4096
+      || !Number.isFinite(Date.parse(expiry)) || Date.parse(expiry) <= Date.now()) {
+      console.error("billing_lifecycle.pix_invalid_response", {status:response.status,provider_code:payment.error || null});
+      failures++; continue;
+    }
+    const { error: intentError } = await admin.rpc("backend_billing_lifecycle_record_pix", { target_signup_id: signup.id, payload: { purpose: signup.access_until ? "renewal" : "initial", amount_cents: signup.total_cents, provider_payment_id: String(payment.id), external_reference: externalReference, expires_at: expiry, qr_code: qrCode } });
     if (intentError) { failures++; continue; }
     pixCreated++;
   }

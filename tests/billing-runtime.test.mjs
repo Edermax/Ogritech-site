@@ -6,6 +6,7 @@ import { createHmac, webcrypto } from "node:crypto";
 import test from "node:test";
 import { z } from "zod";
 
+const pixAttempt={request_id:"11111111-1111-4111-8111-111111111111",external_reference:"signup:fixture:pix:stable-request",expires_at:new Date(Date.now()+72*3600000).toISOString()};
 const root = new URL("../", import.meta.url);
 const signup = { id: "aabbccdd-1234-4000-8000-123456789012", product_code: "menu", total_cents: 4990, cycle_months: 1,
   email: "fixture@example.invalid", status: "trial_active", trial_ends_at: new Date(Date.now()+3600000).toISOString(), access_until: null };
@@ -108,18 +109,18 @@ test("a processed subscription invoice with a rejected payment does not grant ac
 });
 
 test("lifecycle keeps the payment idempotency key stable after a persistence failure",async()=>{
-  const keys=[];let writes=0;
-  const admin={rpc:async name=>name.endsWith("pix_due")?{data:[signup]}:name.endsWith("expired")?{data:[]}:{error:++writes===1?{code:"fixture"}:null}};
-  const handler=await loadHandler("billing-lifecycle",admin,async(_url,options)=>{keys.push(options.headers["X-Idempotency-Key"]);return Response.json({id:"provider-payment",point_of_interaction:{}});});
+  const keys=[],bodies=[];let writes=0;
+  const admin={rpc:async name=>name.endsWith("pix_due")?{data:[signup]}:name.endsWith("prepare_pix")?{data:pixAttempt}:name.endsWith("expired")?{data:[]}:{error:++writes===1?{code:"fixture"}:null}};
+  const handler=await loadHandler("billing-lifecycle",admin,async(_url,options)=>{keys.push(options.headers["X-Idempotency-Key"]);bodies.push(JSON.parse(options.body));return Response.json({id:"provider-payment",payment_method_id:"pix",status:"pending",currency_id:"BRL",transaction_amount:49.9,point_of_interaction:{transaction_data:{qr_code:"fixture-qr"}}});});
   const request=()=>new Request("https://fixture.invalid/lifecycle",{method:"POST",headers:{"x-cron-secret":"fixture-cron"}});
   assert.equal((await handler(request())).status,502);
   assert.equal((await handler(request())).status,200);
-  assert.equal(keys.length,2);assert.equal(keys[0],keys[1]);
+  assert.equal(keys.length,2);assert.equal(keys[0],keys[1]);assert.match(keys[0],/^[a-f0-9-]{36}$/);assert.deepEqual(bodies[0],bodies[1],"retry payload including expiration remains identical");
 });
 
 test("lifecycle fails visibly when access suspension cannot be persisted",async()=>{
   const expired={...signup,trial_ends_at:new Date(Date.now()-3600000).toISOString()};
-  const admin={rpc:async name=>name.endsWith("pix_due")?{data:[]}:name.endsWith("expired")?{data:[expired]}:{error:{code:"fixture"}}};
+  const admin={rpc:async name=>name.endsWith("pix_due")?{data:[]}:name.endsWith("prepare_pix")?{data:pixAttempt}:name.endsWith("expired")?{data:[expired]}:{error:{code:"fixture"}}};
   const handler=await loadHandler("billing-lifecycle",admin,provider);
   const response=await handler(new Request("https://fixture.invalid/lifecycle",{method:"POST",headers:{"x-cron-secret":"fixture-cron"}}));
   assert.equal(response.status,502);const body=await response.json();assert.equal(body.data.suspended,0);assert.equal(body.data.failures,1);
@@ -297,10 +298,10 @@ test("sandbox notification cannot mutate an Agenda signup or process live resour
 
 test("lifecycle generates renewal only for Cardápio and ignores retired Agenda",async()=>{
   const requests=[];
-  const admin={rpc:async name=>name.endsWith("pix_due")?{data:[signup,{...signup,id:"aabbccdd-1234-4000-8000-123456789013",product_code:"agenda"}]}:name.endsWith("expired")?{data:[]}:{error:null}};
+  const admin={rpc:async name=>name.endsWith("pix_due")?{data:[signup,{...signup,id:"aabbccdd-1234-4000-8000-123456789013",product_code:"agenda"}]}:name.endsWith("prepare_pix")?{data:pixAttempt}:name.endsWith("expired")?{data:[]}:{error:null}};
   const handler=await loadHandler("billing-lifecycle",admin,async(_url,options)=>{
     requests.push({authorization:options.headers.Authorization,body:JSON.parse(options.body)});
-    return Response.json({id:`fixture-${requests.length}`,point_of_interaction:{}});
+    return Response.json({id:`fixture-${requests.length}`,payment_method_id:"pix",status:"pending",currency_id:"BRL",transaction_amount:49.9,point_of_interaction:{transaction_data:{qr_code:"fixture-qr"}}});
   },{SUPABASE_URL:"https://fuesdztsvrkkgnbqhcxi.supabase.co",MP_MENU_SANDBOX_ACCESS_TOKEN:"sandbox-token",MP_MENU_SANDBOX_WEBHOOK_SECRET:"sandbox-secret"});
   const response=await handler(new Request("https://fixture.invalid/lifecycle",{method:"POST",headers:{"x-cron-secret":"fixture-cron"}}));
   assert.equal(response.status,200);assert.equal(requests.length,1);
@@ -360,4 +361,49 @@ test('existing subscription or pending payment blocks a second checkout before p
   const response=await handler(new Request('https://fixture.invalid/billing',{method:'POST',headers:{authorization:'Bearer fixture'},body:JSON.stringify({action:'choose_payment',product:'menu',barbershop_id:signup.id,cycle:'monthly',payment_method:'card',recurring_authorized:true})}));
   assert.equal(response.status,409);assert.equal((await response.json()).error.code,'billing_already_configured');
  }
+});
+
+
+test('billing status resumes only the pending checkout belonging to this signup',async()=>{
+ for(const mismatch of [false,true]) {
+  const record={...signup,payment_method:'card',status:'payment_pending',provider_subscription_id:'existing-sub'};
+  const db={auth:{getUser:async()=>({data:{user:{id:'owner'}}})},rpc:async()=>({data:record}),from(){return {select(){return this;},eq(){return this;},maybeSingle:async()=>({data:{active:true,role:'owner',barbershop_id:signup.id}})};}};
+  const handler=await loadHandler('ogritech-billing',db,async(url,options)=>{
+   assert.match(url,/preapproval\/existing-sub$/);assert.equal(options.headers.Authorization,'Bearer sandbox-token');
+   return Response.json({id:'existing-sub',status:'pending',external_reference:`signup:${mismatch?'other':signup.id}`,init_point:'https://www.mercadopago.com.br/subscriptions/checkout?preapproval_id=existing-sub'});
+  },{SUPABASE_URL:'https://fuesdztsvrkkgnbqhcxi.supabase.co',MP_MENU_SANDBOX_ACCESS_TOKEN:'sandbox-token'});
+  const response=await handler(new Request('https://fixture.invalid/billing',{method:'POST',headers:{authorization:'Bearer fixture'},body:JSON.stringify({action:'billing_status',product:'menu',barbershop_id:signup.id})}));
+  assert.equal(response.status,200);const data=(await response.json()).data;
+  assert.equal(Boolean(data.checkout_url),!mismatch);assert.equal(data.status,'payment_pending');
+ }
+});
+
+test('Pix worker rejects a provider response without a valid QR or matching amount',async()=>{
+ for(const override of [{point_of_interaction:{}},{transaction_amount:1},{currency_id:'USD'},{status:'approved'}]) {
+  let writes=0;
+  const db={rpc:async name=>name.endsWith('pix_due')?{data:[signup]}:name.endsWith('prepare_pix')?{data:pixAttempt}:name.endsWith('expired')?{data:[]}:(writes++,{error:null})};
+  const handler=await loadHandler('billing-lifecycle',db,async()=>Response.json({id:'pix-payment',payment_method_id:'pix',status:'pending',currency_id:'BRL',transaction_amount:49.9,point_of_interaction:{transaction_data:{qr_code:'fixture-qr'}},...override}));
+  const response=await handler(new Request('https://fixture.invalid/lifecycle',{method:'POST',headers:{'x-cron-secret':'fixture-cron'}}));
+  assert.equal(response.status,502);assert.equal(writes,0);assert.equal((await response.json()).data.pix_created,0);
+ }
+});
+
+
+test('billing status database failures are not reported as a missing subscription',async()=>{
+ const db={auth:{getUser:async()=>({data:{user:{id:'owner'}}})},rpc:async()=>({error:{code:'fixture'}}),from(){return {select(){return this;},eq(){return this;},maybeSingle:async()=>({data:{active:true,role:'owner',barbershop_id:signup.id}})};}};
+ const handler=await loadHandler('ogritech-billing',db,async()=>assert.fail('no provider call on lookup failure'));
+ const response=await handler(new Request('https://fixture.invalid/billing',{method:'POST',headers:{authorization:'Bearer fixture'},body:JSON.stringify({action:'billing_status',product:'menu',barbershop_id:signup.id})}));
+ assert.equal(response.status,503);assert.equal((await response.json()).error.code,'billing_status_unavailable');
+});
+
+test('Pix selection after expiry keeps past_due and the paid access boundary',async()=>{
+ const boundary=new Date(Date.now()-3600000).toISOString(),writes=[];
+ const db={auth:{getUser:async()=>({data:{user:{id:'owner'}}})},rpc:async(name,args)=>{writes.push({name,args});return {data:name.endsWith('lookup')?{...signup,status:'past_due',access_until:boundary}:null};},from:table=>{
+  const result={data:table==='profiles'?{active:true,role:'owner',barbershop_id:signup.id}:{id:'fixture-id'},error:null};
+  const chain={select(){return chain;},update(value){writes.push({table,value});return chain;},eq(){return chain;},insert:async()=>result,maybeSingle:async()=>result,single:async()=>result,then(resolve,reject){return Promise.resolve(result).then(resolve,reject);}};return chain;
+ }};
+ const handler=await loadHandler('ogritech-billing',db,async()=>assert.fail('Pix selection does not charge'));
+ const response=await handler(new Request('https://fixture.invalid/billing',{method:'POST',headers:{authorization:'Bearer fixture'},body:JSON.stringify({action:'choose_payment',product:'menu',barbershop_id:signup.id,cycle:'monthly',payment_method:'pix',recurring_authorized:false})}));
+ assert.equal(response.status,200);assert.equal(writes.find(row=>row.name==='backend_billing_choose_payment_update').args.payload.status,'past_due');
+ assert.equal(writes.find(row=>row.table==='platform_subscriptions').value.next_billing_on,boundary.slice(0,10));
 });

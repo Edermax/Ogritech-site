@@ -79,7 +79,8 @@
       "billing_explicit_backend_rpcs",
       "billing_rejected_email_event",
       "menu_billing_lifecycle_reliability",
-      "menu_visual_identity_assets"
+      "menu_visual_identity_assets",
+      "menu_pix_expiry_recovery"
     ],
     "remoteVersionAliases": {},
     "observedMigrationNames": [
@@ -275,6 +276,10 @@
       {
         "name": "menu_visual_identity_assets",
         "reason": "Logo, capa, cores e publicacao isolada de identidade visual exigem validacao completa no staging antes de promover."
+      },
+      {
+        "name": "menu_pix_expiry_recovery",
+        "reason": "Recuperacao de Pix vencido e QR atual exigem validacao de banco e provedor antes de promover."
       }
     ],
     "observationEvidence": "config/menu-environment-inventory.json",

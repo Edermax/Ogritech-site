@@ -8,6 +8,6 @@ test("toda migration está classificada para staging e produção", () => {
     encoding: "utf8"
   });
   assert.equal(result.status, 0, result.stderr || result.stdout);
-  assert.match(result.stdout, /77 migrations classificadas/);
-  assert.match(result.stdout, /produção=55 aplicadas \(36 contíguas \+ 19 fora de ordem\) \+ 22 retidas/);
+  assert.match(result.stdout, /78 migrations classificadas/);
+  assert.match(result.stdout, /produção=55 aplicadas \(36 contíguas \+ 19 fora de ordem\) \+ 23 retidas/);
 });

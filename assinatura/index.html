@@ -35,6 +35,7 @@
                 <h2 id="paymentTitle">Escolha como deseja continuar</h2>
                 <p>Nenhuma cobrança retroativa será feita. A liberação acontece automaticamente após a confirmação.</p>
             </div>
+            <button id="refreshBillingButton" class="secondary-button" type="button">Atualizar status</button>
             <form id="billingForm" class="hidden">
                 <label>Periodicidade
                     <select id="billingCycle">
@@ -52,6 +53,7 @@
                 <button id="paymentButton" class="primary-button" type="submit">Definir forma de pagamento</button>
             </form>
 
+            <a id="resumeCheckout" class="primary-button hidden" rel="noopener" href="#">Continuar pagamento no Mercado Pago</a>
             <div id="pixPanel" class="pix-panel hidden">
                 <p class="eyebrow">PIX PARA RENOVAÇÃO</p>
                 <h3>Copie o código Pix</h3>
@@ -70,6 +72,6 @@
     <footer><a href="termos.html">Termos de Uso</a><a href="privacidade.html">Privacidade</a></footer>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
     <script src="supabase-config.js"></script>
-    <script src="assinatura/assinatura.js"></script>
+    <script src="assinatura/assinatura.js?v=20261020.2"></script>
 </body>
 </html>
