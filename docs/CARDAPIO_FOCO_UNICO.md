@@ -23,3 +23,5 @@ Os módulos de origem continuam no código para histórico e compatibilidade adm
 A atualização da comunicação inclui minutas de Termos v3.0 e Privacidade v2.0. Antes da publicação, obter revisão aplicável, atualizar BILLING_TERMS_VERSION/BILLING_TERMS_SHA256 e registrar os aceites com a nova versão. Os segredos atuais e aceites históricos não foram alterados.
 
 Verificacao local: 236 testes passaram, sem falhas ou skips; checagem estatica aprovada. Na previa, imagens carregadas, carrossel funcionando e sem overflow horizontal na largura observada. Nenhum deploy ou SQL de retirada foi executado em producao.
+
+Banco: 5 assercoes pgTAP da retirada passaram no staging em transacao com rollback: produtos antigos indisponiveis, Cardapio ativo, public_menu preservado, agendamento e propostas sem acesso publico. Nenhuma alteracao persistente nesta verificacao.
