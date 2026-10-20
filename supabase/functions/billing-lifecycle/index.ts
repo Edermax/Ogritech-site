@@ -14,7 +14,7 @@ const addMonths = (iso: string, months: number) => {
 
 function menuPixOrderPayload(signup: {email:string;total_cents:number}, attempt:{external_reference:string}) {
   const amount=(signup.total_cents/100).toFixed(2);
-  return {type:"online",processing_mode:"automatic",external_reference:attempt.external_reference,total_amount:amount,
+  return {type:"online",processing_mode:"automatic",external_reference:attempt.external_reference.replaceAll(":","_").slice(0,64),total_amount:amount,
     payer:{email:signup.email},transactions:{payments:[{amount,payment_method:{id:"pix",type:"bank_transfer"},expiration_time:"PT72H"}]}};
 }
 
@@ -56,7 +56,7 @@ Deno.serve(async (request) => {
     if (useOrders) {
       const order=payment, transaction=order.transactions?.payments?.[0];
       if (!/^ORD[A-Z0-9]+$/.test(String(order.id||"")) || order.transactions?.payments?.length!==1
-        || order.country_code!=="BRA" || String(order.user_id)!=="3778177682" || order.live_mode===true || order.external_reference!==externalReference
+        || order.country_code!=="BRA" || String(order.user_id)!=="3778177682" || order.live_mode===true || order.external_reference!==menuPixOrderPayload(signup,attempt).external_reference
         || Number(order.total_amount)!==Number(transaction?.amount)) { failures++; continue; }
       payment={id:order.id,payment_method_id:transaction?.payment_method?.id,status:transaction?.status==="action_required"?"pending":transaction?.status,
         currency_id:"BRL",transaction_amount:Number(transaction?.amount),point_of_interaction:{transaction_data:{qr_code:transaction?.payment_method?.qr_code}}};

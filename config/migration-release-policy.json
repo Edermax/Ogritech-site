@@ -160,7 +160,8 @@
       "billing_explicit_backend_rpcs",
       "billing_rejected_email_event",
       "menu_billing_lifecycle_reliability",
-      "menu_visual_identity_assets"
+      "menu_visual_identity_assets",
+      "menu_pix_expiry_recovery"
     ],
     "observationEvidence": "config/menu-environment-inventory.json"
   },

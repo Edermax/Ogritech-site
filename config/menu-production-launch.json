@@ -67,7 +67,7 @@
         "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
         "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md"
       ],
-      "remaining": "Producao: 55 migrations aplicadas e 23 pendentes no candidato. Staging permanece com 77 persistidas. Recuperacao de Pix candidata validada em transacao com rollback (20 assercoes novas e 26 de regressao). Replay limpo e dry-run precisam incluir a migration 78 antes da promocao."
+      "remaining": "Producao permanece com 55 migrations; candidato tem 23 pendentes. Staging tem 78 persistidas. Replay limpo passou com 522 assercoes em 20 arquivos e dry-run de producao listou as 23 pendentes, sem aplicar alteracoes. Promocao ainda depende dos gates e autorizacao de release."
     },
     {
       "id": "application_publication",
@@ -101,9 +101,10 @@
         "docs/evidencias/fase-7i-previa-privada-cardapio-2026-09-17.md",
         "scripts/subscription-center-ui-smoke.mjs",
         "docs/evidencias/cardapio-retomada-2026-10-19.md",
-        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md"
+        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
+        "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md"
       ],
-      "remaining": "Backend mensal ficticio aprovado no staging, incluindo acesso, reenvio idempotente e cancelamento. Ainda pendem checkout hospedado, entrega automatica espontanea de webhook e Pix. Nao reabrir jornadas dos itens 2 e 3 ja aceitas pelo usuario."
+      "remaining": "Checkout mensal ficticio aberto no Edge e assinatura cancelada. Pix Orders APRO de R$49,90 aprovado no staging; webhook assinado liberou acesso e reenvio preservou o periodo. Entrega espontanea ainda nao comprovada: application_id da order diverge do painel acessivel; simulador oficial foi recusado. Itens 2 e 3 permanecem aceitos."
     },
     {
       "id": "production_monitor",
@@ -145,11 +146,12 @@
     "reexecuted": false
   },
   "billingHomologation": {
-    "status": "STAGING_MONTHLY_BACKEND_PASSED_HOSTED_UI_AND_AUTOMATIC_DELIVERY_PENDING",
-    "databaseAssertions": 26,
-    "runtimeTests": 27,
+    "status": "STAGING_PIX_AND_HOSTED_CHECKOUT_PASSED_AUTOMATIC_DELIVERY_PENDING",
+    "databaseAssertions": 46,
+    "runtimeTests": 36,
     "remoteMutationsPersisted": true,
-    "evidence": "docs/evidencias/cardapio-pagamento-aprovado-2026-10-20.md"
+    "evidence": "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md",
+    "temporaryQaClosed": true
   },
   "legacyRetirementReview": {
     "observedAt": "2026-10-20",

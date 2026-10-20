@@ -6,7 +6,7 @@ import { createHmac, webcrypto } from "node:crypto";
 import test from "node:test";
 import { z } from "zod";
 
-const pixAttempt={request_id:"11111111-1111-4111-8111-111111111111",external_reference:"signup:fixture:pix:stable-request",expires_at:new Date(Date.now()+72*3600000).toISOString()};
+const pixAttempt={request_id:"11111111-1111-4111-8111-111111111111",external_reference:"signup:aabbccdd-1234-4000-8000-123456789012:pix:11111111-1111-4111-8111-111111111111",expires_at:new Date(Date.now()+72*3600000).toISOString()};
 const root = new URL("../", import.meta.url);
 const signup = { id: "aabbccdd-1234-4000-8000-123456789012", product_code: "menu", total_cents: 4990, cycle_months: 1,
   email: "fixture@example.invalid", status: "trial_active", trial_ends_at: new Date(Date.now()+3600000).toISOString(), access_until: null };
@@ -409,7 +409,7 @@ test('Pix selection after expiry keeps past_due and the paid access boundary',as
 });
 
 
-const orderFixture=()=>({id:'ORD01TESTPIX2026102000000001',user_id:'3778177682',country_code:'BRA',total_amount:'49.90',external_reference:`signup:${signup.id}:pix:fixture`,status:'processed',status_detail:'accredited',transactions:{payments:[{id:'PAY01TESTPIX2026102000000001',amount:'49.90',status:'processed',status_detail:'accredited',payment_method:{id:'pix',qr_code:'fixture-qr'}}]}});
+const orderFixture=()=>({id:'ORD01TESTPIX2026102000000001',user_id:'3778177682',country_code:'BRA',total_amount:'49.90',external_reference:`signup_${signup.id}_pix_fixture`,status:'processed',status_detail:'accredited',transactions:{payments:[{id:'PAY01TESTPIX2026102000000001',amount:'49.90',status:'processed',status_detail:'accredited',payment_method:{id:'pix',qr_code:'fixture-qr'}}]}});
 const ordersEnv={SUPABASE_URL:'https://fuesdztsvrkkgnbqhcxi.supabase.co',MP_MENU_SANDBOX_ACCESS_TOKEN:'sandbox-token',MP_MENU_SANDBOX_WEBHOOK_SECRET:'sandbox-secret',MP_MENU_SANDBOX_PIX_ORDERS:'true'};
 
 test('Orders Pix worker is opt-in and records the order ID with a stable amount',async()=>{
@@ -417,10 +417,10 @@ test('Orders Pix worker is opt-in and records the order ID with a stable amount'
  const db={rpc:async(name,args)=>name.endsWith('pix_due')?{data:[signup]}:name.endsWith('prepare_pix')?{data:pixAttempt}:name.endsWith('expired')?{data:[]}:(written=args,{error:null})};
  const handler=await loadHandler('billing-lifecycle',db,async(url,options)=>{
   assert.equal(url,'https://api.mercadopago.com/v1/orders');sent=JSON.parse(options.body);
-  const order=orderFixture();order.status='action_required';order.transactions.payments[0].status='action_required';order.external_reference=pixAttempt.external_reference;return Response.json(order);
+  const order=orderFixture();order.status='action_required';order.transactions.payments[0].status='action_required';order.external_reference=pixAttempt.external_reference.replaceAll(":","_").slice(0,64);return Response.json(order);
  },ordersEnv);
  const response=await handler(new Request('https://fixture.invalid/lifecycle',{method:'POST',headers:{'x-cron-secret':'fixture-cron'}}));
- assert.equal(response.status,200);assert.equal(sent.total_amount,'49.90');assert.equal(sent.processing_mode,'automatic');assert.equal(sent.transactions.payments[0].expiration_time,'PT72H');
+ assert.equal(response.status,200);assert.equal(sent.external_reference.length,64);assert.match(sent.external_reference,/^signup_aabbccdd-1234-4000-8000-123456789012_pix_[a-f0-9-]+$/);assert.equal(sent.total_amount,'49.90');assert.equal(sent.processing_mode,'automatic');assert.equal(sent.transactions.payments[0].expiration_time,'PT72H');
  assert.equal(written.payload.provider_payment_id,orderFixture().id);assert.equal(written.payload.qr_code,'fixture-qr');
 });
 

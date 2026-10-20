@@ -1,43 +1,38 @@
-# Checkout e Pix — recuperação e diagnóstico
+# Checkout e Pix — recuperação e homologação em staging
 
-Continuação do PR20, sem merge ou deploy de produção. Esta evidência diferencia correções de código de homologação financeira no provedor.
+Continuação do PR20 no PR21. Produção não recebeu merge, migration, alteração de segredo ou deploy.
 
-## Correções
+## Entrega implementada
 
-- Checkout pendente pode ser retomado pela tela autenticada da assinatura. O backend consulta a assinatura existente, confere ID, referência do cadastro e status pending; somente então retorna o link oficial. A tela não cria uma segunda assinatura para retomá-la.
-- URLs de checkout são restritas a HTTPS, host `www.mercadopago.com.br` e caminho `/subscriptions/`. O retorno de teste preserva `env=staging`.
-- Pix vencido deixa de ser exibido como código pagável. Há atualização manual do status e consulta automática limitada para Pix pendente.
-- O worker rejeita QR ausente, valor/moeda divergentes, estado incompatível ou vencimento inválido antes de registrar cobrança como disponível.
-- Migration candidata `20261020204455_menu_pix_expiry_recovery.sql`: tentativas Pix vencidas/recusadas/canceladas podem ser substituídas; uma tentativa válida, aprovada ou uma assinatura encerrada não é substituída indevidamente. Os registros anteriores são preservados.
-- A tentativa é reservada no banco antes do POST: reenvios usam a mesma chave UUID, referência e vencimento. A gravação confere se o período, valor e pagamento anterior permanecem iguais. A reserva privada tem RLS, sem acesso de clientes.
-- O status retorna o QR do pagamento atual, evitando escolher outro por empate de timestamp ou exibir Pix antigo após trocar para cartão.
-- A escolha de Pix após expiração mantém o estado de pendência, sem anunciar um novo teste gratuito. A próxima data de cobrança respeita o acesso vigente.
+- Retomada do checkout pendente pela tela autenticada: backend confere assinatura, referência e estado antes de retornar URL HTTPS oficial. A retomada não cria outra assinatura.
+- Pix vencido deixa de aparecer como pagável. Atualização manual e consulta automática limitada mostram o estado atualizado; trocar para cartão oculta QR antigo.
+- Reserva privada da tentativa Pix antes do POST, com UUID idempotente, referência e vencimento fixos. Validação na gravação protege contra concorrência, valor incorreto, QR ausente e tentativa obsoleta; histórico preservado.
+- Migration `20261020204455_menu_pix_expiry_recovery.sql` aplicada somente ao staging, que passou de 77 para 78 migrations.
+- Orders Pix opt-in `MP_MENU_SANDBOX_PIX_ORDERS=true` somente no staging. Referência externa convertida para caracteres aceitos e limitada a 64 caracteres, preservando o UUID do cadastro; a chave de idempotência permanece UUID completo. O caminho de produção continua na Payments API.
+- Webhook Orders exige assinatura, ambiente fictício, vendedor de teste confirmado, país BRA, uma transação Pix e valor compatível. Somente order e pagamento processed/accredited concedem acesso.
 
-## Verificação
+## Autorização e execução em 20/10
 
-- 254 testes JavaScript aprovados; testes de runtime executam os handlers reais com banco/provedor substituídos.
-- Staging, transações com rollback: 20 asserções da recuperação e reserva Pix e 26 asserções de regressão do ciclo de assinatura aprovadas.
-- Nenhum pagamento, assinatura externa, envio de e-mail ou troca de segredo foi executado nesta etapa. A migration candidata ainda não foi aplicada permanentemente e nenhum handler foi publicado.
+O usuário autorizou até 20h Brasília (23h UTC): um Pix APRO fictício de R$49,90 e uma assinatura mensal pending sem cartão, publicação apenas no staging e tópico Orders de teste. Chaves administrativas foram usadas somente em memória, com JWT e cabeçalho administrativo. Nenhuma credencial foi versionada.
 
-## Provedor: pendências reais
+1. A API recusou a referência inicial (84 caracteres e dois-pontos). Após corrigir o formato, a chave consumida pela resposta HTTP400 foi substituída somente na fixture sem pagamento. Não houve segunda order criada.
+2. Uma order fictícia `ORDTST01M5DJTAHSWD5DPC6V28Q3FH5T` retornou QR e action_required. Inicialmente o cadastro estava payment_pending, sem acesso e com cardápio indisponível.
+3. Consulta posterior confirmou processed/accredited na order e pagamento. Não houve transferência real.
+4. Reenvio administrativo assinado ao webhook real do staging consultou o recurso no Mercado Pago, aplicou o pagamento e liberou o cardápio para visitante anônimo. Prazo: 20/11/2026 21:18:46 UTC. Reenvio repetido manteve exatamente o mesmo prazo: uma intenção Pix e um evento processado.
+5. Assinatura mensal `46c02524c5cd4be38eef557a8a33be45` criada pending, R$49,90, sem cartão. O checkout oficial abriu no Edge na tela “Como você prefere pagar?”, com a descrição da assinatura. Nenhum cartão foi informado. Cancelamento confirmado por GET no provedor.
+6. Fixtures encerradas, cardápio fictício despublicado e nenhuma mensagem fictícia pendente na outbox. Histórico financeiro mantido. Ferramenta `menu-sandbox-qa` substituída por resposta fixa HTTP410, mantendo JWT; acesso anônimo retorna HTTP401.
 
-O diagnóstico histórico registrou HTTP401 `Unauthorized use of live credentials` em `/v1/payments` com a credencial do vendedor de teste usada para assinaturas. Isso não é evidência de falha do Pix em produção. É necessário conferir a credencial e o contrato compatíveis com a Payments API no painel; não trocar para uma credencial real como tentativa de contorno.
+## Limitação que permanece aberta
 
-Em 20/10, a página de credenciais de teste no Edge exigiu validação por telefone. A primeira tentativa ficou em “Enviando código…”. Após recarregar e selecionar WhatsApp uma vez, o campo de seis dígitos apareceu. O usuário deve concluir essa etapa no navegador; códigos e tokens não devem passar pelo chat.
+A entrega espontânea do webhook **não foi comprovada**. O recurso Orders informa application_id `2354123347267667`; o painel acessível é `6084226312562536` (Ogritech Assinaturas), onde Orders foi habilitado somente no modo de teste, preservando URL e assinatura existentes. A divergência é um indício para investigação, não uma causa conclusivamente comprovada. O painel do ID informado pela order retornou erro 5xx nesta conta.
 
-Checkout visual no Mercado Pago, criação de Pix fictício e entrega espontânea do webhook ainda não foram concluídos nesta rodada. A autorização financeira anterior expirou; qualquer novo ensaio externo deve ter escopo e janela próprios. A ferramenta administrativa anterior permanece encerrada.
+O simulador oficial foi enviado para o mesmo endpoint de staging com o ID da order existente. Ele produziu payload genérico de Point, live_mode=true e usuário principal; o endpoint recusou a autenticação (HTTP401). Nenhuma validação de segurança foi removida. Esse envio não conta como entrega espontânea nem como nova aprovação. Falta alinhar a origem das credenciais/notificações e observar uma notificação autêntica do provedor no fluxo de teste.
 
-Fontes oficiais consultadas: [Pix via Payments](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-payments/integration-configuration/integrate-pix), [compras de teste via Payments](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-payments/integration-test/make-test-purchase). A documentação de Pix define vencimento entre 30 minutos e 30 dias; a reserva usa 72 horas.
+## Verificações
 
+- 257 testes JavaScript aprovados localmente, incluindo 36 de runtime e o caso real de referência de 84 caracteres.
+- Replay limpo de 78 migrations na [CI](https://github.com/Edermax/Ogritech-site/actions/runs/39498141640): 522 asserções SQL em 20 arquivos. A suíte JavaScript também passou nessa execução; a correção posterior do formato externo foi testada localmente.
+- Testes SQL da recuperação: 20 novas asserções e 26 de regressão; staging conferido com 78 migrations, uma intenção Pix e um evento de reenvio processado.
+- Dry-run de produção atualizado: exatamente 23 migrations pendentes. Cópia isolada com alias histórico compatível e hash idêntico; nenhuma aplicação ou reparação de histórico em produção.
 
-## Caminho Orders preparado após acesso ao painel
-
-A validação telefônica foi aceita e o painel abriu as credenciais de teste. Apenas a família APP_USR foi conferida; nenhuma chave foi impressa ou exportada e o campo voltou a ficar mascarado.
-
-A documentação atual apresenta a Orders API como caminho de teste Pix com essa família de credencial. Foi preparado suporte opt-in `MP_MENU_SANDBOX_PIX_ORDERS=true`, exclusivamente no projeto de staging: criação em `/v1/orders`, valores decimais em string, chave UUID e QR normalizado pelo ID da order. Produção mantém a integração anterior e ignora notificações Orders.
-
-O webhook de teste passa a tratar o tópico order mediante assinatura válida, `live_mode=false`, vendedor fictício confirmado e verificado pela API, país BRA, uma única transação Pix e valor compatível com o cadastro. Só processed/accredited da order e da transação pode conceder acesso. O ID da order mantém a idempotência. Testes cobrem aprovação, repetição, notificação real, outro vendedor e valor divergente.
-
-Fontes: [teste Pix Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/integration-test/pix), [notificações Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/notifications). O cenário APRO de teste aprova automaticamente, sem transferência bancária real.
-
-Ferramenta administrativa temporária e fixtures preparadas em `private/menu-checkout-pix-qa.ts` e `private/menu-checkout-pix-fixtures.sql`, fora do versionamento e sem credenciais. Escopo fixo: uma order Pix fictícia de R$49,90 e uma assinatura mensal pending sem cartão, IDs internos específicos, autenticação administrativa, seller test_user e expiração em 20/10/2026 às 23h UTC (20h Brasília). Não publicadas enquanto se aguarda autorização do usuário. A ferramenta anterior continua encerrada.
+Fontes oficiais: [teste Pix Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/integration-test/pix), [contrato de criação de order](https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-api/create-order/post) e [notificações Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/notifications).

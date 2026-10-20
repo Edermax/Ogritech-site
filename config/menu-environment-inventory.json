@@ -590,6 +590,10 @@
       {
         "version": "20261020151727",
         "name": "menu_visual_identity_assets"
+      },
+      {
+        "version": "20261020204455",
+        "name": "menu_pix_expiry_recovery"
       }
     ]
   },
