@@ -11,6 +11,7 @@ jobs:
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v5
         with: { node-version: 22 }
+      - run: npm ci --ignore-scripts
       - run: npm run validate
   database:
     runs-on: ubuntu-latest
