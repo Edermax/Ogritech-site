@@ -1,25 +1,28 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-19",
+  "updatedAt": "2026-10-20",
   "baseline": "move_profile_rls_helpers_private",
   "strategy": "contiguous_tail",
   "authorized": false,
   "decision": "BLOCKED_PENDING_REVIEW",
   "localReplay": {
-    "status": "NEEDS_REFRESH",
-    "migrationCount": 71,
-    "testFiles": 49,
-    "assertions": 180,
-    "evidence": "docs/evidencias/cardapio-replay-limpo-producao-2026-09-27.md",
-    "currentReleaseEvidence": "docs/evidencias/cardapio-retomada-2026-10-19.md"
+    "status": "PASSED",
+    "mode": "CLEAN_CI_REPLAY",
+    "migrationCount": 77,
+    "testFiles": 19,
+    "assertions": 502,
+    "evidence": "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/39490732314",
+    "sourceCommit": "2bbf80d364fb88e20affb3c6e16d88297bb3a443"
   },
   "productionDryRun": {
-    "status": "NEEDS_REFRESH",
-    "executedAt": "2026-09-27",
-    "command": "supabase db push --dry-run --include-all --linked",
+    "status": "PASSED",
+    "executedAt": "2026-10-20",
+    "command": "supabase db push --workdir <isolated-alias-copy> --project-ref mvzcoaiiwytycdqcvydf --include-all --skip-vault --dry-run",
+    "migrationCount": 22,
     "remoteChangesPerformed": false,
-    "evidence": "docs/evidencias/cardapio-dry-run-producao-2026-09-27.md",
-    "historicalMigrationCount": 33
+    "evidence": "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
+    "aliasCompatibility": "billing_rejected_email_event: 20261003025228 -> 20261003162614, identical file hash; no history repair"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [
