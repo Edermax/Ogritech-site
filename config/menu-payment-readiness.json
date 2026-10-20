@@ -74,7 +74,7 @@
       }
     },
     "sharedProviderTokenUnchanged": true,
-    "billingHandlersUseSandboxToken": false,
+    "billingHandlersUseSandboxToken": true,
     "providerPaymentProbe": {
       "status": 401,
       "message": "Unauthorized use of live credentials"
@@ -136,7 +136,14 @@
       "persisted": true,
       "processed": false,
       "httpStatus": 500
-    }
+    },
+    "billingHandlerDeployment": {
+      "ogritechBillingVersion": 14,
+      "lifecycleVersion": 10,
+      "monthlyQuoteHttpStatus": 200,
+      "lifecycleWithoutSecretHttpStatus": 401
+    },
+    "nextFinancialRun": "WAITING_RENEWED_AUTHORIZATION_UNTIL_2026_10_20_0130_BRT"
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
