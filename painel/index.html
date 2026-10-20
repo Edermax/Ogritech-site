@@ -48,15 +48,7 @@
 
             <!-- Menu de módulos -->
             <nav class="menu">
-                <a href="#" class="menu-item active" data-section="dashboard"><span>⌂</span>Dashboard</a>
-                <a href="#" class="menu-item" data-section="clientes"><span>♙</span>Clientes</a>
-                <a href="#" class="menu-item" data-section="agenda"><span>◷</span>Ogritech Agenda</a>
-                <a href="#" class="menu-item" data-section="servicos"><span>✂</span>Serviços</a>
-                <a href="#" class="menu-item" data-section="profissionais"><span>♟</span>Profissionais</a>
-                <a href="#" class="menu-item" data-section="landing"><span>◇</span>Ogritech Páginas</a>
-                <a href="#" class="menu-item" data-section="orcamentos"><span>▤</span>Ogritech Orçamentos</a>
                 <a href="#" class="menu-item" data-section="cardapio"><span>☷</span>Ogritech Cardápio</a>
-                <a href="#" class="menu-item" data-section="financeiro"><span>R$</span>Financeiro</a>
                 <a href="#" class="menu-item" data-section="configuracoes"><span>⚙</span>Configurações</a>
             </nav>
 
@@ -105,7 +97,7 @@
                      VISÃO: DASHBOARD
                      Esta é a tela inicial do sistema.
                      ================================================= -->
-                <div id="dashboardView" class="view-section">
+                <div id="dashboardView" hidden class="view-section">
 
                     <!-- Indicadores -->
                     <div class="stats-grid">
@@ -192,7 +184,7 @@
                      Cliente, funcionário e proprietário compartilham
                      o mesmo conjunto de agendamentos no protótipo.
                      ================================================= -->
-                <div id="agendaView" class="view-section hidden">
+                <div id="agendaView" hidden class="view-section hidden">
 
                     <article class="panel agenda-panel">
 
@@ -257,7 +249,7 @@
                      VISÃO: CLIENTES
                      CRUD integrado ao Supabase para contas reais.
                      ================================================= -->
-                <div id="clientsView" class="view-section hidden">
+                <div id="clientsView" hidden class="view-section hidden">
 
                     <article class="panel clients-panel">
                         <div class="clients-toolbar">
@@ -307,21 +299,21 @@
 
                 </div>
 
-                <div id="servicesView" class="view-section hidden">
+                <div id="servicesView" hidden class="view-section hidden">
                     <article class="panel module-panel">
                         <div class="clients-toolbar"><div><p class="eyebrow">CATÁLOGO</p><h2>Serviços</h2><p class="section-description">Preços, duração e custos usados na agenda e nos indicadores.</p><p class="plan-capacity" id="servicesCapacity"></p></div><button class="gold-button" id="newServiceButton" data-manager-only>+ Novo serviço</button></div>
                         <div class="table-wrapper"><table class="clients-table"><thead><tr><th>Serviço</th><th>Categoria</th><th>Duração</th><th>Preço</th><th>Custo</th><th>Ações</th></tr></thead><tbody id="servicesTableBody"></tbody></table></div>
                     </article>
                 </div>
 
-                <div id="professionalsView" class="view-section hidden">
+                <div id="professionalsView" hidden class="view-section hidden">
                     <article class="panel module-panel">
                         <div class="clients-toolbar"><div><p class="eyebrow">EQUIPE</p><h2>Profissionais</h2><p class="section-description">Gerencie nomes, especialidades, comissões, serviços, jornada e folgas da equipe.</p><p class="plan-capacity" id="professionalsCapacity"></p></div><button class="gold-button" id="newProfessionalButton" data-manager-only>+ Novo profissional</button></div>
                         <div class="table-wrapper"><table class="clients-table"><thead><tr><th>Profissional</th><th>Especialidade</th><th>Comissão</th><th>Agenda</th><th>Ações</th></tr></thead><tbody id="professionalsTableBody"></tbody></table></div>
                     </article>
                 </div>
 
-                <div id="landingView" class="view-section hidden">
+                <div id="landingView" hidden class="view-section hidden">
                     <article class="panel module-panel commercial-panel">
                         <div class="clients-toolbar"><div><p class="eyebrow">OGRITECH PÁGINAS</p><h2>Sua presença digital</h2><p class="section-description">Publique sua página comercial e acompanhe os contatos recebidos.</p></div><a class="table-button edit hidden" id="landingPublicLink" target="_blank" rel="noopener">Abrir página</a></div>
                         <form id="landingSettingsForm" class="commercial-form" data-manager-only>
@@ -335,7 +327,7 @@
                     <article class="panel module-panel"><div class="panel-header"><div><p class="eyebrow">CAPTAÇÃO</p><h2>Leads recebidos</h2></div></div><div id="landingLeadsList" class="commercial-list"></div></article>
                 </div>
 
-                <div id="quotesView" class="view-section hidden">
+                <div id="quotesView" hidden class="view-section hidden">
                     <article class="panel module-panel"><div class="clients-toolbar"><div><p class="eyebrow">OGRITECH ORÇAMENTOS</p><h2>Solicitações de orçamento</h2><p class="section-description">Transforme briefings em propostas comerciais rastreáveis.</p></div></div><div id="quoteRequestsList" class="commercial-list"></div></article>
                     <article class="panel module-panel hidden" id="quoteComposer"><div class="panel-header"><div><p class="eyebrow">PROPOSTA</p><h2 id="quoteComposerTitle">Nova proposta</h2></div></div>
                         <form id="quoteProposalForm" class="commercial-form"><input type="hidden" id="quoteRequestId"><label>Título<input id="proposalTitle" required maxlength="160"></label><label>Escopo<textarea id="proposalScope" maxlength="6000"></textarea></label><div class="form-row"><label>Descrição do item<input id="proposalItemDescription" required maxlength="300"></label><label>Valor (R$)<input id="proposalItemPrice" type="number" min="0.01" step="0.01" required></label></div><label>Validade<input id="proposalValidUntil" type="date"></label><p class="form-message" id="proposalMessage"></p><button class="gold-button" type="submit">Criar e gerar link</button></form>
@@ -389,14 +381,14 @@
                     <div class="commercial-grid" id="menuCatalogWorkspace"><article class="panel module-panel"><div class="panel-header"><div><p class="eyebrow">CATÁLOGO</p><h2>Produtos e preços</h2><p class="section-description">Cadastre, edite e organize as informações que o cliente verá. Produtos publicados só podem ser alterados após despublicar o cardápio.</p></div></div><p class="menu-lock-notice hidden" id="menuCatalogLockNotice" role="status">O catálogo está protegido porque o cardápio está publicado. Para adicionar ou alterar produtos, vá a “Configuração” e use “Despublicar cardápio”.</p><form id="menuItemForm" class="commercial-form menu-product-editor" data-manager-only><input id="menuItemId" type="hidden"><input id="menuCategoryId" type="hidden"><div class="form-row"><label>Categoria<input id="menuCategoryName" required maxlength="100" list="menuCategorySuggestions" placeholder="Ex.: Lanches"><datalist id="menuCategorySuggestions"></datalist></label><label>Produto<input id="menuItemName" required minlength="2" maxlength="160"></label></div><label>Descrição<textarea id="menuItemDescription" maxlength="1000" placeholder="Ingredientes, tamanho e informações importantes"></textarea></label><div class="form-row"><label>Tipo<select id="menuItemType"><option value="simple">Simples</option><option value="configurable">Montável</option><option value="fractional">Fracionado</option><option value="weight">Por peso</option><option value="quantity">Por quantidade</option><option value="preorder">Sob encomenda</option><option value="combo">Combo</option></select></label><label>Unidade<input id="menuItemUnit" maxlength="30" value="unidade" placeholder="unidade, kg, fatia"></label></div><div class="form-row"><label>Quantidade mínima<input id="menuItemMinimum" type="number" min="0.001" step="0.001" value="1" required></label><label>Quantidade máxima<input id="menuItemMaximum" type="number" min="0.001" step="0.001" placeholder="Sem limite"></label></div><label>Antecedência para encomenda (horas)<input id="menuItemLeadTime" type="number" min="0" max="8760" step="1" value="0"></label><fieldset><legend>Foto do produto</legend><p class="section-description">JPEG, PNG ou WebP de até 5 MB. A foto é enviada diretamente para o armazenamento seguro da Ogritech.</p><input id="menuItemImageUrl" type="hidden"><input id="menuItemImagePath" type="hidden"><label>Escolher foto<input id="menuItemImage" type="file" accept="image/jpeg,image/png,image/webp"></label><div id="menuItemImagePreview" class="menu-image-preview hidden"><img alt="Prévia da foto do produto"><button id="menuItemImageRemove" class="table-button" type="button">Remover foto</button></div></fieldset><fieldset><legend>Preços e variações</legend><div id="menuPriceRows" class="menu-editor-rows"></div><button id="menuAddPrice" class="table-button edit" type="button">+ Adicionar variação</button></fieldset><fieldset><legend>Adicionais e escolhas</legend><p class="section-description">Ex.: escolha o tamanho, sabores, bordas ou complementos.</p><div id="menuOptionGroupRows" class="menu-editor-rows"></div><button id="menuAddOptionGroup" class="table-button edit" type="button">+ Adicionar grupo</button></fieldset><div class="form-row"><label class="settings-toggle"><input id="menuItemActive" type="checkbox" checked><span>Produto ativo</span></label><label class="settings-toggle"><input id="menuItemAvailable" type="checkbox" checked><span>Disponível para pedidos</span></label></div><div class="commercial-actions"><button class="gold-button" id="menuItemSubmit" type="submit">Salvar produto</button><button class="table-button hidden" id="menuItemCancel" type="button">Cancelar edição</button></div><p class="form-message" id="menuItemMessage" role="status" aria-live="polite"></p></form><div id="menuCatalogList" class="commercial-list menu-catalog-editor-list"></div></article><article class="panel module-panel" id="menuOrdersPanel"><div class="clients-toolbar"><div><p class="eyebrow">OPERAÇÃO</p><h2>Pedidos recentes</h2><p class="section-description">Acompanhe, confirme e conclua os pedidos recebidos pelo cardápio.</p></div><button class="table-button edit" id="menuOrdersReload" type="button">Atualizar pedidos</button></div><p class="form-message menu-action-feedback" id="menuOperationMessage" role="status" aria-live="polite"></p><div id="menuOrdersList" class="commercial-list"></div></article></div>
                 </div>
 
-                <div id="financialView" class="view-section hidden" data-owner-only>
+                <div id="financialView" hidden class="view-section hidden" data-owner-only>
                     <div class="stats-grid finance-summary"><article class="stat-card"><span>Entradas</span><strong id="financeIncome">R$ 0</strong><small>No período</small></article><article class="stat-card"><span>Saídas</span><strong id="financeExpense">R$ 0</strong><small>No período</small></article><article class="stat-card"><span>Saldo</span><strong id="financeBalance">R$ 0</strong><small>No período</small></article></div>
                     <article class="panel module-panel"><div class="clients-toolbar"><div><p class="eyebrow">FLUXO DE CAIXA</p><h2>Lançamentos</h2><p class="section-description">Registre receitas e despesas do negócio.</p></div><button class="gold-button" id="newFinancialButton">+ Novo lançamento</button></div><div class="agenda-filters compact-filters"><label>De<input type="date" id="financeStart"></label><label>Até<input type="date" id="financeEnd"></label><label>Tipo<select id="financeTypeFilter"><option value="all">Todos</option><option value="income">Entradas</option><option value="expense">Saídas</option></select></label></div><div class="table-wrapper"><table class="clients-table"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th>Ações</th></tr></thead><tbody id="financialTableBody"></tbody></table></div><div class="empty-state hidden" id="financialEmpty"><strong>Nenhum lançamento encontrado.</strong><span>Registre uma entrada ou saída para começar.</span></div></article>
                 </div>
 
                 <div id="settingsView" class="view-section hidden" data-owner-only>
-                    <article class="panel settings-panel"><p class="eyebrow">PREFERÊNCIAS</p><h2>Configurações do negócio</h2><p class="section-description">Personalize a identificação, o expediente e o endereço público da agenda.</p><form id="settingsForm"><div class="form-row"><label>Nome do negócio<input id="settingsBusinessName" required maxlength="80"></label><label>Segmento<input id="settingsSegment" required maxlength="60"></label></div><div class="form-row"><label>Início do expediente<input type="time" id="settingsOpenTime" required></label><label>Fim do expediente<input type="time" id="settingsCloseTime" required></label></div><label>Duração padrão dos horários<select id="settingsSlotDuration"><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">60 minutos</option></select></label><fieldset class="public-booking-settings"><legend>Agendamento público</legend><label>Endereço da agenda<div class="slug-field"><span>ogritech.com.br/agendar/?empresa=</span><input id="settingsPublicSlug" pattern="[a-z0-9](?:[a-z0-9]|-){2,47}" maxlength="48" placeholder="nome-do-negocio"></div></label><label class="settings-toggle"><input type="checkbox" id="settingsPublicBookingEnabled"><span>Permitir novos agendamentos sem login</span></label><a class="table-button edit hidden" id="publicBookingLink" href="#" target="_blank" rel="noopener">Abrir agenda pública</a></fieldset><p class="form-message" id="settingsMessage" role="status"></p><button class="gold-button" type="submit">Salvar configurações</button></form></article>
-                    <article class="panel settings-panel" id="subscriptionCenter"><div class="panel-header"><div><p class="eyebrow">ASSINATURA E DADOS</p><h2>Suas soluções Ogritech</h2><p class="section-description">Contrate, altere ou cancele por conta própria. Cancelar uma solução não afeta as demais. Se preferir, <a href="mailto:suporte@ogritech.com.br">a Ogritech está disponível para ajudar</a>.</p></div><button class="table-button edit" id="exportBusinessData" type="button">Exportar meus dados</button></div><p class="form-message" id="subscriptionMessage" role="status"></p><div class="commercial-list" id="subscriptionList"><p class="section-description">Carregando soluções...</p></div></article>
+                    <article class="panel settings-panel" hidden><p class="eyebrow">PREFERÊNCIAS</p><h2>Configurações do negócio</h2><p class="section-description">Personalize a identificação, o expediente e o endereço público da agenda.</p><form id="settingsForm"><div class="form-row"><label>Nome do negócio<input id="settingsBusinessName" required maxlength="80"></label><label>Segmento<input id="settingsSegment" required maxlength="60"></label></div><div class="form-row"><label>Início do expediente<input type="time" id="settingsOpenTime" required></label><label>Fim do expediente<input type="time" id="settingsCloseTime" required></label></div><label>Duração padrão dos horários<select id="settingsSlotDuration"><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">60 minutos</option></select></label><fieldset class="public-booking-settings"><legend>Agendamento público</legend><label>Endereço da agenda<div class="slug-field"><span>ogritech.com.br/agendar/?empresa=</span><input id="settingsPublicSlug" pattern="[a-z0-9](?:[a-z0-9]|-){2,47}" maxlength="48" placeholder="nome-do-negocio"></div></label><label class="settings-toggle"><input type="checkbox" id="settingsPublicBookingEnabled"><span>Permitir novos agendamentos sem login</span></label><a class="table-button edit hidden" id="publicBookingLink" href="#" target="_blank" rel="noopener">Abrir agenda pública</a></fieldset><p class="form-message" id="settingsMessage" role="status"></p><button class="gold-button" type="submit">Salvar configurações</button></form></article>
+                    <article class="panel settings-panel" id="subscriptionCenter"><div class="panel-header"><div><p class="eyebrow">ASSINATURA E DADOS</p><h2>Sua assinatura do Cardápio</h2><p class="section-description">Gerencie o plano e o pagamento do seu cardápio. Se preferir, <a href="mailto:suporte@ogritech.com.br">a Ogritech está disponível para ajudar</a>.</p></div><button class="table-button edit" id="exportBusinessData" type="button">Exportar meus dados</button></div><p class="form-message" id="subscriptionMessage" role="status"></p><div class="commercial-list" id="subscriptionList"><p class="section-description">Carregando assinatura...</p></div></article>
                 </div>
 
             </section>

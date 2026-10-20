@@ -295,7 +295,7 @@ test("sandbox notification cannot mutate an Agenda signup or process live resour
   }
 });
 
-test("staging lifecycle keeps Cardápio sandbox and Agenda provider credentials separate",async()=>{
+test("lifecycle generates renewal only for Cardápio and ignores retired Agenda",async()=>{
   const requests=[];
   const admin={rpc:async name=>name.endsWith("pix_due")?{data:[signup,{...signup,id:"aabbccdd-1234-4000-8000-123456789013",product_code:"agenda"}]}:name.endsWith("expired")?{data:[]}:{error:null}};
   const handler=await loadHandler("billing-lifecycle",admin,async(_url,options)=>{
@@ -303,9 +303,9 @@ test("staging lifecycle keeps Cardápio sandbox and Agenda provider credentials 
     return Response.json({id:`fixture-${requests.length}`,point_of_interaction:{}});
   },{SUPABASE_URL:"https://fuesdztsvrkkgnbqhcxi.supabase.co",MP_MENU_SANDBOX_ACCESS_TOKEN:"sandbox-token",MP_MENU_SANDBOX_WEBHOOK_SECRET:"sandbox-secret"});
   const response=await handler(new Request("https://fixture.invalid/lifecycle",{method:"POST",headers:{"x-cron-secret":"fixture-cron"}}));
-  assert.equal(response.status,200);assert.equal(requests.length,2);
+  assert.equal(response.status,200);assert.equal(requests.length,1);
   assert.equal(requests[0].authorization,"Bearer sandbox-token");assert.match(requests[0].body.notification_url,/menu-sandbox-webhook$/);
-  assert.equal(requests[1].authorization,"Bearer fixture");assert.match(requests[1].body.notification_url,/mercado-pago-webhook$/);
+
 });
 
 test("recurring test-user live flag requires exact buyer and API-verified test seller",async()=>{
@@ -345,4 +345,10 @@ test('cancellation retries retain the paid boundary and never cancel the approve
   assert.equal(response.status,expected);assert.equal(calls.length,2);assert.ok(calls.every(url=>url.includes('/preapproval/')));
   assert.equal(db.writes[0].status,'cancel_at_period_end');assert.equal(db.writes[0].access_until,db.record.access_until);
  }
+});
+
+test('retired Agenda trial is rejected before any database or provider operation',async()=>{
+ const handler=await loadHandler('ogritech-billing',{},async()=>assert.fail('retired trial must not call provider'));
+ const response=await handler(new Request('https://fixture.invalid/billing',{method:'POST',body:JSON.stringify({action:'start_trial',product:'agenda',business_name:'Fixture',responsible_name:'Fixture',tax_document:'00000000000000',email:'fixture@example.invalid',phone:'11999999999',cycle:'monthly',payment_method:'pix',terms_version:'fixture',accepted_terms:true,accepted_privacy:true,recurring_authorized:false})}));
+ assert.equal(response.status,410);assert.equal((await response.json()).error.code,'product_retired');
 });

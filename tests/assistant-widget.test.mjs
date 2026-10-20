@@ -14,7 +14,8 @@ const [script, css, mobileCss, journey, callbackMigration, emailMigration, email
 
 test("assistente comercial mantém escopo e não inventa WhatsApp", () => {
   assert.match(script, /Aquisição e dúvidas comerciais/);
-  assert.match(script, /Ogritech Agenda/);
+  assert.match(script, /Ogritech Cardápio/);
+  assert.doesNotMatch(script, /Ogritech Agenda|R\$ 97/);
   assert.match(emailFunction, /contato@ogritech\.com\.br/);
   assert.doesNotMatch(script, /wa\.me|api\.whatsapp\.com/);
   assert.doesNotMatch(script, /99457.?7762/);

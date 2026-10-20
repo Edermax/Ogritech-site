@@ -25,12 +25,12 @@ test("painel não recarrega quando veio de um login com contexto atual", () => {
 });
 
 test("service worker invalida o shell antigo e não pré-carrega a rota legada de login", () => {
-  assert.match(serviceWorkerSource, /ogritech-shell-v15/);
+  assert.match(serviceWorkerSource, /ogritech-shell-v16/);
   assert.doesNotMatch(serviceWorkerSource, /"\.\/login\.html"/);
 });
 
 test("telas de autenticação e áreas protegidas começam ocultas até a decisão de sessão", () => {
-  for (const page of [loginPage, canonicalLoginPage, panelPage, clientPage]) {
+  for (const page of [loginPage, canonicalLoginPage, panelPage]) {
     assert.match(page, /<style>html\{visibility:hidden\}<\/style>/);
   }
   assert.match(loginSource, /if \(!session\)\s*{[\s\S]*document\.documentElement\.style\.visibility = "visible"/);

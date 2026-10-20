@@ -21,7 +21,7 @@
     function render() {
         const list = byId("subscriptionList");
         if (!list || !center) return;
-        list.innerHTML = (center.products || []).map((product) => {
+        list.innerHTML = (center.products || []).filter((product) => product.code === "menu").map((product) => {
             const subscription = activeSubscription(product.code);
             const plans = product.plans || [];
             const selectedPlan = subscription?.plan_id || plans[0]?.id || "";
@@ -51,7 +51,7 @@
         message("Carregando suas assinaturas...");
         const { data, error } = await supabaseClient.rpc("business_subscription_center", { target_barbershop_id: BARBERSHOP_ID });
         if (error) return message(friendly(error), true);
-        center = data; render(); message("Você controla suas soluções sem atendimento obrigatório.");
+        center = data; render(); message("Você controla sua assinatura sem atendimento obrigatório.");
     }
     async function updateSubscription(button) {
         if (busy) return;
@@ -60,7 +60,7 @@
         const plan = byId("subscriptionList").querySelector(`[data-plan-for="${CSS.escape(product)}"]`)?.value || null;
         let reason = null;
         if (action === "cancel") {
-            if (!confirm(`Cancelar a renovação de ${activeSubscription(product)?.product_name}? As outras soluções continuarão ativas.`)) return;
+            if (!confirm(`Cancelar a renovação de ${activeSubscription(product)?.product_name}? O acesso ao Cardápio será mantido até o fim do período pago.`)) return;
             reason = prompt("Motivo opcional do cancelamento (até 500 caracteres):") || "";
             if (reason.length > 500) return message("O motivo pode ter no máximo 500 caracteres.", true);
         }

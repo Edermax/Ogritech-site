@@ -205,6 +205,7 @@ Deno.serve(async (request) => {
   if ((json as { action?: string }).action === "start_trial") {
     const parsed = StartBody.safeParse(json);
     if (!parsed.success) return reply({ error: { code: "invalid_input", fields: parsed.error.flatten().fieldErrors } }, 422, origin);
+    if (parsed.data.product !== "menu") return reply({ error: { code: "product_retired", message: "A Ogritech oferece exclusivamente o Cardápio." } }, 410, origin);
     const input = parsed.data, cnpj = validCnpj(input.tax_document), phone = input.phone.replace(/\D/g, "");
     if (!cnpj || !/^\d{10,11}$/.test(phone)) return reply({ error: { code: "invalid_company_data", message: "Confira o CNPJ e o telefone." } }, 422, origin);
     if (input.payment_method === "card" && !input.recurring_authorized) return reply({ error: { code: "recurring_authorization_required" } }, 422, origin);

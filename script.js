@@ -74,12 +74,12 @@ const AGENDA_SECTIONS = new Set(["dashboard", "clientes", "agenda", "servicos", 
 let activeProductCodes = new Set();
 
 async function applyProductAccess() {
-    if (IS_DEMO || !BARBERSHOP_ID) return "dashboard";
+    if (IS_DEMO || !BARBERSHOP_ID) return "cardapio";
     const { data, error } = await supabaseClient.rpc("business_product_catalog", { target_barbershop_id: BARBERSHOP_ID });
     if (error) throw error;
     const access = new Map((Array.isArray(data) ? data : []).map((item) => [item.code, Boolean(item.subscribed) && ["trial", "active", "grace_period"].includes(item.status)]));
     activeProductCodes = new Set([...access].filter(([, allowed]) => allowed).map(([code]) => code));
-    const agendaAllowed = activeProductCodes.has("agenda");
+    const agendaAllowed = false; // Retired products are no longer exposed in the operator panel.
     menuItems.forEach((item) => {
         const productCode = PRODUCT_SECTION_CODES[item.dataset.section];
         const allowed = productCode ? access.get(productCode) === true : !AGENDA_SECTIONS.has(item.dataset.section) || agendaAllowed;
@@ -100,11 +100,7 @@ async function applyProductAccess() {
         businessConfig.professionals = [];
         applyBusinessCustomization();
     }
-    const defaultSection = agendaAllowed ? "dashboard"
-        : activeProductCodes.has("menu") ? "cardapio"
-        : activeProductCodes.has("pages") ? "landing"
-        : activeProductCodes.has("quotes") ? "orcamentos"
-        : null;
+    const defaultSection = activeProductCodes.has("menu") ? "cardapio" : null;
     if (!defaultSection) throw new Error("Nenhuma solução ativa para este negócio.");
     menuItems.forEach((item) => item.classList.toggle("active", item.dataset.section === defaultSection));
     showSection(defaultSection);
@@ -576,6 +572,7 @@ function hideAllViews() {
 }
 
 function showSection(section) {
+    if (!["cardapio", "configuracoes"].includes(section)) section = "cardapio";
     hideAllViews();
 
     if (section === "clientes") {

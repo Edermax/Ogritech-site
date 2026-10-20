@@ -170,8 +170,8 @@ test("soluções comerciais possuem telas funcionais e RPCs públicas limitadas"
   assert.match(menu, /public_create_menu_order/);
   assert.match(proposal, /public_respond_quote_proposal/);
   assert.match(order, /public_get_menu_order/);
-  assert.match(panel, /data-section="landing"/);
-  assert.match(panel, /data-section="orcamentos"/);
+  assert.doesNotMatch(panel, /data-section="landing"/);
+  assert.doesNotMatch(panel, /data-section="orcamentos"/);
   assert.match(panel, /data-section="cardapio"/);
   assert.doesNotMatch([admin, landing, menu, proposal, order].join("\n"), /service_role/i);
 });

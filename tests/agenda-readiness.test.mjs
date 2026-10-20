@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 const root = new URL("../", import.meta.url);
 const load = (path) => readFile(new URL(path, root), "utf8");
 
-test("agenda pública mantém o contrato completo da jornada", async () => {
+test("rota da agenda está encerrada e os contratos históricos de segurança permanecem preservados", async () => {
   const [frontend, page, migration, schedulingMigration] = await Promise.all([
     load("agendar/agendar.js"),
     load("agendar/index.html"),
@@ -30,8 +30,8 @@ test("agenda pública mantém o contrato completo da jornada", async () => {
   assert.match(frontend, /error\.code\s*===\s*\"23505\"/);
   assert.match(frontend, /localStorage\.setItem\(preferenceKey/);
   assert.doesNotMatch(frontend, /localStorage\.setItem\(`ogritechPublicBooking:/);
-  assert.match(page, /id="privacyConsent"[^>]+required/);
-  assert.match(page, /id="clientEmail"[^>]+required/);
+  assert.match(page, /http-equiv="refresh" content="0;url=\//);
+  assert.doesNotMatch(page, /src="agendar\.js/);
   assert.match(schedulingMigration, /business_appointments_no_employee_overlap/i);
   assert.match(migration, /Muitas tentativas/i);
   assert.match(migration, /digest\(secret_token,'sha256'\)/i);
