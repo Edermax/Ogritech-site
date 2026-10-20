@@ -10,7 +10,7 @@ export const DEFAULT_THRESHOLDS = Object.freeze({
   menuAvailabilityMs: 3000
 });
 
-export function evaluateMetrics(metrics, thresholds = DEFAULT_THRESHOLDS, availability) {
+export function evaluateMetrics(metrics, thresholds = DEFAULT_THRESHOLDS, availability, billingReadiness) {
   const failures = [];
   if (metrics.server_errors >= thresholds.serverErrors) {
     failures.push(`${metrics.server_errors} resposta(s) 5xx`);
@@ -36,7 +36,19 @@ export function evaluateMetrics(metrics, thresholds = DEFAULT_THRESHOLDS, availa
       failures.push(`Cardápio respondeu em ${availability.latency_ms} ms`);
     }
   }
+  if (billingReadiness && !billingReadiness.ok) failures.push(`Contratação do Cardápio indisponível (${billingReadiness.code || billingReadiness.status})`);
   return failures;
+}
+
+export async function checkMenuBillingReadiness(url, fetchImpl = fetch) {
+  const target = new URL(url);
+  if (target.protocol !== "https:") throw new Error("Billing readiness deve usar HTTPS");
+  const response = await fetchImpl(target, { method: "POST", redirect: "error", signal: AbortSignal.timeout(5000),
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ action: "trial_readiness", product: "menu" }) });
+  const body = await response.json().catch(() => ({}));
+  return { ok: response.ok && body.data?.ready === true && body.data?.product === "menu", status: response.status,
+    code: typeof body.error?.code === "string" ? body.error.code : null };
 }
 
 export function normalizeResult(payload) {
@@ -116,8 +128,9 @@ async function main() {
   if (!response.ok) throw new Error(`Supabase Logs API respondeu HTTP ${response.status}`);
   const metrics = normalizeResult(await response.json());
   const availability = await checkMenuAvailability(menuHealthUrl);
-  const failures = evaluateMetrics(metrics, DEFAULT_THRESHOLDS, availability);
-  const report = { checked_at: end.toISOString(), window_minutes: windowMinutes, metrics, availability, failures };
+  const billingReadiness = await checkMenuBillingReadiness(`https://${projectRef}.supabase.co/functions/v1/ogritech-billing`);
+  const failures = evaluateMetrics(metrics, DEFAULT_THRESHOLDS, availability, billingReadiness);
+  const report = { checked_at: end.toISOString(), window_minutes: windowMinutes, metrics, availability, billing_readiness: billingReadiness, failures };
   console.log(JSON.stringify(report, null, 2));
 
   if (process.env.GITHUB_OUTPUT) {

@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-02",
+  "updatedAt": "2026-10-19",
   "product": "Ogritech Cardápio",
   "rollbackTarget": {
-    "ref": "52ab0265385ca9607af421eb9016b048f83b47ca",
-    "source": "last_successful_pages_release_before_billing_backend_bridge",
+    "ref": "1771d9c5d737682329e775b22d8e4ba171f7075e",
+    "source": "GitHub Pages successful build after operational backup fix, verified 2026-10-19",
     "verifiedAsCurrentProduction": true,
     "requiredFiles": [
       "index.html",
@@ -23,8 +23,15 @@
   "database": {
     "downMigrationsAllowed": false,
     "strategy": "forward_only_additive_correction",
-    "restoreAllowedOnlyFor": ["confirmed_data_loss", "confirmed_data_corruption"],
-    "restoreRequires": ["incident_commander_approval", "fresh_backup_identity", "isolated_restore_validation"]
+    "restoreAllowedOnlyFor": [
+      "confirmed_data_loss",
+      "confirmed_data_corruption"
+    ],
+    "restoreRequires": [
+      "incident_commander_approval",
+      "fresh_backup_identity",
+      "isolated_restore_validation"
+    ]
   },
   "orderedSteps": [
     "declare_no_go_and_record_incident",
@@ -47,8 +54,21 @@
     "monitor_alert_unresolved"
   ],
   "localRehearsal": {
-    "status": "PREPARED",
+    "status": "PASSED_LOCAL_READ_ONLY",
     "remoteChangesPerformed": false,
     "productionRehearsalRequired": true
+  },
+  "backup": {
+    "runId": 39288297613,
+    "artifact": "ogritech-production-20261019T164846Z",
+    "restoreRunId": 39288776485,
+    "restoreStatus": "PASSED",
+    "userAuthorized": true,
+    "retentionDays": 7,
+    "databaseAssertions": 252,
+    "databaseSuites": 9,
+    "disposableDatabaseRemoved": true,
+    "fixMerged": true,
+    "fixPullRequest": "https://github.com/Edermax/Ogritech-site/pull/17"
   }
 }

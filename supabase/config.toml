@@ -35,6 +35,12 @@ verify_jwt = false
 [functions.mercado-pago-webhook]
 verify_jwt = false
 
+# Shares the handler, but the URL selects dedicated sandbox credentials and project guards.
+# Do not deploy before MP_MENU_SANDBOX_WEBHOOK_SECRET is configured for the test application.
+[functions.menu-sandbox-webhook]
+verify_jwt = false
+entrypoint = "./functions/mercado-pago-webhook/index.ts"
+
 [functions.billing-email-dispatch]
 verify_jwt = false
 

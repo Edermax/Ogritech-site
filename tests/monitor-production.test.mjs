@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildQuery, checkMenuAvailability, evaluateMetrics, normalizeResult } from "../scripts/monitor-production.mjs";
+import { buildQuery, checkMenuAvailability, checkMenuBillingReadiness, evaluateMetrics, normalizeResult } from "../scripts/monitor-production.mjs";
 
 const healthy = {
   server_errors: 0,
@@ -72,4 +72,20 @@ test("health check do Cardápio exige HTTPS e registra somente status e latênci
   assert.equal(result.status, 200);
   assert.equal(typeof result.latency_ms, "number");
   assert.deepEqual(evaluateMetrics(healthy, undefined, { ok: false, status: 503, latency_ms: 20 }), ["Cardápio indisponível (HTTP 503)"]);
+});
+
+test("monitor detects an unavailable backend behind a healthy static page", async () => {
+  const readiness = await checkMenuBillingReadiness("https://fixture.invalid/billing",async(_url,options)=>{
+    assert.deepEqual(JSON.parse(options.body),{action:"trial_readiness",product:"menu"});
+    return Response.json({error:{code:"product_catalog_unavailable"}},{status:503});
+  });
+  assert.equal(readiness.ok,false);
+  assert.deepEqual(evaluateMetrics(healthy,undefined,{ok:true,status:200,latency_ms:5},readiness),["Contratação do Cardápio indisponível (product_catalog_unavailable)"]);
+});
+
+test("billing readiness requires a real menu readiness response", async () => {
+  for(const body of [{},{data:{ready:true,product:"agenda"}}]) {
+    assert.equal((await checkMenuBillingReadiness("https://fixture.invalid",async()=>Response.json(body))).ok,false);
+  }
+  assert.equal((await checkMenuBillingReadiness("https://fixture.invalid",async()=>Response.json({data:{ready:true,product:"menu"}}))).ok,true);
 });

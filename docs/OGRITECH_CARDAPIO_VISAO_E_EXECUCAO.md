@@ -2,9 +2,9 @@
 
 Registrado em: 08/09/2026.
 
-Estado: **FASE 7D — BETA HUMANO LOCAL APROVADO NOS QUATRO SEGMENTOS EM 16/09/2026**.
+Estado em 19/10/2026: **ENTREGA PARCIAL EM PRODUÇÃO; CONCILIAÇÃO CONCLUÍDA E CORREÇÕES DA ASSINATURA VERIFICADAS EM ENSAIO ISOLADO**. As jornadas do lojista e dos pedidos foram consideradas concluídas pelo usuário. Ver [evidência vigente](evidencias/cardapio-retomada-2026-10-19.md) e `config/menu-production-launch.json` para pendências de nova liberação.
 
-Este documento é a fonte de verdade para retomar o planejamento e a execução da solução oficialmente chamada **Ogritech Cardápio**. Ele registra as decisões aceitas pelo responsável da Ogritech durante a descoberta do produto. A autorização vigente permite a padronização da nomenclatura no frontend e na documentação; não autoriza migrations remotas, contratação de provedores, mensagens reais ou publicação.
+Este documento registra a visão e as decisões da solução **Ogritech Cardápio**. Para retomar a execução, usar também o inventário e a evidência de 19/10: as autorizações de descoberta descritas nas fases abaixo são históricas. A rodada atual autorizou conciliação, homologação de assinatura e atualização da prontidão; não criou autorização de cobrança real ou nova publicação em produção.
 
 ## Visão consolidada
 
@@ -263,4 +263,4 @@ Quando o responsável decidir iniciar, a primeira autorização recomendada é a
 - 19/09/2026: Fase 7K-B implementou métricas agregadas no painel, protegidas por autenticação, vínculo com o estabelecimento e RLS. O resumo acompanha limites, estados, possíveis duplicidades e integridade de valores sem retornar dados pessoais.
 - 25/09/2026: Fase 7K-C encerrou antecipadamente o piloto privado após atingir o limite revisado de 15 pedidos. A exportação privada foi gerada fora do repositório, o cardápio foi despublicado, novas entradas foram bloqueadas e o monitor automático foi removido. Nenhum dado legítimo foi excluído.
 
-O estado vigente é o piloto privado encerrado na Fase 7K-C. O Cardápio permanece despublicado no staging, sem renovação automática. Produção, IA paga e mensagens automáticas continuam sem autorização; uma nova publicação exige nova decisão explícita.
+O piloto privado foi encerrado na Fase 7K-C. Depois disso houve homologação do editor em staging e implantação parcial em produção, confirmadas na conciliação de 19/10/2026. As funções de cobrança estão ativas em produção, porém a prontidão atual falha e o candidato de correções ainda não foi publicado. O registro atual é a [evidência de retomada](evidencias/cardapio-retomada-2026-10-19.md); o encerramento do piloto não descreve sozinho o estado da plataforma.

@@ -21,7 +21,7 @@ Deno.serve(async (request) => {
   if (!url || !key || !mpToken) return new Response("not configured", { status: 503 });
   const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const now = new Date(), pixWindow = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();
-  let pixCreated = 0, suspended = 0, finalized = 0;
+  let pixCreated = 0, suspended = 0, finalized = 0, failures = 0;
 
   // Pix não é cobrado no início: o QR é emitido automaticamente 48 h antes do fim do acesso.
   const { data: pixDue, error: pixDueError } = await admin.rpc("backend_billing_lifecycle_pix_due", { target_cutoff: pixWindow });
@@ -30,19 +30,22 @@ Deno.serve(async (request) => {
     return new Response(`pix query failed:${pixDueError.code || "unknown"}`, { status: 500 });
   }
   for (const signup of pixDue || []) {
+    const sandbox = signup.product_code === "menu" && url === "https://fuesdztsvrkkgnbqhcxi.supabase.co";
+    const signupToken = sandbox ? Deno.env.get("MP_MENU_SANDBOX_ACCESS_TOKEN") || "" : mpToken;
+    if (!signupToken || (sandbox && !Deno.env.get("MP_MENU_SANDBOX_WEBHOOK_SECRET"))) { failures++; continue; }
     const periodEnd = signup.access_until || signup.trial_ends_at;
     if (new Date(periodEnd) > new Date(pixWindow)) continue;
-    const externalReference = `signup:${signup.id}:renewal:${Date.now()}`;
+    const externalReference = `signup:${signup.id}:renewal:${new Date(periodEnd).toISOString()}:${signup.total_cents}:${signup.provider_payment_id || "initial"}`;
     const expiresAt = new Date(Math.max(Date.now() + 72 * 60 * 60 * 1000, new Date(periodEnd).getTime() + 24 * 60 * 60 * 1000)).toISOString();
     const response = await fetch("https://api.mercadopago.com/v1/payments", {
       method: "POST",
-      headers: { Authorization: `Bearer ${mpToken}`, "Content-Type": "application/json", "X-Idempotency-Key": externalReference },
-      body: JSON.stringify({ transaction_amount: signup.total_cents / 100, description: "Renovação Ogritech Cardápio", payment_method_id: "pix", payer: { email: signup.email }, external_reference: externalReference, date_of_expiration: expiresAt, notification_url: `${url}/functions/v1/mercado-pago-webhook`, metadata: { signup_id: signup.id } }),
+      headers: { Authorization: `Bearer ${signupToken}`, "Content-Type": "application/json", "X-Idempotency-Key": externalReference },
+      body: JSON.stringify({ transaction_amount: signup.total_cents / 100, description: "Renovação Ogritech Cardápio", payment_method_id: "pix", payer: { email: signup.email }, external_reference: externalReference, date_of_expiration: expiresAt, notification_url: `${url}/functions/v1/${sandbox ? "menu-sandbox-webhook" : "mercado-pago-webhook"}`, metadata: { signup_id: signup.id } }),
     });
     const payment = await response.json().catch(() => ({}));
-    if (!response.ok || !payment.id) continue;
+    if (!response.ok || !payment.id) { failures++; continue; }
     const { error: intentError } = await admin.rpc("backend_billing_lifecycle_record_pix", { target_signup_id: signup.id, payload: { purpose: signup.status === "trial_active" ? "initial" : "renewal", amount_cents: signup.total_cents, provider_payment_id: String(payment.id), external_reference: externalReference, expires_at: expiresAt, qr_code: payment.point_of_interaction?.transaction_data?.qr_code || "" } });
-    if (intentError) continue;
+    if (intentError) { failures++; continue; }
     pixCreated++;
   }
 
@@ -52,9 +55,10 @@ Deno.serve(async (request) => {
     const boundary = signup.access_until || signup.trial_ends_at;
     if (new Date(boundary) > now) continue;
     const cancelled = signup.status === "cancel_at_period_end";
-    await admin.rpc("backend_billing_lifecycle_suspend", { target_signup_id: signup.id, target_cancelled: cancelled, target_boundary: boundary });
+    const result = await admin.rpc("backend_billing_lifecycle_suspend", { target_signup_id: signup.id, target_cancelled: cancelled, target_boundary: boundary });
+    if (result.error) { failures++; continue; }
     cancelled ? finalized++ : suspended++;
   }
 
-  return Response.json({ data: { pix_created: pixCreated, suspended, cancellations_finalized: finalized, next_period_example: addMonths(now.toISOString(), 1) } });
+  return Response.json({ data: { pix_created: pixCreated, suspended, cancellations_finalized: finalized, failures, next_period_example: addMonths(now.toISOString(), 1) } }, { status: failures ? 502 : 200 });
 });

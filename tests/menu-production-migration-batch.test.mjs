@@ -33,6 +33,17 @@ test("autorização exige decisão explícita", () => {
   assert.throws(() => evaluateMigrationBatch(invalid, policy, names), /APPROVED/);
 });
 
+test("current release contract classifies the actual pending production inventory", async () => {
+  const [currentBatch,currentPolicy] = await Promise.all([
+    readFile(new URL("../config/menu-production-migration-batch.json",import.meta.url),"utf8").then(JSON.parse),
+    readFile(new URL("../config/migration-release-policy.json",import.meta.url),"utf8").then(JSON.parse)
+  ]);
+  const pending=currentPolicy.production.heldMigrations.map(item=>item.name);
+  const result=evaluateMigrationBatch(currentBatch,currentPolicy,pending);
+  assert.equal(result.total,pending.length);
+  assert.ok(!currentBatch.requiredMenuMigrations.includes("menu_trial_self_service"),"already applied trial must not be required again");
+});
+
 test("migrations específicas da Diniz são inertes quando a empresa não existe", async () => {
   const files = [
     "20260918123817_diniz_sunday_hours_and_sweets_quantity.sql",

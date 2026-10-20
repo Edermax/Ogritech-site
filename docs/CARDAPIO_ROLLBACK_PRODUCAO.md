@@ -10,7 +10,7 @@ Este runbook prepara a reversão do Cardápio sem autorizar publicação ou alte
 4. Confirmar quem pode declarar `NO-GO`, fechar entradas, republicar e autorizar restauração.
 5. Executar `npm run rehearse:menu-production-rollback` no commit da janela.
 
-O hash atualmente preparado é uma referência recuperável do repositório, mas ainda não está confirmado como a versão efetivamente servida em produção. Essa confirmação é um gate, não uma suposição.
+Em 19/10/2026, após a integração operacional do PR #17, a API GitHub Pages confirmou `1771d9c5d737682329e775b22d8e4ba171f7075e` como commit servido. Esse hash é o retorno preparado para a próxima janela; o ensaio local confirmou os seis arquivos necessários. Após corrigir as permissões, o backup `39288297613` e sua restauração `39288776485` passaram, com 252 testes de banco e limpeza completa. O contrato identifica o artefato criptografado autorizado. A integração não alterou o código do produto; não houve ensaio de fechamento e retorno remoto nesta rodada.
 
 ## Sequência do rollback
 

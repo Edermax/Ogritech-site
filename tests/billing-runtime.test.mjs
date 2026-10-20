@@ -1,0 +1,309 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { stripTypeScriptTypes } from "node:module";
+import { runInNewContext } from "node:vm";
+import { createHmac, webcrypto } from "node:crypto";
+import test from "node:test";
+import { z } from "zod";
+
+const root = new URL("../", import.meta.url);
+const signup = { id: "aabbccdd-1234-4000-8000-123456789012", product_code: "menu", total_cents: 4990, cycle_months: 1,
+  email: "fixture@example.invalid", status: "trial_active", trial_ends_at: new Date(Date.now()+3600000).toISOString(), access_until: null };
+
+// Execute the real Edge handler with only the database and provider replaced.
+async function loadHandler(name, admin, fetchImpl, environment = {}, clock = Date) {
+  let handler;
+  const source = await readFile(new URL(`supabase/functions/${name}/index.ts`, root), "utf8");
+  const code = stripTypeScriptTypes(source.replace(/^import .*;\r?\n/gm, ""));
+  runInNewContext(code, {
+    createClient: () => admin, z, fetch: fetchImpl, crypto: webcrypto, Request, Response, URL, URLSearchParams, Date: clock, TextEncoder, AbortSignal,
+    console: { error() {} },
+    Deno: { env: { get: key => ({ SUPABASE_URL: "https://fixture.invalid", SUPABASE_SERVICE_ROLE_KEY: "fixture",
+      MERCADO_PAGO_ACCESS_TOKEN: "fixture", MERCADO_PAGO_WEBHOOK_SECRET: "fixture-secret", BILLING_CRON_SECRET: "fixture-cron", ...environment })[key] }, serve: value => { handler = value; } }
+  });
+  return handler;
+}
+
+function webhookDb({ rpcFailure = false, completionFailure = false } = {}) {
+  const events = new Map();
+  let calls = 0;
+  return { events, get calls() { return calls; }, setRpcFailure(value) { rpcFailure=value; }, setCompletionFailure(value) { completionFailure=value; },
+    rpc: async name => name.endsWith("lookup") ? { data: signup } : (calls++, { error: rpcFailure ? { code: "fixture_failure" } : null }),
+    from: () => {
+      let op, values, row;
+      const chain = {
+        insert(value) { if(events.has(value.provider_event_id)) return Promise.resolve({error:{code:"23505"}}); events.set(value.provider_event_id,{...value}); return Promise.resolve({error:null}); },
+        select() { op="select";return chain; }, update(value) { op="update";values=value;return chain; },
+        eq(key,value) { if(key==="provider_event_id") row=events.get(value);return chain; },
+        single: async () => ({data:row,error:null}),
+        then(resolve,reject) { if(op==="update" && !(completionFailure && values.processed_at)) Object.assign(row,values);
+          return Promise.resolve({error:completionFailure && values?.processed_at ? {code:"fixture_failure"}:null}).then(resolve,reject); }
+      }; return chain;
+    }
+  };
+}
+
+function notification(id="evt-1",type="payment") {
+  const dataId="payment-1", requestId="fixture-request", ts=String(Date.now());
+  const signature=createHmac("sha256","fixture-secret").update(`id:${dataId};request-id:${requestId};ts:${ts};`).digest("hex");
+  return new Request("https://fixture.invalid/webhook",{method:"POST",headers:{"content-type":"application/json","x-request-id":requestId,"x-signature":`ts=${ts},v1=${signature}`},body:JSON.stringify({id,type,data:{id:dataId}})});
+}
+const provider = async () => Response.json({ status:"approved", transaction_amount:49.90,currency_id:"BRL",external_reference:`signup:${signup.id}` });
+
+test("webhook retries an unprocessed notification after a provider failure",async()=>{
+  const db=webhookDb();let failures=1;
+  const handler=await loadHandler("mercado-pago-webhook",db,async()=>failures-- > 0 ? new Response("failure",{status:503}):provider());
+  assert.equal((await handler(notification())).status,500);
+  assert.equal((await handler(notification())).status,200);
+  assert.equal(db.calls,1);
+  assert.ok(db.events.get("evt-1").processed_at);
+  assert.equal(db.events.get("evt-1").error_message,null);
+  assert.equal((await handler(notification())).status,200);
+  assert.equal(db.calls,1);
+});
+
+test("webhook does not acknowledge failed financial persistence",async()=>{
+  const db=webhookDb({rpcFailure:true});const handler=await loadHandler("mercado-pago-webhook",db,provider);
+  assert.equal((await handler(notification())).status,500);
+  assert.equal(db.events.get("evt-1").processed_at,undefined);
+  db.setRpcFailure(false);
+  assert.equal((await handler(notification())).status,200);
+  assert.equal(db.calls,2);
+});
+
+test("webhook can retry when completion of the event itself fails",async()=>{
+  const db=webhookDb({completionFailure:true});const handler=await loadHandler("mercado-pago-webhook",db,provider);
+  assert.equal((await handler(notification())).status,500);
+  db.setCompletionFailure(false);
+  assert.equal((await handler(notification())).status,200);
+});
+
+test("webhook rejects a payment whose amount or currency differs from the offer",async()=>{
+  for(const resource of [{transaction_amount:1,currency_id:"BRL"},{transaction_amount:49.90,currency_id:"USD"}]) {
+    const db=webhookDb();const handler=await loadHandler("mercado-pago-webhook",db,async()=>Response.json({status:"approved",external_reference:`signup:${signup.id}`,...resource}));
+    assert.equal((await handler(notification())).status,500);assert.equal(db.calls,0);
+  }
+});
+
+test("webhook does not query the provider with an invalid signature",async()=>{
+  let called=false;const handler=await loadHandler("mercado-pago-webhook",webhookDb(),async()=>{called=true;return provider();});
+  const request=notification();request.headers.set("x-signature","ts=1,v1=invalid");
+  assert.equal((await handler(request)).status,401);assert.equal(called,false);
+});
+
+test("subscription notification uses the actual payment ID for idempotency",async()=>{
+  const db=webhookDb(),rpc=db.rpc,applied=[];
+  db.rpc=async(name,args)=>{if(name.endsWith("apply")) applied.push(args);return rpc(name,args);};
+  const handler=await loadHandler("mercado-pago-webhook",db,async url=>Response.json(url.includes("/v1/payments/")?{id:"actual-payment",status:"approved",transaction_amount:49.90,currency_id:"BRL"}:{status:"processed",external_reference:`signup:${signup.id}`,payment:{id:"actual-payment",status:"approved"}}));
+  assert.equal((await handler(notification("evt-1","subscription_authorized_payment"))).status,200);
+  assert.equal(applied[0].target_payment_id,"actual-payment");assert.equal(applied[0].target_status,"approved");
+});
+
+test("a processed subscription invoice with a rejected payment does not grant access",async()=>{
+  const db=webhookDb(),rpc=db.rpc,applied=[];
+  db.rpc=async(name,args)=>{if(name.endsWith("apply")) applied.push(args);return rpc(name,args);};
+  const handler=await loadHandler("mercado-pago-webhook",db,async url=>Response.json(url.includes("/v1/payments/")?{id:"actual-payment",status:"rejected"}:{status:"processed",external_reference:`signup:${signup.id}`,payment:{id:"actual-payment",status:"approved"}}));
+  assert.equal((await handler(notification("evt-1","subscription_authorized_payment"))).status,200);
+  assert.equal(applied[0].target_status,"rejected");
+});
+
+test("lifecycle keeps the payment idempotency key stable after a persistence failure",async()=>{
+  const keys=[];let writes=0;
+  const admin={rpc:async name=>name.endsWith("pix_due")?{data:[signup]}:name.endsWith("expired")?{data:[]}:{error:++writes===1?{code:"fixture"}:null}};
+  const handler=await loadHandler("billing-lifecycle",admin,async(_url,options)=>{keys.push(options.headers["X-Idempotency-Key"]);return Response.json({id:"provider-payment",point_of_interaction:{}});});
+  const request=()=>new Request("https://fixture.invalid/lifecycle",{method:"POST",headers:{"x-cron-secret":"fixture-cron"}});
+  assert.equal((await handler(request())).status,502);
+  assert.equal((await handler(request())).status,200);
+  assert.equal(keys.length,2);assert.equal(keys[0],keys[1]);
+});
+
+test("lifecycle fails visibly when access suspension cannot be persisted",async()=>{
+  const expired={...signup,trial_ends_at:new Date(Date.now()-3600000).toISOString()};
+  const admin={rpc:async name=>name.endsWith("pix_due")?{data:[]}:name.endsWith("expired")?{data:[expired]}:{error:{code:"fixture"}}};
+  const handler=await loadHandler("billing-lifecycle",admin,provider);
+  const response=await handler(new Request("https://fixture.invalid/lifecycle",{method:"POST",headers:{"x-cron-secret":"fixture-cron"}}));
+  assert.equal(response.status,502);const body=await response.json();assert.equal(body.data.suspended,0);assert.equal(body.data.failures,1);
+});
+
+test("real quote handler returns the monthly and annual Cardápio offers",async()=>{
+  const handler=await loadHandler("ogritech-billing",{},async()=>assert.fail("no provider call expected"));
+  for(const [cycle,total] of [["monthly",4990],["annual",49900]]) {
+    const response=await handler(new Request("https://fixture.invalid/billing",{method:"POST",body:JSON.stringify({action:"quote",product:"menu",cycle})}));
+    assert.equal(response.status,200);assert.equal((await response.json()).data.total_cents,total);
+  }
+});
+
+test("payment choice does not claim success when subscription or audit persistence fails",async()=>{
+  for(const failingTable of ["platform_subscriptions","platform_billing_audit_log"]) {
+    const admin={auth:{getUser:async()=>({data:{user:{id:"fixture-owner"}}})},rpc:async name=>({data:name.endsWith("lookup")?signup:null,error:null}),from:table=>{
+      const data=table==="profiles"?{active:true,role:"owner",barbershop_id:signup.id}:{id:"fixture-id"};
+      const result={data,error:table===failingTable?{code:"fixture"}:null};
+      const chain={select(){return chain;},update(){return chain;},eq(){return chain;},insert:async()=>result,
+        maybeSingle:async()=>result,single:async()=>result,then(resolve,reject){return Promise.resolve(result).then(resolve,reject);}};
+      return chain;
+    }};
+    const handler=await loadHandler("ogritech-billing",admin,async()=>assert.fail("Pix choice must not charge the provider"));
+    const response=await handler(new Request("https://fixture.invalid/billing",{method:"POST",headers:{authorization:"Bearer fixture"},body:JSON.stringify({action:"choose_payment",product:"menu",barbershop_id:signup.id,cycle:"annual",payment_method:"pix",recurring_authorized:false})}));
+    assert.equal(response.status,500,failingTable);assert.equal((await response.json()).error.code,"billing_update_failed");
+  }
+});
+
+test("Cardápio hosted checkout sends pending recurrence without a plan or card token",async()=>{
+  for(const [cycle,months,amount] of [["monthly",1,49.9],["annual",12,499]]) {
+    const writes=[];
+    const paidUntil=new Date(Date.now()+7*86400000).toISOString();
+    const admin={auth:{getUser:async()=>({data:{user:{id:"fixture-owner"}}})},rpc:async(name,args)=>{
+      writes.push({name,args});return {data:name.endsWith("lookup")?{...signup,access_until:paidUntil}:null,error:null};
+    },from:table=>{
+      const result={data:table==="profiles"?{active:true,role:"owner",barbershop_id:signup.id}:{id:"fixture-id"},error:null};
+      const chain={select(){return chain;},update(){return chain;},eq(){return chain;},insert:async()=>result,
+        maybeSingle:async()=>result,single:async()=>result,then(resolve,reject){return Promise.resolve(result).then(resolve,reject);}};
+      return chain;
+    }};
+    let sent;
+    const handler=await loadHandler("ogritech-billing",admin,async(url,options)=>{
+      assert.equal(url,"https://api.mercadopago.com/preapproval");sent=JSON.parse(options.body);
+      return Response.json({id:"fixture-preapproval",init_point:"https://www.mercadopago.com.br/subscriptions/checkout?preapproval_id=fixture-preapproval"});
+    });
+    const response=await handler(new Request("https://fixture.invalid/billing",{method:"POST",headers:{authorization:"Bearer fixture"},body:JSON.stringify({action:"choose_payment",product:"menu",barbershop_id:signup.id,cycle,payment_method:"card",recurring_authorized:true})}));
+    assert.equal(response.status,200);
+    assert.equal(sent.status,"pending");assert.equal(sent.preapproval_plan_id,undefined);assert.equal(sent.card_token_id,undefined);
+    assert.equal(sent.auto_recurring.frequency,months);assert.equal(sent.auto_recurring.transaction_amount,amount);assert.equal(sent.auto_recurring.currency_id,"BRL");
+    assert.equal(sent.auto_recurring.start_date,paidUntil);assert.equal(sent.external_reference,`signup:${signup.id}`);
+    assert.equal(sent.auto_recurring.free_trial,undefined,"changing payment must not restart the trial");
+    const persisted=writes.find(row=>row.name==="backend_billing_choose_payment_update");
+    assert.equal(persisted.args.payload.provider_plan_id,"");assert.equal(persisted.args.payload.provider_subscription_id,"fixture-preapproval");
+  }
+});
+
+test("sandbox QA requires administrative authentication and the exact staging project",async()=>{
+  const providerMustNotRun=async()=>assert.fail("provider must not be called before authorization and environment checks");
+  const handler=await loadHandler("menu-sandbox-qa",{},providerMustNotRun);
+  for(const authorization of ["","Bearer anon-fixture"]) {
+    const response=await handler(new Request("https://fixture.invalid/qa",{method:"POST",headers:{authorization},body:JSON.stringify({cycle:"monthly"})}));
+    assert.equal(response.status,401);
+  }
+  const response=await handler(new Request("https://fixture.invalid/qa",{method:"POST",headers:{authorization:"Bearer fixture","x-qa-admin-key":"fixture"},body:JSON.stringify({cycle:"monthly"})}));
+  assert.equal(response.status,403,"a valid administrative key from another environment cannot run QA");
+});
+
+test("sandbox QA expires and cannot operate after its approved window",async()=>{
+  class ExpiredClock extends Date { static now(){return Date.parse("2026-10-20T01:31:00Z");} }
+  const handler=await loadHandler("menu-sandbox-qa",{},async()=>assert.fail("expired QA must not call provider"),{SUPABASE_URL:"https://fuesdztsvrkkgnbqhcxi.supabase.co"},ExpiredClock);
+  const response=await handler(new Request("https://fixture.invalid/qa",{method:"POST",headers:{authorization:"Bearer fixture","x-qa-admin-key":"fixture"},body:JSON.stringify({cycle:"monthly"})}));
+  assert.equal(response.status,403);
+});
+
+function signedNotice({dataId="AbC123",bodyId=dataId,ts=String(Date.now()),secret="fixture-secret",path="webhook",type="payment"}={}) {
+  const requestId="signed-fixture";
+  const signature=createHmac("sha256",secret).update(`id:${dataId.toLowerCase()};request-id:${requestId};ts:${ts};`).digest("hex");
+  return new Request(`https://fixture.invalid/${path}?data.id=${encodeURIComponent(dataId)}`,{method:"POST",headers:{"content-type":"application/json","x-request-id":requestId,"x-signature":`ts=${ts},v1=${signature}`},body:JSON.stringify({id:"signed-event",type,data:{id:bodyId}})});
+}
+
+test("webhook validates normalized query ID and rejects expired or conflicting signed notifications",async()=>{
+  const db=webhookDb();let calls=0;
+  const handler=await loadHandler("mercado-pago-webhook",db,async()=>{calls++;return provider();});
+  assert.equal((await handler(signedNotice({bodyId:"different"}))).status,400);
+  assert.equal((await handler(signedNotice({ts:String(Date.now()-11*60000)}))).status,401);
+  assert.equal(calls,0);
+  assert.equal((await handler(signedNotice())).status,200,"uppercase provider IDs are normalized only in the signature manifest");
+  assert.equal(calls,1);
+});
+
+test("plan and unknown webhook topics do not enter the payment inbox",async()=>{
+  const db=webhookDb();const handler=await loadHandler("mercado-pago-webhook",db,async()=>assert.fail("unsupported topic must not fetch a payment"));
+  assert.equal((await handler(signedNotice({type:"subscription_preapproval_plan"}))).status,200);
+  assert.equal(db.events.size,0);
+});
+
+test("payment authorization and invoice processing alone cannot grant access",async()=>{
+  for(const status of ["authorized","processed","pending"]) {
+    const db=webhookDb();const handler=await loadHandler("mercado-pago-webhook",db,async()=>Response.json({status,transaction_amount:49.9,currency_id:"BRL",external_reference:`signup:${signup.id}`}));
+    assert.equal((await handler(notification())).status,200);assert.equal(db.calls,0);
+  }
+  const db=webhookDb();const handler=await loadHandler("mercado-pago-webhook",db,async()=>Response.json({status:"processed",external_reference:`signup:${signup.id}`}));
+  assert.equal((await handler(notification("invoice-no-payment","subscription_authorized_payment"))).status,500);
+  assert.equal(db.calls,0);
+});
+
+test("sandbox webhook fails closed without dedicated credentials and outside staging",async()=>{
+  const db=webhookDb();const handler=await loadHandler("mercado-pago-webhook",db,async()=>assert.fail("sandbox must not use Agenda credentials"));
+  assert.equal((await handler(signedNotice({path:"menu-sandbox-webhook"}))).status,503);
+  const stageHandler=await loadHandler("mercado-pago-webhook",db,async()=>assert.fail("dedicated signature secret is required"),{SUPABASE_URL:"https://fuesdztsvrkkgnbqhcxi.supabase.co",MP_MENU_SANDBOX_ACCESS_TOKEN:"sandbox-token"});
+  assert.equal((await stageHandler(signedNotice({path:"menu-sandbox-webhook"}))).status,503);
+  assert.equal(db.events.size,0);
+});
+
+test("sandbox webhook uses dedicated token and refuses resources from another seller",async()=>{
+  const db=webhookDb();const handler=await loadHandler("mercado-pago-webhook",db,async(_url,options)=>{
+    assert.equal(options.headers.Authorization,"Bearer sandbox-token");
+    return Response.json({collector_id:123,live_mode:false,status:"approved",external_reference:`signup:${signup.id}`,transaction_amount:49.9,currency_id:"BRL"});
+  },{SUPABASE_URL:"https://fuesdztsvrkkgnbqhcxi.supabase.co",MP_MENU_SANDBOX_ACCESS_TOKEN:"sandbox-token",MP_MENU_SANDBOX_WEBHOOK_SECRET:"sandbox-secret"});
+  assert.equal((await handler(signedNotice({path:"menu-sandbox-webhook",secret:"sandbox-secret"}))).status,500);
+  assert.equal(db.calls,0);
+  assert.equal(db.events.get("menu_sandbox:signed-event").error_message,"sandbox_resource_mismatch");
+});
+
+test("card QA cancels the authorized fixture before testing rejection and reuses the buyer",async()=>{
+  class TestClock extends Date { static now(){return Date.parse("2026-10-19T23:00:00Z");} }
+  const operations=[];let scenario;
+  const handler=await loadHandler("menu-sandbox-qa",{},async(url,options)=>{
+    const body=options.body?JSON.parse(options.body):null;
+    if(url.endsWith("/users/me"))return Response.json({id:3778177682,tags:["test_user"]});
+    if(url.endsWith("/v1/card_tokens")){
+      scenario=body.cardholder.name;
+      if(scenario==="OTHE")assert.ok(operations.includes("cancelled"),"cleanup must finish before the next scenario");
+      return Response.json({id:"fixture-token"});
+    }
+    if(url.endsWith("/preapproval")&&options.method==="POST"){
+      assert.equal(body.payer_email,"test_user_7651078366654254160@testuser.com");
+      return scenario==="APRO"?Response.json({id:"fixture-preapproval",status:"authorized"}, {status:201}):Response.json({message:"test refusal"},{status:400});
+    }
+    if(url.includes("/authorized_payments/search?"))return Response.json({results:[{id:"fixture-invoice",status:"processed",payment:{id:123,status:"approved"}}]});
+    if(url.endsWith("/preapproval/fixture-preapproval")){
+      if(options.method==="PUT"){assert.equal(body.status,"cancelled");operations.push("cancelled");}
+      return Response.json({status:"cancelled"});
+    }
+    assert.fail(`Unexpected provider operation: ${url}`);
+  },{SUPABASE_URL:"https://fuesdztsvrkkgnbqhcxi.supabase.co",MP_MENU_SANDBOX_ACCESS_TOKEN:"sandbox-token"},TestClock);
+  const response=await handler(new Request("https://fixture.invalid/qa",{method:"POST",headers:{authorization:"Bearer fixture","x-qa-admin-key":"fixture"},body:JSON.stringify({action:"card_scenarios"})}));
+  assert.equal(response.status,200);const data=(await response.json()).data;
+  assert.equal(data.outcomes.length,2);assert.equal(data.outcomes[0].cancelled,true);assert.equal(data.outcomes[1].subscriptionCreated,false);
+});
+
+test("sandbox approval and rejection reach the correct billing transition with a signed notification",async()=>{
+  for(const status of ["approved","rejected"]) {
+    const db=webhookDb(),rpc=db.rpc,applied=[];
+    db.rpc=async(name,args)=>{if(name.endsWith("apply"))applied.push(args);return rpc(name,args);};
+    const handler=await loadHandler("mercado-pago-webhook",db,async()=>Response.json({id:"AbC123",collector_id:3778177682,live_mode:false,status,transaction_amount:49.9,currency_id:"BRL",external_reference:`signup:${signup.id}`}),{SUPABASE_URL:"https://fuesdztsvrkkgnbqhcxi.supabase.co",MP_MENU_SANDBOX_ACCESS_TOKEN:"sandbox-token",MP_MENU_SANDBOX_WEBHOOK_SECRET:"sandbox-secret"});
+    const request=()=>signedNotice({path:"menu-sandbox-webhook",secret:"sandbox-secret"});
+    assert.equal((await handler(request())).status,200);
+    assert.equal(applied.length,1);assert.equal(applied[0].target_status,status);
+    if(status==="approved")assert.ok(Date.parse(applied[0].target_access_until)>Date.parse(signup.trial_ends_at));
+    else assert.equal(applied[0].target_access_until,null);
+    assert.equal((await handler(request())).status,200);assert.equal(applied.length,1,"duplicate notification must not grant another period");
+  }
+});
+
+test("sandbox notification cannot mutate an Agenda signup or process live resources",async()=>{
+  for(const liveMode of [true,false]) {
+    const db=webhookDb(),rpc=db.rpc;
+    db.rpc=async name=>name.endsWith("lookup")?{data:{...signup,product_code:"agenda"}}:rpc(name);
+    const handler=await loadHandler("mercado-pago-webhook",db,async()=>Response.json({collector_id:3778177682,live_mode:liveMode,status:"approved",transaction_amount:49.9,currency_id:"BRL",external_reference:`signup:${signup.id}`}),{SUPABASE_URL:"https://fuesdztsvrkkgnbqhcxi.supabase.co",MP_MENU_SANDBOX_ACCESS_TOKEN:"sandbox-token",MP_MENU_SANDBOX_WEBHOOK_SECRET:"sandbox-secret"});
+    assert.equal((await handler(signedNotice({path:"menu-sandbox-webhook",secret:"sandbox-secret"}))).status,500);
+    assert.equal(db.calls,0);
+  }
+});
+
+test("staging lifecycle keeps Cardápio sandbox and Agenda provider credentials separate",async()=>{
+  const requests=[];
+  const admin={rpc:async name=>name.endsWith("pix_due")?{data:[signup,{...signup,id:"aabbccdd-1234-4000-8000-123456789013",product_code:"agenda"}]}:name.endsWith("expired")?{data:[]}:{error:null}};
+  const handler=await loadHandler("billing-lifecycle",admin,async(_url,options)=>{
+    requests.push({authorization:options.headers.Authorization,body:JSON.parse(options.body)});
+    return Response.json({id:`fixture-${requests.length}`,point_of_interaction:{}});
+  },{SUPABASE_URL:"https://fuesdztsvrkkgnbqhcxi.supabase.co",MP_MENU_SANDBOX_ACCESS_TOKEN:"sandbox-token",MP_MENU_SANDBOX_WEBHOOK_SECRET:"sandbox-secret"});
+  const response=await handler(new Request("https://fixture.invalid/lifecycle",{method:"POST",headers:{"x-cron-secret":"fixture-cron"}}));
+  assert.equal(response.status,200);assert.equal(requests.length,2);
+  assert.equal(requests[0].authorization,"Bearer sandbox-token");assert.match(requests[0].body.notification_url,/menu-sandbox-webhook$/);
+  assert.equal(requests[1].authorization,"Bearer fixture");assert.match(requests[1].body.notification_url,/mercado-pago-webhook$/);
+});

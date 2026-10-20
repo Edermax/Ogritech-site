@@ -1,5 +1,5 @@
 {
-    "auditedAt": "2026-10-03",
+  "auditedAt": "2026-10-19",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -77,18 +77,89 @@
       "billing_service_role_bridge",
       "grant_billing_bridge_schema_usage",
       "billing_explicit_backend_rpcs",
-      "billing_rejected_email_event"
+      "billing_rejected_email_event",
+      "menu_billing_lifecycle_reliability"
     ],
-    "remoteVersionAliases": {
-      "platform_contact_leads": "20260901214935",
-      "deny_platform_contact_attempt_reads": "20260901215227",
-      "index_remaining_foreign_keys": "20260901220744",
-      "remove_legacy_rls_policies": "20260902103025",
-      "enforce_plan_capacity": "20260903163936",
-      "link_public_bookings_to_client_auth": "20260903154920",
-      "fix_plan_capacity_access": "20260903201303",
-      "harden_authenticated_booking_actions": "20260904023742"
-    }
+    "remoteVersionAliases": {},
+    "observedMigrationNames": [
+      "create_core_schema",
+      "create_saas_clients",
+      "expand_ogritech_platform",
+      "add_lgpd_governance",
+      "create_financial_entries",
+      "create_operational_tables",
+      "expand_services_financial",
+      "platform_master_console",
+      "harden_schema_and_booking",
+      "admin_audit_and_rate_limits",
+      "reset_preoperation_metrics",
+      "platform_billing",
+      "repair_unlinked_businesses",
+      "repair_all_unlinked_businesses",
+      "harden_function_execution",
+      "harden_operations_and_scheduling",
+      "enable_pgtap_for_staging_tests",
+      "allow_remote_pgtap_runner",
+      "optimize_rls_and_internal_rpc_access",
+      "finish_rls_initplan_optimization",
+      "consolidate_permissive_rls_policies",
+      "isolate_privileged_functions",
+      "restore_platform_users_service_role_grants",
+      "add_real_staff_availability",
+      "save_staff_availability",
+      "public_booking_flow",
+      "add_commercial_solutions",
+      "index_commercial_solution_foreign_keys",
+      "public_commercial_flows",
+      "harden_commercial_attempts_rls",
+      "restrict_send_quote_proposal",
+      "add_private_platform_legal_identity",
+      "atomic_appointment_operations",
+      "enforce_atomic_appointment_transitions",
+      "harden_rls_auto_enable_execution",
+      "move_profile_rls_helpers_private",
+      "platform_contact_leads",
+      "deny_platform_contact_attempt_reads",
+      "index_remaining_foreign_keys",
+      "remove_legacy_rls_policies",
+      "add_appointment_reassignment_offers",
+      "link_public_bookings_to_client_auth",
+      "enforce_plan_capacity",
+      "fix_plan_capacity_access",
+      "harden_authenticated_booking_actions",
+      "assistant_callback_requests",
+      "assistant_email_callbacks",
+      "ogritech_billing_self_service",
+      "billing_lifecycle_automation",
+      "multiproduct_foundation",
+      "multiproduct_activation",
+      "menu_catalog_core",
+      "menu_cart_orders",
+      "menu_self_service_onboarding",
+      "commercial_self_service_lifecycle",
+      "menu_assistant_foundation",
+      "menu_ai_staging_controls",
+      "menu_ai_staging_inference",
+      "fix_menu_ai_staging_telemetry_authorization",
+      "allow_menu_ai_service_private_schema",
+      "diniz_sunday_hours_and_sweets_quantity",
+      "menu_private_pilot_metrics",
+      "diniz_automatic_delivery_distance",
+      "restore_diniz_delivery_zones_after_geocode_validation",
+      "enable_diniz_geoapify_delivery",
+      "menu_self_service_catalog_editor",
+      "menu_catalog_order_and_delivery_zones",
+      "menu_catalog_draft_publication",
+      "menu_trial_self_service",
+      "billing_private_backend_rpcs",
+      "fix_menu_trial_plan_sync",
+      "billing_service_role_bridge",
+      "grant_billing_bridge_schema_usage",
+      "billing_explicit_backend_rpcs",
+      "billing_rejected_email_event",
+      "menu_billing_lifecycle_reliability"
+    ],
+    "observationEvidence": "config/menu-environment-inventory.json"
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
@@ -194,7 +265,15 @@
       {
         "name": "menu_catalog_draft_publication",
         "reason": "Rascunho independente e promoção atômica do catálogo permanecem retidos até homologação concorrente com pedidos sintéticos no staging."
+      },
+      {
+        "name": "menu_billing_lifecycle_reliability",
+        "reason": "Correções do ciclo de assinatura verificadas em transação isolada com rollback; ainda não promovidas. Exige revisão do lote, deploy coordenado das funções e homologação do provedor."
       }
-    ]
+    ],
+    "observationEvidence": "config/menu-environment-inventory.json",
+    "remoteVersionAliases": {
+      "billing_rejected_email_event": "20261003162614"
+    }
   }
 }
