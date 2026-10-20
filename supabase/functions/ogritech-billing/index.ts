@@ -146,6 +146,10 @@ Deno.serve(async (request) => {
     }
     const { data: signup } = await admin.rpc("backend_billing_choose_payment_lookup", { target_barbershop_id: input.barbershop_id });
     if (!signup) return reply({ error: { code: "billing_signup_not_found" } }, 404, origin);
+    if ((signup.provider_subscription_id && signup.status !== "cancelled") ||
+        (signup.status === "payment_pending" && signup.provider_payment_id)) {
+      return reply({ error: { code: "billing_already_configured", message: "Já existe uma assinatura ou pagamento em andamento. Consulte seu status antes de iniciar outro." } }, 409, origin);
+    }
     const sandbox = url === "https://fuesdztsvrkkgnbqhcxi.supabase.co";
     const chosen = quote(input.cycle, "menu"), accessToken = Deno.env.get(sandbox ? "MP_MENU_SANDBOX_ACCESS_TOKEN" : "MERCADO_PAGO_ACCESS_TOKEN") || "";
     const planId = ""; // Hosted pending subscriptions carry their own server-defined recurrence.

@@ -352,3 +352,12 @@ test('retired Agenda trial is rejected before any database or provider operation
  const response=await handler(new Request('https://fixture.invalid/billing',{method:'POST',body:JSON.stringify({action:'start_trial',product:'agenda',business_name:'Fixture',responsible_name:'Fixture',tax_document:'00000000000000',email:'fixture@example.invalid',phone:'11999999999',cycle:'monthly',payment_method:'pix',terms_version:'fixture',accepted_terms:true,accepted_privacy:true,recurring_authorized:false})}));
  assert.equal(response.status,410);assert.equal((await response.json()).error.code,'product_retired');
 });
+
+test('existing subscription or pending payment blocks a second checkout before provider calls',async()=>{
+ for(const existing of [{status:'active',provider_subscription_id:'fixture-sub'},{status:'payment_pending',provider_payment_id:'fixture-pay'}]){
+  const admin={auth:{getUser:async()=>({data:{user:{id:'fixture-owner'}}})},rpc:async()=>({data:{...signup,...existing}}),from(){return {select(){return this;},eq(){return this;},async maybeSingle(){return {data:{active:true,role:'owner',barbershop_id:signup.id}};}};}};
+  const handler=await loadHandler('ogritech-billing',admin,async()=>assert.fail('duplicate checkout must not reach provider'));
+  const response=await handler(new Request('https://fixture.invalid/billing',{method:'POST',headers:{authorization:'Bearer fixture'},body:JSON.stringify({action:'choose_payment',product:'menu',barbershop_id:signup.id,cycle:'monthly',payment_method:'card',recurring_authorized:true})}));
+  assert.equal(response.status,409);assert.equal((await response.json()).error.code,'billing_already_configured');
+ }
+});

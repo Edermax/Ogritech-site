@@ -77,12 +77,13 @@ async function applyProductAccess() {
     if (IS_DEMO || !BARBERSHOP_ID) return "cardapio";
     const { data, error } = await supabaseClient.rpc("business_product_catalog", { target_barbershop_id: BARBERSHOP_ID });
     if (error) throw error;
-    const access = new Map((Array.isArray(data) ? data : []).map((item) => [item.code, Boolean(item.subscribed) && ["trial", "active", "grace_period"].includes(item.status)]));
+    const access = new Map((Array.isArray(data) ? data : []).filter((item) => item.code === "menu").map((item) => [item.code, Boolean(item.subscribed) && ["trial", "active", "grace_period"].includes(item.status)]));
     activeProductCodes = new Set([...access].filter(([, allowed]) => allowed).map(([code]) => code));
     const agendaAllowed = false; // Retired products are no longer exposed in the operator panel.
     menuItems.forEach((item) => {
         const productCode = PRODUCT_SECTION_CODES[item.dataset.section];
-        const allowed = productCode ? access.get(productCode) === true : !AGENDA_SECTIONS.has(item.dataset.section) || agendaAllowed;
+        const allowed = item.dataset.section === "configuracoes" ||
+            (productCode ? access.get(productCode) === true : !AGENDA_SECTIONS.has(item.dataset.section) || agendaAllowed);
         item.dataset.productAllowed = String(allowed);
         item.classList.toggle("solution-hidden", !allowed);
         item.setAttribute("aria-disabled", String(!allowed));
@@ -555,7 +556,7 @@ const titles = {
     orcamentos: "Ogritech Orçamentos",
     cardapio: "Ogritech Cardápio",
     financeiro: "Financeiro",
-    configuracoes: "Configurações"
+    configuracoes: "Assinatura e dados"
 };
 
 function hideAllViews() {
@@ -1830,23 +1831,7 @@ async function initializeOperationalDashboard() {
     if (savedSettings.name) businessConfig.name = savedSettings.name;
     if (savedSettings.segment) businessConfig.segment = savedSettings.segment;
     if (!BARBERSHOP_ID) return;
-    const defaultSection = await applyProductAccess();
-    if (activeProductCodes.has("agenda")) {
-        await loadOperationalData();
-        await refreshNotifications();
-        updateClientCount();
-        renderClients();
-        renderDashboardAgenda();
-        renderBusinessIndicators();
-        renderPrivacyRequests();
-        renderAgenda();
-        renderServices();
-        renderProfessionals();
-        renderPlanCapacity();
-        renderFinancial();
-    } else if (defaultSection === "cardapio") {
-        window.loadMenuAdmin?.();
-    }
+    await applyProductAccess();
 }
 
 initializeOperationalDashboard().catch((error) => reportDataError("carregar os dados", error));
