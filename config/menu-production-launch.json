@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "product": "Ogritech Cardápio",
   "environment": "production",
-  "updatedAt": "2026-10-19",
+  "updatedAt": "2026-10-20",
   "releaseAuthorized": false,
   "gates": [
     {
@@ -63,9 +63,10 @@
         "docs/evidencias/cardapio-replay-limpo-producao-2026-09-27.md",
         "docs/evidencias/cardapio-inventario-producao-readonly-2026-09-27.md",
         "docs/evidencias/cardapio-dry-run-producao-2026-09-27.md",
-        "docs/evidencias/cardapio-retomada-2026-10-19.md"
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md"
       ],
-      "remaining": "Produção mantém 55 migrations e 21 locais retidas. Staging atualizado para 76 após aplicar as duas correções de billing e validar 26 asserções com rollback. Editor/rascunhos e correções de billing ainda não promovidos em produção. Atualizar dry-run e replay antes de nova janela."
+      "remaining": "Staging: 77 migrations; producao: 55 aplicadas, 22 pendentes. Replay limpo de CI aprovado no commit 2bbf80d (19 suites, 502 assercoes). Dry-run de producao confirmou as 22 pendentes usando copia temporaria com alias remoto, sem reparar historico. Falta aprovar disposicao do lote e promover na janela de release."
     },
     {
       "id": "application_publication",
@@ -74,9 +75,10 @@
       "evidence": [
         "supabase/functions",
         ".github/workflows/validate.yml",
-        "docs/evidencias/cardapio-retomada-2026-10-19.md"
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md"
       ],
-      "remaining": "Pages publica a51eec70580ba606d7c187e5e38c4d0fffdb0829 e quatro funções de billing estão ACTIVE. Correções verificadas nesta rodada ainda locais. Prontidão de contratação atual retorna product_catalog_unavailable."
+      "remaining": "Pages confirmado no commit 1771d9c5d737682329e775b22d8e4ba171f7075e. PRs 18, 19 e 20 aprovados no CI e ainda em rascunho. Falta promocao coordenada de banco, funcoes e frontend; nao houve deploy nesta etapa."
     },
     {
       "id": "production_synthetic_test",
@@ -97,9 +99,10 @@
       "evidence": [
         "docs/evidencias/fase-7i-previa-privada-cardapio-2026-09-17.md",
         "scripts/subscription-center-ui-smoke.mjs",
-        "docs/evidencias/cardapio-retomada-2026-10-19.md"
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md"
       ],
-      "remaining": "Pagamento, expiração, recuperação, cancelamento e preservação da Agenda passaram em 26 asserções de banco com rollback. Falta promoção coordenada e homologação do provedor; não reabrir os itens 2 e 3 aceitos pelo usuário."
+      "remaining": "Backend mensal ficticio aprovado no staging, incluindo acesso, reenvio idempotente e cancelamento. Ainda pendem checkout hospedado, entrega automatica espontanea de webhook e Pix. Nao reabrir jornadas dos itens 2 e 3 ja aceitas pelo usuario."
     },
     {
       "id": "production_monitor",
@@ -122,9 +125,10 @@
         "config/menu-production-rollback.json",
         "scripts/menu-production-rollback-rehearsal.mjs",
         "tests/menu-production-rollback.test.mjs",
-        "docs/evidencias/cardapio-retomada-2026-10-19.md"
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md"
       ],
-      "remaining": "Commit servido confirmado pela API Pages e definido como retorno da próxima janela. Ensaio de leitura do Git preparado; fechamento e republicação remotos continuam sem ensaio atual."
+      "remaining": "Commit 1771d9c5d737682329e775b22d8e4ba171f7075e confirmado como publicado. Ensaio local somente leitura aprovado em 20/10; fechamento e republicacao remotos permanecem sem ensaio atual."
     }
   ],
   "currentProduction": {
@@ -145,5 +149,14 @@
     "runtimeTests": 27,
     "remoteMutationsPersisted": true,
     "evidence": "docs/evidencias/cardapio-pagamento-aprovado-2026-10-20.md"
+  },
+  "legacyRetirementReview": {
+    "observedAt": "2026-10-20",
+    "mode": "aggregate_read_only",
+    "agendaActiveSubscriptions": 7,
+    "providerReferences": 0,
+    "legacyBillingSignups": 0,
+    "providerReconciliationComplete": false,
+    "evidence": "docs/evidencias/cardapio-preparacao-release-2026-10-20.md"
   }
 }

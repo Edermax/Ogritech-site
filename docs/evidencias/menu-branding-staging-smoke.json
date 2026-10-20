@@ -1,0 +1,14 @@
+{
+    "preview":  "http://127.0.0.1:8088/cardapio/?env=staging\u0026empresa=branding-visual-smoke-menu",
+    "project":  "fuesdztsvrkkgnbqhcxi",
+    "testedAt":  "2026-10-20T15:56:54.7002270Z",
+    "draftIsolation":  "PASS",
+    "shop":  "b8100000-0000-4000-8000-000000000001",
+    "upload":  "PASS",
+    "publication":  "PASS",
+    "cover":  "b8100000-0000-4000-8000-000000000001/0da973a4-1c9e-4cc5-a6bc-e72e43aea072.jpg",
+    "publicImage":  "PASS",
+    "logo":  "b8100000-0000-4000-8000-000000000001/0af73caf-1419-46e3-b8ac-d0579cd5bcf4.jpg",
+    "user":  "9c120179-b457-4bbf-bd4f-ffadf127d8f2",
+    "cleanedAt":  "2026-10-20T15:59:59.3446055Z"
+}

@@ -40,7 +40,7 @@
     });
     return rows.length ? `Como referência aproximada: ${rows.join("; ")}. O rendimento pode variar conforme o corte e o tipo de recheio.` : "A quantidade de pessoas pode variar conforme o corte. Confirme o rendimento com o estabelecimento.";
   }
-  const applyVisualIdentity = (identity) => { if (identity?.customized !== true) return; if (/^#[0-9a-f]{6}$/i.test(identity.accent_color || "")) document.documentElement.style.setProperty("--accent", identity.accent_color); };
+  const applyVisualIdentity = (identity) => { globalThis.OgritechMenuBranding?.applyColors(document.documentElement,identity); };
   const dinizIllustration = (category, item) => {
     if (!isDinizMenu) return null;
     const label = `${category?.name || ""} ${item?.name || ""}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -59,7 +59,7 @@
     return null;
   };
   const deliveryZoneLabel = (zone) => Number(zone.fee) === 0 && zone.code === "bolo-agendado" ? `${clean(zone.name)} · taxa calculada após informar o endereço` : `${clean(zone.name)} · ${money.format(zone.fee)}`;
-  const estimatedUnitPrice = (entry) => entry.price + entry.selections.reduce((sum, item) => sum + item.price_delta * item.quantity, 0);
+  const estimatedUnitPrice = (entry) => globalThis.OgritechMenuPricing.unitPrice(entry.price, entry.selections, entry.optionGroups);
   const localDateTimeValue = (date) => {
     const offset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - offset).toISOString().slice(0, 16);
@@ -126,11 +126,11 @@
     $("cartReviewTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total);
   }
   function updateCart() { let count = 0, total = 0, hasQuote = false; cart.forEach((entry) => { count += entry.quantity; total += entry.quantity * estimatedUnitPrice(entry); hasQuote ||= entry.isQuote; }); $("cartCount").textContent = count; $("cartTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total); $("checkoutButton").textContent = hasQuote ? "Continuar solicitação" : "Finalizar pedido"; $("checkoutTitle").textContent = hasQuote ? "Enviar solicitação para análise" : "Finalizar pedido"; $("orderSubmitButton").textContent = hasQuote ? "Enviar solicitação" : "Enviar pedido"; $("cartBar").classList.toggle("hidden", !count); renderCartReview(total, hasQuote); if (!count) { $("cartReview").classList.add("hidden"); $("checkout").classList.add("hidden"); } updateSchedulingRequirement(); }
-  function addConfigured(price, selections = [], quantity = 1) { const signature = `${price.id}:${selections.map((item) => `${item.menu_option_id}x${item.quantity}`).sort().join(",")}`; const entry = cart.get(signature) || { menu_item_price_id: price.id, name: price.item.name, label: price.label, price: price.amount, quantity: 0, minimumQuantity: Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1)), maximumQuantity: price.item.maximum_quantity == null ? 100 : Math.floor(Number(price.item.maximum_quantity)), selections, isQuote: isQuoteItem(price.item), leadTimeHours: price.item.lead_time_hours }; entry.quantity = Math.min(entry.maximumQuantity, entry.quantity + quantity); cart.set(signature, entry); pendingRequestId = null; updateCart(); }
+  function addConfigured(price, selections = [], quantity = 1) { const signature = `${price.id}:${selections.map((item) => `${item.menu_option_id}x${item.quantity}`).sort().join(",")}`; const entry = cart.get(signature) || { menu_item_price_id: price.id, name: price.item.name, label: price.label, price: price.amount, quantity: 0, minimumQuantity: Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1)), maximumQuantity: price.item.maximum_quantity == null ? 100 : Math.floor(Number(price.item.maximum_quantity)), selections, optionGroups: price.item.option_groups || [], isQuote: isQuoteItem(price.item), leadTimeHours: price.item.lead_time_hours }; entry.quantity = Math.min(entry.maximumQuantity, entry.quantity + quantity); cart.set(signature, entry); pendingRequestId = null; updateCart(); }
   function configure(price, quantity = 1) {
     const groups = price.item.option_groups || []; if (!groups.length) return addConfigured(price, [], quantity);
     $("configuratorTitle").textContent = price.item.name;
-    $("configuratorGroups").innerHTML = groups.map((group) => `<fieldset data-min="${group.minimum_selections}" data-max="${group.maximum_selections}"><legend>${clean(group.name)} <small>Escolha de ${group.minimum_selections} a ${group.maximum_selections}</small></legend>${group.options.map((option) => `<label><input type="${group.selection_type === "single" ? "radio" : "checkbox"}" name="group-${group.id}" value="${option.id}" data-price="${option.price_delta}"> <span>${clean(option.name)}${Number(option.price_delta) ? ` + ${money.format(option.price_delta)}` : ""}</span></label>`).join("")}</fieldset>`).join("");
+    $("configuratorGroups").innerHTML = groups.map((group) => `<fieldset data-min="${group.minimum_selections}" data-max="${group.maximum_selections}"><legend>${clean(group.name)} <small>Escolha de ${group.minimum_selections} a ${group.maximum_selections}${Number(group.free_selections) ? ` · ${group.free_selections} incluídos` : ""}</small></legend>${group.options.map((option) => `<label><input type="${group.selection_type === "single" ? "radio" : "checkbox"}" name="group-${group.id}" value="${option.id}" data-price="${option.price_delta}" data-option-name="${clean(option.name)}"> <span>${clean(option.name)}${Number(option.price_delta) ? ` + ${money.format(option.price_delta)}` : ""}</span>${group.selection_type !== "single" && Number(option.maximum_quantity) > 1 ? `<input aria-label="Quantidade de ${clean(option.name)}" data-option-quantity="${option.id}" type="number" min="1" max="${option.maximum_quantity}" step="1" value="1">` : ""}</label>`).join("")}</fieldset>`).join("");
     $("configurator").dataset.priceId = price.id; $("configurator").dataset.quantity = quantity; $("configuratorMessage").textContent = ""; $("configurator").showModal();
   }
   function assistantMessage(text, kind = "assistant") { const node = document.createElement("p"); node.className = `assistant-message${kind === "user" ? " user" : ""}`; node.textContent = text; $("menuAssistantMessages").append(node); node.scrollIntoView({ block: "nearest" }); }
@@ -172,16 +172,37 @@
     let sessionToken = sessionStorage.getItem(`ogritechMenuAssistant:${slug}`); if (!sessionToken) { sessionToken = createUuid().replaceAll("-", ""); sessionStorage.setItem(`ogritechMenuAssistant:${slug}`, sessionToken); }
     const { data, error } = await supabaseClient.rpc("public_menu_assistant_message", { target_slug: slug, session_token: sessionToken, supplied_message: message }); button.disabled = false;
     if (error) return assistantMessage(error.message?.includes("Limite") ? error.message : "Não consegui responder agora. Continue pelo cardápio ou fale com o estabelecimento.");
-    const reply = data.intent === "greeting" ? "Posso ajudar a encontrar bolos, doces, recheios, informações de pagamento ou a estimar o rendimento por peso. O que você gostaria de saber?" : data.reply;
+    const reply = data.intent === "greeting" && isDinizMenu ? "Posso ajudar a encontrar bolos, doces, recheios, informações de pagamento ou a estimar o rendimento por peso. O que você gostaria de saber?" : data.reply;
     assistantMessage(reply); assistantControls(data); input.focus();
   });
-  $("configuratorForm").addEventListener("submit", (event) => { event.preventDefault(); const selections = []; for (const fieldset of $("configuratorGroups").querySelectorAll("fieldset")) { const checked = [...fieldset.querySelectorAll("input:checked")]; if (checked.length < Number(fieldset.dataset.min) || checked.length > Number(fieldset.dataset.max)) { $("configuratorMessage").textContent = "Confira a quantidade de escolhas obrigatórias."; return; } checked.forEach((input) => selections.push({ menu_option_id: input.value, quantity: 1, price_delta: Number(input.dataset.price), name: input.nextElementSibling?.textContent?.trim() || "" })); } addConfigured(prices.get($("configurator").dataset.priceId), selections, Number($("configurator").dataset.quantity) || 1); $("configurator").close(); });
+  $("configuratorForm").addEventListener("submit", (event) => {
+    event.preventDefault(); const selections = [];
+    for (const fieldset of $("configuratorGroups").querySelectorAll("fieldset")) {
+      const checked = [...fieldset.querySelectorAll('input[type="radio"]:checked,input[type="checkbox"]:checked')];
+      let count = 0;
+      for (const input of checked) {
+        const quantityInput = fieldset.querySelector(`[data-option-quantity="${input.value}"]`);
+        if (quantityInput && !quantityInput.reportValidity()) return;
+        const quantity = quantityInput ? Number(quantityInput.value) : 1;
+        count += quantity;
+        selections.push({menu_option_id:input.value,quantity,price_delta:Number(input.dataset.price),name:input.dataset.optionName});
+      }
+      if (count < Number(fieldset.dataset.min) || count > Number(fieldset.dataset.max)) { $("configuratorMessage").textContent = "Confira a quantidade de escolhas obrigatórias."; return; }
+    }
+    addConfigured(prices.get($("configurator").dataset.priceId), selections, Number($("configurator").dataset.quantity) || 1); $("configurator").close();
+  });
   $("closeConfigurator").addEventListener("click", () => $("configurator").close());
   async function init() {
     const { data, error } = await supabaseClient.rpc("public_menu", { target_slug: slug }); if (error || !data) { $("loading").innerHTML = "<h1>Cardápio indisponível</h1><p>Confira o endereço ou tente novamente.</p>"; return; }
     const menuTitle = isDinizMenu ? data.menu.title.replace(/\s*[—-]\s*piloto privado\s*$/i, "").trim() : data.menu.title;
     page = data; applyVisualIdentity(data.menu.visual_identity); document.title = `${menuTitle} | Ogritech`; $("menuTitle").textContent = menuTitle; $("menuDescription").textContent = data.menu.description; $("menuDescription").classList.toggle("hidden", !data.menu.description?.trim());
-    if (isDinizMenu) { $("menuBrandLogo").src = "../assets/diniz-doces/logo.jpg"; $("menuBrandLogo").alt = "Diniz Doces"; $("menuBrandLockup").classList.remove("hidden"); $("calculateDeliveryButton").classList.remove("hidden"); $("deliveryProviderNotice").classList.remove("hidden"); }
+    const logoUrl = globalThis.OgritechMenuBranding?.assetUrl(data.menu.visual_identity?.logo_path, window.OGRITECH_SUPABASE_URL);
+    const coverUrl = globalThis.OgritechMenuBranding?.assetUrl(data.menu.visual_identity?.cover_path, window.OGRITECH_SUPABASE_URL);
+    $("menuBrandLockup").classList.toggle("hidden", !logoUrl && !(isDinizMenu && data.menu.visual_identity?.customized !== true));
+    if (logoUrl) { $("menuBrandLogo").src=logoUrl; $("menuBrandLogo").alt=menuTitle; }
+    $("menuCoverImage").hidden=!coverUrl; if(coverUrl) $("menuCoverImage").src=coverUrl;
+    if (isDinizMenu && !logoUrl && data.menu.visual_identity?.customized !== true) { $("menuBrandLogo").src = "../assets/diniz-doces/logo.jpg"; $("menuBrandLogo").alt = "Diniz Doces"; $("menuBrandLockup").classList.remove("hidden"); }
+    if (isDinizMenu) { $("calculateDeliveryButton").classList.remove("hidden"); $("deliveryProviderNotice").classList.remove("hidden"); }
     const paymentNames = {pix:"Pix",cash:"Dinheiro",credit_card:"Cartão de crédito",debit_card:"Cartão de débito"}, hours = data.menu.weekly_hours;
     $("menuPayments").textContent = `Pagamento combinado com o estabelecimento: ${(data.menu.payment_methods || []).map((code) => paymentNames[code] || code).join(", ")}.`;
     $("menuHours").textContent = formatHours(hours);
@@ -193,7 +214,7 @@
       const quote = isQuoteItem(item), first = records[0], minimumQuantity = Math.max(1, Math.ceil(Number(item.minimum_quantity) || 1)), maximumQuantity = item.maximum_quantity == null ? "" : Math.floor(Number(item.maximum_quantity)), customQuantity = minimumQuantity > 1;
       const quantityPicker = customQuantity ? `<label class="menu-quantity-picker"><span>Quantidade (mínimo ${minimumQuantity})</span><input type="number" inputmode="numeric" min="${minimumQuantity}"${maximumQuantity ? ` max="${maximumQuantity}"` : ""} step="1" value="${minimumQuantity}" data-quantity-select="${item.id}"></label>` : "";
       const initialPrice = first ? (customQuantity ? `${minimumQuantity} unidades · ${money.format(first.amount * minimumQuantity)}` : (quote ? `A partir de ${money.format(first.amount)}` : money.format(first.amount))) : "Indisponível";
-      const pricePicker = records.length ? `<label class="menu-price-picker"><span>${weightPickerLabel(records, quote)}</span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(displayPriceLabel(record.label))}</option>`).join("")}</select></label>${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button class="public-button" data-add-selected="${item.id}">${quote ? "Solicitar análise" : ((item.option_groups || []).length ? "Escolha os sabores" : "Adicionar")}</button></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
+      const pricePicker = records.length ? `<label class="menu-price-picker"><span>${weightPickerLabel(records, quote)}</span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(displayPriceLabel(record.label))}</option>`).join("")}</select></label>${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button class="public-button" data-add-selected="${item.id}">${quote ? "Solicitar análise" : ((item.option_groups || []).length ? "Personalizar" : "Adicionar")}</button></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
       const illustration = dinizIllustration(category, item), media = item.image_url
         ? `<div class="menu-item-media"><img class="menu-item-image" src="${clean(item.image_url)}" alt=""></div>`
         : illustration
@@ -219,7 +240,7 @@
     const action = event.target.closest("[data-cart-increase],[data-cart-decrease],[data-cart-remove]"); if (!action) return;
     const signature = action.dataset.cartIncrease || action.dataset.cartDecrease || action.dataset.cartRemove, entry = cart.get(signature); if (!entry) return;
     if (action.dataset.cartRemove) cart.delete(signature);
-    else if (action.dataset.cartIncrease && entry.quantity < entry.maximumQuantity) entry.quantity += 1;
+    else if (action.dataset.cartIncrease && entry.quantity < entry.maximumQuantity) entry.quantity = Math.min(entry.maximumQuantity, entry.quantity + 1);
     else if (action.dataset.cartDecrease && entry.quantity > entry.minimumQuantity) entry.quantity -= 1;
     pendingRequestId = null; updateCart();
   });

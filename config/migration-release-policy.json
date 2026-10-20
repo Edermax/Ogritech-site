@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-10-19",
+  "auditedAt": "2026-10-20",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -78,7 +78,8 @@
       "grant_billing_bridge_schema_usage",
       "billing_explicit_backend_rpcs",
       "billing_rejected_email_event",
-      "menu_billing_lifecycle_reliability"
+      "menu_billing_lifecycle_reliability",
+      "menu_visual_identity_assets"
     ],
     "remoteVersionAliases": {},
     "observedMigrationNames": [
@@ -157,7 +158,8 @@
       "grant_billing_bridge_schema_usage",
       "billing_explicit_backend_rpcs",
       "billing_rejected_email_event",
-      "menu_billing_lifecycle_reliability"
+      "menu_billing_lifecycle_reliability",
+      "menu_visual_identity_assets"
     ],
     "observationEvidence": "config/menu-environment-inventory.json"
   },
@@ -188,87 +190,91 @@
     "heldMigrations": [
       {
         "name": "platform_contact_leads",
-        "reason": "Captação comercial permanece desativada até a decisão de negócio e o go-live."
+        "reason": "Capta\u00c3\u00a7\u00c3\u00a3o comercial permanece desativada at\u00c3\u00a9 a decis\u00c3\u00a3o de neg\u00c3\u00b3cio e o go-live."
       },
       {
         "name": "deny_platform_contact_attempt_reads",
-        "reason": "Endurecimento pertence à mesma entrega comercial ainda não promovida."
+        "reason": "Endurecimento pertence \u00c3\u00a0 mesma entrega comercial ainda n\u00c3\u00a3o promovida."
       },
       {
         "name": "index_remaining_foreign_keys",
-        "reason": "Será promovida no mesmo lote validado para evitar divergência de pacote."
+        "reason": "Ser\u00c3\u00a1 promovida no mesmo lote validado para evitar diverg\u00c3\u00aancia de pacote."
       },
       {
         "name": "remove_legacy_rls_policies",
-        "reason": "Correção do drift legado será promovida somente após validação no staging e autorização do lote de produção."
+        "reason": "Corre\u00c3\u00a7\u00c3\u00a3o do drift legado ser\u00c3\u00a1 promovida somente ap\u00c3\u00b3s valida\u00c3\u00a7\u00c3\u00a3o no staging e autoriza\u00c3\u00a7\u00c3\u00a3o do lote de produ\u00c3\u00a7\u00c3\u00a3o."
       },
       {
         "name": "add_appointment_reassignment_offers",
-        "reason": "Substituição de profissional permanece retida até concluir aceite público, notificações e testes transacionais no staging."
+        "reason": "Substitui\u00c3\u00a7\u00c3\u00a3o de profissional permanece retida at\u00c3\u00a9 concluir aceite p\u00c3\u00bablico, notifica\u00c3\u00a7\u00c3\u00b5es e testes transacionais no staging."
       },
       {
         "name": "link_public_bookings_to_client_auth",
-        "reason": "Login por SMS e área do cliente permanecem retidos até configurar credenciais dos provedores e validar a jornada no staging."
+        "reason": "Login por SMS e \u00c3\u00a1rea do cliente permanecem retidos at\u00c3\u00a9 configurar credenciais dos provedores e validar a jornada no staging."
       },
       {
         "name": "harden_authenticated_booking_actions",
-        "reason": "Correção de cancelamento autenticado e confirmação de telefone validada no staging; acompanha lote de identidade ainda não autorizado para produção."
+        "reason": "Corre\u00c3\u00a7\u00c3\u00a3o de cancelamento autenticado e confirma\u00c3\u00a7\u00c3\u00a3o de telefone validada no staging; acompanha lote de identidade ainda n\u00c3\u00a3o autorizado para produ\u00c3\u00a7\u00c3\u00a3o."
       },
       {
         "name": "menu_assistant_foundation",
-        "reason": "Fundação determinística do assistente web permanece local até homologação de segurança, custo, precisão e autorização específica de staging e de qualquer modelo externo."
+        "reason": "Funda\u00c3\u00a7\u00c3\u00a3o determin\u00c3\u00adstica do assistente web permanece local at\u00c3\u00a9 homologa\u00c3\u00a7\u00c3\u00a3o de seguran\u00c3\u00a7a, custo, precis\u00c3\u00a3o e autoriza\u00c3\u00a7\u00c3\u00a3o espec\u00c3\u00adfica de staging e de qualquer modelo externo."
       },
       {
         "name": "menu_ai_staging_controls",
-        "reason": "Controles da homologação híbrida permanecem locais; segredo, função e tráfego de staging exigem autorização específica posterior."
+        "reason": "Controles da homologa\u00c3\u00a7\u00c3\u00a3o h\u00c3\u00adbrida permanecem locais; segredo, fun\u00c3\u00a7\u00c3\u00a3o e tr\u00c3\u00a1fego de staging exigem autoriza\u00c3\u00a7\u00c3\u00a3o espec\u00c3\u00adfica posterior."
       },
       {
         "name": "menu_ai_staging_inference",
-        "reason": "Telemetria da inferência permanece fora de produção até conclusão da janela sintética, revisão de custo e nova autorização."
+        "reason": "Telemetria da infer\u00c3\u00aancia permanece fora de produ\u00c3\u00a7\u00c3\u00a3o at\u00c3\u00a9 conclus\u00c3\u00a3o da janela sint\u00c3\u00a9tica, revis\u00c3\u00a3o de custo e nova autoriza\u00c3\u00a7\u00c3\u00a3o."
       },
       {
         "name": "fix_menu_ai_staging_telemetry_authorization",
-        "reason": "Correção da telemetria acompanha a inferência de staging e permanece retida até autorização específica de produção."
+        "reason": "Corre\u00c3\u00a7\u00c3\u00a3o da telemetria acompanha a infer\u00c3\u00aancia de staging e permanece retida at\u00c3\u00a9 autoriza\u00c3\u00a7\u00c3\u00a3o espec\u00c3\u00adfica de produ\u00c3\u00a7\u00c3\u00a3o."
       },
       {
         "name": "allow_menu_ai_service_private_schema",
-        "reason": "Permissão mínima do serviço para registrar telemetria permanece retida com a inferência até autorização específica de produção."
+        "reason": "Permiss\u00c3\u00a3o m\u00c3\u00adnima do servi\u00c3\u00a7o para registrar telemetria permanece retida com a infer\u00c3\u00aancia at\u00c3\u00a9 autoriza\u00c3\u00a7\u00c3\u00a3o espec\u00c3\u00adfica de produ\u00c3\u00a7\u00c3\u00a3o."
       },
       {
         "name": "diniz_sunday_hours_and_sweets_quantity",
-        "reason": "Ajustes específicos do piloto privado da Diniz Doces permanecem restritos ao staging e não devem alterar dados de produção."
+        "reason": "Ajustes espec\u00c3\u00adficos do piloto privado da Diniz Doces permanecem restritos ao staging e n\u00c3\u00a3o devem alterar dados de produ\u00c3\u00a7\u00c3\u00a3o."
       },
       {
         "name": "menu_private_pilot_metrics",
-        "reason": "Métricas agregadas da Fase 7K-B permanecem restritas ao staging durante o piloto privado; produção exige decisão pós-piloto."
+        "reason": "M\u00c3\u00a9tricas agregadas da Fase 7K-B permanecem restritas ao staging durante o piloto privado; produ\u00c3\u00a7\u00c3\u00a3o exige decis\u00c3\u00a3o p\u00c3\u00b3s-piloto."
       },
       {
         "name": "diniz_automatic_delivery_distance",
-        "reason": "Cálculo automático da entrega da Diniz precisa ser homologado com CEPs reais no staging antes de qualquer promoção para produção."
+        "reason": "C\u00c3\u00a1lculo autom\u00c3\u00a1tico da entrega da Diniz precisa ser homologado com CEPs reais no staging antes de qualquer promo\u00c3\u00a7\u00c3\u00a3o para produ\u00c3\u00a7\u00c3\u00a3o."
       },
       {
         "name": "restore_diniz_delivery_zones_after_geocode_validation",
-        "reason": "Reversão de segurança mantém as regras anteriores após a fonte gratuita falhar na validação da distância; produção não recebe o experimento."
+        "reason": "Revers\u00c3\u00a3o de seguran\u00c3\u00a7a mant\u00c3\u00a9m as regras anteriores ap\u00c3\u00b3s a fonte gratuita falhar na valida\u00c3\u00a7\u00c3\u00a3o da dist\u00c3\u00a2ncia; produ\u00c3\u00a7\u00c3\u00a3o n\u00c3\u00a3o recebe o experimento."
       },
       {
         "name": "enable_diniz_geoapify_delivery",
-        "reason": "Integração Geoapify e faixas automáticas permanecem restritas ao staging até homologar rotas reais da Diniz; produção exige autorização separada."
+        "reason": "Integra\u00c3\u00a7\u00c3\u00a3o Geoapify e faixas autom\u00c3\u00a1ticas permanecem restritas ao staging at\u00c3\u00a9 homologar rotas reais da Diniz; produ\u00c3\u00a7\u00c3\u00a3o exige autoriza\u00c3\u00a7\u00c3\u00a3o separada."
       },
       {
         "name": "menu_self_service_catalog_editor",
-        "reason": "Editor completo, upload de imagens e gravação atômica do catálogo permanecem retidos até validação do fluxo de rascunho e promoção controlada no staging."
+        "reason": "Editor completo, upload de imagens e grava\u00c3\u00a7\u00c3\u00a3o at\u00c3\u00b4mica do cat\u00c3\u00a1logo permanecem retidos at\u00c3\u00a9 valida\u00c3\u00a7\u00c3\u00a3o do fluxo de rascunho e promo\u00c3\u00a7\u00c3\u00a3o controlada no staging."
       },
       {
         "name": "menu_catalog_order_and_delivery_zones",
-        "reason": "Ordenação do catálogo e múltiplas regiões de entrega permanecem retidas até homologação transacional e visual no staging."
+        "reason": "Ordena\u00c3\u00a7\u00c3\u00a3o do cat\u00c3\u00a1logo e m\u00c3\u00baltiplas regi\u00c3\u00b5es de entrega permanecem retidas at\u00c3\u00a9 homologa\u00c3\u00a7\u00c3\u00a3o transacional e visual no staging."
       },
       {
         "name": "menu_catalog_draft_publication",
-        "reason": "Rascunho independente e promoção atômica do catálogo permanecem retidos até homologação concorrente com pedidos sintéticos no staging."
+        "reason": "Rascunho independente e promo\u00c3\u00a7\u00c3\u00a3o at\u00c3\u00b4mica do cat\u00c3\u00a1logo permanecem retidos at\u00c3\u00a9 homologa\u00c3\u00a7\u00c3\u00a3o concorrente com pedidos sint\u00c3\u00a9ticos no staging."
       },
       {
         "name": "menu_billing_lifecycle_reliability",
-        "reason": "Correções do ciclo de assinatura verificadas em transação isolada com rollback; ainda não promovidas. Exige revisão do lote, deploy coordenado das funções e homologação do provedor."
+        "reason": "Corre\u00c3\u00a7\u00c3\u00b5es do ciclo de assinatura verificadas em transa\u00c3\u00a7\u00c3\u00a3o isolada com rollback; ainda n\u00c3\u00a3o promovidas. Exige revis\u00c3\u00a3o do lote, deploy coordenado das fun\u00c3\u00a7\u00c3\u00b5es e homologa\u00c3\u00a7\u00c3\u00a3o do provedor."
+      },
+      {
+        "name": "menu_visual_identity_assets",
+        "reason": "Logo, capa, cores e publicacao isolada de identidade visual exigem validacao completa no staging antes de promover."
       }
     ],
     "observationEvidence": "config/menu-environment-inventory.json",
