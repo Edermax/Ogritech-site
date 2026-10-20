@@ -27,7 +27,8 @@
     "menu_self_service_catalog_editor",
     "menu_catalog_order_and_delivery_zones",
     "menu_catalog_draft_publication",
-    "menu_billing_lifecycle_reliability"
+    "menu_billing_lifecycle_reliability",
+    "menu_visual_identity_assets"
   ],
   "classifications": {
     "shared_hardening": [
@@ -47,7 +48,8 @@
       "menu_self_service_catalog_editor",
       "menu_catalog_order_and_delivery_zones",
       "menu_catalog_draft_publication",
-      "menu_billing_lifecycle_reliability"
+      "menu_billing_lifecycle_reliability",
+      "menu_visual_identity_assets"
     ],
     "ai_staging_disabled": [
       "menu_ai_staging_controls",

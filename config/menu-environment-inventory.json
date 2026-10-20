@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "observedAt": "2026-10-19",
+  "observedAt": "2026-10-20",
   "source": "Supabase MCP read-only, staging CLI migration deployment and GitHub Pages API",
   "frontend": {
     "commit": "1771d9c5d737682329e775b22d8e4ba171f7075e",
@@ -586,6 +586,10 @@
       {
         "version": "20261019154554",
         "name": "menu_billing_lifecycle_reliability"
+      },
+      {
+        "version": "20261020151727",
+        "name": "menu_visual_identity_assets"
       }
     ]
   },
