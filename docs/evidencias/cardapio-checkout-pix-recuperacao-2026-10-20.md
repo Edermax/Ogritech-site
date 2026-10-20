@@ -36,3 +36,13 @@ O simulador oficial foi enviado para o mesmo endpoint de staging com o ID da ord
 - Dry-run de produção atualizado: exatamente 23 migrations pendentes. Cópia isolada com alias histórico compatível e hash idêntico; nenhuma aplicação ou reparação de histórico em produção.
 
 Fontes oficiais: [teste Pix Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/integration-test/pix), [contrato de criação de order](https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-api/create-order/post) e [notificações Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/notifications).
+
+## Diagnóstico da origem do webhook — continuação
+
+Na conta principal, a página de credenciais confirmou o vendedor fictício 3778177682. Os logs do staging no intervalo 21:15–22:00 UTC mostraram dois HTTP200 (reenvios administrativos) e um HTTP401 (simulador oficial), sem outro recebimento.
+
+A documentação oficial de [notificações com credenciais de teste](https://www.mercadopago.com.br/developers/pt/docs/mp-point/notifications) orienta acessar a conta fictícia para configurar seus webhooks. Após autenticar o vendedor de teste na mesma aba do Edge, a aplicação 2354123347267667 abriu e informou “Você ainda não configurou notificações”. Isso confirma que a configuração da conta principal não atendia essa aplicação fictícia.
+
+Foi preparado, sem salvar, o evento Order (Mercado Pago) com destino ao endpoint menu-sandbox-webhook do staging. A aba chama-se Modo de produção dentro da conta fictícia; não se trata da conta ou do Supabase de produção. Salvar criará a primeira assinatura secreta dessa aplicação. Confirmação específica solicitada para salvar/transmitir essa chave ao cofre do staging e executar um novo Pix fictício até 20h; nenhum novo Pix foi criado nesta continuação.
+
+Ferramenta local preparada restrita a pix_create/pix_status, vendedor/aplicação/fixture fixos e limite 23h UTC. Verificações locais: 401 sem autenticação, 410 após prazo ou em outro projeto, sem tocar banco ou provedor. A função publicada continua encerrada.
