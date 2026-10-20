@@ -283,12 +283,27 @@ Deno.serve(async (request) => {
     const sandbox = signup.product_code === "menu" && url === "https://fuesdztsvrkkgnbqhcxi.supabase.co";
     const mpToken = Deno.env.get(sandbox ? "MP_MENU_SANDBOX_ACCESS_TOKEN" : "MERCADO_PAGO_ACCESS_TOKEN") || "";
     if (!mpToken && (signup.provider_subscription_id || signup.provider_payment_id)) return reply({ error: { code: "billing_not_configured" } }, 503, origin);
-    if (mpToken && signup.provider_subscription_id) await fetch(`https://api.mercadopago.com/preapproval/${signup.provider_subscription_id}`, { method: "PUT", headers: { Authorization: `Bearer ${mpToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ status: "cancelled" }) });
-    if (mpToken && signup.provider_payment_id) await fetch(`https://api.mercadopago.com/v1/payments/${signup.provider_payment_id}`, { method: "PUT", headers: { Authorization: `Bearer ${mpToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ status: "cancelled" }) });
+    if (mpToken && signup.provider_subscription_id) {
+      const endpoint = `https://api.mercadopago.com/preapproval/${encodeURIComponent(signup.provider_subscription_id)}`;
+      const cancelled = await fetch(endpoint, { method: "PUT", headers: { Authorization: `Bearer ${mpToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ status: "cancelled" }) });
+      const confirmed = await fetch(endpoint, { headers: { Authorization: `Bearer ${mpToken}` } });
+      const subscription = await confirmed.json().catch(() => ({}));
+      if (!confirmed.ok || subscription.status !== "cancelled") {
+        console.error("cancel.provider", { status: cancelled.status, signup_id: signup.id });
+        return reply({ error: { code: "provider_cancellation_failed", provider_status: cancelled.status } }, 502, origin);
+      }
+    }
+    // An approved installment remains paid when future recurrence is cancelled.
+    if (mpToken && signup.provider_payment_id && !signup.provider_subscription_id && !["active", "cancel_at_period_end"].includes(signup.status)) {
+      const cancelled = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(signup.provider_payment_id)}`, { method: "PUT", headers: { Authorization: `Bearer ${mpToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ status: "cancelled" }) });
+      if (!cancelled.ok) return reply({ error: { code: "provider_cancellation_failed" } }, 502, origin);
+    }
     const accessUntil = signup.access_until || signup.trial_ends_at;
-    const nextStatus = signup.status === "active" && new Date(accessUntil) > new Date() ? "cancel_at_period_end" : "cancelled";
-    await admin.from("backend_billing_signups").update({ status: nextStatus, cancelled_at: new Date().toISOString(), cancel_reason: parsed.data.reason || null, access_until: accessUntil }).eq("id", signup.id);
-    await admin.rpc("backend_billing_enqueue_once", { target_signup_id: signup.id, target_event_type: "cancellation_requested", target_payload: { access_until: accessUntil } });
+    const nextStatus = ["active", "cancel_at_period_end"].includes(signup.status) && new Date(accessUntil) > new Date() ? "cancel_at_period_end" : "cancelled";
+    const persisted = await admin.from("backend_billing_signups").update({ status: nextStatus, cancelled_at: new Date().toISOString(), cancel_reason: parsed.data.reason || null, access_until: accessUntil }).eq("id", signup.id);
+    if (persisted.error) return reply({ error: { code: "cancellation_persistence_failed" } }, 500, origin);
+    const queued = await admin.rpc("backend_billing_enqueue_once", { target_signup_id: signup.id, target_event_type: "cancellation_requested", target_payload: { access_until: accessUntil } });
+    if (queued.error) return reply({ error: { code: "cancellation_notification_failed" } }, 500, origin);
     return reply({ data: { status: nextStatus, access_until: accessUntil } }, 200, origin);
   }
   return reply({ data: { status: signup.status, access_until: signup.access_until || signup.trial_ends_at } }, 200, origin);

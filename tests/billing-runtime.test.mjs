@@ -307,3 +307,42 @@ test("staging lifecycle keeps Cardápio sandbox and Agenda provider credentials 
   assert.equal(requests[0].authorization,"Bearer sandbox-token");assert.match(requests[0].body.notification_url,/menu-sandbox-webhook$/);
   assert.equal(requests[1].authorization,"Bearer fixture");assert.match(requests[1].body.notification_url,/mercado-pago-webhook$/);
 });
+
+test("recurring test-user live flag requires exact buyer and API-verified test seller",async()=>{
+ for(const [buyer,tags,expected] of [["3774414383",["test_user"],200],["other-buyer",["test_user"],500],["3774414383",[],500]]){
+  const db=webhookDb();
+  const handler=await loadHandler("mercado-pago-webhook",db,async url=>String(url).endsWith('/users/me')?Response.json({id:3778177682,tags}):Response.json({id:"AbC123",collector_id:3778177682,payer:{id:buyer},live_mode:true,status:"approved",transaction_amount:49.9,currency_id:"BRL",external_reference:`signup:${signup.id}`}),{SUPABASE_URL:"https://fuesdztsvrkkgnbqhcxi.supabase.co",MP_MENU_SANDBOX_ACCESS_TOKEN:"sandbox-token",MP_MENU_SANDBOX_WEBHOOK_SECRET:"sandbox-secret"});
+  assert.equal((await handler(signedNotice({path:"menu-sandbox-webhook",secret:"sandbox-secret"}))).status,expected);
+  assert.equal(db.calls,expected===200?1:0);
+ }
+});
+
+test("integrated QA expires at the newly authorized deadline",async()=>{
+ class ExpiredClock extends Date {static now(){return Date.parse('2026-10-20T04:31:00Z');}}
+ const handler=await loadHandler('menu-sandbox-qa',{},async()=>assert.fail('expired QA must not reach provider'),{SUPABASE_URL:'https://fuesdztsvrkkgnbqhcxi.supabase.co'},ExpiredClock);
+ const response=await handler(new Request('https://fixture.invalid/qa',{method:'POST',headers:{'x-qa-admin-key':'fixture'},body:JSON.stringify({action:'e2e_start'})}));
+ assert.equal(response.status,403);
+});
+
+function cancellationDb({status='active',persistFailure=false}={}){
+ const record={...signup,status,access_until:new Date(Date.now()+86400000).toISOString(),provider_subscription_id:'fixture-sub',provider_payment_id:'fixture-paid'};
+ const writes=[];
+ return {record,writes,from(){return {select(){return this;},eq(){return this;},async maybeSingle(){return {data:record};},update(value){return {eq:async()=>{writes.push(value);return {error:persistFailure?{code:'fixture_failure'}:null};}};}};},async rpc(){return {data:true,error:null};}};
+}
+
+test('cancellation cannot succeed locally when provider still authorizes recurrence',async()=>{
+ const db=cancellationDb();
+ const handler=await loadHandler('ogritech-billing',db,async(_url,options)=>Response.json(options.method==='PUT'?{error:'provider_failure'}:{status:'authorized'},{status:options.method==='PUT'?500:200}),{SUPABASE_URL:'https://fuesdztsvrkkgnbqhcxi.supabase.co',MP_MENU_SANDBOX_ACCESS_TOKEN:'sandbox-token'});
+ const response=await handler(new Request('https://fixture.invalid/billing',{method:'POST',headers:{'content-type':'application/json','x-management-token':'a'.repeat(64)},body:JSON.stringify({action:'cancel'})}));
+ assert.equal(response.status,502);assert.equal(db.writes.length,0);
+});
+
+test('cancellation retries retain the paid boundary and never cancel the approved installment',async()=>{
+ for(const [status,persistFailure,expected] of [['active',false,200],['cancel_at_period_end',false,200],['active',true,500]]){
+  const db=cancellationDb({status,persistFailure}),calls=[];
+  const handler=await loadHandler('ogritech-billing',db,async(url,options)=>{calls.push(String(url));assert.equal(options.headers.Authorization,'Bearer sandbox-token');return Response.json({status:'cancelled'});},{SUPABASE_URL:'https://fuesdztsvrkkgnbqhcxi.supabase.co',MP_MENU_SANDBOX_ACCESS_TOKEN:'sandbox-token'});
+  const response=await handler(new Request('https://fixture.invalid/billing',{method:'POST',headers:{'content-type':'application/json','x-management-token':'a'.repeat(64)},body:JSON.stringify({action:'cancel'})}));
+  assert.equal(response.status,expected);assert.equal(calls.length,2);assert.ok(calls.every(url=>url.includes('/preapproval/')));
+  assert.equal(db.writes[0].status,'cancel_at_period_end');assert.equal(db.writes[0].access_until,db.record.access_until);
+ }
+});

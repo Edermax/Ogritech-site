@@ -140,10 +140,10 @@
     "reexecuted": false
   },
   "billingHomologation": {
-    "status": "SANDBOX_PENDING_SUBSCRIPTIONS_CREATED_AND_CANCELLED_PAYMENT_AND_WEBHOOK_PENDING",
+    "status": "STAGING_MONTHLY_BACKEND_PASSED_HOSTED_UI_AND_AUTOMATIC_DELIVERY_PENDING",
     "databaseAssertions": 26,
-    "runtimeTests": 11,
-    "remoteMutationsPersisted": false,
-    "evidence": "docs/evidencias/cardapio-retomada-2026-10-19.md"
+    "runtimeTests": 27,
+    "remoteMutationsPersisted": true,
+    "evidence": "docs/evidencias/cardapio-pagamento-aprovado-2026-10-20.md"
   }
 }

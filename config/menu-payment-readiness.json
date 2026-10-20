@@ -42,7 +42,7 @@
     "sandboxSellerVerified": true,
     "sandboxSellerId": "3778177682",
     "missingSecretNames": [],
-    "sandboxWebhookCandidate": "DEPLOYED_STAGING_SIGNED_SIMULATION_PERSISTED_PAYMENT_PROCESSING_PENDING",
+    "sandboxWebhookCandidate": "DEPLOYED_STAGING_SIGNED_PAYMENT_PROCESSED",
     "cardScenarios": "APRO_AUTHORIZED_AND_CANCELLED_OTHE_REJECTED_CAPTURE_NOT_OBSERVED",
     "cardScenarioEvidence": {
       "apro": {
@@ -87,7 +87,7 @@
       "status": 400,
       "message": "User bad request"
     },
-    "temporaryQaFunction": "CLOSED_HTTP_410_VERSION_18",
+    "temporaryQaFunction": "CLOSED_HTTP_410_VERSION_25",
     "administrativeProbe": {
       "status": 200,
       "providerReached": true,
@@ -127,8 +127,8 @@
       "message": "Both cycles created, read back and cancelled with existing test buyer",
       "nextStep": "Validate card approval/rejection and signed webhook through staging product flow"
     },
-    "processedProviderEvents": 0,
-    "homologation": "NOT_COMPLETED",
+    "processedProviderEvents": 2,
+    "homologation": "MONTHLY_BACKEND_PAYMENT_ACCESS_REPLAY_CANCEL_PASSED_HOSTED_UI_AND_AUTOMATIC_DELIVERY_PENDING",
     "signedSimulation": {
       "eventId": "menu_sandbox:123456",
       "type": "payment",
@@ -138,12 +138,35 @@
       "httpStatus": 500
     },
     "billingHandlerDeployment": {
-      "ogritechBillingVersion": 14,
+      "ogritechBillingVersion": 15,
       "lifecycleVersion": 10,
       "monthlyQuoteHttpStatus": 200,
       "lifecycleWithoutSecretHttpStatus": 401
     },
-    "nextFinancialRun": "WAITING_RENEWED_AUTHORIZATION_UNTIL_2026_10_20_0130_BRT"
+    "nextFinancialRun": "COMPLETED_AND_CLOSED",
+    "integratedMonthlyRun": {
+      "subscriptionId": "5c4a6b47d3c3469080ddfa36cbcfdffb",
+      "paymentId": "185103950250",
+      "amountBrl": 49.9,
+      "status": "approved",
+      "collectorId": "3778177682",
+      "payerId": "3774414383",
+      "providerLiveMode": true,
+      "verifiedTestSeller": true,
+      "providerPanelDeliveryHttpStatus": 200,
+      "replayHttpStatuses": [
+        200,
+        200
+      ],
+      "paymentIntentCount": 1,
+      "accessUntil": "2026-11-20T02:29:23.242642Z",
+      "periodUnchangedAfterReplay": true,
+      "subscriptionCancelledVerified": true,
+      "localStatusAfterCancellation": "cancel_at_period_end",
+      "accessPreservedAfterCancellation": true,
+      "fixtureRetainedForAudit": true,
+      "automaticNotificationObserved": false
+    }
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
@@ -158,11 +181,12 @@
   },
   "isolatedValidation": {
     "databaseAssertions": 26,
-    "handlerTests": 23,
+    "handlerTests": 27,
     "status": "PASSED",
     "realPaymentCreated": false
   },
   "pending": [
+    "Confirm automatic provider delivery and hosted owner checkout; current approval used API test card and provider-panel delivery",
     "Publish the reviewed checkout candidate to an isolated staging product flow and validate actual card authorization and rejection",
     "Resolve legacy Payments API credential rejection before testing Pix or card payments",
     "Wire dedicated sandbox token consistently across staging billing handlers and webhook without changing Agenda credentials",

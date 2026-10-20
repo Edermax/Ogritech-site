@@ -63,7 +63,17 @@ Deno.serve(async (request) => {
       if (String(actualPayment.id) !== String(resource.payment.id)) throw new Error("invoice_payment_mismatch");
       resource.payment = actualPayment;
     }
-    if (sandbox && (String(resource.collector_id ?? resource.payment?.collector_id) !== "3778177682" || resource.live_mode === true || resource.payment?.live_mode === true)) throw new Error("sandbox_resource_mismatch");
+    if (sandbox) {
+      if (String(resource.collector_id ?? resource.payment?.collector_id) !== "3778177682") throw new Error("sandbox_resource_mismatch");
+      // Recurring payments made by the confirmed test users can report live_mode=true.
+      // Admit that shape only for the exact test buyer and a token verified as the test seller.
+      if (resource.live_mode === true || resource.payment?.live_mode === true) {
+        if (String(resource.payment?.payer?.id ?? resource.payer?.id) !== "3774414383") throw new Error("sandbox_resource_mismatch");
+        const sellerResponse = await fetch("https://api.mercadopago.com/users/me", { headers: { Authorization: `Bearer ${accessToken}` } });
+        const seller = await sellerResponse.json().catch(() => ({}));
+        if (!sellerResponse.ok || String(seller.id) !== "3778177682" || !Array.isArray(seller.tags) || !seller.tags.includes("test_user")) throw new Error("sandbox_seller_not_test_user");
+      }
+    }
     const paymentId = String(resource.payment?.id || dataId);
     const reference = String(resource.external_reference || resource.metadata?.signup_id || "");
     const signupId = reference.match(/[0-9a-f]{8}-[0-9a-f-]{27,}/i)?.[0] || "";

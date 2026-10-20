@@ -99,3 +99,6 @@ MP_MENU_SANDBOX_WEBHOOK_SECRET salvo no cofre fuesdztsvrkkgnbqhcxi, confirmado p
 
 ### Handlers do PR 18 publicados no staging
 Em 19/10 as 23h22 BRT, publicados ogritech-billing v14 e billing-lifecycle v10 exclusivamente em fuesdztsvrkkgnbqhcxi. Cotacao mensal: HTTP 200, 4990 centavos; lifecycle sem segredo: HTTP 401. menu-sandbox-webhook permanece v1. Novo teste financeiro depende de renovacao explicita da janela anterior expirada as 22h30; nenhuma nova assinatura criada nesta etapa. CI do PR 18 aprovada nos jobs static e database.
+
+### Pagamento aprovado e cancelamento verificados
+Evidencia atual em [pagamento aprovado de 20/10](cardapio-pagamento-aprovado-2026-10-20.md): pagamento ficticio mensal aprovado, webhook assinado HTTP200, acesso liberado, reenvio sem duplicacao e cancelamento preservando periodo. Ferramenta encerrada HTTP410 v25. Checkout hospedado visual e entrega automatica ainda pendentes.
