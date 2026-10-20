@@ -30,6 +30,7 @@ Deno.serve(async (request) => {
     return new Response(`pix query failed:${pixDueError.code || "unknown"}`, { status: 500 });
   }
   for (const signup of pixDue || []) {
+    if (signup.product_code !== "menu") continue;
     const sandbox = signup.product_code === "menu" && url === "https://fuesdztsvrkkgnbqhcxi.supabase.co";
     const signupToken = sandbox ? Deno.env.get("MP_MENU_SANDBOX_ACCESS_TOKEN") || "" : mpToken;
     if (!signupToken || (sandbox && !Deno.env.get("MP_MENU_SANDBOX_WEBHOOK_SECRET"))) { failures++; continue; }
@@ -52,6 +53,7 @@ Deno.serve(async (request) => {
   const { data: expired, error: expiredError } = await admin.rpc("backend_billing_lifecycle_expired");
   if (expiredError) return new Response("expiry query failed", { status: 500 });
   for (const signup of expired || []) {
+    if (signup.product_code !== "menu") continue;
     const boundary = signup.access_until || signup.trial_ends_at;
     if (new Date(boundary) > now) continue;
     const cancelled = signup.status === "cancel_at_period_end";

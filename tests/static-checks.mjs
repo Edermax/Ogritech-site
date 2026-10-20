@@ -28,7 +28,7 @@ const manifest = JSON.parse(await readFile(new URL("../manifest.webmanifest", im
 if (manifest.display !== "standalone" || !manifest.start_url || !manifest.icons?.length) {
   throw new Error("Manifesto PWA incompleto");
 }
-for (const page of ["index.html", "cliente.html", "login.html"]) {
+for (const page of ["index.html", "login.html"]) {
   const html = await readFile(new URL(`../${page}`, import.meta.url), "utf8");
   if (!html.includes('rel="manifest"') || !/src="pwa\.js(?:\?[^\"]*)?"/.test(html)) {
     throw new Error(`${page}: integração PWA ausente`);

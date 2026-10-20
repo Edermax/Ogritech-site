@@ -62,18 +62,9 @@ test("demonstração oferece confeitaria, pizzaria e marmitaria em carrossel ace
   assert.match(styles, /@media\(max-width:900px\)\{\.hero\{grid-template-columns:minmax\(0,1fr\)\}\}/);
 });
 
-test("home encaminha a oferta do Cardápio para a landing dedicada", () => {
-  assert.match(home, /href="\/cardapio-digital\/"[\s\S]*Ogritech Cardápio/);
-  assert.match(home, /Ogritech Cardápio<\/span><b class="availability-badge">Disponível em breve<\/b>/);
-  assert.match(home, /Ogritech Agenda<\/span><b class="availability-badge">Em breve<\/b>/);
-  assert.doesNotMatch(home, /availability-badge is-available/);
-  assert.match(sitemap, /https:\/\/ogritech\.com\.br\/cardapio-digital\//);
-});
-
-test("home mantém Agenda indisponível e apresenta o plano do Cardápio com hierarquia", () => {
-  assert.doesNotMatch(home, /Quero transformar meu negócio/);
-  assert.doesNotMatch(home, /Testar grátis por 14 dias — R\$ 97\/mês/);
-  assert.doesNotMatch(home, /Conhecer a agenda online/);
-  assert.match(home, /class="solution-unavailable" role="status"/);
-  assert.match(home, /Plano Ogritech Cardápio[\s\S]*R\$ 49,90[\s\S]*14 dias grátis/);
+test("home apresenta diretamente o Cardápio sem catálogo multiproduto", () => {
+ assert.match(home, /Seu cardápio\./);
+ assert.match(home, /href="\/criar-cardapio\/"/);
+ assert.doesNotMatch(home, /Ogritech Agenda|Ogritech Páginas|Ogritech Orçamentos|availability-badge/);
+ assert.doesNotMatch(sitemap, /agenda-online/);
 });
