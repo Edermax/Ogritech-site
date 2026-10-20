@@ -10,7 +10,7 @@
     "testCredentials": "ACTIVATED_VERIFIED",
     "dashboardStage": "ETAPA_1_DE_5",
     "evidence": "Authenticated developer dashboard: Dados das credenciais de teste visible after user completed the activation form",
-    "testPaymentObserved": false,
+    "testPaymentObserved": true,
     "activationAuthorized": true,
     "termsAcceptance": "COMPLETED_BY_USER",
     "captchaObserved": true,
