@@ -12,6 +12,12 @@ const addMonths = (iso: string, months: number) => {
   return value.toISOString();
 };
 
+function menuPixOrderPayload(signup: {email:string;total_cents:number}, attempt:{external_reference:string}) {
+  const amount=(signup.total_cents/100).toFixed(2);
+  return {type:"online",processing_mode:"automatic",external_reference:attempt.external_reference,total_amount:amount,
+    payer:{email:signup.email},transactions:{payments:[{amount,payment_method:{id:"pix",type:"bank_transfer"},expiration_time:"PT72H"}]}};
+}
+
 Deno.serve(async (request) => {
   if (request.method !== "POST") return new Response("method not allowed", { status: 405 });
   const cronSecret = Deno.env.get("BILLING_CRON_SECRET") || "";
@@ -40,12 +46,21 @@ Deno.serve(async (request) => {
     if (attemptError) { failures++; continue; }
     if (!attempt) continue;
     const externalReference = attempt.external_reference, expiresAt = attempt.expires_at;
-    const response = await fetch("https://api.mercadopago.com/v1/payments", {
+    const useOrders = sandbox && Deno.env.get("MP_MENU_SANDBOX_PIX_ORDERS") === "true";
+    const response = await fetch(`https://api.mercadopago.com/v1/${useOrders ? "orders" : "payments"}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${signupToken}`, "Content-Type": "application/json", "X-Idempotency-Key": attempt.request_id },
-      body: JSON.stringify({ transaction_amount: signup.total_cents / 100, description: "Renovação Ogritech Cardápio", payment_method_id: "pix", payer: { email: signup.email }, external_reference: externalReference, date_of_expiration: expiresAt, notification_url: `${url}/functions/v1/${sandbox ? "menu-sandbox-webhook" : "mercado-pago-webhook"}`, metadata: { signup_id: signup.id } }),
+      body: JSON.stringify(useOrders ? menuPixOrderPayload(signup,attempt) : { transaction_amount: signup.total_cents / 100, description: "Renovação Ogritech Cardápio", payment_method_id: "pix", payer: { email: signup.email }, external_reference: externalReference, date_of_expiration: expiresAt, notification_url: `${url}/functions/v1/${sandbox ? "menu-sandbox-webhook" : "mercado-pago-webhook"}`, metadata: { signup_id: signup.id } }),
     });
-    const payment = await response.json().catch(() => ({}));
+    let payment = await response.json().catch(() => ({}));
+    if (useOrders) {
+      const order=payment, transaction=order.transactions?.payments?.[0];
+      if (!/^ORD[A-Z0-9]+$/.test(String(order.id||"")) || order.transactions?.payments?.length!==1
+        || order.country_code!=="BRA" || String(order.user_id)!=="3778177682" || order.live_mode===true || order.external_reference!==externalReference
+        || Number(order.total_amount)!==Number(transaction?.amount)) { failures++; continue; }
+      payment={id:order.id,payment_method_id:transaction?.payment_method?.id,status:transaction?.status==="action_required"?"pending":transaction?.status,
+        currency_id:"BRL",transaction_amount:Number(transaction?.amount),point_of_interaction:{transaction_data:{qr_code:transaction?.payment_method?.qr_code}}};
+    }
     const qrCode = payment.point_of_interaction?.transaction_data?.qr_code;
     const expiry = payment.date_of_expiration || expiresAt;
     if (!response.ok || !/^[a-zA-Z0-9_-]{1,128}$/.test(String(payment.id || ""))

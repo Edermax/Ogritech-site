@@ -28,3 +28,16 @@ Em 20/10, a página de credenciais de teste no Edge exigiu validação por telef
 Checkout visual no Mercado Pago, criação de Pix fictício e entrega espontânea do webhook ainda não foram concluídos nesta rodada. A autorização financeira anterior expirou; qualquer novo ensaio externo deve ter escopo e janela próprios. A ferramenta administrativa anterior permanece encerrada.
 
 Fontes oficiais consultadas: [Pix via Payments](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-payments/integration-configuration/integrate-pix), [compras de teste via Payments](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-payments/integration-test/make-test-purchase). A documentação de Pix define vencimento entre 30 minutos e 30 dias; a reserva usa 72 horas.
+
+
+## Caminho Orders preparado após acesso ao painel
+
+A validação telefônica foi aceita e o painel abriu as credenciais de teste. Apenas a família APP_USR foi conferida; nenhuma chave foi impressa ou exportada e o campo voltou a ficar mascarado.
+
+A documentação atual apresenta a Orders API como caminho de teste Pix com essa família de credencial. Foi preparado suporte opt-in `MP_MENU_SANDBOX_PIX_ORDERS=true`, exclusivamente no projeto de staging: criação em `/v1/orders`, valores decimais em string, chave UUID e QR normalizado pelo ID da order. Produção mantém a integração anterior e ignora notificações Orders.
+
+O webhook de teste passa a tratar o tópico order mediante assinatura válida, `live_mode=false`, vendedor fictício confirmado e verificado pela API, país BRA, uma única transação Pix e valor compatível com o cadastro. Só processed/accredited da order e da transação pode conceder acesso. O ID da order mantém a idempotência. Testes cobrem aprovação, repetição, notificação real, outro vendedor e valor divergente.
+
+Fontes: [teste Pix Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/integration-test/pix), [notificações Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/notifications). O cenário APRO de teste aprova automaticamente, sem transferência bancária real.
+
+Ferramenta administrativa temporária e fixtures preparadas em `private/menu-checkout-pix-qa.ts` e `private/menu-checkout-pix-fixtures.sql`, fora do versionamento e sem credenciais. Escopo fixo: uma order Pix fictícia de R$49,90 e uma assinatura mensal pending sem cartão, IDs internos específicos, autenticação administrativa, seller test_user e expiração em 20/10/2026 às 23h UTC (20h Brasília). Não publicadas enquanto se aguarda autorização do usuário. A ferramenta anterior continua encerrada.

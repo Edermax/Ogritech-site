@@ -37,7 +37,8 @@ Deno.serve(async (request) => {
   const expected = await hmac(`id:${dataId.toLowerCase()};request-id:${requestId};ts:${parts.ts};`, secret);
   if (!secureEqual(expected, parts.v1)) return new Response("invalid signature", { status: 401 });
   const topic = String(body?.type || body?.topic || "payment");
-  if (!["payment", "subscription_authorized_payment", "subscription_preapproval"].includes(topic)) return new Response("ignored", { status: 200 });
+  if (!["payment", "subscription_authorized_payment", "subscription_preapproval", "order"].includes(topic)) return new Response("ignored", { status: 200 });
+  if (topic === "order" && (!sandbox || Deno.env.get("MP_MENU_SANDBOX_PIX_ORDERS") !== "true")) return new Response("ignored", {status:200});
   const eventId = `${sandbox ? "menu_sandbox:" : ""}${String(body?.id || `${topic}:${dataId}:${parts.ts}`)}`;
   const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const eventInsert = await admin.from("platform_billing_events").insert({ provider: "mercado_pago", provider_event_id: eventId, event_type: topic, payload: body || {} });
@@ -51,10 +52,23 @@ Deno.serve(async (request) => {
     const isAuthorizedPayment = topic === "subscription_authorized_payment";
     const isSubscription = topic === "subscription_preapproval";
     const encodedId = encodeURIComponent(dataId);
-    const endpoint = isSubscription ? `https://api.mercadopago.com/preapproval/${encodedId}` : isAuthorizedPayment ? `https://api.mercadopago.com/authorized_payments/${encodedId}` : `https://api.mercadopago.com/v1/payments/${encodedId}`;
+    const endpoint = topic === "order" ? `https://api.mercadopago.com/v1/orders/${encodedId}` : isSubscription ? `https://api.mercadopago.com/preapproval/${encodedId}` : isAuthorizedPayment ? `https://api.mercadopago.com/authorized_payments/${encodedId}` : `https://api.mercadopago.com/v1/payments/${encodedId}`;
     const resourceResponse = await fetch(endpoint, { headers: { Authorization: `Bearer ${accessToken}` } });
     if (!resourceResponse.ok) throw new Error(`resource_${resourceResponse.status}`);
-    const resource = await resourceResponse.json();
+    let resource = await resourceResponse.json();
+    if (topic === "order") {
+      const payment=resource.transactions?.payments?.[0];
+      if (body?.live_mode !== false || resource.live_mode === true || String(resource.user_id)!=="3778177682"
+        || String(resource.id).toLowerCase()!==dataId.toLowerCase() || resource.country_code!=="BRA"
+        || resource.transactions?.payments?.length!==1 || payment?.payment_method?.id!=="pix"
+        || Number(resource.total_amount)!==Number(payment.amount)) throw new Error("sandbox_order_mismatch");
+      const sellerResponse=await fetch("https://api.mercadopago.com/users/me",{headers:{Authorization:`Bearer ${accessToken}`}});
+      const seller=await sellerResponse.json().catch(()=>({}));
+      if (!sellerResponse.ok || String(seller.id)!=="3778177682" || !seller.tags?.includes("test_user")) throw new Error("sandbox_seller_not_test_user");
+      const orderPaid=resource.status==="processed" && resource.status_detail==="accredited" && payment.status==="processed" && payment.status_detail==="accredited";
+      resource={...resource,collector_id:resource.user_id,live_mode:false,transaction_amount:Number(payment.amount),currency_id:"BRL",
+        status:orderPaid?"approved":payment.status==="failed"?"rejected":payment.status==="canceled"?"cancelled":payment.status};
+    }
     if (isAuthorizedPayment) {
       if (!/^[a-z0-9_-]{1,128}$/i.test(String(resource.payment?.id || ""))) throw new Error("invoice_payment_missing");
       const actualResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(String(resource.payment.id))}`, { headers: { Authorization: `Bearer ${accessToken}` } });

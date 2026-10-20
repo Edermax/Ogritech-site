@@ -195,10 +195,10 @@ test("sandbox QA expires and cannot operate after its approved window",async()=>
   assert.equal(response.status,403);
 });
 
-function signedNotice({dataId="AbC123",bodyId=dataId,ts=String(Date.now()),secret="fixture-secret",path="webhook",type="payment"}={}) {
+function signedNotice({dataId="AbC123",bodyId=dataId,ts=String(Date.now()),secret="fixture-secret",path="webhook",type="payment",liveMode}={}) {
   const requestId="signed-fixture";
   const signature=createHmac("sha256",secret).update(`id:${dataId.toLowerCase()};request-id:${requestId};ts:${ts};`).digest("hex");
-  return new Request(`https://fixture.invalid/${path}?data.id=${encodeURIComponent(dataId)}`,{method:"POST",headers:{"content-type":"application/json","x-request-id":requestId,"x-signature":`ts=${ts},v1=${signature}`},body:JSON.stringify({id:"signed-event",type,data:{id:bodyId}})});
+  return new Request(`https://fixture.invalid/${path}?data.id=${encodeURIComponent(dataId)}`,{method:"POST",headers:{"content-type":"application/json","x-request-id":requestId,"x-signature":`ts=${ts},v1=${signature}`},body:JSON.stringify({id:"signed-event",type,data:{id:bodyId},...(liveMode===undefined?{}:{live_mode:liveMode})})});
 }
 
 test("webhook validates normalized query ID and rejects expired or conflicting signed notifications",async()=>{
@@ -406,4 +406,36 @@ test('Pix selection after expiry keeps past_due and the paid access boundary',as
  const response=await handler(new Request('https://fixture.invalid/billing',{method:'POST',headers:{authorization:'Bearer fixture'},body:JSON.stringify({action:'choose_payment',product:'menu',barbershop_id:signup.id,cycle:'monthly',payment_method:'pix',recurring_authorized:false})}));
  assert.equal(response.status,200);assert.equal(writes.find(row=>row.name==='backend_billing_choose_payment_update').args.payload.status,'past_due');
  assert.equal(writes.find(row=>row.table==='platform_subscriptions').value.next_billing_on,boundary.slice(0,10));
+});
+
+
+const orderFixture=()=>({id:'ORD01TESTPIX2026102000000001',user_id:'3778177682',country_code:'BRA',total_amount:'49.90',external_reference:`signup:${signup.id}:pix:fixture`,status:'processed',status_detail:'accredited',transactions:{payments:[{id:'PAY01TESTPIX2026102000000001',amount:'49.90',status:'processed',status_detail:'accredited',payment_method:{id:'pix',qr_code:'fixture-qr'}}]}});
+const ordersEnv={SUPABASE_URL:'https://fuesdztsvrkkgnbqhcxi.supabase.co',MP_MENU_SANDBOX_ACCESS_TOKEN:'sandbox-token',MP_MENU_SANDBOX_WEBHOOK_SECRET:'sandbox-secret',MP_MENU_SANDBOX_PIX_ORDERS:'true'};
+
+test('Orders Pix worker is opt-in and records the order ID with a stable amount',async()=>{
+ let sent,written;
+ const db={rpc:async(name,args)=>name.endsWith('pix_due')?{data:[signup]}:name.endsWith('prepare_pix')?{data:pixAttempt}:name.endsWith('expired')?{data:[]}:(written=args,{error:null})};
+ const handler=await loadHandler('billing-lifecycle',db,async(url,options)=>{
+  assert.equal(url,'https://api.mercadopago.com/v1/orders');sent=JSON.parse(options.body);
+  const order=orderFixture();order.status='action_required';order.transactions.payments[0].status='action_required';order.external_reference=pixAttempt.external_reference;return Response.json(order);
+ },ordersEnv);
+ const response=await handler(new Request('https://fixture.invalid/lifecycle',{method:'POST',headers:{'x-cron-secret':'fixture-cron'}}));
+ assert.equal(response.status,200);assert.equal(sent.total_amount,'49.90');assert.equal(sent.processing_mode,'automatic');assert.equal(sent.transactions.payments[0].expiration_time,'PT72H');
+ assert.equal(written.payload.provider_payment_id,orderFixture().id);assert.equal(written.payload.qr_code,'fixture-qr');
+});
+
+test('signed sandbox Pix order grants once using the order ID and verified test seller',async()=>{
+ const db=webhookDb(),rpc=db.rpc,applied=[];db.rpc=async(name,args)=>{if(name.endsWith('apply'))applied.push(args);return rpc(name,args);};
+ const handler=await loadHandler('mercado-pago-webhook',db,async url=>Response.json(String(url).endsWith('/users/me')?{id:'3778177682',tags:['test_user']}:orderFixture()),ordersEnv);
+ const request=()=>signedNotice({dataId:orderFixture().id,path:'menu-sandbox-webhook',type:'order',secret:'sandbox-secret',liveMode:false});
+ assert.equal((await handler(request())).status,200);assert.equal(applied[0].target_payment_id,orderFixture().id);assert.equal(applied[0].target_status,'approved');
+ assert.equal((await handler(request())).status,200);assert.equal(applied.length,1);
+});
+
+test('Orders sandbox rejects real notifications, wrong amounts and another seller',async()=>{
+ for(const scenario of ['live','amount','seller']){
+  const db=webhookDb();const order=orderFixture();if(scenario==='amount'){order.total_amount='50.00';order.transactions.payments[0].amount='50.00';}if(scenario==='seller')order.user_id='other';
+  const handler=await loadHandler('mercado-pago-webhook',db,async url=>Response.json(String(url).endsWith('/users/me')?{id:'3778177682',tags:['test_user']}:order),ordersEnv);
+  assert.equal((await handler(signedNotice({dataId:order.id,path:'menu-sandbox-webhook',type:'order',secret:'sandbox-secret',liveMode:scenario==='live'}))).status,500);assert.equal(db.calls,0);
+ }
 });
