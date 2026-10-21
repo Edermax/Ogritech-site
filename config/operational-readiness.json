@@ -1,17 +1,67 @@
 {
   "schemaVersion": 1,
   "roles": [
-    { "id": "pilot_owner", "label": "Dono do piloto", "owner": "", "backup": "", "coverage": "Dias úteis, 09:00–18:00 BRT" },
-    { "id": "agenda_operator", "label": "Operador principal", "owner": "", "backup": "", "coverage": "Dias úteis, 09:00–18:00 BRT" },
-    { "id": "technical_support", "label": "Suporte técnico", "owner": "", "backup": "", "coverage": "S1: acionamento imediato" },
-    { "id": "privacy_owner", "label": "Privacidade/LGPD", "owner": "", "backup": "", "coverage": "Dias úteis, 09:00–18:00 BRT" },
-    { "id": "finance_owner", "label": "Financeiro", "owner": "", "backup": "", "coverage": "Dias úteis, 09:00–18:00 BRT" }
+    {
+      "id": "pilot_owner",
+      "label": "Dono do piloto",
+      "owner": "",
+      "backup": "",
+      "coverage": "Dias úteis, 09:00–18:00 BRT"
+    },
+    {
+      "id": "agenda_operator",
+      "label": "Operador principal",
+      "owner": "",
+      "backup": "",
+      "coverage": "Dias úteis, 09:00–18:00 BRT"
+    },
+    {
+      "id": "technical_support",
+      "label": "Suporte técnico",
+      "owner": "Eder Ogrizio Silva",
+      "backup": "",
+      "coverage": "S1: acionamento imediato"
+    },
+    {
+      "id": "privacy_owner",
+      "label": "Privacidade/LGPD",
+      "owner": "",
+      "backup": "",
+      "coverage": "Dias úteis, 09:00–18:00 BRT"
+    },
+    {
+      "id": "finance_owner",
+      "label": "Financeiro",
+      "owner": "",
+      "backup": "",
+      "coverage": "Dias úteis, 09:00–18:00 BRT"
+    }
   ],
   "channels": [
-    { "address": "contato@ogritech.com.br", "purpose": "Captação e atendimento comercial", "status": "PENDING", "forwardTo": "" },
-    { "address": "suporte@ogritech.com.br", "purpose": "Suporte operacional e incidentes", "status": "PENDING", "forwardTo": "" },
-    { "address": "financeiro@ogritech.com.br", "purpose": "Cobrança e documentos fiscais", "status": "PENDING", "forwardTo": "" },
-    { "address": "privacidade@ogritech.com.br", "purpose": "Direitos dos titulares e LGPD", "status": "PENDING", "forwardTo": "" }
+    {
+      "address": "contato@ogritech.com.br",
+      "purpose": "Captação e atendimento comercial",
+      "status": "PENDING",
+      "forwardTo": ""
+    },
+    {
+      "address": "suporte@ogritech.com.br",
+      "purpose": "Suporte operacional e incidentes",
+      "status": "PENDING",
+      "forwardTo": ""
+    },
+    {
+      "address": "financeiro@ogritech.com.br",
+      "purpose": "Cobrança e documentos fiscais",
+      "status": "PENDING",
+      "forwardTo": ""
+    },
+    {
+      "address": "privacidade@ogritech.com.br",
+      "purpose": "Direitos dos titulares e LGPD",
+      "status": "PENDING",
+      "forwardTo": ""
+    }
   ],
   "legal": {
     "corporateDataCompleted": false,
@@ -23,10 +73,16 @@
   },
   "commercial": {
     "pricingScenariosPrepared": true,
-    "selectedScenario": "",
-    "billingMethod": "",
+    "selectedScenario": "menu_self_service_49_90_monthly_499_annual",
+    "billingMethod": "Cartão recorrente autorizado ou Pix por período, após o teste gratuito",
     "fiscalIssuanceDefined": false,
-    "pilotPolicyApproved": false
+    "pilotPolicyApproved": true,
+    "implementationFeeCents": 0,
+    "onboardingMode": "self_service_with_support_guidance",
+    "manualServicesPolicy": "separate_quote_and_explicit_customer_approval",
+    "fiscalOperatingMode": "manual_initially_pending_accounting_validation",
+    "policyApprovedAt": "2026-10-21",
+    "policySource": "Aceite do usuário: lets go, após proposta de implantação gratuita e serviços manuais sob orçamento."
   },
   "authorization": {
     "technicalApproved": false,
@@ -39,5 +95,14 @@
     "approvedByBusiness": "",
     "approvedAt": ""
   },
-  "deferredUntilLast": ["supabase_leaked_password_protection"]
+  "deferredUntilLast": [
+    "supabase_leaked_password_protection"
+  ],
+  "corporateIdentity": {
+    "taxDocument": "39531449000111",
+    "source": "Informado pelo responsável na conversa de 20/10/2026",
+    "legalName": "",
+    "officialRegistrationVerified": false,
+    "supportOwner": "Eder Ogrizio Silva"
+  }
 }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "product": "Ogritech Cardápio",
   "environment": "production",
-  "updatedAt": "2026-10-20",
+  "updatedAt": "2026-10-21",
   "releaseAuthorized": false,
   "gates": [
     {
@@ -13,9 +13,10 @@
         "termos.html",
         "privacidade.html",
         "docs/JURIDICO_HANDOFF_CHECKLIST.md",
-        "docs/evidencias/cardapio-retomada-2026-10-19.md"
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/CARDAPIO_POLITICA_COMERCIAL.md"
       ],
-      "remaining": "Preencher dados societários e obter aprovação formal de profissional jurídico."
+      "remaining": "CNPJ 39.531.449/0001-11 informado pelo responsável. Faltam comprovante cadastral atualizado, razão social oficial, endereço e revisão jurídica. Minuta 3.1 atualiza a política de implantação; versão/hash precisam ser alinhados ao backend na publicação."
     },
     {
       "id": "commercial_definition",
@@ -23,9 +24,10 @@
       "status": "BLOCKED_HUMAN",
       "evidence": [
         "config/operational-readiness.json",
-        "docs/evidencias/cardapio-retomada-2026-10-19.md"
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/CARDAPIO_POLITICA_COMERCIAL.md"
       ],
-      "remaining": "Oferta implementada confirmada: 14 dias gratuitos, R$ 49,90/mês ou R$ 499,00/ano. Ainda faltam registro formal das decisões de implantação, cobrança e emissão fiscal."
+      "remaining": "Política comercial aprovada em 21/10: implantação gratuita por autosserviço, orientação incluída, serviços manuais sob orçamento separado; 14 dias grátis, R$ 49,90/mês ou R$ 499/ano. Emissão manual inicial aprovada como modelo operacional; ainda faltam confirmar regime/CNAE, emissor, competência e prazos com a contabilidade."
     },
     {
       "id": "support_and_incidents",
@@ -34,9 +36,10 @@
       "evidence": [
         "docs/SLA_SUPORTE_ESCALONAMENTO.md",
         "docs/lgpd/PLANO_RESPOSTA_INCIDENTES.md",
-        "docs/evidencias/cardapio-retomada-2026-10-19.md"
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/CARDAPIO_POLITICA_COMERCIAL.md"
       ],
-      "remaining": "Nomear titulares e substitutos, testar canais e executar exercícios S1 e S2."
+      "remaining": "Eder Ogrizio Silva nomeado responsável pelo suporte. Faltam substituto, definição dos demais papéis, validação de cobertura/canais e exercícios S1 e S2."
     },
     {
       "id": "backup_restore",
@@ -187,5 +190,16 @@
     "productionActivated": false,
     "focusedTests": 15,
     "publicReadKeyConfigured": true
+  },
+  "commercialPolicyAcceptance": {
+    "approvedAt": "2026-10-21",
+    "implementationFeeCents": 0,
+    "supportGuidanceIncluded": true,
+    "manualServicesRequireSeparateQuote": true,
+    "manualFiscalOperationInitially": true,
+    "fiscalComplianceValidated": false,
+    "termsVersion": "3.1",
+    "termsSha256": "f2ec377a7b2886609488bc4208d9f6d69977bfac236d435df52707ddf900bcad",
+    "backendTermsSynchronizationPending": true
   }
 }
