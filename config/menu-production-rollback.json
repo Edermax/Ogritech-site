@@ -74,5 +74,20 @@
     "disposableDatabaseRemoved": true,
     "fixMerged": true,
     "fixPullRequest": "https://github.com/Edermax/Ogritech-site/pull/17"
+  },
+  "hostedRehearsal": {
+    "status": "SAME_VERSION_REDEPLOY_PASSED",
+    "sourceCommit": "1771d9c5d737682329e775b22d8e4ba171f7075e",
+    "workflowRun": "39289627446",
+    "runAttempt": 2,
+    "completedAt": "2026-10-21T00:54:15-03:00",
+    "verifiedAt": "2026-10-21T00:54:48-03:00",
+    "requiredFilesVerified": 6,
+    "cloudflareEmailTransformedFiles": 2,
+    "frontendRedeployed": true,
+    "applicationVersionChanged": false,
+    "databaseChangesPerformed": false,
+    "fullFunctionalProductionRehearsalRequired": true,
+    "evidence": "docs/evidencias/cardapio-republicacao-hospedagem-2026-10-21.md"
   }
 }

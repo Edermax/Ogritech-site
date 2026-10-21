@@ -7,6 +7,40 @@ import { createHash } from "node:crypto";
 
 const root = new URL("../", import.meta.url);
 
+export function undoCloudflareEmailProtection(html) {
+  const decode = (hex) => {
+    if (hex.length < 4 || hex.length % 2) throw new Error("Proteção de email inválida");
+    const bytes = Buffer.from(hex, "hex");
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(1).map((byte) => byte ^ bytes[0]));
+  };
+  // Reverse only the exact transformations observed on the live site. No
+  // generic whitespace, script, text, attribute or HTML normalization is allowed.
+  return html
+    .replace(/href="\/cdn-cgi\/l\/email-protection#([a-f0-9]+)"/g, (_match, value) => `href="mailto:${decode(value)}"`)
+    .replace(/<span class="__cf_email__" data-cfemail="([a-f0-9]+)">\[email&#160;protected\]<\/span>/g, (_match, value) => decode(value))
+    .replace(/<script data-cfasync="false" src="\/cdn-cgi\/scripts\/[a-f0-9]+\/cloudflare-static\/email-decode\.min\.js"><\/script>/g, "");
+}
+
+export async function verifyHostedRollback(ref, files, fetchImpl = fetch) {
+  if (!/^[a-f0-9]{40}$/.test(ref)) throw new Error("Verificação hospedada exige commit imutável");
+  const results = [];
+  const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
+  for (const file of files) {
+    if (!/^[a-zA-Z0-9_/-]+\.(html|js)$/.test(file) || file.split("/").includes("..")) throw new Error("Arquivo hospedado inválido");
+    const path = file.endsWith("index.html") ? file.slice(0, -"index.html".length) : file;
+    const response = await fetchImpl(`https://ogritech.com.br/${path}`, { redirect: "error", signal: AbortSignal.timeout(10000), headers: { "Cache-Control": "no-cache" } });
+    const received = Buffer.from(await response.arrayBuffer());
+    const expected = execFileSync("git", ["show", `${ref}:${file}`], { cwd: root, stdio: "pipe" });
+    const verified = file.endsWith(".html") ? Buffer.from(undoCloudflareEmailProtection(received.toString("utf8"))) : received;
+    results.push({ file, status: response.status, receivedSha256: sha256(received), expectedSha256: sha256(expected),
+      verifiedSha256: sha256(verified), matchesSnapshot: sha256(verified) === sha256(expected),
+      cloudflareEmailTransformation: !received.equals(verified),
+      headers: { contentType: response.headers.get("content-type"), hsts: response.headers.get("strict-transport-security"), nosniff: response.headers.get("x-content-type-options") } });
+  }
+  return { checkedAt: new Date().toISOString(), mode: "hosted_read_only", sourceCommit: ref, origin: "https://ogritech.com.br", files: results,
+    passed: results.length > 0 && results.every((item) => item.status === 200 && item.matchesSnapshot), remoteChangesPerformed: false };
+}
+
 export function evaluateRollbackContract(contract, repositoryFiles) {
   const failures = [];
   if (!/^[0-9a-f]{40}$/i.test(contract.rollbackTarget?.ref ?? "")) failures.push("rollback_ref_not_immutable");
@@ -79,13 +113,13 @@ export async function rehearseRollbackHttp(ref, files, readSource = (file) => ex
 
 async function main() {
   const args = process.argv.slice(2);
-  if (args.length && !(args.length === 1 && args[0] === "--http")) throw new Error("Uso: menu-production-rollback-rehearsal.mjs [--http]");
+  if (args.length && !(args.length === 1 && ["--http", "--hosted"].includes(args[0]))) throw new Error("Uso: menu-production-rollback-rehearsal.mjs [--http|--hosted]");
   const contract = JSON.parse(await readFile(new URL("config/menu-production-rollback.json", root), "utf8"));
   const files = inspectRollbackRef(contract.rollbackTarget.ref);
   const result = evaluateRollbackContract(contract, files);
   const report = {
     checkedAt: new Date().toISOString(),
-    mode: "local_read_only",
+    mode: args[0] === "--hosted" ? "hosted_read_only" : "local_read_only",
     rollbackRef: contract.rollbackTarget.ref,
     rollbackRefVerifiedAsCurrentProduction: contract.rollbackTarget.verifiedAsCurrentProduction,
     requiredFiles: contract.rollbackTarget.requiredFiles.length,
@@ -94,8 +128,12 @@ async function main() {
     remoteChangesPerformed: false
   };
   if (args[0] === "--http" && result.passed) report.httpRehearsal = await rehearseRollbackHttp(contract.rollbackTarget.ref, contract.rollbackTarget.requiredFiles);
+  if (args[0] === "--hosted" && result.passed) {
+    report.hostedVerification = await verifyHostedRollback(contract.rollbackTarget.ref, contract.rollbackTarget.requiredFiles);
+    if (!report.hostedVerification.passed) report.passed = false;
+  }
   console.log(JSON.stringify(report, null, 2));
-  if (!result.passed) process.exitCode = 1;
+  if (!report.passed) process.exitCode = 1;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
