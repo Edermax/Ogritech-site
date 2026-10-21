@@ -8,20 +8,20 @@
   "localReplay": {
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
-    "migrationCount": 77,
-    "testFiles": 19,
-    "assertions": 502,
-    "evidence": "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/39490732314",
-    "sourceCommit": "2bbf80d364fb88e20affb3c6e16d88297bb3a443"
+    "migrationCount": 78,
+    "testFiles": 20,
+    "assertions": 522,
+    "evidence": "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/39529232043",
+    "sourceCommit": "6c9ec456bb8b44d21e2966c6a0ddffd14e8c4cca"
   },
   "productionDryRun": {
     "status": "PASSED",
     "executedAt": "2026-10-20",
     "command": "supabase db push --workdir <isolated-alias-copy> --project-ref mvzcoaiiwytycdqcvydf --include-all --skip-vault --dry-run",
-    "migrationCount": 22,
+    "migrationCount": 23,
     "remoteChangesPerformed": false,
-    "evidence": "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
+    "evidence": "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md",
     "aliasCompatibility": "billing_rejected_email_event: 20261003025228 -> 20261003162614, identical file hash; no history repair"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
@@ -31,7 +31,8 @@
     "menu_catalog_order_and_delivery_zones",
     "menu_catalog_draft_publication",
     "menu_billing_lifecycle_reliability",
-    "menu_visual_identity_assets"
+    "menu_visual_identity_assets",
+    "menu_pix_expiry_recovery"
   ],
   "classifications": {
     "shared_hardening": [
@@ -52,7 +53,8 @@
       "menu_catalog_order_and_delivery_zones",
       "menu_catalog_draft_publication",
       "menu_billing_lifecycle_reliability",
-      "menu_visual_identity_assets"
+      "menu_visual_identity_assets",
+      "menu_pix_expiry_recovery"
     ],
     "ai_staging_disabled": [
       "menu_ai_staging_controls",
@@ -76,7 +78,7 @@
     "AI controls remain disabled and the kill switch remains active.",
     "A clean replay and the full database suite pass on the exact release commit.",
     "Production dry-run must list exactly the currently reviewed pending tail; historical counts do not authorize this release.",
-    "Fresh encrypted backup and Cardápio restore drill pass before db push.",
+    "Fresh encrypted backup and Card\u00e1pio restore drill pass before db push.",
     "Postgres 15.19/17.11 checks for ltree, btree_gist, legacy pgcrypto and custom operators are recorded.",
     "Security and performance advisors have no unaccepted critical finding.",
     "Technical and business owners explicitly authorize the release window."

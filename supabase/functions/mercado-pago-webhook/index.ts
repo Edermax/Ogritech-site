@@ -30,14 +30,24 @@ Deno.serve(async (request) => {
   if (!/^[a-z0-9_-]{1,128}$/i.test(dataId) || (queryId && bodyId != null && queryId.toLowerCase() !== String(bodyId).toLowerCase())) return new Response("invalid notification", { status: 400 });
   const requestId = request.headers.get("x-request-id") || "", signature = request.headers.get("x-signature") || "";
   const parts = Object.fromEntries(signature.split(",").map((part) => part.trim().split("=", 2)));
-  if (!dataId || !parts.ts || !parts.v1 || !requestId) return new Response("invalid notification", { status: 400 });
-  if (!/^\d{10}(?:\d{3})?$/.test(parts.ts) || !/^[a-f0-9]{64}$/i.test(parts.v1)) return new Response("invalid signature", { status: 401 });
+  const rejectSignature = (reason: string, message: string, status = 401) => {
+    if (sandbox) console.info(JSON.stringify({event:"menu_sandbox_webhook_rejected",reason,request_id:requestId||null,resource_id:dataId,id_source:queryId?"query":"body",timestamp_digits:parts.ts?.length||0}));
+    return new Response(message,{status});
+  };
+  if (!dataId || !parts.ts || !parts.v1 || !requestId) return rejectSignature("components_missing","invalid notification",400);
+  if (!/^\d{10}(?:\d{3})?$/.test(parts.ts) || !/^[a-f0-9]{64}$/i.test(parts.v1)) return rejectSignature("format_invalid","invalid signature");
   const timestampMs = Number(parts.ts) * (parts.ts.length === 10 ? 1000 : 1);
-  if (Math.abs(Date.now() - timestampMs) > 10 * 60_000) return new Response("expired signature", { status: 401 });
-  const expected = await hmac(`id:${dataId.toLowerCase()};request-id:${requestId};ts:${parts.ts};`, secret);
-  if (!secureEqual(expected, parts.v1)) return new Response("invalid signature", { status: 401 });
+  if (Math.abs(Date.now() - timestampMs) > 10 * 60_000) return rejectSignature("timestamp_outside_window","expired signature");
   const topic = String(body?.type || body?.topic || "payment");
-  if (!["payment", "subscription_authorized_payment", "subscription_preapproval"].includes(topic)) return new Response("ignored", { status: 200 });
+  // The SDK preserves raw IDs; older notification senders canonicalize alphanumeric IDs.
+  // Both manifests identify the same resource; each still requires a valid HMAC.
+  const signatureIds = sandbox && topic === "order" ? [...new Set([dataId, dataId.toLowerCase()])] : [dataId.toLowerCase()];
+  const expected = await Promise.all(signatureIds.map(id => hmac(`id:${id};request-id:${requestId};ts:${parts.ts};`, secret)));
+  const signatureMatches = expected.map(value => secureEqual(value, parts.v1));
+  if (sandbox && topic === "order") console.info(JSON.stringify({event:"menu_sandbox_webhook_signature",request_id:requestId,resource_id:dataId,matched:signatureMatches.some(Boolean),canonical_form:signatureMatches[0]?"raw":signatureMatches[1]?"lowercase":"none",id_source:queryId?"query":"body"}));
+  if (!signatureMatches.some(Boolean)) return rejectSignature("hmac_mismatch","invalid signature");
+  if (!["payment", "subscription_authorized_payment", "subscription_preapproval", "order"].includes(topic)) return new Response("ignored", { status: 200 });
+  if (topic === "order" && (!sandbox || Deno.env.get("MP_MENU_SANDBOX_PIX_ORDERS") !== "true")) return new Response("ignored", {status:200});
   const eventId = `${sandbox ? "menu_sandbox:" : ""}${String(body?.id || `${topic}:${dataId}:${parts.ts}`)}`;
   const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const eventInsert = await admin.from("platform_billing_events").insert({ provider: "mercado_pago", provider_event_id: eventId, event_type: topic, payload: body || {} });
@@ -51,10 +61,23 @@ Deno.serve(async (request) => {
     const isAuthorizedPayment = topic === "subscription_authorized_payment";
     const isSubscription = topic === "subscription_preapproval";
     const encodedId = encodeURIComponent(dataId);
-    const endpoint = isSubscription ? `https://api.mercadopago.com/preapproval/${encodedId}` : isAuthorizedPayment ? `https://api.mercadopago.com/authorized_payments/${encodedId}` : `https://api.mercadopago.com/v1/payments/${encodedId}`;
+    const endpoint = topic === "order" ? `https://api.mercadopago.com/v1/orders/${encodedId}` : isSubscription ? `https://api.mercadopago.com/preapproval/${encodedId}` : isAuthorizedPayment ? `https://api.mercadopago.com/authorized_payments/${encodedId}` : `https://api.mercadopago.com/v1/payments/${encodedId}`;
     const resourceResponse = await fetch(endpoint, { headers: { Authorization: `Bearer ${accessToken}` } });
     if (!resourceResponse.ok) throw new Error(`resource_${resourceResponse.status}`);
-    const resource = await resourceResponse.json();
+    let resource = await resourceResponse.json();
+    if (topic === "order") {
+      const payment=resource.transactions?.payments?.[0];
+      if (body?.live_mode !== false || resource.live_mode === true || String(resource.user_id)!=="3778177682"
+        || String(resource.id).toLowerCase()!==dataId.toLowerCase() || resource.country_code!=="BRA"
+        || resource.transactions?.payments?.length!==1 || payment?.payment_method?.id!=="pix"
+        || Number(resource.total_amount)!==Number(payment.amount)) throw new Error("sandbox_order_mismatch");
+      const sellerResponse=await fetch("https://api.mercadopago.com/users/me",{headers:{Authorization:`Bearer ${accessToken}`}});
+      const seller=await sellerResponse.json().catch(()=>({}));
+      if (!sellerResponse.ok || String(seller.id)!=="3778177682" || !seller.tags?.includes("test_user")) throw new Error("sandbox_seller_not_test_user");
+      const orderPaid=resource.status==="processed" && resource.status_detail==="accredited" && payment.status==="processed" && payment.status_detail==="accredited";
+      resource={...resource,collector_id:resource.user_id,live_mode:false,transaction_amount:Number(payment.amount),currency_id:"BRL",
+        status:orderPaid?"approved":payment.status==="failed"?"rejected":payment.status==="canceled"?"cancelled":payment.status};
+    }
     if (isAuthorizedPayment) {
       if (!/^[a-z0-9_-]{1,128}$/i.test(String(resource.payment?.id || ""))) throw new Error("invoice_payment_missing");
       const actualResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(String(resource.payment.id))}`, { headers: { Authorization: `Bearer ${accessToken}` } });

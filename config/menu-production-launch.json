@@ -64,9 +64,10 @@
         "docs/evidencias/cardapio-inventario-producao-readonly-2026-09-27.md",
         "docs/evidencias/cardapio-dry-run-producao-2026-09-27.md",
         "docs/evidencias/cardapio-retomada-2026-10-19.md",
-        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md"
+        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
+        "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md"
       ],
-      "remaining": "Staging: 77 migrations; producao: 55 aplicadas, 22 pendentes. Replay limpo de CI aprovado no commit 2bbf80d (19 suites, 502 assercoes). Dry-run de producao confirmou as 22 pendentes usando copia temporaria com alias remoto, sem reparar historico. Falta aprovar disposicao do lote e promover na janela de release."
+      "remaining": "Producao permanece com 55 migrations; candidato tem 23 pendentes. Staging tem 78 persistidas. Replay limpo passou com 522 assercoes em 20 arquivos e dry-run de producao listou as 23 pendentes, sem aplicar alteracoes. Promocao ainda depende dos gates e autorizacao de release."
     },
     {
       "id": "application_publication",
@@ -95,14 +96,15 @@
     {
       "id": "lifecycle_test",
       "label": "Exportação, despublicação e cancelamento aprovados",
-      "status": "PARTIAL",
+      "status": "APPROVED",
       "evidence": [
         "docs/evidencias/fase-7i-previa-privada-cardapio-2026-09-17.md",
         "scripts/subscription-center-ui-smoke.mjs",
         "docs/evidencias/cardapio-retomada-2026-10-19.md",
-        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md"
+        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
+        "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md"
       ],
-      "remaining": "Backend mensal ficticio aprovado no staging, incluindo acesso, reenvio idempotente e cancelamento. Ainda pendem checkout hospedado, entrega automatica espontanea de webhook e Pix. Nao reabrir jornadas dos itens 2 e 3 ja aceitas pelo usuario."
+      "remaining": ""
     },
     {
       "id": "production_monitor",
@@ -144,11 +146,18 @@
     "reexecuted": false
   },
   "billingHomologation": {
-    "status": "STAGING_MONTHLY_BACKEND_PASSED_HOSTED_UI_AND_AUTOMATIC_DELIVERY_PENDING",
-    "databaseAssertions": 26,
-    "runtimeTests": 27,
+    "status": "STAGING_PIX_HOSTED_CHECKOUT_AND_PROVIDER_DELIVERY_PASSED",
+    "databaseAssertions": 46,
+    "runtimeTests": 37,
     "remoteMutationsPersisted": true,
-    "evidence": "docs/evidencias/cardapio-pagamento-aprovado-2026-10-20.md"
+    "evidence": "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md",
+    "temporaryQaClosed": true,
+    "providerDeliveryConfirmed": true,
+    "automaticAccessGranted": true,
+    "administrativeReplayUsed": false,
+    "providerApplicationId": "2354123347267667",
+    "providerOrderId": "ORDTST01M5E1QWW0TK37090X1PCXHNCC",
+    "verifiedAt": "2026-10-20T22:55:46-03:00"
   },
   "legacyRetirementReview": {
     "observedAt": "2026-10-20",

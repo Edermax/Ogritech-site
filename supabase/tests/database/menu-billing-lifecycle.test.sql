@@ -56,8 +56,8 @@ select extensions.is((select discount_bps from private.billing_signups where id=
 select public.backend_billing_webhook_apply('bc300000-0000-4000-8000-000000000001','fixture-annual-1','approved',null);
 select extensions.ok((select access_until=now()+interval '12 months' from private.billing_signups where id='bc300000-0000-4000-8000-000000000001'),'annual payment grants exactly twelve calendar months');
 update private.billing_signups set access_until=now()+interval '1 day' where id='bc300000-0000-4000-8000-000000000001';
-select public.backend_billing_lifecycle_record_pix('bc300000-0000-4000-8000-000000000001','{"purpose":"renewal","amount_cents":49900,"provider_payment_id":"fixture-rejected","external_reference":"fixture-rejected-ref","expires_at":"2030-01-01T00:00:00Z","qr_code":"fixture"}');
-select public.backend_billing_lifecycle_record_pix('bc300000-0000-4000-8000-000000000001','{"purpose":"renewal","amount_cents":49900,"provider_payment_id":"fixture-rejected","external_reference":"fixture-rejected-ref","expires_at":"2030-01-01T00:00:00Z","qr_code":"fixture"}');
+select public.backend_billing_lifecycle_record_pix('bc300000-0000-4000-8000-000000000001',jsonb_build_object('purpose','renewal','amount_cents',49900,'provider_payment_id','fixture-rejected','external_reference','fixture-rejected-ref','expires_at',now()+interval '1 day','qr_code','fixture'));
+select public.backend_billing_lifecycle_record_pix('bc300000-0000-4000-8000-000000000001',jsonb_build_object('purpose','renewal','amount_cents',49900,'provider_payment_id','fixture-rejected','external_reference','fixture-rejected-ref','expires_at',now()+interval '1 day','qr_code','fixture'));
 select extensions.is((select count(*) from private.billing_payment_intents where provider_payment_id='fixture-rejected'),1::bigint,'Pix persistence is idempotent');
 select public.backend_billing_webhook_apply('bc300000-0000-4000-8000-000000000001','fixture-rejected','rejected',null);
 select extensions.ok((select payment_requested_at is null and status='active' from private.billing_signups where id='bc300000-0000-4000-8000-000000000001'),'rejection permits retry and preserves paid access');

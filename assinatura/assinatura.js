@@ -18,6 +18,7 @@
         return data?.data ?? null;
     }
     function render(state) {
+        $("resumeCheckout").classList.add("hidden"); $("resumeCheckout").removeAttribute("href");
         $("billingForm").classList.add("hidden");
         $("backToMenu").classList.add("hidden");
         $("pixPanel").classList.add("hidden");
@@ -64,8 +65,18 @@
             $("billingSummary").textContent = "O período gratuito terminou. Regularize para reabrir o Cardápio automaticamente.";
             $("billingDeadline").textContent = `O acesso operacional foi encerrado em ${formatDate(deadline)}.`;
         }
-        const hasPix = ["trial_active", "payment_pending", "past_due"].includes(state.status) && Boolean(state.pix?.qr_code);
+        if (state.status === "payment_pending" && state.payment_method === "card" && state.checkout_url) {
+            try { const target = new URL(state.checkout_url);
+                if (target.protocol === "https:" && target.hostname === "www.mercadopago.com.br" && !target.username && !target.password && target.pathname.startsWith("/subscriptions/")) {
+                    $("resumeCheckout").href = target.href; $("resumeCheckout").classList.remove("hidden");
+                    $("billingSummary").textContent = "Continue no Mercado Pago para concluir a autorização do cartão. O acesso pago depende da confirmação do pagamento.";
+                }
+            } catch { /* Invalid provider URLs are never offered to the customer. */ }
+        }
+        const pixExpired = Boolean(state.pix?.expires_at) && (!Number.isFinite(Date.parse(state.pix.expires_at)) || Date.parse(state.pix.expires_at) <= Date.now());
+        const hasPix = state.payment_method === "pix" && ["trial_active", "payment_pending", "past_due"].includes(state.status) && Boolean(state.pix?.qr_code) && !pixExpired;
         $("pixPanel").classList.toggle("hidden", !hasPix);
+        if (pixExpired && state.payment_method === "pix" && ["trial_active", "payment_pending", "past_due"].includes(state.status)) $("billingSummary").textContent = "O Pix anterior venceu. Aguarde a atualização automática do código; o acesso pago só muda após confirmação.";
         if (hasPix) {
             $("pixCode").value = state.pix.qr_code;
             $("pixExpiration").textContent = state.pix.expires_at ? `Este código vence em ${formatDate(state.pix.expires_at)}.` : "";
@@ -76,7 +87,7 @@
             clearTimeout(pollTimer);
             const state = await invoke({ action: "billing_status", product: "menu", barbershop_id: barbershopId });
             render(state);
-            if (new URLSearchParams(location.search).get("pagamento") === "retorno" && state?.status === "payment_pending") {
+            if (state?.status === "payment_pending" && (state.payment_method === "pix" || new URLSearchParams(location.search).get("pagamento") === "retorno")) {
                 if (pollAttempts++ < 12) {
                     message("Aguardando a confirmação do Mercado Pago. Esta página será atualizada automaticamente.");
                     pollTimer = setTimeout(load, 5000);
@@ -84,6 +95,7 @@
             } else if (state?.status === "active") message("Pagamento confirmado. Seu acesso foi liberado.");
         } catch (error) { $("billingForm").classList.add("hidden"); message(error.message, true); }
     }
+    $("refreshBillingButton").addEventListener("click", async () => { $("refreshBillingButton").disabled = true; pollAttempts = 0; try { await load(); } finally { $("refreshBillingButton").disabled = false; } });
     $("paymentMethod").addEventListener("change", () => {
         const card = $("paymentMethod").value === "card";
         $("recurringLabel").classList.toggle("hidden", !card);
@@ -105,8 +117,7 @@
         finally { $("paymentButton").disabled = false; }
     });
     $("copyPixButton").addEventListener("click", async () => {
-        await navigator.clipboard.writeText($("pixCode").value);
-        message("Código Pix copiado.");
+        await navigator.clipboard.writeText($("pixCode").value).then(() => message("Código Pix copiado."), () => message("Não foi possível copiar. Selecione o código e copie manualmente.", true));
     });
     $("logoutButton").addEventListener("click", async () => { await supabaseClient.auth.signOut(); location.replace(environmentUrl("login/")); });
 
