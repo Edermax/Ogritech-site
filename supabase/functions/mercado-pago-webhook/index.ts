@@ -30,13 +30,22 @@ Deno.serve(async (request) => {
   if (!/^[a-z0-9_-]{1,128}$/i.test(dataId) || (queryId && bodyId != null && queryId.toLowerCase() !== String(bodyId).toLowerCase())) return new Response("invalid notification", { status: 400 });
   const requestId = request.headers.get("x-request-id") || "", signature = request.headers.get("x-signature") || "";
   const parts = Object.fromEntries(signature.split(",").map((part) => part.trim().split("=", 2)));
-  if (!dataId || !parts.ts || !parts.v1 || !requestId) return new Response("invalid notification", { status: 400 });
-  if (!/^\d{10}(?:\d{3})?$/.test(parts.ts) || !/^[a-f0-9]{64}$/i.test(parts.v1)) return new Response("invalid signature", { status: 401 });
+  const rejectSignature = (reason: string, message: string, status = 401) => {
+    if (sandbox) console.info(JSON.stringify({event:"menu_sandbox_webhook_rejected",reason,request_id:requestId||null,resource_id:dataId,id_source:queryId?"query":"body",timestamp_digits:parts.ts?.length||0}));
+    return new Response(message,{status});
+  };
+  if (!dataId || !parts.ts || !parts.v1 || !requestId) return rejectSignature("components_missing","invalid notification",400);
+  if (!/^\d{10}(?:\d{3})?$/.test(parts.ts) || !/^[a-f0-9]{64}$/i.test(parts.v1)) return rejectSignature("format_invalid","invalid signature");
   const timestampMs = Number(parts.ts) * (parts.ts.length === 10 ? 1000 : 1);
-  if (Math.abs(Date.now() - timestampMs) > 10 * 60_000) return new Response("expired signature", { status: 401 });
-  const expected = await hmac(`id:${dataId.toLowerCase()};request-id:${requestId};ts:${parts.ts};`, secret);
-  if (!secureEqual(expected, parts.v1)) return new Response("invalid signature", { status: 401 });
+  if (Math.abs(Date.now() - timestampMs) > 10 * 60_000) return rejectSignature("timestamp_outside_window","expired signature");
   const topic = String(body?.type || body?.topic || "payment");
+  // The SDK preserves raw IDs; older notification senders canonicalize alphanumeric IDs.
+  // Both manifests identify the same resource; each still requires a valid HMAC.
+  const signatureIds = sandbox && topic === "order" ? [...new Set([dataId, dataId.toLowerCase()])] : [dataId.toLowerCase()];
+  const expected = await Promise.all(signatureIds.map(id => hmac(`id:${id};request-id:${requestId};ts:${parts.ts};`, secret)));
+  const signatureMatches = expected.map(value => secureEqual(value, parts.v1));
+  if (sandbox && topic === "order") console.info(JSON.stringify({event:"menu_sandbox_webhook_signature",request_id:requestId,resource_id:dataId,matched:signatureMatches.some(Boolean),canonical_form:signatureMatches[0]?"raw":signatureMatches[1]?"lowercase":"none",id_source:queryId?"query":"body"}));
+  if (!signatureMatches.some(Boolean)) return rejectSignature("hmac_mismatch","invalid signature");
   if (!["payment", "subscription_authorized_payment", "subscription_preapproval", "order"].includes(topic)) return new Response("ignored", { status: 200 });
   if (topic === "order" && (!sandbox || Deno.env.get("MP_MENU_SANDBOX_PIX_ORDERS") !== "true")) return new Response("ignored", {status:200});
   const eventId = `${sandbox ? "menu_sandbox:" : ""}${String(body?.id || `${topic}:${dataId}:${parts.ts}`)}`;

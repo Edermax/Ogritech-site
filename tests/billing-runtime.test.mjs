@@ -12,13 +12,15 @@ const signup = { id: "aabbccdd-1234-4000-8000-123456789012", product_code: "menu
   email: "fixture@example.invalid", status: "trial_active", trial_ends_at: new Date(Date.now()+3600000).toISOString(), access_until: null };
 
 // Execute the real Edge handler with only the database and provider replaced.
+const runtimeLogs=[];
+
 async function loadHandler(name, admin, fetchImpl, environment = {}, clock = Date) {
   let handler;
   const source = await readFile(new URL(`supabase/functions/${name}/index.ts`, root), "utf8");
   const code = stripTypeScriptTypes(source.replace(/^import .*;\r?\n/gm, ""));
   runInNewContext(code, {
     createClient: () => admin, z, fetch: fetchImpl, crypto: webcrypto, Request, Response, URL, URLSearchParams, Date: clock, TextEncoder, AbortSignal,
-    console: { error() {} },
+    console: { error() {}, info(value) { runtimeLogs.push(JSON.parse(value)); } },
     Deno: { env: { get: key => ({ SUPABASE_URL: "https://fixture.invalid", SUPABASE_SERVICE_ROLE_KEY: "fixture",
       MERCADO_PAGO_ACCESS_TOKEN: "fixture", MERCADO_PAGO_WEBHOOK_SECRET: "fixture-secret", BILLING_CRON_SECRET: "fixture-cron", ...environment })[key] }, serve: value => { handler = value; } }
   });
@@ -197,7 +199,7 @@ test("sandbox QA expires and cannot operate after its approved window",async()=>
 
 function signedNotice({dataId="AbC123",bodyId=dataId,ts=String(Date.now()),secret="fixture-secret",path="webhook",type="payment",liveMode}={}) {
   const requestId="signed-fixture";
-  const signature=createHmac("sha256",secret).update(`id:${dataId.toLowerCase()};request-id:${requestId};ts:${ts};`).digest("hex");
+  const signature=createHmac("sha256",secret).update(`id:${type==="order"?dataId:dataId.toLowerCase()};request-id:${requestId};ts:${ts};`).digest("hex");
   return new Request(`https://fixture.invalid/${path}?data.id=${encodeURIComponent(dataId)}`,{method:"POST",headers:{"content-type":"application/json","x-request-id":requestId,"x-signature":`ts=${ts},v1=${signature}`},body:JSON.stringify({id:"signed-event",type,data:{id:bodyId},...(liveMode===undefined?{}:{live_mode:liveMode})})});
 }
 
@@ -438,4 +440,26 @@ test('Orders sandbox rejects real notifications, wrong amounts and another selle
   const handler=await loadHandler('mercado-pago-webhook',db,async url=>Response.json(String(url).endsWith('/users/me')?{id:'3778177682',tags:['test_user']}:order),ordersEnv);
   assert.equal((await handler(signedNotice({dataId:order.id,path:'menu-sandbox-webhook',type:'order',secret:'sandbox-secret',liveMode:scenario==='live'}))).status,500);assert.equal(db.calls,0);
  }
+});
+
+
+test('Orders signature accepts raw and canonical IDs but rejects a different resource',async()=>{
+ const db=webhookDb(),order=orderFixture();
+ const handler=await loadHandler('mercado-pago-webhook',db,async url=>Response.json(String(url).endsWith('/users/me')?{id:'3778177682',tags:['test_user']}:order),ordersEnv);
+ const original=signedNotice({dataId:order.id,path:'menu-sandbox-webhook',type:'order',secret:'sandbox-secret',liveMode:false});
+ const wrongHeaders=new Headers(original.headers),requestId=wrongHeaders.get('x-request-id'),ts=wrongHeaders.get('x-signature').match(/ts=(\d+)/)[1];
+ const wrong=createHmac('sha256','sandbox-secret').update(`id:other-resource;request-id:${requestId};ts:${ts};`).digest('hex');
+ wrongHeaders.set('x-signature',`ts=${ts},v1=${wrong}`);
+ assert.equal((await handler(new Request(original.url,{method:'POST',headers:wrongHeaders,body:await original.clone().text()}))).status,401);
+ assert.equal(db.calls,0);
+ const canonicalHeaders=new Headers(original.headers);
+ const canonical=createHmac('sha256','sandbox-secret').update(`id:${order.id.toLowerCase()};request-id:${requestId};ts:${ts};`).digest('hex');
+ canonicalHeaders.set('x-signature',`ts=${ts},v1=${canonical}`);
+ assert.equal((await handler(new Request(original.url,{method:'POST',headers:canonicalHeaders,body:await original.clone().text()}))).status,200);
+ assert.equal((await handler(original)).status,200);
+ assert.equal(db.calls,1);
+ const logged=runtimeLogs.at(-1);
+ assert.deepEqual(Object.keys(logged).sort(),['canonical_form','event','id_source','matched','request_id','resource_id']);
+ assert.equal(logged.matched,true);assert.equal(logged.canonical_form,'raw');
+ assert.equal(JSON.stringify(logged).includes('sandbox-secret'),false);
 });
