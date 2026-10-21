@@ -1,12 +1,18 @@
 import { createHash } from "node:crypto";
+import { normalizeResult } from "./monitor-production.mjs";
 
 export function validateReport(report) {
   if (!report || !Array.isArray(report.failures) || report.failures.some((value) => typeof value !== "string")) {
     throw new Error("Relatório do monitor inválido");
   }
-  if (!report.failures.length && (!report.metrics ||
-    ![report.availability, report.billing_readiness, report.menu_backend].every((probe) => probe?.ok === true))) {
-    throw new Error("Recuperação exige todas as verificações saudáveis");
+  if (!report.failures.length) {
+    if (![report.availability, report.billing_readiness, report.menu_backend]
+      .every((probe) => probe?.ok === true && probe.status >= 200 && probe.status < 300)) {
+      throw new Error("Recuperação exige todas as verificações saudáveis");
+    }
+    try { normalizeResult({ result: [report.metrics] }); } catch {
+      throw new Error("Recuperação exige métricas completas");
+    }
   }
 }
 

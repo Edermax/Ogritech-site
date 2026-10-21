@@ -121,7 +121,7 @@
         "docs/CARDAPIO_MONITORAMENTO.md",
         "docs/evidencias/cardapio-monitoramento-funcional-2026-10-20.md"
       ],
-      "remaining": "Monitor funcional corrigido com sondas independentes de HTML, catálogo, contratação e telemetria. Testes locais aprovados; ensaio remoto de alerta/recuperação pendente. Produção sem cardápio publicado e trial_readiness HTTP 503: falta promoção do monitor, chave pública, URL válida e execução real saudável após lançamento coordenado."
+      "remaining": "Monitor funcional e ensaio remoto de abertura, repetição e recuperação aprovados (run 39533528327, issue 25 encerrada). Produção sem cardápio publicado e trial_readiness HTTP 503: falta promover o monitor, configurar a chave pública e URL válida e confirmar execução real saudável após lançamento coordenado."
     },
     {
       "id": "rollback_rehearsal",
@@ -172,5 +172,15 @@
     "legacyBillingSignups": 0,
     "providerReconciliationComplete": false,
     "evidence": "docs/evidencias/cardapio-preparacao-release-2026-10-20.md"
+  },
+  "monitoringHomologation": {
+    "status": "ISOLATED_ALERT_RECOVERY_PASSED",
+    "evidence": "docs/evidencias/cardapio-monitoramento-funcional-2026-10-20.md",
+    "workflowRun": "39533528327",
+    "drillIssue": 25,
+    "drillIssueClosed": true,
+    "productionInterrupted": false,
+    "productionActivated": false,
+    "focusedTests": 15
   }
 }

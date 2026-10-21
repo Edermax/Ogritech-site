@@ -46,9 +46,9 @@ jobs:
           MONITOR_OUTCOME: ${{ steps.monitor.outcome }}
         with:
           script: |
-            const { synchronizeIncident } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/monitor-incident.mjs`);
+            const { synchronizeIncident, validateReport } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/monitor-incident.mjs`);
             let report;
-            try { report = JSON.parse(process.env.REPORT); } catch {
+            try { report = JSON.parse(process.env.REPORT); validateReport(report); } catch {
               report = { failures: ["Monitor falhou antes de produzir o relatório; recuperação não confirmada"] };
             }
             if (process.env.MONITOR_OUTCOME !== "success" && !report.failures?.length) {

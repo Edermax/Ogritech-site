@@ -30,7 +30,8 @@ test("isolated drill opens, deduplicates and resolves its own issue while preser
 
 test("incomplete green reports cannot close any incident", async () => {
   const github = fakeGithub();
-  for (const report of [{}, { failures: [] }, { failures: [], metrics: {}, availability: { ok: true } }]) {
+  for (const report of [{}, { failures: [] }, { failures: [], metrics: {}, availability: { ok: true } },
+    { failures: [], metrics: {}, availability: { ok: true, status: 200 }, billing_readiness: { ok: true, status: 200 }, menu_backend: { ok: true, status: 200 } }]) {
     await assert.rejects(synchronizeIncident({ github, repo: {}, report, runUrl: "https://example.test" }), /inválido|Recuperação/);
   }
   assert.equal(github.issues[0].state, "open");

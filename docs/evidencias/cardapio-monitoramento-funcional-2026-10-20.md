@@ -17,9 +17,11 @@ O publicador de incidentes é compartilhado entre produção e ensaio, pagina as
 
 ## Validação
 
-- 14 testes focados do monitor e incidentes aprovados.
-- `npm run validate` aprovado: verificação estática, política de 78 migrations e 264 testes JavaScript.
-- Abertura e fechamento reais da issue de ensaio: aguardando execução do workflow candidato.
+- 15 testes focados do monitor e incidentes aprovados.
+- `npm run validate` aprovado: verificação estática, política de 78 migrations e 265 testes JavaScript.
+- Ensaio remoto aprovado: [execução 39533528327](https://github.com/Edermax/Ogritech-site/actions/runs/39533528327), com transições `opened → unchanged → resolved` na [issue 25](https://github.com/Edermax/Ogritech-site/issues/25).
+- A primeira execução identificou atraso de consistência na listagem por label do GitHub. O código passou a consultar diretamente os identificadores retornados ao criar os alertas, com teste específico dessa regressão. As duas issues sintéticas iniciais, 22 e 23, foram encerradas pela execução corretiva 39533469066. Nenhuma issue `monitor-drill` permaneceu aberta após o ensaio.
+- A validação remota executa também o replay completo e os testes do banco no Supabase local do CI; não aplica migrations a produção ou staging.
 
 ## Limite de conclusão
 
