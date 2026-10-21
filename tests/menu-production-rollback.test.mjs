@@ -2,9 +2,19 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { evaluateRollbackContract } from "../scripts/menu-production-rollback-rehearsal.mjs";
+import { evaluateRollbackContract, rehearseRollbackHttp } from "../scripts/menu-production-rollback-rehearsal.mjs";
 
 const root = new URL("../", import.meta.url);
+
+test("rollback serves exactly the immutable snapshot over isolated HTTP", async () => {
+  const result = await rehearseRollbackHttp("a".repeat(40), ["index.html", "pedido/pedido.js"], (file) => Buffer.from(`snapshot:${file}`));
+  assert.equal(result.files.length, 2);
+  assert.ok(result.files.every((file) => file.status === 200 && /^[a-f0-9]{64}$/.test(file.sha256)));
+  assert.equal(result.remoteChangesPerformed, false);
+  assert.equal(result.productionRehearsalRequired, true);
+  await assert.rejects(rehearseRollbackHttp("main", ["index.html"]), /imutável/);
+  await assert.rejects(rehearseRollbackHttp("a".repeat(40), ["../private/data.html"]), /inválidos/);
+});
 
 test("contrato de rollback bloqueia reversão destrutiva e preserva acompanhamento", async () => {
   const contract = JSON.parse(await readFile(new URL("config/menu-production-rollback.json", root), "utf8"));

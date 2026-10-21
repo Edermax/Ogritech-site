@@ -2,6 +2,18 @@
 
 Este runbook prepara a reversão do Cardápio sem autorizar publicação ou alteração remota. A fonte executável é `config/menu-production-rollback.json`; o ensaio local somente lê o histórico Git.
 
+## Ensaio isolado de 21/10/2026
+
+`node scripts/menu-production-rollback-rehearsal.mjs --http` serve os seis arquivos obrigatórios diretamente do commit imutável em um servidor temporário restrito a `127.0.0.1`. O ensaio compara os bytes recebidos por HTTP aos hashes do snapshot e fecha o servidor ao terminar. O CI armazena o relatório junto ao pacote de publicação. Ele não comprova o mecanismo da hospedagem, cabeçalhos remotos, assets completos nem execução de JavaScript no navegador.
+
+A suíte `supabase/tests/database/menu-cart-orders.test.sql` inclui um exercício transacional de fechamento: preserva um pedido fictício, tenta fechar como visitante, fecha como gestor, verifica recusa dos endpoints públicos legado/v2 e mantém o acompanhamento com token válido. Tokens inválidos continuam sem acesso. A transação é revertida e roda no Postgres descartável do CI; não envolve pagamentos ou clientes reais.
+
+## Como fechar entradas
+
+Usar a operação existente `public.set_menu_publication(target_barbershop_id, false)` com sessão autorizada de gestor do negócio afetado. A despublicação retira o catálogo público e bloqueia novas chamadas de criação nos dois endpoints; o acompanhamento usa `public.public_get_menu_order` com referência e token e não depende do estado de publicação. Registrar os negócios afetados no incidente e confirmar cada fechamento. Não apagar pedidos, revogar seus tokens nem desativar negócios ou assinaturas para simular esse fechamento.
+
+Pedidos já em processamento precisam de conciliação; a despublicação não representa cancelamento das transações iniciadas anteriormente. A reabertura é uma decisão posterior ao monitor e às validações, usando a operação normal de publicação e suas verificações de prontidão. Não reabrir por alteração direta de tabela para contornar essas verificações.
+
 ## Antes da janela
 
 1. Confirmar qual commit está efetivamente publicado e registrar seu hash de 40 caracteres como alvo de rollback.
