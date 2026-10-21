@@ -17,10 +17,13 @@ jobs:
         run: |
           mkdir -p outputs
           node scripts/menu-release-package.mjs > outputs/menu-release-package.json
+          node scripts/menu-production-rollback-rehearsal.mjs --http > outputs/menu-rollback-http.json
       - uses: actions/upload-artifact@v7
         with:
           name: menu-release-package-${{ github.sha }}
-          path: outputs/menu-release-package.json
+          path: |
+            outputs/menu-release-package.json
+            outputs/menu-rollback-http.json
           retention-days: 7
           if-no-files-found: error
   database:

@@ -1,6 +1,6 @@
 begin;
 set local search_path=public,extensions;
-select extensions.plan(21);
+select extensions.plan(29);
 
 select extensions.has_table('public','menu_delivery_zones','áreas de entrega existem');
 select extensions.has_table('public','menu_order_item_options','snapshot de adicionais existe');
@@ -56,6 +56,29 @@ select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-
 select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','delivery','{"text":"Rua Teste, 1","zone_code":"fora"}','', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[{"menu_option_id":"97000000-0000-4000-8000-000000000001","quantity":1}]}]',true,'98000000-0000-4000-8000-000000000003',null,'')$$,'22023','Área de entrega inválida','área não cadastrada é rejeitada');
 reset role;
 select extensions.is((select count(*) from public.menu_orders),1::bigint,'tentativas inválidas não deixam pedidos parciais');
+
+-- Rollback drill: use only this transaction's synthetic order. No production
+-- fixture, provider call or persistent publication change is involved.
+do $$ declare payload jsonb; begin
+  select response into strict payload from private.menu_order_idempotency
+    where client_request_id='98000000-0000-4000-8000-000000000001';
+  perform set_config('rollback_test.reference',payload->>'reference',true);
+  perform set_config('rollback_test.token',payload->>'token',true);
+end $$;
+set local role anon;
+select extensions.ok(public.public_get_menu_order(current_setting('rollback_test.reference'),current_setting('rollback_test.token')) is not null,'rollback: pedido existente pode ser acompanhado antes do fechamento');
+select extensions.throws_ok($$select public.set_menu_publication('91000000-0000-4000-8000-000000000001',false)$$,'42501',null,'rollback: visitante não pode fechar entradas');
+reset role;
+set local role authenticated;
+select extensions.lives_ok($$select public.set_menu_publication('91000000-0000-4000-8000-000000000001',false)$$,'rollback: gestor fecha novas entradas pela RPC existente');
+reset role;
+set local role anon;
+select extensions.throws_ok($$select public.public_menu('pedido-seguro')$$,'22023','Cardápio indisponível','rollback: catálogo deixa de aceitar acesso público');
+select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','pickup',null,'','[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1}]',true,'98000000-0000-4000-8000-000000000004',null,'')$$,'22023','Cardápio indisponível','rollback: endpoint v2 bloqueia novo pedido após fechamento');
+select extensions.throws_ok($$select public.public_create_menu_order('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','pickup',null,'','[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1}]',true,'')$$,'22023','Cardápio indisponível','rollback: endpoint legado também bloqueia novos pedidos');
+select extensions.ok(public.public_get_menu_order(current_setting('rollback_test.reference'),current_setting('rollback_test.token')) is not null,'rollback: acompanhamento existente permanece disponível após fechamento');
+select extensions.ok(public.public_get_menu_order(current_setting('rollback_test.reference'),'invalid-token') is null,'rollback: fechamento não enfraquece proteção do acompanhamento');
+reset role;
 
 select * from extensions.finish();
 rollback;

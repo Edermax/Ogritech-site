@@ -140,9 +140,11 @@
         "scripts/menu-production-rollback-rehearsal.mjs",
         "tests/menu-production-rollback.test.mjs",
         "docs/evidencias/cardapio-retomada-2026-10-19.md",
-        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md"
+        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
+        "supabase/tests/database/menu-cart-orders.test.sql",
+        "docs/evidencias/cardapio-rollback-isolado-2026-10-21.md"
       ],
-      "remaining": "Commit 1771d9c5d737682329e775b22d8e4ba171f7075e confirmado como publicado. Ensaio local somente leitura aprovado em 20/10; fechamento e republicacao remotos permanecem sem ensaio atual."
+      "remaining": "Snapshot imutável 1771d9c5d737682329e775b22d8e4ba171f7075e servido e verificado por HTTP local em 21/10. Exercício transacional de fechamento e acompanhamento incluído no CI isolado. Falta confirmar fechamento/republicação na hospedagem real e observação do monitor na janela autorizada."
     }
   ],
   "currentProduction": {

@@ -2,6 +2,8 @@ import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { createServer } from "node:http";
+import { createHash } from "node:crypto";
 
 const root = new URL("../", import.meta.url);
 
@@ -36,7 +38,48 @@ export function inspectRollbackRef(ref, command = execFileSync) {
   }).split(/\r?\n/).filter(Boolean);
 }
 
+export async function rehearseRollbackHttp(ref, files, readSource = (file) => execFileSync("git", ["show", `${ref}:${file}`], { cwd: root, stdio: "pipe" })) {
+  if (!/^[0-9a-f]{40}$/.test(ref)) throw new Error("Ensaio HTTP exige commit imutável");
+  if (!files.length || files.some((file) => !/^[a-zA-Z0-9_/-]+\.(html|js)$/.test(file) || file.split("/").includes(".."))) {
+    throw new Error("Arquivos inválidos para o ensaio HTTP");
+  }
+  const sources = new Map(files.map((file) => [`/${file}`, Buffer.from(readSource(file))]));
+  const sha256 = (value) => createHash("sha256").update(value).digest("hex");
+  const server = createServer((request, response) => {
+    if (request.method !== "GET") { response.writeHead(405).end(); return; }
+    const pathname = new URL(request.url, "http://127.0.0.1").pathname;
+    const path = pathname.endsWith("/") ? `${pathname}index.html` : pathname;
+    const source = sources.get(path);
+    if (!source) { response.writeHead(404).end(); return; }
+    response.writeHead(200, { "Content-Type": path.endsWith(".js") ? "application/javascript" : "text/html; charset=utf-8", "Cache-Control": "no-store" });
+    response.end(source);
+  });
+  const startedAt = Date.now();
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  try {
+    const origin = `http://127.0.0.1:${server.address().port}`;
+    const results = [];
+    for (const [path, source] of sources) {
+      const route = path.endsWith("/index.html") ? path.slice(0, -"index.html".length) : path;
+      const response = await fetch(`${origin}${route}`, { signal: AbortSignal.timeout(5000), redirect: "error" });
+      const body = Buffer.from(await response.arrayBuffer());
+      const digest = sha256(body);
+      if (response.status !== 200 || digest !== sha256(source)) throw new Error(`Conteúdo HTTP divergente: ${path}`);
+      results.push({ path: path.slice(1), status: response.status, sha256: digest });
+    }
+    return { mode: "isolated_loopback_http", sourceCommit: ref, files: results,
+      durationMs: Date.now() - startedAt, remoteChangesPerformed: false, productionRehearsalRequired: true };
+  } finally {
+    await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  }
+}
+
 async function main() {
+  const args = process.argv.slice(2);
+  if (args.length && !(args.length === 1 && args[0] === "--http")) throw new Error("Uso: menu-production-rollback-rehearsal.mjs [--http]");
   const contract = JSON.parse(await readFile(new URL("config/menu-production-rollback.json", root), "utf8"));
   const files = inspectRollbackRef(contract.rollbackTarget.ref);
   const result = evaluateRollbackContract(contract, files);
@@ -50,6 +93,7 @@ async function main() {
     failures: result.failures,
     remoteChangesPerformed: false
   };
+  if (args[0] === "--http" && result.passed) report.httpRehearsal = await rehearseRollbackHttp(contract.rollbackTarget.ref, contract.rollbackTarget.requiredFiles);
   console.log(JSON.stringify(report, null, 2));
   if (!result.passed) process.exitCode = 1;
 }
