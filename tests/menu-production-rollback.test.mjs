@@ -2,9 +2,23 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { evaluateRollbackContract, rehearseRollbackHttp } from "../scripts/menu-production-rollback-rehearsal.mjs";
+import { evaluateRollbackContract, rehearseRollbackHttp, undoCloudflareEmailProtection } from "../scripts/menu-production-rollback-rehearsal.mjs";
 
 const root = new URL("../", import.meta.url);
+
+test("hosted verification reverses only observed Cloudflare email protection", () => {
+  const encoded = (value) => {
+    const key = 7;
+    return Buffer.from([key, ...Buffer.from(value).map((byte) => byte ^ key)]).toString("hex");
+  };
+  const email = "suporte@example.invalid";
+  const original = `<a href="mailto:${email}">${email}</a><script src="app.js"></script>`;
+  const hosted = `<a href="/cdn-cgi/l/email-protection#${encoded(email)}"><span class="__cf_email__" data-cfemail="${encoded(email)}">[email&#160;protected]</span></a><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="app.js"></script>`;
+  assert.equal(undoCloudflareEmailProtection(hosted), original);
+  assert.notEqual(undoCloudflareEmailProtection(hosted.replace("app.js", "changed.js")), original);
+  assert.notEqual(undoCloudflareEmailProtection(`${hosted}<script src="injected.js"></script>`), original);
+  assert.throws(() => undoCloudflareEmailProtection('<a href="/cdn-cgi/l/email-protection#abc">x</a>'), /inválida/);
+});
 
 test("rollback serves exactly the immutable snapshot over isolated HTTP", async () => {
   const result = await rehearseRollbackHttp("a".repeat(40), ["index.html", "pedido/pedido.js"], (file) => Buffer.from(`snapshot:${file}`));

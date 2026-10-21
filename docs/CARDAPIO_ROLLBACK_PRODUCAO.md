@@ -8,6 +8,16 @@ Este runbook prepara a reversão do Cardápio sem autorizar publicação ou alte
 
 A suíte `supabase/tests/database/menu-cart-orders.test.sql` inclui um exercício transacional de fechamento: preserva um pedido fictício, tenta fechar como visitante, fecha como gestor, verifica recusa dos endpoints públicos legado/v2 e mantém o acompanhamento com token válido. Tokens inválidos continuam sem acesso. A transação é revertida e roda no Postgres descartável do CI; não envolve pagamentos ou clientes reais.
 
+## Republicação da mesma versão na hospedagem real
+
+Em 21/10/2026, a tentativa 2 da execução Pages `39289627446` republicou com sucesso o commit `1771d9c5d737682329e775b22d8e4ba171f7075e`, que já estava no ar. A execução original foi conferida como exclusiva de build, status e deploy do Pages; nenhuma rotina financeira ou de banco foi reexecutada. Foi usado `gh run rerun 39289627446 --repo Edermax/Ogritech-site`, mantendo o SHA original, em vez de solicitar um rebuild de uma referência móvel. Uma execução de outro tipo nunca deve ser reexecutada apenas por compartilhar esse commit.
+
+O comando `node scripts/menu-production-rollback-rehearsal.mjs --hosted` conferiu os seis arquivos por HTTPS antes e depois. A homepage e o painel recebem proteção de e-mails pelo Cloudflare: a verificação reverte apenas os links/spans e o script específico dessa transformação, preservando hashes brutos e hashes após a reversão. Quaisquer outras diferenças impedem aprovação. Os seis arquivos conferiram; HSTS e `nosniff` estavam presentes.
+
+A reexecução de uma execução antiga está disponível por até 30 dias após a execução inicial. Conferir essa elegibilidade antes de uma janela futura; depois do prazo, preparar um mecanismo de publicação com checkout explícito do SHA, sem recorrer a uma referência móvel como substituto.
+
+Esse exercício comprova republicação da mesma versão e leitura dos arquivos hospedados. Não constitui rollback entre duas versões diferentes, teste de pedidos reais nem recuperação funcional do backend. O gate permanece parcial até a validação coordenada com o monitor completo em produção. Ver evidência em `evidencias/cardapio-republicacao-hospedagem-2026-10-21.md`.
+
 ## Como fechar entradas
 
 Usar a operação existente `public.set_menu_publication(target_barbershop_id, false)` com sessão autorizada de gestor do negócio afetado. A despublicação retira o catálogo público e bloqueia novas chamadas de criação nos dois endpoints; o acompanhamento usa `public.public_get_menu_order` com referência e token e não depende do estado de publicação. Registrar os negócios afetados no incidente e confirmar cada fechamento. Não apagar pedidos, revogar seus tokens nem desativar negócios ou assinaturas para simular esse fechamento.

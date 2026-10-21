@@ -142,9 +142,10 @@
         "docs/evidencias/cardapio-retomada-2026-10-19.md",
         "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
         "supabase/tests/database/menu-cart-orders.test.sql",
-        "docs/evidencias/cardapio-rollback-isolado-2026-10-21.md"
+        "docs/evidencias/cardapio-rollback-isolado-2026-10-21.md",
+        "docs/evidencias/cardapio-republicacao-hospedagem-2026-10-21.md"
       ],
-      "remaining": "Snapshot imutável 1771d9c5d737682329e775b22d8e4ba171f7075e servido e verificado por HTTP local em 21/10. Exercício transacional de fechamento e acompanhamento incluído no CI isolado. Falta confirmar fechamento/republicação na hospedagem real e observação do monitor na janela autorizada."
+      "remaining": "Republicação real da mesma versão 1771d9c5 concluída em 21/10 (Pages run 39289627446, tentativa 2); seis arquivos conferidos por HTTPS antes/depois, com reversão estrita da proteção de emails do Cloudflare. Fechamento e acompanhamento aprovados no CI isolado. Falta exercício coordenado de recuperação funcional e monitor completo em produção; não houve rollback entre versões diferentes."
     }
   ],
   "currentProduction": {
