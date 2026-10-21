@@ -204,5 +204,12 @@
     "termsVersion": "3.1",
     "termsSha256": "f2ec377a7b2886609488bc4208d9f6d69977bfac236d435df52707ddf900bcad",
     "backendTermsSynchronizationPending": true
+  },
+  "technicalDeploymentAuthorization": {
+    "authorized": true,
+    "date": "2026-10-21",
+    "source": "Pedido explícito do usuário para publicar agora em ogritech.com.br",
+    "commercialLegalFiscalReviewCompleted": false,
+    "pendingGatesPreserved": true
   }
 }

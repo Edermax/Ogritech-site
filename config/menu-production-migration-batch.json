@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-20",
+  "updatedAt": "2026-10-21",
   "baseline": "move_profile_rls_helpers_private",
   "strategy": "contiguous_tail",
-  "authorized": false,
-  "decision": "BLOCKED_PENDING_REVIEW",
+  "authorized": true,
+  "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
@@ -78,7 +78,7 @@
     "AI controls remain disabled and the kill switch remains active.",
     "A clean replay and the full database suite pass on the exact release commit.",
     "Production dry-run must list exactly the currently reviewed pending tail; historical counts do not authorize this release.",
-    "Fresh encrypted backup and Card\u00e1pio restore drill pass before db push.",
+    "Fresh encrypted backup and Cardápio restore drill pass before db push.",
     "Postgres 15.19/17.11 checks for ltree, btree_gist, legacy pgcrypto and custom operators are recorded.",
     "Security and performance advisors have no unaccepted critical finding.",
     "Technical and business owners explicitly authorize the release window."
@@ -98,5 +98,6 @@
     "billing_service_role_bridge",
     "billing_explicit_backend_rpcs",
     "billing_rejected_email_event"
-  ]
+  ],
+  "authorizationSource": "Pedido explícito do responsável: quero essas atualizações no ar, faça agora. Autoriza promoção técnica de produção; não atesta validação fiscal ou jurídica."
 }
