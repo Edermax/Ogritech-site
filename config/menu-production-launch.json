@@ -77,9 +77,12 @@
         "supabase/functions",
         ".github/workflows/validate.yml",
         "docs/evidencias/cardapio-retomada-2026-10-19.md",
-        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md"
+        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
+        "config/menu-release-package.json",
+        "scripts/menu-release-package.mjs",
+        "docs/CARDAPIO_PACOTE_PUBLICACAO.md"
       ],
-      "remaining": "Pages confirmado no commit 1771d9c5d737682329e775b22d8e4ba171f7075e. PRs 18, 19 e 20 aprovados no CI e ainda em rascunho. Falta promocao coordenada de banco, funcoes e frontend; nao houve deploy nesta etapa."
+      "remaining": "Frontend de produção permanece em 1771d9c5d737682329e775b22d8e4ba171f7075e. Candidatos empilhados nos PRs 18, 19, 20, 21 e 24. Pacote imutável de publicação preparado, incluindo hashes, sete funções explícitas e exclusão de sandbox/IA externa. Falta promoção coordenada de banco, funções e frontend na janela autorizada."
     },
     {
       "id": "production_synthetic_test",
@@ -119,9 +122,10 @@
         "scripts/monitor-drill.mjs",
         "tests/monitor-incident.test.mjs",
         "docs/CARDAPIO_MONITORAMENTO.md",
-        "docs/evidencias/cardapio-monitoramento-funcional-2026-10-20.md"
+        "docs/evidencias/cardapio-monitoramento-funcional-2026-10-20.md",
+        "docs/CARDAPIO_PACOTE_PUBLICACAO.md"
       ],
-      "remaining": "Monitor funcional e ensaio remoto de abertura, repetição e recuperação aprovados (run 39533528327, issue 25 encerrada). Produção sem cardápio publicado e trial_readiness HTTP 503: falta promover o monitor, configurar a chave pública e URL válida e confirmar execução real saudável após lançamento coordenado."
+      "remaining": "Monitor funcional e ensaio remoto de abertura, repetição e recuperação aprovados (run 39533528327, issue 25 encerrada). Produção sem cardápio publicado e trial_readiness HTTP 503: falta promover o monitor, configurar URL válida e confirmar execução real saudável após lançamento coordenado. Chave pública de leitura já configurada no environment production do GitHub."
     },
     {
       "id": "rollback_rehearsal",
@@ -181,6 +185,7 @@
     "drillIssueClosed": true,
     "productionInterrupted": false,
     "productionActivated": false,
-    "focusedTests": 15
+    "focusedTests": 15,
+    "publicReadKeyConfigured": true
   }
 }
