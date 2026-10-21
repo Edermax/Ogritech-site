@@ -37,7 +37,8 @@
     "test": "node --test tests/*.test.mjs",
     "validate": "npm run check && npm run audit:migrations && npm test",
     "billing:preflight": "powershell -ExecutionPolicy Bypass -File scripts/deploy-ogritech-billing.ps1",
-    "validate:agenda-pilot": "npm run validate && npm run test:agenda-bot"
+    "validate:agenda-pilot": "npm run validate && npm run test:agenda-bot",
+    "prepare:menu-release": "node scripts/menu-release-package.mjs"
   },
   "engines": {
     "node": ">=22"

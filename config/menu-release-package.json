@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "productionProjectRef": "mvzcoaiiwytycdqcvydf",
+  "productionFunctions": [
+    "platform-users",
+    "assistant-email-dispatch",
+    "cep-lookup",
+    "ogritech-billing",
+    "mercado-pago-webhook",
+    "billing-lifecycle",
+    "billing-email-dispatch"
+  ],
+  "excludedFunctions": [
+    "menu-sandbox-qa",
+    "menu-sandbox-webhook",
+    "menu-ai-assistant"
+  ],
+  "requiredFrontendFiles": [
+    "index.html",
+    "cardapio/index.html",
+    "cardapio/cardapio.js",
+    "pedido/index.html",
+    "pedido/pedido.js",
+    "painel/index.html",
+    "supabase-config.js",
+    "sw.js"
+  ],
+  "orderedPhases": [
+    "resolve_business_and_legal_decisions",
+    "confirm_release_commit_and_ci",
+    "verify_fresh_backup_and_isolated_restore",
+    "verify_entry_closure_and_immutable_rollback",
+    "review_exact_migration_tail_and_aliases",
+    "apply_reviewed_database_batch",
+    "deploy_explicit_production_functions",
+    "verify_production_billing_configuration_without_exposing_secrets",
+    "publish_frontend_and_retire_legacy_access",
+    "configure_published_menu_monitor_target",
+    "verify_real_health_and_observe_monitor_window"
+  ]
+}
