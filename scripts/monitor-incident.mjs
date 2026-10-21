@@ -10,7 +10,7 @@ export function validateReport(report) {
   }
 }
 
-export async function synchronizeIncident({ github, repo, report, runUrl, drill = false }) {
+export async function synchronizeIncident({ github, repo, report, runUrl, drill = false, knownIssueNumbers = [] }) {
   validateReport(report);
   const label = drill ? "monitor-drill" : "production-monitor";
   const title = drill ? "[Monitor drill] Ensaio isolado do Cardápio" : "[Monitor] Alerta operacional de produção";
@@ -21,8 +21,16 @@ export async function synchronizeIncident({ github, repo, report, runUrl, drill 
     await github.rest.issues.createLabel({ ...repo, name: label, color: drill ? "5319e7" : "b60205",
       description: drill ? "Ensaio sintético; não representa falha de produção" : "Incidente detectado pelo monitor automático de produção" });
   }
-  const issues = await github.paginate(github.rest.issues.listForRepo, { ...repo, state: "open", labels: label, per_page: 100 });
-  const incidents = issues.filter((issue) => !issue.pull_request && issue.title === title);
+  const issues = await github.paginate(github.rest.issues.listForRepo, { ...repo, state: "open", labels: label, per_page: 100,
+    headers: { "cache-control": "no-cache" } });
+  // Label-filtered lists can lag behind a newly-created issue. Follow the
+  // returned identifiers directly during one execution, verifying their scope.
+  for (const issue_number of new Set(knownIssueNumbers)) {
+    const { data } = await github.rest.issues.get({ ...repo, issue_number });
+    if (!issues.some((issue) => issue.number === data.number)) issues.push(data);
+  }
+  const incidents = issues.filter((issue) => issue.state === "open" && !issue.pull_request && issue.title === title &&
+    issue.labels.some((item) => (typeof item === "string" ? item : item.name) === label));
   const fingerprint = createHash("sha256").update(JSON.stringify([...report.failures].sort())).digest("hex");
   const marker = `<!-- monitor-fingerprint:${fingerprint} -->`;
   const body = `${drill ? "ENSAIO SINTÉTICO. Nenhum serviço real foi interrompido.\n\n" : ""}${report.failures.length ? "Condição de alerta detectada." : "Condição normalizada; todas as verificações concluídas."}\n\n\`\`\`json\n${JSON.stringify(report, null, 2)}\n\`\`\`\n\nExecução: ${runUrl}\n${marker}`;

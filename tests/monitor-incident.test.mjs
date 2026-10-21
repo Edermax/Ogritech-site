@@ -8,6 +8,7 @@ function fakeGithub() {
   const comments = [];
   const api = {
     getLabel: async () => ({}),
+    get: async ({ issue_number }) => ({ data: issues.find((issue) => issue.number === issue_number) }),
     listForRepo: async ({ labels }) => ({ data: issues.filter((issue) => issue.state === "open" && issue.labels.includes(labels)) }),
     create: async (payload) => { const issue = { ...payload, number: issues.length + 1, state: "open" }; issues.push(issue); return { data: issue }; },
     update: async ({ issue_number, ...payload }) => Object.assign(issues.find((issue) => issue.number === issue_number), payload),
@@ -34,6 +35,16 @@ test("incomplete green reports cannot close any incident", async () => {
   }
   assert.equal(github.issues[0].state, "open");
   assert.equal(github.comments.length, 0);
+});
+
+test("drill follows returned issue identifiers even when the label list has not caught up", async () => {
+  const github = fakeGithub();
+  github.rest.issues.listForRepo = async () => ({ data: [] });
+  const result = await runMonitorDrill({ github, repo: {}, runUrl: "https://example.test/run" });
+  assert.deepEqual(result.transitions.map((step) => step.action), ["opened", "unchanged", "resolved"]);
+  assert.equal(github.issues.length, 2);
+  assert.equal(github.issues[0].state, "open");
+  assert.equal(github.issues[1].state, "closed");
 });
 
 test("changed faults update an incident once and repeated faults remain quiet", async () => {

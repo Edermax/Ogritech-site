@@ -24,21 +24,23 @@ export async function runMonitorDrill({ github, repo, runUrl }) {
   });
   assert.deepEqual((await collect()).failures, []);
   const transitions = [];
+  const knownIssueNumbers = [];
   try {
     backendDown = true;
     const failure = await collect();
     assert.equal(failure.availability.ok, true);
     assert.equal(failure.failures.length, 1);
     transitions.push(await synchronizeIncident({ github, repo, runUrl, drill: true, report: failure }));
+    knownIssueNumbers.push(transitions[0].issue);
     assert.ok(["opened", "updated", "unchanged"].includes(transitions[0].action));
-    const repeated = await synchronizeIncident({ github, repo, runUrl, drill: true, report: await collect() });
+    const repeated = await synchronizeIncident({ github, repo, runUrl, drill: true, knownIssueNumbers, report: await collect() });
     assert.equal(repeated.action, "unchanged");
     transitions.push(repeated);
   } finally {
     backendDown = false;
     const recovery = await collect();
     assert.deepEqual(recovery.failures, []);
-    transitions.push(await synchronizeIncident({ github, repo, runUrl, drill: true, report: recovery }));
+    transitions.push(await synchronizeIncident({ github, repo, runUrl, drill: true, knownIssueNumbers, report: recovery }));
   }
   assert.equal(transitions.at(-1).action, "resolved");
   return { synthetic: true, productionInterrupted: false, transitions };
