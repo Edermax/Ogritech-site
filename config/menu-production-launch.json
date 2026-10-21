@@ -114,9 +114,14 @@
         ".github/workflows/monitor-production.yml",
         "scripts/monitor-production.mjs",
         "tests/monitor-production.test.mjs",
-        "docs/evidencias/cardapio-retomada-2026-10-19.md"
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "scripts/monitor-incident.mjs",
+        "scripts/monitor-drill.mjs",
+        "tests/monitor-incident.test.mjs",
+        "docs/CARDAPIO_MONITORAMENTO.md",
+        "docs/evidencias/cardapio-monitoramento-funcional-2026-10-20.md"
       ],
-      "remaining": "Monitor executa sem incidente aberto, mas URL aponta para slug ausente e só verifica HTML. Checagem funcional do backend implementada e testada localmente; falta publicar e validar abertura/resolução do incidente."
+      "remaining": "Monitor funcional corrigido com sondas independentes de HTML, catálogo, contratação e telemetria. Testes locais aprovados; ensaio remoto de alerta/recuperação pendente. Produção sem cardápio publicado e trial_readiness HTTP 503: falta promoção do monitor, chave pública, URL válida e execução real saudável após lançamento coordenado."
     },
     {
       "id": "rollback_rehearsal",
