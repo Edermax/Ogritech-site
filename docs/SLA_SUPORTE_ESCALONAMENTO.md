@@ -9,6 +9,7 @@ Este documento organiza o atendimento durante o piloto assistido da Agenda Ogrit
 
 ## Cobertura inicial
 
+- Responsável pelo suporte técnico do Cardápio: **Eder Ogrizio Silva**, informado pelo responsável e registrado em 21/10/2026. Substituto e cobertura ainda pendentes; esta nomeação não ativa os prazos abaixo.
 - Janela proposta: dias úteis, das 09h às 18h, horário de Brasília.
 - Fora da janela, somente alertas S1 exigem acionamento imediato, desde que a escala tenha um responsável nominal confirmado.
 - A cobertura só entra em vigor quando dono do piloto, operador principal, suporte técnico e substituto estiverem preenchidos no runbook.

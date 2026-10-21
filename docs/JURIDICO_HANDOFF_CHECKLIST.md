@@ -4,6 +4,7 @@ Este documento organiza a revisão; não substitui parecer jurídico.
 
 ## Dados a preencher
 
+- CNPJ informado pelo responsável: **39.531.449/0001-11**. Aguardando comprovante cadastral atualizado para confirmar razão social, situação e endereço. Política comercial aprovada em `CARDAPIO_POLITICA_COMERCIAL.md`; validação fiscal e revisão jurídica continuam pendentes.
 - Razão social, nome fantasia, CNPJ, endereço e contatos da Ogritech.
 - Representante legal e poderes de assinatura.
 - Dados equivalentes do estabelecimento contratante.
