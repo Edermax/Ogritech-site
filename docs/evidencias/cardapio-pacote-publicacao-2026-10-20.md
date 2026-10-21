@@ -16,7 +16,7 @@ Variável pública `MENU_HEALTH_PUBLISHABLE_KEY` criada no environment productio
 
 ## Validação
 
-Seis testes específicos aprovados: inventário e hashes, bloqueio de funções de homologação, proteção contra projeto de staging, cauda incompleta de migrations, entrypoint ausente, autenticação omitida e leitura de snapshot imutável. Validação completa e execução do pacote no commit candidato serão confirmadas pelo CI do PR.
+Seis testes específicos aprovados: inventário e hashes, bloqueio de funções de homologação, proteção contra projeto de staging, cauda incompleta de migrations, entrypoint ausente, autenticação omitida e leitura de snapshot imutável. Validação local completa aprovada: 271 testes JavaScript, checagem estática e política de 78 migrations. O pacote foi gerado a partir do commit `1dba12db1b55b24eb847b5c52f27720b11744c54`: 23 migrations, sete funções e sete gates pendentes, `releaseAuthorized=false`, `applySupported=false`. O CI do PR também gera o artefato do candidato e valida o banco.
 
 ## Pendências preservadas
 
