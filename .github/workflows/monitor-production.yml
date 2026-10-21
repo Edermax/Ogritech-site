@@ -4,17 +4,24 @@ on:
   schedule:
     - cron: "*/15 * * * *"
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "Produção ou ensaio isolado sem serviços reais"
+        type: choice
+        options: [production, drill]
+        default: production
 
 permissions:
   contents: read
   issues: write
 
 concurrency:
-  group: monitor-production
-  cancel-in-progress: true
+  group: monitor-${{ inputs.mode || 'production' }}
+  cancel-in-progress: false
 
 jobs:
   observe:
+    if: ${{ inputs.mode != 'drill' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment: production
@@ -22,6 +29,7 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
       MENU_HEALTH_URL: ${{ vars.MENU_HEALTH_URL }}
+      MENU_HEALTH_PUBLISHABLE_KEY: ${{ vars.MENU_HEALTH_PUBLISHABLE_KEY }}
       MONITOR_WINDOW_MINUTES: "20"
     steps:
       - uses: actions/checkout@v5
@@ -38,40 +46,33 @@ jobs:
           MONITOR_OUTCOME: ${{ steps.monitor.outcome }}
         with:
           script: |
-            const title = "[Monitor] Alerta operacional de produção";
-            try {
-              await github.rest.issues.getLabel({ ...context.repo, name: "production-monitor" });
-            } catch (error) {
-              if (error.status !== 404) throw error;
-              await github.rest.issues.createLabel({
-                ...context.repo,
-                name: "production-monitor",
-                color: "b60205",
-                description: "Incidente detectado pelo monitor automático de produção"
-              });
+            const { synchronizeIncident, validateReport } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/monitor-incident.mjs`);
+            let report;
+            try { report = JSON.parse(process.env.REPORT); validateReport(report); } catch {
+              report = { failures: ["Monitor falhou antes de produzir o relatório; recuperação não confirmada"] };
             }
-            const { data: issues } = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: "open",
-              labels: "production-monitor",
-              per_page: 10
-            });
-            const incident = issues.find((issue) => issue.title === title);
-            const report = process.env.REPORT || "Monitor falhou antes de produzir o relatório.";
-            if (process.env.MONITOR_OUTCOME !== "success") {
-              const body = `O monitor detectou um limite excedido ou falha de coleta.\n\n\`\`\`json\n${report}\n\`\`\`\n\nExecução: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-              if (incident) {
-                await github.rest.issues.createComment({ ...context.repo, issue_number: incident.number, body });
-              } else {
-                await github.rest.issues.create({ ...context.repo, title, body, labels: ["production-monitor"] });
-              }
-              core.setFailed("O monitor de produção detectou uma condição de alerta.");
-            } else if (incident) {
-              await github.rest.issues.createComment({
-                ...context.repo,
-                issue_number: incident.number,
-                body: `Condição normalizada. Relatório: \`${report}\``
-              });
-              await github.rest.issues.update({ ...context.repo, issue_number: incident.number, state: "closed" });
+            if (process.env.MONITOR_OUTCOME !== "success" && !report.failures?.length) {
+              report.failures = ["Execução do monitor falhou; recuperação não confirmada"];
             }
+            await synchronizeIncident({ github, repo: context.repo, report,
+              runUrl: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}` });
+            if (report.failures.length) core.setFailed("O monitor de produção detectou uma condição de alerta.");
+
+  drill:
+    if: ${{ inputs.mode == 'drill' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22 }
+      - name: Exercise isolated alert and recovery
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { runMonitorDrill } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/monitor-drill.mjs`);
+            const result = await runMonitorDrill({ github, repo: context.repo,
+              runUrl: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}` });
+            core.info(JSON.stringify(result));
+            await core.summary.addHeading("Ensaio isolado do monitor do Cardápio")
+              .addCodeBlock(JSON.stringify(result, null, 2), "json").write();
