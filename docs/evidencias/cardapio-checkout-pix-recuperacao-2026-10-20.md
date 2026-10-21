@@ -2,6 +2,8 @@
 
 Continuação do PR20 no PR21. Produção não recebeu merge, migration, alteração de segredo ou deploy.
 
+**Resultado final em 20/10, Brasília:** Pix fictício aprovado, evento original entregue pelo Mercado Pago com HTTP200 e acesso público liberado automaticamente. Uma única intenção aprovada; fixture encerrada e ferramenta temporária desativada ao terminar. Checkout mensal já validado e cancelado.
+
 ## Entrega implementada
 
 - Retomada do checkout pendente pela tela autenticada: backend confere assinatura, referência e estado antes de retornar URL HTTPS oficial. A retomada não cria outra assinatura.
@@ -22,9 +24,9 @@ O usuário autorizou até 20h Brasília (23h UTC): um Pix APRO fictício de R$49
 5. Assinatura mensal `46c02524c5cd4be38eef557a8a33be45` criada pending, R$49,90, sem cartão. O checkout oficial abriu no Edge na tela “Como você prefere pagar?”, com a descrição da assinatura. Nenhum cartão foi informado. Cancelamento confirmado por GET no provedor.
 6. Fixtures encerradas, cardápio fictício despublicado e nenhuma mensagem fictícia pendente na outbox. Histórico financeiro mantido. Ferramenta `menu-sandbox-qa` substituída por resposta fixa HTTP410, mantendo JWT; acesso anônimo retorna HTTP401.
 
-## Limitação que permanece aberta
+## Limitação inicial — resolvida ao final desta evidência
 
-A entrega espontânea do webhook **não foi comprovada**. O recurso Orders informa application_id `2354123347267667`; o painel acessível é `6084226312562536` (Ogritech Assinaturas), onde Orders foi habilitado somente no modo de teste, preservando URL e assinatura existentes. A divergência é um indício para investigação, não uma causa conclusivamente comprovada. O painel do ID informado pela order retornou erro 5xx nesta conta.
+Na primeira rodada, a entrega espontânea do webhook ainda não havia sido comprovada. O recurso Orders informa application_id `2354123347267667`; o painel acessível é `6084226312562536` (Ogritech Assinaturas), onde Orders foi habilitado somente no modo de teste, preservando URL e assinatura existentes. A divergência é um indício para investigação, não uma causa conclusivamente comprovada. O painel do ID informado pela order retornou erro 5xx nesta conta.
 
 O simulador oficial foi enviado para o mesmo endpoint de staging com o ID da order existente. Ele produziu payload genérico de Point, live_mode=true e usuário principal; o endpoint recusou a autenticação (HTTP401). Nenhuma validação de segurança foi removida. Esse envio não conta como entrega espontânea nem como nova aprovação. Falta alinhar a origem das credenciais/notificações e observar uma notificação autêntica do provedor no fluxo de teste.
 
@@ -58,3 +60,17 @@ O usuário então autorizou até 23h30 de 20/10 (02:30 UTC de 21/10) somente um 
 O [SDK oficial](https://github.com/mercadopago/sdk-nodejs/blob/master/src/utils/webhook/index.ts) preserva o ID bruto ao montar HMAC. O staging passou a validar tanto o ID bruto quanto sua forma canônica em minúsculas para Orders, sem alterar o recurso identificado. Ambas exigem HMAC válido com a chave secreta; assinatura de outro recurso é recusada. Fluxo legado preservado. Diagnóstico estruturado somente no sandbox informa motivo, ID/correlação e forma canônica, sem chave, assinatura completa ou corpo do evento. Testes confirmam autenticação e ausência de segredo no log.
 
 Verificação atual: 258 testes JavaScript aprovados, incluindo 37 de runtime, além dos checks estáticos e da classificação das 78 migrations. Correção publicada somente como menu-sandbox-webhook. Nenhum reenvio administrativo foi usado nesta nova janela; aguardando repetição automática do evento existente.
+
+## Resultado final — entrega oficial e acesso confirmados
+
+Às 22:55:45 de 20/10 (01:55:45 UTC de 21/10), o webhook recebeu e autenticou o evento original de ORDTST01M5E1QWW0TK37090X1PCXHNCC. O log sanitizado informou matched=true, canonical_form=lowercase e id_source=query. Isso confirma a normalização efetivamente usada pelo emissor e a necessidade da compatibilidade corrigida.
+
+O banco registrou processamento às 22:55:46.494 Brasília, sem erro. O payload autenticado mantém date_created original de 22:38:22.500889197, aplicação 2354123347267667, live_mode=false, tipo online, valor 49.90 e referência da fixture e270. O histórico normal de Webhooks do Mercado Pago passou de “401 - Com erro” para **“200 - Entregue”** na linha do evento original, com filtro Teste/Últimos 7 dias. [Evidência visual](cardapio-webhook-entregue-2026-10-20.png).
+
+A tela do simulador foi preparada durante o diagnóstico, mas não apresentou resultado de simulação e não foi usada como prova de entrega espontânea. O resultado final é sustentado pelo histórico do evento original no provedor, seus metadados e o processamento no banco. Nenhum reenvio administrativo pela ferramenta QA foi executado nesta janela; ela só expunha criação e consulta de um Pix fixo.
+
+Antes do encerramento, a consulta pública anônima retornou o cardápio, o cadastro estava active e access_until era 20/11/2026 às 22:55:46.402438 Brasília. Contagem: uma intenção Pix, uma intenção aprovada e um único período concedido. A preservação do mesmo período foi conferida novamente após o encerramento; o teste de repetição idempotente permanece aprovado.
+
+Após a prova, a fixture foi cancelada, as assinaturas internas encerradas e o cardápio fictício despublicado. Nenhuma mensagem fictícia ficou pendente. Histórico preservado. A função temporária foi substituída por HTTP410 permanente mantendo JWT; confirmação administrativa 410 e anônima 401. Não foram criadas chaves adicionais na janela das 23h30 nem houve pagamento/cartão real.
+
+A [CI do commit da correção](https://github.com/Edermax/Ogritech-site/actions/runs/39529232043) aprovou 258 testes JavaScript e 522 verificações SQL em 20 arquivos, após replay das 78 migrations. A homologação descrita se limita ao staging; promoção e operação de produção continuam sujeitas aos demais gates.

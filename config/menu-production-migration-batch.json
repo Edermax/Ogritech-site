@@ -12,8 +12,8 @@
     "testFiles": 20,
     "assertions": 522,
     "evidence": "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/39498141640",
-    "sourceCommit": "b64ba45156bc4f968072c5b90db6a096c8ee881c"
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/39529232043",
+    "sourceCommit": "6c9ec456bb8b44d21e2966c6a0ddffd14e8c4cca"
   },
   "productionDryRun": {
     "status": "PASSED",

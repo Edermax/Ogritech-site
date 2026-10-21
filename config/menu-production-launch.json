@@ -96,7 +96,7 @@
     {
       "id": "lifecycle_test",
       "label": "Exportação, despublicação e cancelamento aprovados",
-      "status": "PARTIAL",
+      "status": "APPROVED",
       "evidence": [
         "docs/evidencias/fase-7i-previa-privada-cardapio-2026-09-17.md",
         "scripts/subscription-center-ui-smoke.mjs",
@@ -104,7 +104,7 @@
         "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
         "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md"
       ],
-      "remaining": "Checkout mensal ficticio aberto no Edge e assinatura cancelada. Pix Orders APRO de R$49,90 aprovado no staging; webhook assinado liberou acesso e reenvio preservou o periodo. Entrega espontanea ainda nao comprovada: application_id da order diverge do painel acessivel; simulador oficial foi recusado. Itens 2 e 3 permanecem aceitos."
+      "remaining": ""
     },
     {
       "id": "production_monitor",
@@ -146,12 +146,18 @@
     "reexecuted": false
   },
   "billingHomologation": {
-    "status": "STAGING_PIX_AND_HOSTED_CHECKOUT_PASSED_AUTOMATIC_DELIVERY_PENDING",
+    "status": "STAGING_PIX_HOSTED_CHECKOUT_AND_PROVIDER_DELIVERY_PASSED",
     "databaseAssertions": 46,
-    "runtimeTests": 36,
+    "runtimeTests": 37,
     "remoteMutationsPersisted": true,
     "evidence": "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md",
-    "temporaryQaClosed": true
+    "temporaryQaClosed": true,
+    "providerDeliveryConfirmed": true,
+    "automaticAccessGranted": true,
+    "administrativeReplayUsed": false,
+    "providerApplicationId": "2354123347267667",
+    "providerOrderId": "ORDTST01M5E1QWW0TK37090X1PCXHNCC",
+    "verifiedAt": "2026-10-20T22:55:46-03:00"
   },
   "legacyRetirementReview": {
     "observedAt": "2026-10-20",
