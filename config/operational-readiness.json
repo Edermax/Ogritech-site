@@ -100,9 +100,15 @@
   ],
   "corporateIdentity": {
     "taxDocument": "39531449000111",
-    "source": "Informado pelo responsável na conversa de 20/10/2026",
-    "legalName": "",
-    "officialRegistrationVerified": false,
+    "source": "Comprovante oficial da Receita Federal emitido em 21/10/2026 às 06:41:50 BRT, conferido na aba do Edge",
+    "legalName": "39.531.449 EDER OGRIZIO SILVA",
+    "officialRegistrationVerified": true,
+    "registrationStatus": "ATIVA",
+    "registrationVerifiedAt": "2026-10-21",
+    "primaryCnae": "8219-9/99",
+    "secondaryCnaes": ["4321-5/00", "4930-2/01", "5320-2/01"],
+    "taxRegimeVerified": false,
+    "softwareActivitySuitabilityValidated": false,
     "supportOwner": "Eder Ogrizio Silva"
   }
 }

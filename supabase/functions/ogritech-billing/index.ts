@@ -23,6 +23,7 @@ const StartBody = z.object({
   responsible_name: z.string().trim().min(2).max(150), tax_document: z.string().max(24),
   email: z.string().trim().toLowerCase().email().max(320), phone: z.string().max(24),
   segment: z.string().trim().min(2).max(80).default("Serviços"),
+  service_invoice_preference: z.enum(["requested", "not_requested", "not_informed"]).default("not_informed"),
   cycle: z.enum(["monthly", "quarterly", "semiannual", "annual"]),
   payment_method: z.enum(["card", "pix"]), terms_version: z.string().max(40),
   product: z.enum(["agenda", "menu"]).default("agenda"),
@@ -263,7 +264,7 @@ Deno.serve(async (request) => {
       const { data: shop, error: shopError } = await admin.from("barbershops").insert({ name: clean(input.business_name), segment: clean(input.segment), active: true }).select("id").single();
       if (shopError) throw shopError;
       const productName = input.product === "menu" ? "Cardápio" : "Agenda";
-      const { data: client, error: clientError } = await admin.from("saas_clients").insert({ name: clean(input.business_name), segment: clean(input.segment), contact_name: clean(input.responsible_name), owner_email: input.email, phone, origin: `Contratação self-service — ${productName}`, plan: productName, monthly_fee: cycle.base_monthly_cents / 100, status: "Ativo", invite_status: "Pendente", barbershop_id: shop.id }).select("id").single();
+      const { data: client, error: clientError } = await admin.from("saas_clients").insert({ name: clean(input.business_name), segment: clean(input.segment), contact_name: clean(input.responsible_name), owner_email: input.email, phone, origin: `Contratação self-service — ${productName}`, plan: productName, monthly_fee: cycle.base_monthly_cents / 100, status: "Ativo", invite_status: "Pendente", barbershop_id: shop.id, notes: input.service_invoice_preference === "requested" ? "Nota de serviço: solicitada pelo cliente. Emissão sujeita às obrigações fiscais aplicáveis." : input.service_invoice_preference === "not_requested" ? "Nota de serviço: cliente não solicitou no cadastro. Não constitui dispensa de emissão obrigatória." : "Nota de serviço: preferência não informada." }).select("id").single();
       if (clientError) { await admin.from("barbershops").delete().eq("id", shop.id); throw clientError; }
       await admin.rpc("backend_billing_signup_link", { target_signup_id: signupId, target_barbershop_id: shop.id, target_saas_client_id: client.id });
       await admin.rpc("backend_billing_accept_terms", { payload: { signup_id: signupId, terms_version: termsVersion, terms_sha256: termsHash, recurring_authorized: input.payment_method === "card", ip_address: ip || "", user_agent: (request.headers.get("user-agent") || "").slice(0, 500) } });

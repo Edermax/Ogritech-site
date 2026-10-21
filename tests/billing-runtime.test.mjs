@@ -463,3 +463,34 @@ test('Orders signature accepts raw and canonical IDs but rejects a different res
  assert.equal(logged.matched,true);assert.equal(logged.canonical_form,'raw');
  assert.equal(JSON.stringify(logged).includes('sandbox-secret'),false);
 });
+
+test("signup validates and persists the service invoice preference without changing the trial price", async () => {
+  for (const preference of ["requested", "not_requested", undefined]) {
+    let clientRecord;
+    const admin = {
+      rpc: async name => ({ data: name === "backend_billing_signup_create" ? signup.id : null, error: null }),
+      auth: { admin: { inviteUserByEmail: async () => ({ data: { user: { id: "fixture-owner" } }, error: null }) } },
+      from(table) {
+        const chain = {
+          insert(value) { if (table === "saas_clients") clientRecord = value; return chain; },
+          select() { return chain; }, eq() { return chain; }, update() { return chain; }, delete() { return chain; },
+          single: async () => ({ data: { id: "fixture-id" }, error: null }),
+          then(resolve, reject) { return Promise.resolve({ data: null, error: null }).then(resolve, reject); }
+        }; return chain;
+      }
+    };
+    const handler = await loadHandler("ogritech-billing", admin, async () => { throw Error("Unexpected provider payment"); }, {
+      BILLING_TERMS_VERSION: "fixture", BILLING_TERMS_SHA256: "a".repeat(64)
+    });
+    const body = { action: "start_trial", product: "menu", business_name: "Fixture", responsible_name: "Fixture",
+      tax_document: "11222333000181", email: "fixture@example.invalid", phone: "11999999999", segment: "Restaurante",
+      cycle: "monthly", payment_method: "pix", terms_version: "fixture", accepted_terms: true, accepted_privacy: true,
+      recurring_authorized: false, ...(preference === undefined ? {} : { service_invoice_preference: preference }) };
+    const response = await handler(new Request("https://fixture.invalid/billing", { method: "POST", body: JSON.stringify(body) }));
+    assert.equal(response.status, 201);
+    assert.equal(clientRecord.monthly_fee, 49.9);
+    assert.match(clientRecord.notes, preference === "requested" ? /solicitada pelo cliente/ : preference === "not_requested" ? /Não constitui dispensa/ : /não informada/);
+    const invalid = await handler(new Request("https://fixture.invalid/billing", { method: "POST", body: JSON.stringify({ ...body, service_invoice_preference: "skip_tax" }) }));
+    assert.equal(invalid.status, 422);
+  }
+});
