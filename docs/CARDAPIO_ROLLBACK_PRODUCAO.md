@@ -2,6 +2,28 @@
 
 Este runbook prepara a reversão do Cardápio sem autorizar publicação ou alteração remota. A fonte executável é `config/menu-production-rollback.json`; o ensaio local somente lê o histórico Git.
 
+## Ensaio isolado de 21/10/2026
+
+`node scripts/menu-production-rollback-rehearsal.mjs --http` serve os seis arquivos obrigatórios diretamente do commit imutável em um servidor temporário restrito a `127.0.0.1`. O ensaio compara os bytes recebidos por HTTP aos hashes do snapshot e fecha o servidor ao terminar. O CI armazena o relatório junto ao pacote de publicação. Ele não comprova o mecanismo da hospedagem, cabeçalhos remotos, assets completos nem execução de JavaScript no navegador.
+
+A suíte `supabase/tests/database/menu-cart-orders.test.sql` inclui um exercício transacional de fechamento: preserva um pedido fictício, tenta fechar como visitante, fecha como gestor, verifica recusa dos endpoints públicos legado/v2 e mantém o acompanhamento com token válido. Tokens inválidos continuam sem acesso. A transação é revertida e roda no Postgres descartável do CI; não envolve pagamentos ou clientes reais.
+
+## Republicação da mesma versão na hospedagem real
+
+Em 21/10/2026, a tentativa 2 da execução Pages `39289627446` republicou com sucesso o commit `1771d9c5d737682329e775b22d8e4ba171f7075e`, que já estava no ar. A execução original foi conferida como exclusiva de build, status e deploy do Pages; nenhuma rotina financeira ou de banco foi reexecutada. Foi usado `gh run rerun 39289627446 --repo Edermax/Ogritech-site`, mantendo o SHA original, em vez de solicitar um rebuild de uma referência móvel. Uma execução de outro tipo nunca deve ser reexecutada apenas por compartilhar esse commit.
+
+O comando `node scripts/menu-production-rollback-rehearsal.mjs --hosted` conferiu os seis arquivos por HTTPS antes e depois. A homepage e o painel recebem proteção de e-mails pelo Cloudflare: a verificação reverte apenas os links/spans e o script específico dessa transformação, preservando hashes brutos e hashes após a reversão. Quaisquer outras diferenças impedem aprovação. Os seis arquivos conferiram; HSTS e `nosniff` estavam presentes.
+
+A reexecução de uma execução antiga está disponível por até 30 dias após a execução inicial. Conferir essa elegibilidade antes de uma janela futura; depois do prazo, preparar um mecanismo de publicação com checkout explícito do SHA, sem recorrer a uma referência móvel como substituto.
+
+Esse exercício comprova republicação da mesma versão e leitura dos arquivos hospedados. Não constitui rollback entre duas versões diferentes, teste de pedidos reais nem recuperação funcional do backend. O gate permanece parcial até a validação coordenada com o monitor completo em produção. Ver evidência em `evidencias/cardapio-republicacao-hospedagem-2026-10-21.md`.
+
+## Como fechar entradas
+
+Usar a operação existente `public.set_menu_publication(target_barbershop_id, false)` com sessão autorizada de gestor do negócio afetado. A despublicação retira o catálogo público e bloqueia novas chamadas de criação nos dois endpoints; o acompanhamento usa `public.public_get_menu_order` com referência e token e não depende do estado de publicação. Registrar os negócios afetados no incidente e confirmar cada fechamento. Não apagar pedidos, revogar seus tokens nem desativar negócios ou assinaturas para simular esse fechamento.
+
+Pedidos já em processamento precisam de conciliação; a despublicação não representa cancelamento das transações iniciadas anteriormente. A reabertura é uma decisão posterior ao monitor e às validações, usando a operação normal de publicação e suas verificações de prontidão. Não reabrir por alteração direta de tabela para contornar essas verificações.
+
 ## Antes da janela
 
 1. Confirmar qual commit está efetivamente publicado e registrar seu hash de 40 caracteres como alvo de rollback.
@@ -10,7 +32,7 @@ Este runbook prepara a reversão do Cardápio sem autorizar publicação ou alte
 4. Confirmar quem pode declarar `NO-GO`, fechar entradas, republicar e autorizar restauração.
 5. Executar `npm run rehearse:menu-production-rollback` no commit da janela.
 
-O hash atualmente preparado é uma referência recuperável do repositório, mas ainda não está confirmado como a versão efetivamente servida em produção. Essa confirmação é um gate, não uma suposição.
+Em 19/10/2026, após a integração operacional do PR #17, a API GitHub Pages confirmou `1771d9c5d737682329e775b22d8e4ba171f7075e` como commit servido. Esse hash é o retorno preparado para a próxima janela; o ensaio local confirmou os seis arquivos necessários. Após corrigir as permissões, o backup `39288297613` e sua restauração `39288776485` passaram, com 252 testes de banco e limpeza completa. O contrato identifica o artefato criptografado autorizado. A integração não alterou o código do produto; não houve ensaio de fechamento e retorno remoto nesta rodada.
 
 ## Sequência do rollback
 

@@ -1,5 +1,9 @@
 # Plano de entrada em operação — estado consolidado
 
+## Estado vigente do Cardápio — 19/10/2026
+
+O conteúdo abaixo é o consolidado histórico da Agenda. Para o Cardápio, usar o inventário `config/menu-environment-inventory.json`, o contrato `config/menu-production-launch.json` e a [evidência mais recente de backup e credenciais](evidencias/cardapio-backup-restauracao-corrigida-2026-10-19.md). Conciliação concluída; jornadas do lojista e dos pedidos aceitas pelo usuário; correções da assinatura aprovadas em ensaio isolado, ainda não publicadas. Novo backup e restauração corrigidos aprovados em 252 testes. Credenciais de teste do Mercado Pago ativadas e verificadas; integração de pagamentos no staging ainda pendente. Nova liberação permanece bloqueada.
+
 Atualizado em: 02/09/2026
 Escopo: entrada controlada da Agenda Ogritech, sem liberar automaticamente os demais produtos.
 

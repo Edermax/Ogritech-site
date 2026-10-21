@@ -1,7 +1,7 @@
 {
-  "name": "Ogritech — Gestão e Agendamento",
+  "name": "Ogritech Cardápio",
   "short_name": "Ogritech",
-  "description": "Gestão, agenda, clientes e financeiro para negócios de serviços.",
+  "description": "Cardápio digital, produtos e pedidos para negócios de alimentação.",
   "lang": "pt-BR",
   "start_url": "./painel/",
   "scope": "./",

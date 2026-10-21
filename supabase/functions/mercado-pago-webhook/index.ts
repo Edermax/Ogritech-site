@@ -17,44 +17,117 @@ function secureEqual(left: string, right: string) {
 
 Deno.serve(async (request) => {
   if (request.method !== "POST") return new Response("method not allowed", { status: 405 });
-  const secret = Deno.env.get("MERCADO_PAGO_WEBHOOK_SECRET") || "", accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN") || "";
   const url = Deno.env.get("SUPABASE_URL") || "", key = serviceKey();
+  const sandbox = new URL(request.url).pathname.endsWith("/menu-sandbox-webhook");
+  if (sandbox && url !== "https://fuesdztsvrkkgnbqhcxi.supabase.co") return new Response("not configured", { status: 503 });
+  const secret = Deno.env.get(sandbox ? "MP_MENU_SANDBOX_WEBHOOK_SECRET" : "MERCADO_PAGO_WEBHOOK_SECRET") || "";
+  const accessToken = Deno.env.get(sandbox ? "MP_MENU_SANDBOX_ACCESS_TOKEN" : "MERCADO_PAGO_ACCESS_TOKEN") || "";
   if (!secret || !accessToken || !url || !key) return new Response("not configured", { status: 503 });
-  const body = await request.json().catch(() => null), dataId = String(body?.data?.id || new URL(request.url).searchParams.get("data.id") || "");
+  if (Number(request.headers.get("content-length") || 0) > 16384) return new Response("payload too large", { status: 413 });
+  const body = await request.json().catch(() => null);
+  const queryId = new URL(request.url).searchParams.get("data.id"), bodyId = body?.data?.id;
+  const dataId = String(queryId ?? bodyId ?? "");
+  if (!/^[a-z0-9_-]{1,128}$/i.test(dataId) || (queryId && bodyId != null && queryId.toLowerCase() !== String(bodyId).toLowerCase())) return new Response("invalid notification", { status: 400 });
   const requestId = request.headers.get("x-request-id") || "", signature = request.headers.get("x-signature") || "";
   const parts = Object.fromEntries(signature.split(",").map((part) => part.trim().split("=", 2)));
-  if (!dataId || !parts.ts || !parts.v1 || !requestId) return new Response("invalid notification", { status: 400 });
-  const expected = await hmac(`id:${dataId};request-id:${requestId};ts:${parts.ts};`, secret);
-  if (!secureEqual(expected, parts.v1)) return new Response("invalid signature", { status: 401 });
-  const eventId = String(body?.id || `${body?.type || body?.topic}:${dataId}:${parts.ts}`), topic = String(body?.type || body?.topic || "payment");
+  const rejectSignature = (reason: string, message: string, status = 401) => {
+    if (sandbox) console.info(JSON.stringify({event:"menu_sandbox_webhook_rejected",reason,request_id:requestId||null,resource_id:dataId,id_source:queryId?"query":"body",timestamp_digits:parts.ts?.length||0}));
+    return new Response(message,{status});
+  };
+  if (!dataId || !parts.ts || !parts.v1 || !requestId) return rejectSignature("components_missing","invalid notification",400);
+  if (!/^\d{10}(?:\d{3})?$/.test(parts.ts) || !/^[a-f0-9]{64}$/i.test(parts.v1)) return rejectSignature("format_invalid","invalid signature");
+  const timestampMs = Number(parts.ts) * (parts.ts.length === 10 ? 1000 : 1);
+  if (Math.abs(Date.now() - timestampMs) > 10 * 60_000) return rejectSignature("timestamp_outside_window","expired signature");
+  const topic = String(body?.type || body?.topic || "payment");
+  // The SDK preserves raw IDs; older notification senders canonicalize alphanumeric IDs.
+  // Both manifests identify the same resource; each still requires a valid HMAC.
+  const signatureIds = sandbox && topic === "order" ? [...new Set([dataId, dataId.toLowerCase()])] : [dataId.toLowerCase()];
+  const expected = await Promise.all(signatureIds.map(id => hmac(`id:${id};request-id:${requestId};ts:${parts.ts};`, secret)));
+  const signatureMatches = expected.map(value => secureEqual(value, parts.v1));
+  if (sandbox && topic === "order") console.info(JSON.stringify({event:"menu_sandbox_webhook_signature",request_id:requestId,resource_id:dataId,matched:signatureMatches.some(Boolean),canonical_form:signatureMatches[0]?"raw":signatureMatches[1]?"lowercase":"none",id_source:queryId?"query":"body"}));
+  if (!signatureMatches.some(Boolean)) return rejectSignature("hmac_mismatch","invalid signature");
+  if (!["payment", "subscription_authorized_payment", "subscription_preapproval", "order"].includes(topic)) return new Response("ignored", { status: 200 });
+  if (topic === "order" && (!sandbox || Deno.env.get("MP_MENU_SANDBOX_PIX_ORDERS") !== "true")) return new Response("ignored", {status:200});
+  const eventId = `${sandbox ? "menu_sandbox:" : ""}${String(body?.id || `${topic}:${dataId}:${parts.ts}`)}`;
   const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const eventInsert = await admin.from("platform_billing_events").insert({ provider: "mercado_pago", provider_event_id: eventId, event_type: topic, payload: body || {} });
-  if (eventInsert.error?.code === "23505") return new Response("ok", { status: 200 });
-  if (eventInsert.error) return new Response("persist failed", { status: 500 });
+  if (eventInsert.error?.code === "23505") {
+    const existing = await admin.from("platform_billing_events").select("processed_at").eq("provider", "mercado_pago").eq("provider_event_id", eventId).single();
+    if (existing.error) return new Response("persist failed", { status: 500 });
+    if (existing.data?.processed_at) return new Response("ok", { status: 200 });
+  } else if (eventInsert.error) return new Response("persist failed", { status: 500 });
 
   try {
-    const isAuthorizedPayment = topic.includes("authorized_payment");
-    const isSubscription = topic.includes("subscription_preapproval") && !isAuthorizedPayment;
-    const endpoint = isSubscription ? `https://api.mercadopago.com/preapproval/${dataId}` : isAuthorizedPayment ? `https://api.mercadopago.com/authorized_payments/${dataId}` : `https://api.mercadopago.com/v1/payments/${dataId}`;
+    const isAuthorizedPayment = topic === "subscription_authorized_payment";
+    const isSubscription = topic === "subscription_preapproval";
+    const encodedId = encodeURIComponent(dataId);
+    const endpoint = topic === "order" ? `https://api.mercadopago.com/v1/orders/${encodedId}` : isSubscription ? `https://api.mercadopago.com/preapproval/${encodedId}` : isAuthorizedPayment ? `https://api.mercadopago.com/authorized_payments/${encodedId}` : `https://api.mercadopago.com/v1/payments/${encodedId}`;
     const resourceResponse = await fetch(endpoint, { headers: { Authorization: `Bearer ${accessToken}` } });
     if (!resourceResponse.ok) throw new Error(`resource_${resourceResponse.status}`);
-    const resource = await resourceResponse.json();
+    let resource = await resourceResponse.json();
+    if (topic === "order") {
+      const payment=resource.transactions?.payments?.[0];
+      if (body?.live_mode !== false || resource.live_mode === true || String(resource.user_id)!=="3778177682"
+        || String(resource.id).toLowerCase()!==dataId.toLowerCase() || resource.country_code!=="BRA"
+        || resource.transactions?.payments?.length!==1 || payment?.payment_method?.id!=="pix"
+        || Number(resource.total_amount)!==Number(payment.amount)) throw new Error("sandbox_order_mismatch");
+      const sellerResponse=await fetch("https://api.mercadopago.com/users/me",{headers:{Authorization:`Bearer ${accessToken}`}});
+      const seller=await sellerResponse.json().catch(()=>({}));
+      if (!sellerResponse.ok || String(seller.id)!=="3778177682" || !seller.tags?.includes("test_user")) throw new Error("sandbox_seller_not_test_user");
+      const orderPaid=resource.status==="processed" && resource.status_detail==="accredited" && payment.status==="processed" && payment.status_detail==="accredited";
+      resource={...resource,collector_id:resource.user_id,live_mode:false,transaction_amount:Number(payment.amount),currency_id:"BRL",
+        status:orderPaid?"approved":payment.status==="failed"?"rejected":payment.status==="canceled"?"cancelled":payment.status};
+    }
+    if (isAuthorizedPayment) {
+      if (!/^[a-z0-9_-]{1,128}$/i.test(String(resource.payment?.id || ""))) throw new Error("invoice_payment_missing");
+      const actualResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(String(resource.payment.id))}`, { headers: { Authorization: `Bearer ${accessToken}` } });
+      if (!actualResponse.ok) throw new Error(`payment_${actualResponse.status}`);
+      const actualPayment = await actualResponse.json();
+      if (String(actualPayment.id) !== String(resource.payment.id)) throw new Error("invoice_payment_mismatch");
+      resource.payment = actualPayment;
+    }
+    if (sandbox) {
+      if (String(resource.collector_id ?? resource.payment?.collector_id) !== "3778177682") throw new Error("sandbox_resource_mismatch");
+      // Recurring payments made by the confirmed test users can report live_mode=true.
+      // Admit that shape only for the exact test buyer and a token verified as the test seller.
+      if (resource.live_mode === true || resource.payment?.live_mode === true) {
+        if (String(resource.payment?.payer?.id ?? resource.payer?.id) !== "3774414383") throw new Error("sandbox_resource_mismatch");
+        const sellerResponse = await fetch("https://api.mercadopago.com/users/me", { headers: { Authorization: `Bearer ${accessToken}` } });
+        const seller = await sellerResponse.json().catch(() => ({}));
+        if (!sellerResponse.ok || String(seller.id) !== "3778177682" || !Array.isArray(seller.tags) || !seller.tags.includes("test_user")) throw new Error("sandbox_seller_not_test_user");
+      }
+    }
+    const paymentId = String(resource.payment?.id || dataId);
     const reference = String(resource.external_reference || resource.metadata?.signup_id || "");
     const signupId = reference.match(/[0-9a-f]{8}-[0-9a-f-]{27,}/i)?.[0] || "";
     const subscriptionId = String(resource.preapproval_id || resource.subscription_id || "");
-    const { data: signup } = await admin.rpc("backend_billing_webhook_lookup", { target_signup_id: signupId || null, target_subscription_id: (isSubscription || subscriptionId) ? subscriptionId || dataId : "", target_payment_id: dataId });
+    const { data: signup, error: lookupError } = await admin.rpc("backend_billing_webhook_lookup", { target_signup_id: signupId || null, target_subscription_id: (isSubscription || subscriptionId) ? subscriptionId || dataId : "", target_payment_id: paymentId });
+    if (lookupError) throw new Error("signup_lookup_failed");
     if (signup) {
-      const approved = ["approved", "authorized", "processed"].includes(String(resource.status));
+      if (sandbox && signup.product_code !== "menu") throw new Error("sandbox_product_mismatch");
+      const paymentStatus = String(resource.payment?.status || resource.status);
+      const approved = paymentStatus === "approved";
       if (approved && !isSubscription) {
+        const amount = Number(resource.payment?.transaction_amount ?? resource.transaction_amount);
+        const currency = resource.payment?.currency_id ?? resource.currency_id;
+        if (signup.product_code === "menu" && (!Number.isFinite(amount) || Math.round(amount * 100) !== signup.total_cents || currency !== "BRL")) {
+          throw new Error("payment_amount_mismatch");
+        }
         const start = Math.max(Date.now(), new Date(signup.trial_ends_at).getTime(), signup.access_until ? new Date(signup.access_until).getTime() : 0);
         const end = new Date(start); end.setUTCMonth(end.getUTCMonth() + Number(signup.cycle_months));
-        await admin.rpc("backend_billing_webhook_apply", { target_signup_id: signup.id, target_payment_id: dataId, target_status: "approved", target_access_until: end.toISOString() });
-        if (signup.saas_client_id) await admin.from("saas_clients").update({ status: "Ativo" }).eq("id", signup.saas_client_id);
-      } else if (["rejected", "cancelled", "refunded", "charged_back"].includes(String(resource.status))) {
-        await admin.rpc("backend_billing_webhook_apply", { target_signup_id: signup.id, target_payment_id: dataId, target_status: isSubscription && resource.status === "cancelled" ? "subscription_cancelled" : String(resource.status), target_access_until: null });
+        const applied = await admin.rpc("backend_billing_webhook_apply", { target_signup_id: signup.id, target_payment_id: paymentId, target_status: "approved", target_access_until: end.toISOString() });
+        if (applied.error) throw new Error("payment_apply_failed");
+        if (signup.saas_client_id && signup.product_code !== "menu") {
+          const clientUpdate = await admin.from("saas_clients").update({ status: "Ativo" }).eq("id", signup.saas_client_id);
+          if (clientUpdate.error) throw new Error("client_update_failed");
+        }
+      } else if (["rejected", "cancelled", "refunded", "charged_back"].includes(paymentStatus)) {
+        const applied = await admin.rpc("backend_billing_webhook_apply", { target_signup_id: signup.id, target_payment_id: paymentId, target_status: isSubscription && resource.status === "cancelled" ? "subscription_cancelled" : paymentStatus, target_access_until: null });
+        if (applied.error) throw new Error("payment_apply_failed");
       }
     }
-    await admin.from("platform_billing_events").update({ processed_at: new Date().toISOString(), payload: { notification: body, resource } }).eq("provider", "mercado_pago").eq("provider_event_id", eventId);
+    const completed = await admin.from("platform_billing_events").update({ processed_at: new Date().toISOString(), error_message: null, payload: { notification: body, resource } }).eq("provider", "mercado_pago").eq("provider_event_id", eventId);
+    if (completed.error) throw new Error("event_completion_failed");
     return new Response("ok", { status: 200 });
   } catch (error) {
     await admin.from("platform_billing_events").update({ error_message: error instanceof Error ? error.message : "processing_failed" }).eq("provider", "mercado_pago").eq("provider_event_id", eventId);

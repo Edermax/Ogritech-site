@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-19",
+  "product": "Ogritech Cardápio",
+  "provider": "Mercado Pago",
+  "application": {
+    "name": "Ogritech Assinaturas",
+    "id": "6084226312562536",
+    "solution": "Assinaturas",
+    "testCredentials": "ACTIVATED_VERIFIED",
+    "dashboardStage": "ETAPA_1_DE_5",
+    "evidence": "Authenticated developer dashboard: Dados das credenciais de teste visible after user completed the activation form",
+    "testPaymentObserved": true,
+    "activationAuthorized": true,
+    "termsAcceptance": "COMPLETED_BY_USER",
+    "captchaObserved": true,
+    "identityRevalidation": "COMPLETED_BY_USER",
+    "testApplicationId": "2354123347267667",
+    "testSellerUserId": "3778177682",
+    "tokenCopiedOrExported": true,
+    "tokenTransfer": "USER_SAVED_DIRECTLY_TO_STAGING_SECRET_NO_LOCAL_COPY"
+  },
+  "staging": {
+    "projectRef": "fuesdztsvrkkgnbqhcxi",
+    "billingFunctionsPresent": true,
+    "billingMigrationsApplied": [
+      "20261003025228",
+      "20261019154554"
+    ],
+    "migrationCount": 76,
+    "databaseValidation": {
+      "assertions": 26,
+      "status": "PASSED_AFTER_DEPLOYMENT",
+      "fixtureBusinessesRemaining": 0,
+      "fixtureSignupsRemaining": 0,
+      "fixtureClientsRemaining": 0
+    },
+    "webhookConfigurationAuthorization": "TEST_URL_SAVED_SECRET_INSTALLED_ENDPOINT_DEPLOYED_SIGNED_SIMULATION_RECEIVED",
+    "providerTokenNamePresent": true,
+    "providerTokenMode": "DEDICATED_MENU_TEST_SELLER_VERIFIED_BY_USERS_ME",
+    "sandboxTokenSecret": "MP_MENU_SANDBOX_ACCESS_TOKEN",
+    "sandboxSellerVerified": true,
+    "sandboxSellerId": "3778177682",
+    "missingSecretNames": [],
+    "sandboxWebhookCandidate": "DEPLOYED_STAGING_SIGNED_PAYMENT_PROCESSED",
+    "cardScenarios": "APRO_AUTHORIZED_AND_CANCELLED_OTHE_REJECTED_CAPTURE_NOT_OBSERVED",
+    "cardScenarioEvidence": {
+      "apro": {
+        "subscriptionId": "7e2fba8e53274182a5f0d6a383a6b240",
+        "httpStatus": 201,
+        "status": "authorized",
+        "cancelledVerified": true,
+        "invoicesObserved": 0
+      },
+      "othe": {
+        "httpStatus": 400,
+        "message": "CC_VAL_433 Credit card validation has failed",
+        "subscriptionCreated": false
+      },
+      "realCardUsed": false,
+      "simulatedAmountBrl": 49.9,
+      "approvedPaymentObserved": false
+    },
+    "sandboxPlans": {
+      "monthly": {
+        "id": "ea025130c9a94d5fbf8e5ed570d34090",
+        "amountBrl": 49.9,
+        "trialDays": 14
+      },
+      "annual": {
+        "id": "bf1b34c7c2ed443885c6ede55ca52de5",
+        "amountBrl": 499,
+        "trialDays": 14
+      }
+    },
+    "sharedProviderTokenUnchanged": true,
+    "billingHandlersUseSandboxToken": true,
+    "providerPaymentProbe": {
+      "status": 401,
+      "message": "Unauthorized use of live credentials"
+    },
+    "providerSubscriptionWithPlanProbe": {
+      "status": 400,
+      "message": "card_token_id is required"
+    },
+    "providerSubscriptionWithoutPlanProbe": {
+      "status": 400,
+      "message": "User bad request"
+    },
+    "temporaryQaFunction": "CLOSED_HTTP_410_VERSION_25",
+    "administrativeProbe": {
+      "status": 200,
+      "providerReached": true,
+      "specificHeaderAuthorization": "APPROVED_AND_EXECUTED"
+    },
+    "subscriptionCreationAndCancellation": {
+      "status": "PASSED",
+      "monthly": {
+        "id": "f22b3ca899ca46b68d9636359e364280",
+        "amountBrl": 49.9,
+        "createdStatus": "pending",
+        "readbackStatus": 200,
+        "cancelledVerified": true
+      },
+      "annual": {
+        "id": "50c5fd5db74e46f68e5b4f8bbac3ff03",
+        "amountBrl": 499,
+        "createdStatus": "pending",
+        "readbackStatus": 200,
+        "cancelledVerified": true
+      },
+      "sellerId": "3778177682",
+      "currency": "BRL",
+      "cardProvided": false,
+      "chargeAuthorized": false
+    },
+    "buyerAccount": {
+      "id": "3774414383",
+      "type": "buyer",
+      "country": "BR",
+      "verifiedInDashboard": true,
+      "emailAvailableThroughSellerApi": false
+    },
+    "hostedCheckoutCandidate": "WITHOUT_PLAN_PENDING_SERVER_RECURRENCE_LOCAL_ONLY",
+    "latestHostedCheckoutProbe": {
+      "status": 200,
+      "message": "Both cycles created, read back and cancelled with existing test buyer",
+      "nextStep": "Validate card approval/rejection and signed webhook through staging product flow"
+    },
+    "processedProviderEvents": 2,
+    "homologation": "MONTHLY_BACKEND_PAYMENT_ACCESS_REPLAY_CANCEL_PASSED_HOSTED_UI_AND_AUTOMATIC_DELIVERY_PENDING",
+    "signedSimulation": {
+      "eventId": "menu_sandbox:123456",
+      "type": "payment",
+      "signatureValidated": true,
+      "persisted": true,
+      "processed": false,
+      "httpStatus": 500
+    },
+    "billingHandlerDeployment": {
+      "ogritechBillingVersion": 15,
+      "lifecycleVersion": 10,
+      "monthlyQuoteHttpStatus": 200,
+      "lifecycleWithoutSecretHttpStatus": 401
+    },
+    "nextFinancialRun": "COMPLETED_AND_CLOSED",
+    "integratedMonthlyRun": {
+      "subscriptionId": "5c4a6b47d3c3469080ddfa36cbcfdffb",
+      "paymentId": "185103950250",
+      "amountBrl": 49.9,
+      "status": "approved",
+      "collectorId": "3778177682",
+      "payerId": "3774414383",
+      "providerLiveMode": true,
+      "verifiedTestSeller": true,
+      "providerPanelDeliveryHttpStatus": 200,
+      "replayHttpStatuses": [
+        200,
+        200
+      ],
+      "paymentIntentCount": 1,
+      "accessUntil": "2026-11-20T02:29:23.242642Z",
+      "periodUnchangedAfterReplay": true,
+      "subscriptionCancelledVerified": true,
+      "localStatusAfterCancellation": "cancel_at_period_end",
+      "accessPreservedAfterCancellation": true,
+      "fixtureRetainedForAudit": true,
+      "automaticNotificationObserved": false
+    }
+  },
+  "production": {
+    "projectRef": "mvzcoaiiwytycdqcvydf",
+    "menuPlanSecretNamesPresent": true,
+    "providerTokenMode": "NOT_VERIFIED_SECRET_VALUE_NOT_EXPORTED",
+    "missingSecretNames": [
+      "BILLING_TERMS_VERSION",
+      "BILLING_TERMS_SHA256"
+    ],
+    "processedProviderEvents": 0,
+    "publicReadiness": "product_catalog_unavailable"
+  },
+  "isolatedValidation": {
+    "databaseAssertions": 26,
+    "handlerTests": 27,
+    "status": "PASSED",
+    "realPaymentCreated": false
+  },
+  "pending": [
+    "Confirm automatic provider delivery and hosted owner checkout; current approval used API test card and provider-panel delivery",
+    "Publish the reviewed checkout candidate to an isolated staging product flow and validate actual card authorization and rejection",
+    "Resolve legacy Payments API credential rejection before testing Pix or card payments",
+    "Wire dedicated sandbox token consistently across staging billing handlers and webhook without changing Agenda credentials",
+    "Validate an existing approved sandbox payment, signed event processing and product access; signed fictitious delivery is already verified",
+    "Deploy the reviewed billing candidate in the authorized release window"
+  ]
+}

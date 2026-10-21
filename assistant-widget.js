@@ -37,21 +37,21 @@
   let hasInteracted = false;
 
   const topics = {
-    planos: "A Ogritech Agenda custa R$ 97 por mês. Você também pode pagar a cada 3 meses com 3% de desconto, a cada 6 meses com 5%, ou anualmente com 10%. <a href='/contratar/'>Começar agora</a>.",
-    teste: "Todo CNPJ elegível recebe uma única avaliação gratuita de 14 dias. Não há cobrança durante o teste e você pode cancelar sem falar com atendentes. <a href='/contratar/'>Iniciar teste</a>.",
-    beneficios: "A Ogritech Agenda reúne agenda, equipe, serviços, histórico e relacionamento com clientes, com atendimento focado em agendamentos.",
+    planos: "A Ogritech Cardápio custa R$ 49,90 por mês ou R$ 499 no plano anual. Não há comissão por pedido. <a href='/criar-cardapio/'>Começar agora</a>.",
+    teste: "Todo CNPJ elegível recebe uma única avaliação gratuita de 14 dias. Não há cobrança durante o teste e você pode cancelar sem falar com atendentes. <a href='/criar-cardapio/'>Iniciar teste</a>.",
+    beneficios: "A Ogritech Cardápio reúne produtos, fotos, categorias, preços e pedidos em um único link, com gestão pelo painel.",
     pagamento: "Aceitamos cartão recorrente e Pix. Não oferecemos boleto nem Pix Automático. O cancelamento é feito pela própria conta e o acesso continua até o fim do período pago.",
     contato: "Você pode solicitar retorno por ligação telefônica, WhatsApp ou e-mail. Escolha o canal e informe seus dados."
   };
 
   function menu() {
-    body.innerHTML = `<p class="ogri-assistant__message">Como posso ajudar com a Ogritech Agenda?</p><div class="ogri-assistant__options">
+    body.innerHTML = `<p class="ogri-assistant__message">Como posso ajudar com a Ogritech Cardápio?</p><div class="ogri-assistant__options">
       <button class="ogri-assistant__option" data-topic="planos">Planos e valores</button>
       <button class="ogri-assistant__option" data-topic="teste">Período gratuito</button>
       <button class="ogri-assistant__option" data-topic="beneficios">Benefícios</button>
       <button class="ogri-assistant__option" data-topic="pagamento">Pagamento e cancelamento</button>
       <button class="ogri-assistant__option" data-topic="contato">Solicitar contato</button>
-    </div><p class="ogri-assistant__notice">Atendimento restrito à aquisição, implantação e uso da Ogritech Agenda.</p>`;
+    </div><p class="ogri-assistant__notice">Atendimento restrito à aquisição, implantação e uso da Ogritech Cardápio.</p>`;
   }
 
   function answer(topic) {

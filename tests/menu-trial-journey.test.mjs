@@ -54,7 +54,7 @@ test("cliente define pagamento do Cardápio somente após iniciar o teste", asyn
   assert.match(panel, /data-recurring-authorization/);
   assert.match(panel, /action: "choose_payment"/);
   assert.match(billing, /ChoosePaymentBody/);
-  assert.match(billing, /MP_MENU_\$\{input\.cycle\.toUpperCase\(\)\}_ID/);
+  assert.match(billing, /menuCheckoutPayload\(signup, input\.cycle, appUrl, url\)/);
   assert.match(billing, /product === "menu" && cycle === "annual"[\s\S]*total_cents: 49_900/);
   assert.match(billing, /profile\.role !== "owner"/);
   assert.match(billing, /recurring_authorization_required/);

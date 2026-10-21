@@ -7,7 +7,9 @@ test("pacote antecipado registra decisões pendentes sem inventar responsáveis"
   const config = JSON.parse(await readFile("config/operational-readiness.json", "utf8"));
   const result = validateOperationalReadiness(config);
   assert.equal(result.status, "BLOQUEADO");
-  assert.ok(result.blockers.includes("Selecionar cenário de preço"));
+  assert.ok(!result.blockers.includes("Selecionar cenário de preço"));
+  assert.ok(result.blockers.includes("Definir emissão fiscal"));
+  assert.equal(config.roles.find((role) => role.id === "technical_support").owner, "Eder Ogrizio Silva");
   assert.ok(result.blockers.includes("Autorização explícita de publicação"));
   assert.ok(config.deferredUntilLast.includes("supabase_leaked_password_protection"));
 });

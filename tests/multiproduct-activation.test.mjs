@@ -29,7 +29,7 @@ test("painel do negócio oculta solução não contratada e abre a primeira solu
   assert.match(script,/dataset\.productAllowed === "false"/);
   assert.match(script,/activeProductCodes\.has\("menu"\) \? "cardapio"/);
   assert.match(script,/showSection\(defaultSection\)/);
-  assert.match(script,/if \(activeProductCodes\.has\("agenda"\)\)/);
+  assert.doesNotMatch(script,/if \(activeProductCodes\.has\("agenda"\)\)/);
   assert.match(html,/id="menuOrdersPanel"/);
   assert.match(commercial,/tabs\.after\(health\)/);
   assert.match(commercial,/health\.after\(orders\)/);

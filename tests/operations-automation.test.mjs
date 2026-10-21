@@ -15,11 +15,14 @@ test("backup diário publica e resolve incidente operacional", async () => {
   assert.match(workflow, /function-acl\.sql/);
   assert.match(workflow, /aclexplode/);
   assert.match(workflow, /revoke execute on all functions in schema public/);
+  assert.match(workflow, /export-relation-acl\.sql/);
+  assert.match(workflow, /backup\/relation-acl\.sql/);
 });
 
 test("restauração reaplica ACLs e separa baseline do Cardápio promovido", async () => {
   const workflow = await load(".github/workflows/restore-drill.yml");
   assert.match(workflow, /--file restored\/backup\/function-acl\.sql/);
+  assert.match(workflow, /--file restored\/backup\/relation-acl\.sql/);
   assert.match(workflow, /expect_menu_schema/);
   assert.match(workflow, /EXPECT_MENU_SCHEMA/);
   assert.match(workflow, /menu-cart-orders\.test\.sql/);

@@ -4,6 +4,7 @@ Este documento organiza a revisão; não substitui parecer jurídico.
 
 ## Dados a preencher
 
+- CNPJ **39.531.449/0001-11**, nome empresarial **39.531.449 EDER OGRIZIO SILVA** e situação **ATIVA** confirmados no comprovante oficial da Receita emitido em 21/10/2026 às 06:41:50 BRT. Endereço conferido e preservado no registro local privado. Política comercial aprovada em `CARDAPIO_POLITICA_COMERCIAL.md`; validação fiscal e revisão jurídica continuam pendentes. Porte ME não comprova opção pelo Simples ou SIMEI.
 - Razão social, nome fantasia, CNPJ, endereço e contatos da Ogritech.
 - Representante legal e poderes de assinatura.
 - Dados equivalentes do estabelecimento contratante.

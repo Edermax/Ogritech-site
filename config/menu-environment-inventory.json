@@ -1,0 +1,607 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-20",
+  "source": "Supabase MCP read-only, staging CLI migration deployment and GitHub Pages API",
+  "frontend": {
+    "commit": "1771d9c5d737682329e775b22d8e4ba171f7075e",
+    "url": "https://ogritech.com.br/",
+    "status": "built",
+    "publishedAt": "2026-10-19T16:55:46Z",
+    "applicationBaseCommit": "a51eec70580ba606d7c187e5e38c4d0fffdb0829",
+    "operationalPullRequest": "https://github.com/Edermax/Ogritech-site/pull/17",
+    "applicationCodeChanged": false
+  },
+  "production": {
+    "projectRef": "mvzcoaiiwytycdqcvydf",
+    "migrations": [
+      {
+        "version": "202608180001",
+        "name": "create_core_schema"
+      },
+      {
+        "version": "20260819",
+        "name": "create_saas_clients"
+      },
+      {
+        "version": "202608190001",
+        "name": "expand_ogritech_platform"
+      },
+      {
+        "version": "202608210001",
+        "name": "add_lgpd_governance"
+      },
+      {
+        "version": "202608210002",
+        "name": "create_financial_entries"
+      },
+      {
+        "version": "202608210003",
+        "name": "create_operational_tables"
+      },
+      {
+        "version": "202608210004",
+        "name": "expand_services_financial"
+      },
+      {
+        "version": "202608210005",
+        "name": "platform_master_console"
+      },
+      {
+        "version": "202608220001",
+        "name": "harden_schema_and_booking"
+      },
+      {
+        "version": "202608220002",
+        "name": "admin_audit_and_rate_limits"
+      },
+      {
+        "version": "202608220003",
+        "name": "reset_preoperation_metrics"
+      },
+      {
+        "version": "202608240001",
+        "name": "platform_billing"
+      },
+      {
+        "version": "202608240002",
+        "name": "repair_unlinked_businesses"
+      },
+      {
+        "version": "202608240003",
+        "name": "repair_all_unlinked_businesses"
+      },
+      {
+        "version": "20260825140414",
+        "name": "harden_function_execution"
+      },
+      {
+        "version": "20260825213752",
+        "name": "harden_operations_and_scheduling"
+      },
+      {
+        "version": "20260825225833",
+        "name": "enable_pgtap_for_staging_tests"
+      },
+      {
+        "version": "20260825230312",
+        "name": "allow_remote_pgtap_runner"
+      },
+      {
+        "version": "20260825234545",
+        "name": "optimize_rls_and_internal_rpc_access"
+      },
+      {
+        "version": "20260825234952",
+        "name": "finish_rls_initplan_optimization"
+      },
+      {
+        "version": "20260826000705",
+        "name": "consolidate_permissive_rls_policies"
+      },
+      {
+        "version": "20260826003556",
+        "name": "isolate_privileged_functions"
+      },
+      {
+        "version": "20260827150000",
+        "name": "restore_platform_users_service_role_grants"
+      },
+      {
+        "version": "20260829091359",
+        "name": "add_real_staff_availability"
+      },
+      {
+        "version": "20260829093627",
+        "name": "save_staff_availability"
+      },
+      {
+        "version": "20260829100629",
+        "name": "public_booking_flow"
+      },
+      {
+        "version": "20260829142619",
+        "name": "add_commercial_solutions"
+      },
+      {
+        "version": "20260829142737",
+        "name": "index_commercial_solution_foreign_keys"
+      },
+      {
+        "version": "20260829145553",
+        "name": "public_commercial_flows"
+      },
+      {
+        "version": "20260829145721",
+        "name": "harden_commercial_attempts_rls"
+      },
+      {
+        "version": "20260829145904",
+        "name": "restrict_send_quote_proposal"
+      },
+      {
+        "version": "20260829171217",
+        "name": "add_private_platform_legal_identity"
+      },
+      {
+        "version": "20260829193338",
+        "name": "atomic_appointment_operations"
+      },
+      {
+        "version": "20260829195029",
+        "name": "enforce_atomic_appointment_transitions"
+      },
+      {
+        "version": "20260829214713",
+        "name": "harden_rls_auto_enable_execution"
+      },
+      {
+        "version": "20260830225308",
+        "name": "move_profile_rls_helpers_private"
+      },
+      {
+        "version": "20260903163213",
+        "name": "enforce_plan_capacity"
+      },
+      {
+        "version": "20260903201148",
+        "name": "fix_plan_capacity_access"
+      },
+      {
+        "version": "20260904184313",
+        "name": "assistant_callback_requests"
+      },
+      {
+        "version": "20260904234332",
+        "name": "assistant_email_callbacks"
+      },
+      {
+        "version": "20260906194944",
+        "name": "ogritech_billing_self_service"
+      },
+      {
+        "version": "20260906202647",
+        "name": "billing_lifecycle_automation"
+      },
+      {
+        "version": "20260908194456",
+        "name": "multiproduct_foundation"
+      },
+      {
+        "version": "20260908200932",
+        "name": "multiproduct_activation"
+      },
+      {
+        "version": "20260908202555",
+        "name": "menu_catalog_core"
+      },
+      {
+        "version": "20260908204304",
+        "name": "menu_cart_orders"
+      },
+      {
+        "version": "20260908211413",
+        "name": "menu_self_service_onboarding"
+      },
+      {
+        "version": "20260909213832",
+        "name": "commercial_self_service_lifecycle"
+      },
+      {
+        "version": "20260928173425",
+        "name": "menu_trial_self_service"
+      },
+      {
+        "version": "20260928184426",
+        "name": "billing_private_backend_rpcs"
+      },
+      {
+        "version": "20260928185614",
+        "name": "fix_menu_trial_plan_sync"
+      },
+      {
+        "version": "20261002111000",
+        "name": "billing_service_role_bridge"
+      },
+      {
+        "version": "20261002194500",
+        "name": "grant_billing_bridge_schema_usage"
+      },
+      {
+        "version": "20261002195500",
+        "name": "billing_explicit_backend_rpcs"
+      },
+      {
+        "version": "20261003162614",
+        "name": "billing_rejected_email_event"
+      }
+    ],
+    "functions": [
+      {
+        "slug": "platform-users",
+        "status": "ACTIVE",
+        "version": 15,
+        "verify_jwt": true,
+        "ezbr_sha256": "d62c31f218efe995f2da23320182a5b5e6044b1fb03f5aec966516954bbbe1c8"
+      },
+      {
+        "slug": "assistant-email-dispatch",
+        "status": "ACTIVE",
+        "version": 7,
+        "verify_jwt": true,
+        "ezbr_sha256": "ebf18730ec9a6a51d839f0c24d0aea66b7a6e48a1b0ee487450ee0cb336ceffa"
+      },
+      {
+        "slug": "ogritech-billing",
+        "status": "ACTIVE",
+        "version": 7,
+        "verify_jwt": false,
+        "ezbr_sha256": "370825fc329c23a61e22965883de84050e0679fef623ea09d3f1c98d4f41a06d"
+      },
+      {
+        "slug": "mercado-pago-webhook",
+        "status": "ACTIVE",
+        "version": 6,
+        "verify_jwt": false,
+        "ezbr_sha256": "9a9d25e857ad34a03f987257f04748ec00ae25092bca78ebe9bf7e8291efc872"
+      },
+      {
+        "slug": "billing-lifecycle",
+        "status": "ACTIVE",
+        "version": 8,
+        "verify_jwt": false,
+        "ezbr_sha256": "a3b0d24ef85805e755ff3128f8149b28beb38ff874cde73ced78b34532da9b8d"
+      },
+      {
+        "slug": "billing-email-dispatch",
+        "status": "ACTIVE",
+        "version": 6,
+        "verify_jwt": false,
+        "ezbr_sha256": "dfcda94d14d10156d29f443f2a0b91da1edf5d83f05d2f71e4bbe5ef58dc6624"
+      }
+    ]
+  },
+  "staging": {
+    "projectRef": "fuesdztsvrkkgnbqhcxi",
+    "migrations": [
+      {
+        "version": "202608180001",
+        "name": "create_core_schema"
+      },
+      {
+        "version": "20260819",
+        "name": "create_saas_clients"
+      },
+      {
+        "version": "202608190001",
+        "name": "expand_ogritech_platform"
+      },
+      {
+        "version": "202608210001",
+        "name": "add_lgpd_governance"
+      },
+      {
+        "version": "202608210002",
+        "name": "create_financial_entries"
+      },
+      {
+        "version": "202608210003",
+        "name": "create_operational_tables"
+      },
+      {
+        "version": "202608210004",
+        "name": "expand_services_financial"
+      },
+      {
+        "version": "202608210005",
+        "name": "platform_master_console"
+      },
+      {
+        "version": "202608220001",
+        "name": "harden_schema_and_booking"
+      },
+      {
+        "version": "202608220002",
+        "name": "admin_audit_and_rate_limits"
+      },
+      {
+        "version": "202608220003",
+        "name": "reset_preoperation_metrics"
+      },
+      {
+        "version": "202608240001",
+        "name": "platform_billing"
+      },
+      {
+        "version": "202608240002",
+        "name": "repair_unlinked_businesses"
+      },
+      {
+        "version": "202608240003",
+        "name": "repair_all_unlinked_businesses"
+      },
+      {
+        "version": "20260825140414",
+        "name": "harden_function_execution"
+      },
+      {
+        "version": "20260825213752",
+        "name": "harden_operations_and_scheduling"
+      },
+      {
+        "version": "20260825225833",
+        "name": "enable_pgtap_for_staging_tests"
+      },
+      {
+        "version": "20260825230312",
+        "name": "allow_remote_pgtap_runner"
+      },
+      {
+        "version": "20260825234545",
+        "name": "optimize_rls_and_internal_rpc_access"
+      },
+      {
+        "version": "20260825234952",
+        "name": "finish_rls_initplan_optimization"
+      },
+      {
+        "version": "20260826000705",
+        "name": "consolidate_permissive_rls_policies"
+      },
+      {
+        "version": "20260826003556",
+        "name": "isolate_privileged_functions"
+      },
+      {
+        "version": "20260827150000",
+        "name": "restore_platform_users_service_role_grants"
+      },
+      {
+        "version": "20260829091359",
+        "name": "add_real_staff_availability"
+      },
+      {
+        "version": "20260829093627",
+        "name": "save_staff_availability"
+      },
+      {
+        "version": "20260829100629",
+        "name": "public_booking_flow"
+      },
+      {
+        "version": "20260829142619",
+        "name": "add_commercial_solutions"
+      },
+      {
+        "version": "20260829142737",
+        "name": "index_commercial_solution_foreign_keys"
+      },
+      {
+        "version": "20260829145553",
+        "name": "public_commercial_flows"
+      },
+      {
+        "version": "20260829145721",
+        "name": "harden_commercial_attempts_rls"
+      },
+      {
+        "version": "20260829145904",
+        "name": "restrict_send_quote_proposal"
+      },
+      {
+        "version": "20260829171217",
+        "name": "add_private_platform_legal_identity"
+      },
+      {
+        "version": "20260829193338",
+        "name": "atomic_appointment_operations"
+      },
+      {
+        "version": "20260829195029",
+        "name": "enforce_atomic_appointment_transitions"
+      },
+      {
+        "version": "20260829214713",
+        "name": "harden_rls_auto_enable_execution"
+      },
+      {
+        "version": "20260830225308",
+        "name": "move_profile_rls_helpers_private"
+      },
+      {
+        "version": "20260901214241",
+        "name": "platform_contact_leads"
+      },
+      {
+        "version": "20260901215201",
+        "name": "deny_platform_contact_attempt_reads"
+      },
+      {
+        "version": "20260901220712",
+        "name": "index_remaining_foreign_keys"
+      },
+      {
+        "version": "20260902102152",
+        "name": "remove_legacy_rls_policies"
+      },
+      {
+        "version": "20260902204329",
+        "name": "add_appointment_reassignment_offers"
+      },
+      {
+        "version": "20260903143540",
+        "name": "link_public_bookings_to_client_auth"
+      },
+      {
+        "version": "20260903163213",
+        "name": "enforce_plan_capacity"
+      },
+      {
+        "version": "20260903201148",
+        "name": "fix_plan_capacity_access"
+      },
+      {
+        "version": "20260904023556",
+        "name": "harden_authenticated_booking_actions"
+      },
+      {
+        "version": "20260904184313",
+        "name": "assistant_callback_requests"
+      },
+      {
+        "version": "20260904234332",
+        "name": "assistant_email_callbacks"
+      },
+      {
+        "version": "20260906194944",
+        "name": "ogritech_billing_self_service"
+      },
+      {
+        "version": "20260906202647",
+        "name": "billing_lifecycle_automation"
+      },
+      {
+        "version": "20260908194456",
+        "name": "multiproduct_foundation"
+      },
+      {
+        "version": "20260908200932",
+        "name": "multiproduct_activation"
+      },
+      {
+        "version": "20260908202555",
+        "name": "menu_catalog_core"
+      },
+      {
+        "version": "20260908204304",
+        "name": "menu_cart_orders"
+      },
+      {
+        "version": "20260908211413",
+        "name": "menu_self_service_onboarding"
+      },
+      {
+        "version": "20260909213832",
+        "name": "commercial_self_service_lifecycle"
+      },
+      {
+        "version": "20260910131725",
+        "name": "menu_assistant_foundation"
+      },
+      {
+        "version": "20260910162119",
+        "name": "menu_ai_staging_controls"
+      },
+      {
+        "version": "20260910213617",
+        "name": "menu_ai_staging_inference"
+      },
+      {
+        "version": "20260910215503",
+        "name": "fix_menu_ai_staging_telemetry_authorization"
+      },
+      {
+        "version": "20260910215856",
+        "name": "allow_menu_ai_service_private_schema"
+      },
+      {
+        "version": "20260918123817",
+        "name": "diniz_sunday_hours_and_sweets_quantity"
+      },
+      {
+        "version": "20260919150051",
+        "name": "menu_private_pilot_metrics"
+      },
+      {
+        "version": "20260920171325",
+        "name": "diniz_automatic_delivery_distance"
+      },
+      {
+        "version": "20260920173002",
+        "name": "restore_diniz_delivery_zones_after_geocode_validation"
+      },
+      {
+        "version": "20260920184240",
+        "name": "enable_diniz_geoapify_delivery"
+      },
+      {
+        "version": "20260928145729",
+        "name": "menu_self_service_catalog_editor"
+      },
+      {
+        "version": "20260928150615",
+        "name": "menu_catalog_order_and_delivery_zones"
+      },
+      {
+        "version": "20260928153519",
+        "name": "menu_catalog_draft_publication"
+      },
+      {
+        "version": "20260928173425",
+        "name": "menu_trial_self_service"
+      },
+      {
+        "version": "20260928184426",
+        "name": "billing_private_backend_rpcs"
+      },
+      {
+        "version": "20260928185614",
+        "name": "fix_menu_trial_plan_sync"
+      },
+      {
+        "version": "20261002111000",
+        "name": "billing_service_role_bridge"
+      },
+      {
+        "version": "20261002194500",
+        "name": "grant_billing_bridge_schema_usage"
+      },
+      {
+        "version": "20261002195500",
+        "name": "billing_explicit_backend_rpcs"
+      },
+      {
+        "version": "20261003025228",
+        "name": "billing_rejected_email_event"
+      },
+      {
+        "version": "20261019154554",
+        "name": "menu_billing_lifecycle_reliability"
+      },
+      {
+        "version": "20261020151727",
+        "name": "menu_visual_identity_assets"
+      },
+      {
+        "version": "20261020204455",
+        "name": "menu_pix_expiry_recovery"
+      }
+    ]
+  },
+  "userAcceptance": {
+    "recordedAt": "2026-10-19",
+    "ownerJourney": "ACCEPTED_BY_USER",
+    "orderLifecycle": "ACCEPTED_BY_USER",
+    "source": "User: 2 e 3 considere finalizados",
+    "reexecuted": false
+  }
+}

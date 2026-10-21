@@ -2,78 +2,214 @@
   "schemaVersion": 1,
   "product": "Ogritech Cardápio",
   "environment": "production",
-  "updatedAt": "2026-09-27",
+  "updatedAt": "2026-10-21",
   "releaseAuthorized": false,
   "gates": [
     {
       "id": "legal_review",
       "label": "Termos de Uso e Política de Privacidade revisados",
       "status": "BLOCKED_HUMAN",
-      "evidence": ["termos.html", "privacidade.html", "docs/JURIDICO_HANDOFF_CHECKLIST.md"],
-      "remaining": "Preencher dados societários e obter aprovação formal de profissional jurídico."
+      "evidence": [
+        "termos.html",
+        "privacidade.html",
+        "docs/JURIDICO_HANDOFF_CHECKLIST.md",
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/CARDAPIO_POLITICA_COMERCIAL.md"
+      ],
+      "remaining": "Comprovante oficial de 21/10/2026 conferido: CNPJ ativo, nome empresarial 39.531.449 EDER OGRIZIO SILVA e endereço verificados. Faltam incorporar a identificação empresarial aos documentos finais e concluir revisão jurídica. Minuta 3.1 atualiza a política de implantação; versão/hash precisam ser alinhados ao backend na publicação."
     },
     {
       "id": "commercial_definition",
       "label": "Preço, implantação e período de teste definidos",
       "status": "BLOCKED_HUMAN",
-      "evidence": ["config/operational-readiness.json"],
-      "remaining": "Registrar preço, taxa de implantação, duração do teste, cobrança e emissão fiscal aprovados."
+      "evidence": [
+        "config/operational-readiness.json",
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/CARDAPIO_POLITICA_COMERCIAL.md"
+      ],
+      "remaining": "Política comercial aprovada em 21/10: implantação gratuita por autosserviço, orientação incluída, serviços manuais sob orçamento separado; 14 dias grátis, R$ 49,90/mês ou R$ 499/ano. Emissão manual inicial aprovada como modelo operacional; ainda faltam confirmar regime/CNAE, emissor, competência e prazos com a contabilidade."
     },
     {
       "id": "support_and_incidents",
       "label": "Suporte e responsáveis por incidentes ativos",
       "status": "BLOCKED_HUMAN",
-      "evidence": ["docs/SLA_SUPORTE_ESCALONAMENTO.md", "docs/lgpd/PLANO_RESPOSTA_INCIDENTES.md"],
-      "remaining": "Nomear titulares e substitutos, testar canais e executar exercícios S1 e S2."
+      "evidence": [
+        "docs/SLA_SUPORTE_ESCALONAMENTO.md",
+        "docs/lgpd/PLANO_RESPOSTA_INCIDENTES.md",
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/CARDAPIO_POLITICA_COMERCIAL.md"
+      ],
+      "remaining": "Eder Ogrizio Silva nomeado responsável pelo suporte. Faltam substituto, definição dos demais papéis, validação de cobertura/canais e exercícios S1 e S2."
     },
     {
       "id": "backup_restore",
       "label": "Backup e restauração verificados para o Cardápio",
-      "status": "PARTIAL",
-      "evidence": [".github/workflows/backup-production.yml", ".github/workflows/restore-drill.yml", "docs/evidencias/cardapio-backup-restauracao-pre-lancamento-2026-09-27.md"],
-      "remaining": "Ponto de retorno pré-lançamento restaurado com ACLs e 72 testes. Após promover o Cardápio, repetir backup/restauração com expect_menu_schema=true para validar tabelas, pedidos e idempotência."
+      "status": "APPROVED",
+      "evidence": [
+        ".github/workflows/backup-production.yml",
+        ".github/workflows/restore-drill.yml",
+        "docs/evidencias/cardapio-backup-restauracao-pre-lancamento-2026-09-27.md",
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "https://github.com/Edermax/Ogritech-site/actions/runs/39288297613",
+        "https://github.com/Edermax/Ogritech-site/actions/runs/39288776485"
+      ],
+      "remaining": ""
     },
     {
       "id": "database_promotion",
       "label": "Migrations promovidas de forma controlada",
       "status": "PARTIAL",
-      "evidence": ["config/migration-release-policy.json", "config/menu-production-migration-batch.json", "scripts/menu-production-migration-batch.mjs", "docs/evidencias/cardapio-replay-limpo-producao-2026-09-27.md", "docs/evidencias/cardapio-inventario-producao-readonly-2026-09-27.md", "docs/evidencias/cardapio-dry-run-producao-2026-09-27.md"],
-      "remaining": "Replay limpo, 451 asserções, inventário remoto, Advisors, dry-run exato e ponto de retorno pré-lançamento concluídos. Ainda faltam aceite formal dos achados, responsáveis e autorização GO da janela antes da promoção real."
+      "evidence": [
+        "config/migration-release-policy.json",
+        "config/menu-production-migration-batch.json",
+        "scripts/menu-production-migration-batch.mjs",
+        "docs/evidencias/cardapio-replay-limpo-producao-2026-09-27.md",
+        "docs/evidencias/cardapio-inventario-producao-readonly-2026-09-27.md",
+        "docs/evidencias/cardapio-dry-run-producao-2026-09-27.md",
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
+        "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md"
+      ],
+      "remaining": "Producao permanece com 55 migrations; candidato tem 23 pendentes. Staging tem 78 persistidas. Replay limpo passou com 522 assercoes em 20 arquivos e dry-run de producao listou as 23 pendentes, sem aplicar alteracoes. Promocao ainda depende dos gates e autorizacao de release."
     },
     {
       "id": "application_publication",
       "label": "Frontend e funções necessários publicados",
-      "status": "NOT_STARTED",
-      "evidence": ["supabase/functions", ".github/workflows/validate.yml"],
-      "remaining": "Definir commit imutável, inventário de funções, segredos e origens; publicar após o banco e executar health check."
+      "status": "PARTIAL",
+      "evidence": [
+        "supabase/functions",
+        ".github/workflows/validate.yml",
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
+        "config/menu-release-package.json",
+        "scripts/menu-release-package.mjs",
+        "docs/CARDAPIO_PACOTE_PUBLICACAO.md"
+      ],
+      "remaining": "Frontend de produção permanece em 1771d9c5d737682329e775b22d8e4ba171f7075e. Candidatos empilhados nos PRs 18, 19, 20, 21 e 24. Pacote imutável de publicação preparado, incluindo hashes, sete funções explícitas e exclusão de sandbox/IA externa. Falta promoção coordenada de banco, funções e frontend na janela autorizada."
     },
     {
       "id": "production_synthetic_test",
-      "label": "Jornada sintética completa aprovada em produção",
-      "status": "NOT_STARTED",
-      "evidence": ["docs/evidencias/fase-7f-homologacao-staging-cardapio-2026-09-16.md"],
-      "remaining": "Executar empresa sintética isolada, desktop e celular, validar preços, idempotência, isolamento e limpeza total."
+      "label": "Jornadas do lojista e pedidos concluídas por aceite do responsável",
+      "status": "APPROVED",
+      "evidence": [
+        "docs/evidencias/fase-7f-homologacao-staging-cardapio-2026-09-16.md",
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "config/menu-environment-inventory.json"
+      ],
+      "remaining": "",
+      "acceptanceSource": "Confirmação expressa do usuário em 19/10/2026 para itens 2 e 3; ambiente não especificado; não reexecutados nesta rodada."
     },
     {
       "id": "lifecycle_test",
       "label": "Exportação, despublicação e cancelamento aprovados",
-      "status": "NEEDS_FRESH_EVIDENCE",
-      "evidence": ["docs/evidencias/fase-7i-previa-privada-cardapio-2026-09-17.md", "scripts/subscription-center-ui-smoke.mjs"],
-      "remaining": "Repetir a jornada na empresa sintética de produção e provar que as outras soluções não foram alteradas."
+      "status": "APPROVED",
+      "evidence": [
+        "docs/evidencias/fase-7i-previa-privada-cardapio-2026-09-17.md",
+        "scripts/subscription-center-ui-smoke.mjs",
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
+        "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md"
+      ],
+      "remaining": ""
     },
     {
       "id": "production_monitor",
       "label": "Disponibilidade e criação de pedidos monitoradas",
       "status": "PARTIAL",
-      "evidence": [".github/workflows/monitor-production.yml", "scripts/monitor-production.mjs", "tests/monitor-production.test.mjs"],
-      "remaining": "Configurar MENU_HEALTH_URL em produção e testar a abertura e a resolução do incidente com falha controlada."
+      "evidence": [
+        ".github/workflows/monitor-production.yml",
+        "scripts/monitor-production.mjs",
+        "tests/monitor-production.test.mjs",
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "scripts/monitor-incident.mjs",
+        "scripts/monitor-drill.mjs",
+        "tests/monitor-incident.test.mjs",
+        "docs/CARDAPIO_MONITORAMENTO.md",
+        "docs/evidencias/cardapio-monitoramento-funcional-2026-10-20.md",
+        "docs/CARDAPIO_PACOTE_PUBLICACAO.md"
+      ],
+      "remaining": "Monitor funcional e ensaio remoto de abertura, repetição e recuperação aprovados (run 39533528327, issue 25 encerrada). Produção sem cardápio publicado e trial_readiness HTTP 503: falta promover o monitor, configurar URL válida e confirmar execução real saudável após lançamento coordenado. Chave pública de leitura já configurada no environment production do GitHub."
     },
     {
       "id": "rollback_rehearsal",
       "label": "Rollback documentado e ensaiado",
       "status": "PARTIAL",
-      "evidence": ["docs/CARDAPIO_ROLLBACK_PRODUCAO.md", "config/menu-production-rollback.json", "scripts/menu-production-rollback-rehearsal.mjs", "tests/menu-production-rollback.test.mjs"],
-      "remaining": "Confirmar o hash efetivamente publicado, ensaiar fechamento e republicação no host, validar acompanhamento de pedido e observar uma janela do monitor."
+      "evidence": [
+        "docs/CARDAPIO_ROLLBACK_PRODUCAO.md",
+        "config/menu-production-rollback.json",
+        "scripts/menu-production-rollback-rehearsal.mjs",
+        "tests/menu-production-rollback.test.mjs",
+        "docs/evidencias/cardapio-retomada-2026-10-19.md",
+        "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
+        "supabase/tests/database/menu-cart-orders.test.sql",
+        "docs/evidencias/cardapio-rollback-isolado-2026-10-21.md",
+        "docs/evidencias/cardapio-republicacao-hospedagem-2026-10-21.md"
+      ],
+      "remaining": "Republicação real da mesma versão 1771d9c5 concluída em 21/10 (Pages run 39289627446, tentativa 2); seis arquivos conferidos por HTTPS antes/depois, com reversão estrita da proteção de emails do Cloudflare. Fechamento e acompanhamento aprovados no CI isolado. Falta exercício coordenado de recuperação funcional e monitor completo em produção; não houve rollback entre versões diferentes."
     }
-  ]
+  ],
+  "currentProduction": {
+    "commit": "1771d9c5d737682329e775b22d8e4ba171f7075e",
+    "inventory": "config/menu-environment-inventory.json",
+    "releaseAuthorized": false
+  },
+  "acceptedJourneys": {
+    "recordedAt": "2026-10-19",
+    "ownerJourney": "ACCEPTED_BY_USER",
+    "orderLifecycle": "ACCEPTED_BY_USER",
+    "source": "User: 2 e 3 considere finalizados",
+    "reexecuted": false
+  },
+  "billingHomologation": {
+    "status": "STAGING_PIX_HOSTED_CHECKOUT_AND_PROVIDER_DELIVERY_PASSED",
+    "databaseAssertions": 46,
+    "runtimeTests": 37,
+    "remoteMutationsPersisted": true,
+    "evidence": "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md",
+    "temporaryQaClosed": true,
+    "providerDeliveryConfirmed": true,
+    "automaticAccessGranted": true,
+    "administrativeReplayUsed": false,
+    "providerApplicationId": "2354123347267667",
+    "providerOrderId": "ORDTST01M5E1QWW0TK37090X1PCXHNCC",
+    "verifiedAt": "2026-10-20T22:55:46-03:00"
+  },
+  "legacyRetirementReview": {
+    "observedAt": "2026-10-20",
+    "mode": "aggregate_read_only",
+    "agendaActiveSubscriptions": 7,
+    "providerReferences": 0,
+    "legacyBillingSignups": 0,
+    "providerReconciliationComplete": false,
+    "evidence": "docs/evidencias/cardapio-preparacao-release-2026-10-20.md"
+  },
+  "monitoringHomologation": {
+    "status": "ISOLATED_ALERT_RECOVERY_PASSED",
+    "evidence": "docs/evidencias/cardapio-monitoramento-funcional-2026-10-20.md",
+    "workflowRun": "39533528327",
+    "drillIssue": 25,
+    "drillIssueClosed": true,
+    "productionInterrupted": false,
+    "productionActivated": false,
+    "focusedTests": 15,
+    "publicReadKeyConfigured": true
+  },
+  "commercialPolicyAcceptance": {
+    "approvedAt": "2026-10-21",
+    "implementationFeeCents": 0,
+    "supportGuidanceIncluded": true,
+    "manualServicesRequireSeparateQuote": true,
+    "manualFiscalOperationInitially": true,
+    "fiscalComplianceValidated": false,
+    "termsVersion": "3.1",
+    "termsSha256": "f2ec377a7b2886609488bc4208d9f6d69977bfac236d435df52707ddf900bcad",
+    "backendTermsSynchronizationPending": true
+  },
+  "technicalDeploymentAuthorization": {
+    "authorized": true,
+    "date": "2026-10-21",
+    "source": "Pedido explícito do usuário para publicar agora em ogritech.com.br",
+    "commercialLegalFiscalReviewCompleted": false,
+    "pendingGatesPreserved": true
+  }
 }

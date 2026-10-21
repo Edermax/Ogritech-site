@@ -1,6 +1,8 @@
 # Lançamento controlado do Ogritech Cardápio
 
-Estado em 27/09/2026: **BLOQUEADO**. Este documento organiza a preparação; não autoriza alterações em produção.
+Estado em 19/10/2026: **BLOQUEADO para nova liberação do produto**, com produção já parcialmente implantada. Após integrar somente a correção operacional de backup, Pages serve `1771d9c5d737682329e775b22d8e4ba171f7075e`, com o código do produto preservado. Produção tem 55 migrations e staging tem 76. O núcleo e a contratação estão em produção, enquanto editor/rascunhos e o candidato de correções de billing ainda estão retidos. O inventário atual está em `config/menu-environment-inventory.json` e a evidência inicial em [retomada de 19/10](evidencias/cardapio-retomada-2026-10-19.md).
+
+As jornadas do lojista e dos pedidos foram consideradas concluídas pelo usuário em 19/10. A homologação isolada da assinatura aprovou 26 asserções de banco com rollback e 27 testes dos handlers. As credenciais de teste do Mercado Pago estão ativadas e verificadas; o webhook isolado foi publicado no staging e recebeu uma simulacao assinada. Pagamento mensal simulado aprovado, evento assinado, acesso, reenvio idempotente e cancelamento com periodo preservado foram comprovados no backend do staging. Ainda faltam checkout hospedado pelo lojista e entrega automatica sem acionamento do simulador. O backup e a restauração corrigidos foram autorizados e aprovados: 252 asserções em nove suítes, com banco descartável e arquivos removidos ao final. Estado mais recente: [backup aprovado e ativação confirmada](evidencias/cardapio-backup-restauracao-corrigida-2026-10-19.md). Não reexecutar os itens aceitos como condição para atualizar os demais controles.
 
 A fonte executável é `config/menu-production-launch.json`. O comando `npm run gate:menu-production` mostra o estado atual sem falhar o desenvolvimento. No momento da liberação, `REQUIRE_MENU_PRODUCTION_APPROVAL=true npm run gate:menu-production` deve ser obrigatório e somente poderá passar com os dez gates aprovados e autorização explícita.
 
@@ -18,6 +20,8 @@ A fonte executável é `config/menu-production-launch.json`. O comando `npm run 
 10. **Go/no-go:** registrar commit, migrations, funções, responsáveis, evidências e decisão conjunta técnica e de negócio.
 
 ### Restrição do histórico de migrations
+
+**Inventário atual:** o lote foi reconciliado em 19/10 e classifica 21 migrations ainda pendentes em produção, incluindo a correção criada nesta rodada. Não exige novamente as migrations já aplicadas. O dry-run de setembro é histórico e precisa ser renovado; a classificação íntegra não autoriza promoção. A descrição numérica de 27/09 abaixo documenta o cenário daquele dia.
 
 O CLI não oferece seleção de arquivos individuais no `db push`: ele promove o histórico pendente em ordem. O inventário remoto de 27/09/2026 encontrou 36 migrations contíguas e duas migrations de callbacks registradas fora de ordem. Restam 27 migrations pendentes; o núcleo do Cardápio começa depois de 11 migrations pendentes de outros domínios. Há ainda migrations de IA desligada e ajustes específicos da Diniz após o núcleo.
 

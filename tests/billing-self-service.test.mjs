@@ -5,13 +5,9 @@ import { readFile } from "node:fs/promises";
 const root = new URL("../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
 
-test("oferta única calcula descontos sobre o total do período", async () => {
-  const page = await read("contratar/index.html");
-  const script = await read("contratar/contratar.js");
-  for (const value of ["R$ 97,00", "R$ 282,27", "R$ 552,90", "R$ 1.047,60"]) assert.match(page, new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  assert.match(script, /quarterly:\{months:3,discount:3,total:28227/);
-  assert.match(script, /semiannual:\{months:6,discount:5,total:55290/);
-  assert.match(script, /annual:\{months:12,discount:10,total:104760/);
+test("contratação antiga é retirada e o Cardápio mantém sua oferta", async () => {
+ const page = await read("contratar/index.html");const home=await read("index.html");
+ assert.match(page,/http-equiv="refresh"/);assert.doesNotMatch(page,/contratar\.js/);assert.match(home,/R\$ 49,90/);assert.match(home,/R\$ 499/);
 });
 
 test("billing protege teste por CNPJ e dados pré-autenticação", async () => {
@@ -28,24 +24,12 @@ test("webhook valida assinatura e processa eventos idempotentemente", async () =
   assert.doesNotMatch(webhook, /APP_USR-[A-Za-z0-9-]+/);
 });
 
-test("checkout restringe meios e exige aceites", async () => {
-  const page = await read("contratar/index.html");
-  assert.match(page, /Cartão recorrente/); assert.match(page, />Pix</);
-  assert.doesNotMatch(page, /name="payment_method" value="(?:boleto|pix_automatico|point)"/);
-  assert.match(page, /name="accepted_terms" required/);
-  assert.match(page, /name="recurring_authorized"/);
+test("cadastro do Cardápio exige termos sem solicitar cartão", async () => {
+ const page=await read("criar-cardapio/index.html");assert.match(page,/accepted_terms/);assert.doesNotMatch(page,/name="card_number"/);
 });
 
-test("ações de contratação permanecem ocultas durante carregamento e erro", async () => {
-  const page = await read("contratar/index.html");
-  const styles = await read("contratar/contratar.css");
-  const script = await read("contratar/contratar.js");
-  assert.match(page, /id="resultActions" hidden/);
-  assert.match(page, /id="checkoutLink" hidden/);
-  assert.match(styles, /\[hidden\]\{display:none!important\}/);
-  assert.match(script, /resultActions\.hidden=true/);
-  assert.match(script, /resultActions\.hidden=false/);
-  assert.match(script, /Não foi possível carregar sua contratação/);
+test("backend recusa novas contratações de produtos encerrados", async () => {
+ const handler=await read("supabase/functions/ogritech-billing/index.ts");assert.match(handler,/product_retired/);assert.match(handler,/parsed.data.product !== "menu"/);
 });
 
 test("ciclo de vida automatiza Pix, suspensão e liberação", async () => {
