@@ -223,7 +223,7 @@ function renderUsers() {
     if (!$("usersTableBody") || !$("userBusinessFilter")) return;
     const filter = $("userBusinessFilter").value;
     const filtered = users.filter((user) => filter === "all" || user.barbershop_id === filter);
-    $("usersTableBody").innerHTML = filtered.map((user) => { const business = businesses.find((item) => item.barbershop_id === user.barbershop_id); return `<tr><td><strong>${escapeHtml(user.full_name)}</strong></td><td>${escapeHtml(user.email || "—")}</td><td>${escapeHtml(business?.name || "Sem vínculo")}</td><td><span class="plan-badge">${escapeHtml(roleLabels[user.role] || user.role)}</span></td><td><span class="${user.active ? "active-badge" : "suspended-badge"}">${user.active ? "Ativo" : "Inativo"}</span></td><td><div class="admin-row-actions"><button data-user-action="edit" data-id="${user.id}">Editar</button><button data-user-action="reset-password" data-id="${user.id}">Gerar senha temporária</button><button data-user-action="toggle" data-id="${user.id}">${user.active ? "Desativar" : "Ativar"}</button><button class="danger" data-user-action="delete" data-id="${user.id}">Arquivar</button></div></td></tr>`; }).join("");
+    $("usersTableBody").innerHTML = filtered.map((user) => { const business = businesses.find((item) => item.barbershop_id === user.barbershop_id); return `<tr><td><strong>${escapeHtml(user.full_name)}</strong></td><td>${escapeHtml(user.email || "—")}</td><td>${escapeHtml(business?.name || "Sem vínculo")}</td><td><span class="plan-badge">${escapeHtml(roleLabels[user.role] || user.role)}</span></td><td><span class="${user.active ? "active-badge" : "suspended-badge"}">${user.active ? "Ativo" : "Inativo"}</span></td><td><div class="admin-row-actions">${business && isMenuBusiness(business) ? `<button data-user-action="edit" data-id="${user.id}">Editar</button><button data-user-action="reset-password" data-id="${user.id}">Gerar senha temporária</button><button data-user-action="toggle" data-id="${user.id}">${user.active ? "Desativar" : "Ativar"}</button><button class="danger" data-user-action="delete" data-id="${user.id}">Arquivar</button>` : '<span class="admin-muted">Registro histórico. Ações de acesso indisponíveis.</span>'}</div></td></tr>`; }).join("");
     $("usersEmpty").classList.toggle("hidden", filtered.length > 0);
 }
 
@@ -500,6 +500,16 @@ function selectAdminView(focus = false) {
 }
 function initializeAdminNavigation() {
     selectAdminView(); window.addEventListener("hashchange", () => selectAdminView(true));
+    window.addEventListener("popstate", () => selectAdminView(true));
+    document.addEventListener("click", (event) => {
+        const link = event.target.closest('a[href^="#"]');
+        if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        const hash = link.getAttribute("href"), key = hash.slice(1);
+        if (!Object.hasOwn(adminViews, key)) return;
+        event.preventDefault();
+        if (location.hash !== hash) history.pushState(null, "", hash);
+        selectAdminView(true);
+    });
     document.addEventListener("keydown", (event) => {
         const modal = document.querySelector(".platform-modal:not(.hidden)"); if (!modal) return;
         if (event.key === "Escape") { event.preventDefault(); closeModals(); return; }
