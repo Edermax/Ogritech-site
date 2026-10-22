@@ -195,6 +195,7 @@
   async function init() {
     const { data, error } = await supabaseClient.rpc("public_menu", { target_slug: slug }); if (error || !data) { $("loading").innerHTML = "<h1>Cardápio indisponível</h1><p>Confira o endereço ou tente novamente.</p>"; return; }
     const menuTitle = isDinizMenu ? data.menu.title.replace(/\s*[—-]\s*piloto privado\s*$/i, "").trim() : data.menu.title;
+    data.categories = (data.categories || []).filter(category => (category.items || []).length > 0);
     page = data; applyVisualIdentity(data.menu.visual_identity); document.title = `${menuTitle} | Ogritech`; $("menuTitle").textContent = menuTitle; $("menuDescription").textContent = data.menu.description; $("menuDescription").classList.toggle("hidden", !data.menu.description?.trim());
     const logoUrl = globalThis.OgritechMenuBranding?.assetUrl(data.menu.visual_identity?.logo_path, window.OGRITECH_SUPABASE_URL);
     const coverUrl = globalThis.OgritechMenuBranding?.assetUrl(data.menu.visual_identity?.cover_path, window.OGRITECH_SUPABASE_URL);
@@ -219,7 +220,7 @@
         ? `<div class="menu-item-media"><img class="menu-item-image" src="${clean(item.image_url)}" alt=""></div>`
         : illustration
           ? `<div class="menu-item-media"><img class="menu-item-image" src="${illustration.src}" alt="${illustration.alt}"><span class="menu-image-note">Imagem ilustrativa</span></div>`
-          : `<div class="menu-item-placeholder" aria-hidden="true"><small>Feito por encomenda</small></div>`;
+          : `<div class="menu-item-placeholder" aria-hidden="true"><small>${item.item_type === "preorder" || Number(item.lead_time_hours) > 0 ? "Feito por encomenda" : "Confira as opções"}</small></div>`;
       return `<article class="menu-item-card" data-item="${item.id}">${media}<div class="menu-item-content"><div class="menu-item-heading"><h3>${clean(item.name)}</h3>${quote ? '<span class="menu-item-badge">Sob consulta</span>' : ((item.option_groups || []).length ? '<span class="menu-item-badge">Personalizável</span>' : "")}</div><p>${clean(item.description)}</p>${pricePicker}</div></article>`;
     }).join("")}</div></section>`).join("");
     const refreshSelectedPrice = (itemId) => { const select = $("catalog").querySelector(`[data-price-select="${itemId}"]`), quantityInput = $("catalog").querySelector(`[data-quantity-select="${itemId}"]`), price = prices.get(select.value), output = $("catalog").querySelector(`[data-selected-price="${itemId}"]`), quantity = quantityInput ? Number(quantityInput.value) : 1; output.textContent = quantityInput ? `${quantity} unidades · ${money.format(price.amount * quantity)}` : `${isQuoteItem(price.item) ? "A partir de " : ""}${money.format(price.amount)}`; };
