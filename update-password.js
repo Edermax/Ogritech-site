@@ -1,9 +1,8 @@
 /* OGRITECH - DEFINIÇÃO DE NOVA SENHA */
 
 const updatePasswordForm = document.getElementById("updatePasswordForm");
-const recoveryCredentialFields = document.getElementById("recoveryCredentialFields");
-const recoveryEmailInput = document.getElementById("recoveryEmail");
-const recoveryCodeInput = document.getElementById("recoveryCode");
+const confirmAccessButton = document.getElementById("confirmAccessButton");
+const accessLinkMessage = document.getElementById("accessLinkMessage");
 const newPasswordInput = document.getElementById("newPassword");
 const confirmPasswordInput = document.getElementById("confirmPassword");
 const updatePasswordMessage = document.getElementById("updatePasswordMessage");
@@ -14,7 +13,7 @@ const passwordToggleButtons = updatePasswordForm.querySelectorAll("[data-passwor
 const loginUrl = window.ogritechEnvironmentUrl("login/");
 
 backToLoginLink.href = loginUrl;
-recoveryEmailInput.value = sessionStorage.getItem("ogritechRecoveryEmail") || "";
+
 
 passwordToggleButtons.forEach((toggleButton) => {
     toggleButton.addEventListener("click", () => {
@@ -31,67 +30,73 @@ passwordToggleButtons.forEach((toggleButton) => {
 
 const recoveryUrl = new URL(window.location.href);
 const recoveryHash = new URLSearchParams(recoveryUrl.hash.replace(/^#/, ""));
-const hasRecoveryCallback =
-    recoveryUrl.searchParams.has("code") ||
-    recoveryHash.get("type") === "recovery";
+const callbackType = recoveryUrl.searchParams.get("type") || recoveryHash.get("type");
+const tokenHash = recoveryHash.get("token_hash") || recoveryUrl.searchParams.get("token_hash");
 let recoveryInitialized = false;
 let recoveryAccessToken = null;
+
+function clearCallbackUrl() {
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.hash = "";
+    for (const key of ["code", "token_hash", "type", "error", "error_code", "error_description"]) cleanUrl.searchParams.delete(key);
+    window.history.replaceState({}, document.title, cleanUrl);
+}
+
+function invalidLink() {
+    confirmAccessButton.classList.add("hidden");
+    updatePasswordForm.classList.add("hidden");
+    accessLinkMessage.textContent = "Este link é inválido, expirou ou já foi utilizado. Abra o e-mail mais recente ou solicite um novo link na página de login.";
+    accessLinkMessage.className = "login-message error";
+    clearCallbackUrl();
+}
 
 function showRecoveryForm(session) {
     if (!session || recoveryInitialized) return;
     recoveryInitialized = true;
     invalidRecoveryMessage.classList.add("hidden");
+    confirmAccessButton.classList.add("hidden");
+    accessLinkMessage.textContent = "Link validado. Escolha sua senha abaixo.";
     updatePasswordForm.classList.remove("hidden");
-    recoveryCredentialFields.classList.add("hidden");
-    recoveryEmailInput.required = false;
-    recoveryCodeInput.required = false;
-    updatePasswordMessage.textContent = "Use pelo menos 8 caracteres.";
+    updatePasswordMessage.textContent = "Use pelo menos 8 caracteres, com maiúscula, minúscula, número e símbolo.";
+    clearCallbackUrl();
 }
 
-supabaseClient.auth.onAuthStateChange((event, session) => {
-    if (
-        event === "PASSWORD_RECOVERY" ||
-        (event === "SIGNED_IN" && hasRecoveryCallback)
-    ) {
-        showRecoveryForm(session);
-    }
-});
-
 async function initializeRecovery() {
-    const accessToken = recoveryHash.get("access_token");
-
-    if (accessToken) {
-        const { data, error } = await supabaseClient.auth.getUser(accessToken);
-
-        if (!error && data.user) {
-            recoveryAccessToken = accessToken;
-            showRecoveryForm({ user: data.user });
-            return;
+    if (recoveryUrl.searchParams.has("error") || recoveryHash.has("error")) return invalidLink();
+    if (tokenHash && ["invite", "recovery"].includes(callbackType)) {
+        // Only a human click consumes the one-time link; mail scanners may prefetch the page.
+        accessLinkMessage.textContent = "Clique em continuar para validar seu link. Nenhum código é necessário.";
+        confirmAccessButton.classList.remove("hidden");
+        confirmAccessButton.addEventListener("click", async () => {
+            confirmAccessButton.disabled = true;
+            accessLinkMessage.textContent = "Validando seu link...";
+            try {
+                const { data, error } = await supabaseClient.auth.verifyOtp({ token_hash: tokenHash, type: callbackType });
+                if (error || !data.session) return invalidLink();
+                showRecoveryForm(data.session);
+            } catch { invalidLink(); }
+        }, { once: true });
+        return;
+    }
+    try {
+        const accessToken = recoveryHash.get("access_token");
+        const refreshToken = recoveryHash.get("refresh_token");
+        if (accessToken && ["invite", "recovery"].includes(callbackType)) {
+            if (refreshToken) {
+                const { data, error } = await supabaseClient.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+                if (!error && data.session) return showRecoveryForm(data.session);
+            } else {
+                const { data, error } = await supabaseClient.auth.getUser(accessToken);
+                if (!error && data.user) { recoveryAccessToken = accessToken; return showRecoveryForm({ user: data.user }); }
+            }
         }
-    }
-
-    const authCode = recoveryUrl.searchParams.get("code");
-    if (authCode) {
-        const { data, error } = await supabaseClient.auth.exchangeCodeForSession(authCode);
-        if (!error && data.session) {
-            showRecoveryForm(data.session);
-            recoveryUrl.searchParams.delete("code");
-            window.history.replaceState({}, document.title, recoveryUrl);
-            return;
+        const code = recoveryUrl.searchParams.get("code");
+        if (code) {
+            const { data, error } = await supabaseClient.auth.exchangeCodeForSession(code);
+            if (!error && data.session) return showRecoveryForm(data.session);
         }
-    }
-
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session && hasRecoveryCallback) showRecoveryForm(session);
-
-    if (hasRecoveryCallback) {
-        window.setTimeout(() => {
-            if (recoveryInitialized) return;
-            updatePasswordMessage.textContent =
-                "O link não pôde ser validado. Digite abaixo o código mais recente recebido por e-mail.";
-            updatePasswordMessage.className = "login-message error";
-        }, 3000);
-    }
+    } catch { /* Invalid or disconnected callback: show an actionable link error. */ }
+    invalidLink();
 }
 
 updatePasswordForm.addEventListener("submit", async (event) => {
@@ -114,31 +119,9 @@ updatePasswordForm.addEventListener("submit", async (event) => {
     }
 
     updateButton.disabled = true;
-    updatePasswordMessage.textContent = recoveryInitialized
-        ? "Salvando nova senha..."
-        : "Validando código de recuperação...";
+    if (!recoveryInitialized) { updateButton.disabled = false; return invalidLink(); }
+    updatePasswordMessage.textContent = "Salvando nova senha...";
     updatePasswordMessage.className = "login-message";
-
-    if (!recoveryInitialized) {
-        const email = recoveryEmailInput.value.trim().toLowerCase();
-        const token = recoveryCodeInput.value.trim();
-        const { data, error } = await supabaseClient.auth.verifyOtp({
-            email,
-            token,
-            type: "recovery"
-        });
-
-        if (error || !data.session) {
-            updatePasswordMessage.textContent =
-                "Código inválido ou expirado. Use o código do e-mail mais recente.";
-            updatePasswordMessage.className = "login-message error";
-            updateButton.disabled = false;
-            return;
-        }
-
-        showRecoveryForm(data.session);
-        updatePasswordMessage.textContent = "Salvando nova senha...";
-    }
 
     let updateError = null;
 
@@ -184,7 +167,7 @@ updatePasswordForm.addEventListener("submit", async (event) => {
     } else {
         await supabaseClient.auth.signOut();
     }
-    sessionStorage.clear();
+    sessionStorage.removeItem("ogritechRecoveryEmail");
     updatePasswordMessage.textContent =
         "Senha atualizada. Redirecionando para o login...";
     updatePasswordMessage.className = "login-message success";

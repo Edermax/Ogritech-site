@@ -45,6 +45,12 @@ function serviceKey() {
   if (legacy) return legacy;
   try { return JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") || "{}").default || ""; } catch { return ""; }
 }
+function firstAccessUrl(path: string, product: string) {
+  const target = new URL(path, Deno.env.get("PUBLIC_APP_URL") || "https://ogritech.com.br");
+  target.searchParams.set("primeiro_acesso", product);
+  if (Deno.env.get("SUPABASE_URL") === "https://fuesdztsvrkkgnbqhcxi.supabase.co") target.searchParams.set("env", "staging");
+  return target.href;
+}
 function validCnpj(value: string) {
   const digits = value.replace(/\D/g, "");
   if (!/^\d{14}$/.test(digits) || /^(\d)\1{13}$/.test(digits)) return "";
@@ -268,8 +274,7 @@ Deno.serve(async (request) => {
       if (clientError) { await admin.from("barbershops").delete().eq("id", shop.id); throw clientError; }
       await admin.rpc("backend_billing_signup_link", { target_signup_id: signupId, target_barbershop_id: shop.id, target_saas_client_id: client.id });
       await admin.rpc("backend_billing_accept_terms", { payload: { signup_id: signupId, terms_version: termsVersion, terms_sha256: termsHash, recurring_authorized: input.payment_method === "card", ip_address: ip || "", user_agent: (request.headers.get("user-agent") || "").slice(0, 500) } });
-      const appUrl = Deno.env.get("PUBLIC_APP_URL") || "https://ogritech.com.br";
-      const invitation = await admin.auth.admin.inviteUserByEmail(input.email, { data: { full_name: clean(input.responsible_name), product: input.product }, redirectTo: `${appUrl}/update-password.html?primeiro_acesso=${input.product}` });
+      const invitation = await admin.auth.admin.inviteUserByEmail(input.email, { data: { full_name: clean(input.responsible_name), product: input.product }, redirectTo: firstAccessUrl("/update-password.html", input.product) });
       if (invitation.error) throw invitation.error;
       const profile = await admin.from("profiles").insert({ id: invitation.data.user.id, barbershop_id: shop.id, full_name: clean(input.responsible_name), role: "owner", active: true });
       if (profile.error) throw profile.error;
@@ -297,7 +302,7 @@ Deno.serve(async (request) => {
       }
     }
     if (input.payment_method === "card") await admin.rpc("backend_billing_signup_provider_update", { target_signup_id: signupId, target_plan_id: providerPlanId, target_subscription_id: providerId });
-    return reply({ data: { signup_id: signupId, product: input.product, management_token: token, trial_ends_at: trialEndsAt, login_url: `${appUrl}/login/?produto=${input.product}&primeiro_acesso=1`, checkout_url: checkoutUrl || null, pix, billing_configured: input.payment_method === "pix" || Boolean(providerId), quote: cycle } }, 201, origin);
+    return reply({ data: { signup_id: signupId, product: input.product, management_token: token, trial_ends_at: trialEndsAt, login_url: firstAccessUrl(`/login/?produto=${input.product}`, "1"), checkout_url: checkoutUrl || null, pix, billing_configured: input.payment_method === "pix" || Boolean(providerId), quote: cycle } }, 201, origin);
   }
 
   const parsed = ManageBody.safeParse(json);
