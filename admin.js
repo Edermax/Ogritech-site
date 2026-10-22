@@ -12,6 +12,7 @@ const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL
 const moneyPrecise = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 const shortDate = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" });
 const $ = (id) => document.getElementById(id);
+const adminIcon = (name) => `<svg class="admin-icon" width="18" height="18" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#${name}"></use></svg>`;
 const environmentUrl = (path) => window.ogritechEnvironmentUrl?.(path) || path;
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
 
@@ -117,7 +118,7 @@ function renderSegments() {
     $("segmentGrid").innerHTML = [...new Set(menuBusinesses.map((business) => business.segment))].map((segment) => {
         const meta = SEGMENTS[segment] || SEGMENTS.Outro;
         const count = menuBusinesses.filter((business) => business.segment === segment).length;
-        return `<article class="segment-card" style="--segment-color:${meta.color}"><i>${meta.icon}</i><div><strong>${escapeHtml(segment)}</strong><span>${count} negócio${count === 1 ? "" : "s"}</span></div><b>${count}</b></article>`;
+        return `<article class="segment-card" style="--segment-color:${meta.color}"><i>${adminIcon("store")}</i><div><strong>${escapeHtml(segment)}</strong><span>${count} negócio${count === 1 ? "" : "s"}</span></div><b>${count}</b></article>`;
     }).join("") || '<p class="admin-muted">Os segmentos aparecerão quando o primeiro negócio tiver uma assinatura de Cardápio.</p>';
 }
 
@@ -127,10 +128,10 @@ function renderBusinesses() {
     const filtered = businesses.filter((business) => (scope === "all" || (scope === "menu" ? isMenuBusiness(business) : !isMenuBusiness(business))) && `${business.name} ${business.contact_name} ${business.owner_email || ""}`.toLocaleLowerCase("pt-BR").includes(query) && (segment === "all" || business.segment === segment));
     $("businessTableBody").innerHTML = filtered.map((business) => {
         const meta = SEGMENTS[business.segment] || SEGMENTS.Outro;
-        return `<tr><td><button class="business-link" data-action="detail" data-id="${business.id}"><span style="--segment-color:${meta.color}">${meta.icon}</span><strong>${escapeHtml(business.name)}</strong></button></td>
+        return `<tr><td><button class="business-link" data-action="detail" data-id="${business.id}"><span class="business-symbol" style="--segment-color:${meta.color}">${adminIcon("store")}</span><strong>${escapeHtml(business.name)}</strong></button></td>
         <td>${escapeHtml(business.segment)}</td><td>${escapeHtml(business.contact_name)}</td><td><strong>${escapeHtml(business.phone || "Telefone pendente")}</strong><br><small>${escapeHtml(business.owner_email || "E-mail pendente")}</small></td><td><span class="origin-badge">${escapeHtml(business.origin)}</span></td>
         <td><span class="plan-badge">${escapeHtml(isMenuBusiness(business) ? business.plan : "Histórico · " + business.plan)}</span></td><td>${money.format(business.monthly_fee)}</td><td><span class="${business.status === "Ativo" ? "active-badge" : "suspended-badge"}">${escapeHtml(business.status)}</span></td>
-        <td><div class="admin-row-actions"><button data-action="operate" data-id="${business.id}" ${canOperateMenu(business) ? "" : 'disabled title="A operação exige uma assinatura de Cardápio com acesso ativo"'}>Operar</button><button data-action="edit" data-id="${business.id}">Editar</button><button class="danger" data-action="delete" data-id="${business.id}">Arquivar</button></div></td></tr>`;
+        <td><div class="admin-row-actions"><button data-action="operate" data-id="${business.id}" ${canOperateMenu(business) ? "" : 'disabled title="A operação exige uma assinatura de Cardápio com acesso ativo"'}>${adminIcon("arrow")}Operar</button><button data-action="edit" data-id="${business.id}">${adminIcon("edit")}Editar</button><button class="danger" data-action="delete" data-id="${business.id}">${adminIcon("archive")}Arquivar</button></div></td></tr>`;
     }).join("");
     $("businessEmpty").classList.toggle("hidden", filtered.length > 0);
     document.querySelector(".business-table-wrap").classList.toggle("hidden", filtered.length === 0);
@@ -223,7 +224,7 @@ function renderUsers() {
     if (!$("usersTableBody") || !$("userBusinessFilter")) return;
     const filter = $("userBusinessFilter").value;
     const filtered = users.filter((user) => filter === "all" || user.barbershop_id === filter);
-    $("usersTableBody").innerHTML = filtered.map((user) => { const business = businesses.find((item) => item.barbershop_id === user.barbershop_id); return `<tr><td><strong>${escapeHtml(user.full_name)}</strong></td><td>${escapeHtml(user.email || "—")}</td><td>${escapeHtml(business?.name || "Sem vínculo")}</td><td><span class="plan-badge">${escapeHtml(roleLabels[user.role] || user.role)}</span></td><td><span class="${user.active ? "active-badge" : "suspended-badge"}">${user.active ? "Ativo" : "Inativo"}</span></td><td><div class="admin-row-actions">${business && isMenuBusiness(business) ? `<button data-user-action="edit" data-id="${user.id}">Editar</button><button data-user-action="reset-password" data-id="${user.id}">Gerar senha temporária</button><button data-user-action="toggle" data-id="${user.id}">${user.active ? "Desativar" : "Ativar"}</button><button class="danger" data-user-action="delete" data-id="${user.id}">Arquivar</button>` : '<span class="admin-muted">Registro histórico. Ações de acesso indisponíveis.</span>'}</div></td></tr>`; }).join("");
+    $("usersTableBody").innerHTML = filtered.map((user) => { const business = businesses.find((item) => item.barbershop_id === user.barbershop_id); return `<tr><td><strong>${escapeHtml(user.full_name)}</strong></td><td>${escapeHtml(user.email || "—")}</td><td>${escapeHtml(business?.name || "Sem vínculo")}</td><td><span class="plan-badge">${escapeHtml(roleLabels[user.role] || user.role)}</span></td><td><span class="${user.active ? "active-badge" : "suspended-badge"}">${user.active ? "Ativo" : "Inativo"}</span></td><td><div class="admin-row-actions">${business && isMenuBusiness(business) ? `<button data-user-action="edit" data-id="${user.id}">${adminIcon("edit")}Editar</button><button data-user-action="reset-password" data-id="${user.id}">Gerar senha temporária</button><button data-user-action="toggle" data-id="${user.id}">${user.active ? "Desativar" : "Ativar"}</button><button class="danger" data-user-action="delete" data-id="${user.id}">${adminIcon("archive")}Arquivar</button>` : '<span class="admin-muted">Registro histórico. Ações de acesso indisponíveis.</span>'}</div></td></tr>`; }).join("");
     $("usersEmpty").classList.toggle("hidden", filtered.length > 0);
 }
 

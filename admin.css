@@ -145,3 +145,60 @@
  .platform-admin-page .detail-actions button { flex:1 1 130px; }
 }
 @media(prefers-reduced-motion:reduce) { .platform-admin-page * { scroll-behavior:auto!important; transition:none!important; } }
+/* Brand tokens match the public Cardapio homepage. */
+.platform-admin-page {
+ --admin-bg:#071011; --admin-surface:#0d1719; --admin-surface-raised:#111e20;
+ --admin-line:#233638; --admin-text:#f4f7f6; --admin-muted:#a2adae;
+ --cyan:#39d4e8; --cyan-light:#39d4e8; --gold:#e3c35f; --gold-light:#e3c35f;
+ font-family:Inter,"Segoe UI",system-ui,sans-serif; font-size:15px; line-height:1.6;
+ color:var(--admin-text); background:radial-gradient(ellipse at 95% 0,rgba(57,212,232,.055),transparent 48%),var(--admin-bg);
+}
+.platform-admin-page .platform-sidebar { background:#081214; border-color:var(--admin-line); }
+.platform-admin-page .brand-name { color:var(--admin-text); font-family:inherit; font-size:23px; font-weight:750; letter-spacing:-.8px; }
+.platform-admin-page .brand-subtitle { color:var(--admin-muted); font-size:9px; letter-spacing:1.3px; }
+.platform-admin-page .platform-content { font-family:inherit; }
+.platform-admin-page .platform-topbar h1 { font-weight:780; letter-spacing:-1.2px; }
+.platform-admin-page .platform-kicker { color:var(--cyan); font-weight:800; letter-spacing:.15em; }
+.platform-admin-page .platform-stats article,.platform-admin-page .platform-panel { border-color:var(--admin-line); background:linear-gradient(145deg,var(--admin-surface-raised),var(--admin-surface)); }
+.platform-admin-page .admin-icon { display:inline-block; width:20px; height:20px; flex:0 0 20px; vertical-align:middle; color:currentColor; }
+.platform-admin-page .platform-menu { flex:0 0 auto; align-content:start; }
+.platform-admin-page .platform-menu a { flex:0 0 auto; min-height:48px; height:auto; font-family:inherit; font-weight:600; line-height:1.4; }
+.platform-admin-page .platform-menu a>.admin-icon { color:#89a6aa; transition:color .18s; }
+.platform-admin-page .platform-menu a:hover { border-color:#2f494d; background:#102225; color:var(--admin-text); }
+.platform-admin-page .platform-menu a.active { position:relative; border-color:rgba(57,212,232,.3); background:linear-gradient(110deg,rgba(57,212,232,.12),rgba(57,212,232,.035)); color:var(--admin-text); }
+.platform-admin-page .platform-menu a.active>.admin-icon { color:var(--cyan); }
+.platform-admin-page .platform-menu a.active::after { content:""; width:5px; height:5px; margin-left:auto; border-radius:50%; background:var(--cyan); }
+.platform-admin-page .platform-owner-card button { display:flex; align-items:center; justify-content:center; gap:8px; }
+.platform-admin-page .platform-owner-card button>span { font:inherit; }
+.platform-admin-page .security-pill { display:inline-flex; align-items:center; gap:8px; border:1px solid rgba(227,195,95,.25); color:#ddcf9d; background:rgba(227,195,95,.035); border-radius:999px; padding:9px 13px; }
+.platform-admin-page .security-pill .admin-icon { width:15px; height:15px; flex-basis:15px; }
+.platform-admin-page .platform-stats article { position:relative; padding-top:62px; }
+.platform-admin-page .stat-icon { position:absolute; left:22px; top:20px; color:var(--cyan); padding:8px; box-sizing:content-box; border-radius:10px; background:rgba(57,212,232,.07); border:1px solid rgba(57,212,232,.12); }
+.platform-admin-page .admin-shortcuts a { position:relative; padding-left:74px; min-height:104px; justify-content:center; background:var(--admin-surface); border-color:var(--admin-line); transition:border-color .18s,background .18s; }
+.platform-admin-page .admin-shortcuts a:hover { border-color:rgba(57,212,232,.45); background:var(--admin-surface-raised); }
+.platform-admin-page .shortcut-icon { position:absolute; top:50%; left:20px; transform:translateY(-50%); color:var(--cyan); padding:9px; box-sizing:content-box; border:1px solid #294347; border-radius:12px; }
+.platform-admin-page .cyan-button { display:inline-flex; justify-content:center; align-items:center; gap:9px; background:var(--cyan); border-color:var(--cyan); box-shadow:0 8px 24px rgba(8,185,211,.09); font-weight:750; }
+.platform-admin-page .outline-cyan-button,.platform-admin-page .admin-row-actions button { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:rgba(255,255,255,.025); }
+.platform-admin-page .business-symbol { display:grid; place-items:center; width:32px; height:32px; border-radius:9px; color:var(--cyan); background:rgba(57,212,232,.06); }
+.platform-admin-page .business-link .admin-icon { width:18px; height:18px; }
+.platform-admin-page .plan-card { background:linear-gradient(145deg,rgba(227,195,95,.065),var(--admin-surface) 60%); }
+.platform-admin-page .plan-card.featured { border-color:rgba(227,195,95,.35); box-shadow:none; }
+.platform-admin-page .recommended-plan { color:var(--gold); background:rgba(227,195,95,.08); border:1px solid rgba(227,195,95,.2); padding:6px 10px; }
+.platform-admin-page .app-legal-links a { color:var(--admin-muted); }
+.platform-admin-page .app-legal-links a:hover { color:var(--cyan); }
+@media(max-width:1000px) {
+ .platform-admin-page .platform-sidebar { grid-template-columns:minmax(0,1fr) auto; align-items:center; align-content:start; height:auto; min-height:0; }
+ .platform-admin-page .platform-menu { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-auto-rows:auto; flex-direction:row; align-content:start; align-items:stretch; gap:8px; width:100%; height:auto; min-height:0; }
+ .platform-admin-page .platform-menu a { flex:none; height:auto; min-height:48px; padding:12px; justify-content:flex-start; }
+ .platform-admin-page .platform-owner-card { grid-column:auto; }
+}
+@media(max-width:600px) {
+ .platform-admin-page .platform-sidebar { grid-template-columns:minmax(0,1fr); gap:14px; }
+ .platform-admin-page .platform-owner-card { grid-column:1/-1; }
+ .platform-admin-page .platform-menu { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+ .platform-admin-page .platform-menu a { min-height:48px; padding:10px; font-size:12px; }
+ .platform-admin-page .platform-menu a.active::after { display:none; }
+ .platform-admin-page .platform-stats article { padding-top:58px; }
+ .platform-admin-page .stat-icon { top:14px; left:12px; padding:7px; width:18px; height:18px; }
+ .platform-admin-page .admin-shortcuts a { padding:18px 18px 18px 76px; }
+}

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:54321 http://localhost:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co wss://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co wss://mvzcoaiiwytycdqcvydf.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#080808">
+    <meta name="theme-color" content="#071011">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>Ogritech | Administração da plataforma</title>
     <link rel="icon" href="ogritech-favicon.ico" sizes="any">
@@ -12,31 +12,31 @@
     <link rel="apple-touch-icon" href="ogritech-brand-symbol.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css?v=20261022.1">
-    <link rel="stylesheet" href="admin.css?v=20261022.1">
+    <link rel="stylesheet" href="admin.css?v=20261022.3">
 </head>
 <body class="platform-admin-page">
     <div class="platform-shell">
         <aside class="platform-sidebar">
             <a class="platform-brand-link header-logo-link" href="./" aria-label="Ir para a página principal da Ogritech">
                 <img src="ogritech-brand-symbol.png" alt="" class="platform-admin-logo">
-                <div class="brand-name">OGRITECH</div>
-                <div class="brand-subtitle">ADMINISTRAÇÃO DA PLATAFORMA</div>
+                <div class="brand-name">Ogritech</div>
+                <div class="brand-subtitle">GESTÃO DO CARDÁPIO</div>
             </a>
 
             <nav class="platform-menu" aria-label="Navegação administrativa">
-                <a href="#overview" class="active"><span>⌂</span>Visão geral</a>
-                <a href="#businesses"><span>▦</span>Negócios</a>
-                <a href="#users"><span>♙</span>Acessos</a>
+                <a href="#overview" class="active"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#overview"></use></svg>Visão geral</a>
+                <a href="#businesses"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#store"></use></svg>Negócios</a>
+                <a href="#users"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#users"></use></svg>Acessos</a>
 
-                <a href="#plans"><span>◈</span>Plano do Cardápio</a>
-                <a href="#products"><span>▦</span>Assinaturas</a>
-                <a href="#billing"><span>R$</span>Cobranças</a>
+                <a href="#plans"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#book"></use></svg>Plano do Cardápio</a>
+                <a href="#products"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#card"></use></svg>Assinaturas</a>
+                <a href="#billing"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#receipt"></use></svg>Cobranças</a>
             </nav>
 
             <div class="platform-owner-card">
                 <span class="owner-avatar">ED</span>
                 <div><strong id="platformOwnerName">Edermax</strong><small>Proprietário Ogritech</small></div>
-                <button id="platformLogout" type="button">Sair</button>
+                <button id="platformLogout" type="button"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#logout"></use></svg><span>Sair</span></button>
             </div>
         </aside>
 
@@ -47,17 +47,17 @@
                     <h1 id="adminViewTitle" tabindex="-1">Visão geral</h1>
                     <p><span id="adminViewDescription">Acompanhe seus clientes de Cardápio e acesse as tarefas do dia.</span></p>
                 </div>
-                <div class="security-pill"><span></span>Acesso privado</div>
+                <div class="security-pill"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#shield"></use></svg>Acesso privado</div>
             </header>
 
             <section id="adminSummary" class="platform-stats" aria-label="Resumo da carteira">
-                <article><span>Negócios com Cardápio</span><strong id="businessCount">0</strong><small>Cadastros do produto atual</small></article>
-                <article><span>Segmentos atendidos</span><strong id="segmentCount">0</strong><small>Segmentos com Cardápio</small></article>
-                <article><span>Cardápios com acesso ativo</span><strong id="activeCount">0</strong><small class="cyan-positive">Conforme assinatura e cadastro</small></article>
-                <article><span>Receita mensal estimada</span><strong id="monthlyRevenue">R$ 0</strong><small>Estimativa dos clientes reais</small></article>
+                <article><svg class="admin-icon stat-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#store"></use></svg><span>Negócios com Cardápio</span><strong id="businessCount">0</strong><small>Cadastros do produto atual</small></article>
+                <article><svg class="admin-icon stat-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#pie"></use></svg><span>Segmentos atendidos</span><strong id="segmentCount">0</strong><small>Segmentos com Cardápio</small></article>
+                <article><svg class="admin-icon stat-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#check"></use></svg><span>Cardápios com acesso ativo</span><strong id="activeCount">0</strong><small class="cyan-positive">Conforme assinatura e cadastro</small></article>
+                <article><svg class="admin-icon stat-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#chart"></use></svg><span>Receita mensal estimada</span><strong id="monthlyRevenue">R$ 0</strong><small>Estimativa dos clientes reais</small></article>
             </section>
 
-            <section class="admin-shortcuts" id="adminShortcuts" aria-label="Ações rápidas"><a href="#businesses"><strong>Gerenciar negócios</strong><span>Cadastros e acesso aos cardápios →</span></a><a href="#billing"><strong>Conferir cobranças</strong><span>Faturas e recebimentos →</span></a><a href="#users"><strong>Gerenciar acessos</strong><span>Proprietários e equipe →</span></a></section>
+            <section class="admin-shortcuts" id="adminShortcuts" aria-label="Ações rápidas"><a href="#businesses"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#store"></use></svg><strong>Gerenciar negócios</strong><span>Cadastros e acesso aos cardápios</span></a><a href="#billing"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#receipt"></use></svg><strong>Conferir cobranças</strong><span>Faturas e recebimentos</span></a><a href="#users"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#users"></use></svg><strong>Gerenciar acessos</strong><span>Proprietários e equipe</span></a></section>
             <section class="platform-panel" id="segments">
                 <div class="platform-section-title">
                     <div><p class="platform-kicker">DISTRIBUIÇÃO</p><h2>Clientes por segmento</h2></div>
@@ -72,7 +72,7 @@
                     <div class="business-controls">
                         <select id="businessScope" aria-label="Exibir cadastros"><option value="menu">Cardápios</option><option value="legacy">Histórico de soluções encerradas</option><option value="all">Todos os cadastros</option></select><input type="search" id="businessSearch" placeholder="Buscar negócio ou responsável..." aria-label="Buscar negócio">
                         <select id="segmentFilter" aria-label="Filtrar por segmento"><option value="all">Todos os segmentos</option></select>
-                        <button type="button" class="cyan-button" id="newBusinessButton">Criar cardápio</button>
+                        <button type="button" class="cyan-button" id="newBusinessButton"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#plus"></use></svg>Criar cardápio</button>
                     </div>
                 </div>
                 <p class="demo-notice">Clique no nome para consultar o cadastro. “Operar” abre um Cardápio com acesso ativo. Os cadastros das soluções encerradas ficam disponíveis no filtro de histórico.</p>
@@ -109,7 +109,7 @@
                         <select id="billingStatusFilter" aria-label="Filtrar cobranças por status">
                             <option value="all">Todos os status</option><option value="open">Em aberto</option><option value="overdue">Atrasada</option><option value="paid">Paga</option><option value="partially_refunded">Devolução parcial</option><option value="refunded">Devolvida</option><option value="void">Cancelada</option>
                         </select>
-                        <button type="button" class="cyan-button" id="newInvoiceButton">+ Nova cobrança</button>
+                        <button type="button" class="cyan-button" id="newInvoiceButton"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#plus"></use></svg>Nova cobrança</button>
                     </div>
                 </div>
                 <p class="demo-notice">Este módulo controla somente valores cobrados pela Ogritech: implantação, assinatura, descontos, créditos e serviços adicionais.</p>
@@ -130,7 +130,7 @@
             </section>
 
             <section class="platform-panel" id="users">
-                <div class="platform-section-title business-heading"><div><p class="platform-kicker">ACESSOS</p><h2>Usuários dos negócios</h2></div><div class="business-controls"><select id="userBusinessFilter" aria-label="Filtrar usuários por negócio"></select><button type="button" class="cyan-button" id="newUserButton">+ Adicionar usuário</button></div></div>
+                <div class="platform-section-title business-heading"><div><p class="platform-kicker">ACESSOS</p><h2>Usuários dos negócios</h2></div><div class="business-controls"><select id="userBusinessFilter" aria-label="Filtrar usuários por negócio"></select><button type="button" class="cyan-button" id="newUserButton"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#plus"></use></svg>Adicionar usuário</button></div></div>
                 <p class="demo-notice">Esta seção mostra somente pessoas que receberam acesso ao sistema. Para abrir um cardápio, vá a <a href="#businesses">Negócios</a> e escolha “Operar”.</p>
                 <div class="business-table-wrap"><table class="business-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Negócio</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody id="usersTableBody"></tbody></table></div>
                 <div class="empty-state hidden" id="usersEmpty"><strong>Nenhum usuário encontrado.</strong><span>Adicione proprietários ou pessoas da equipe a um Cardápio cadastrado.</span></div>
@@ -282,7 +282,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
     <script src="supabase-config.js"></script>
-    <script src="admin.js?v=20261022.2"></script>
+    <script src="admin.js?v=20261022.3"></script>
     <script src="pwa.js?v=20260831.2"></script>
 </body>
 </html>
