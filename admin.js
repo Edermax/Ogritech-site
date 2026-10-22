@@ -3,10 +3,12 @@ const SEGMENTS = {
     "Barbearia": { icon: "✂", color: "#f0d477" }, "Salão de beleza": { icon: "✦", color: "#d173df" },
     "Manicure": { icon: "◇", color: "#f18fb4" }, "Bronzeamento": { icon: "☀", color: "#f0ad4e" },
     "Professor de música": { icon: "♫", color: "#6ba8f7" }, "Personal training": { icon: "◆", color: "#65d39b" },
+    "Lanchonete": { icon: "☷", color: "#65d39b" }, "Restaurante": { icon: "☷", color: "#f0d477" },
+    "Confeitaria": { icon: "☷", color: "#d173df" }, "Pizzaria": { icon: "☷", color: "#f0ad4e" },
     "Outro": { icon: "●", color: "#8fa3aa" }
 };
 let businesses = [], plans = [], products = [], subscriptions = [], users = [], invoices = [], billingCustomers = [], payments = [], refunds = [], selectedBusinessId = null;
-const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const moneyPrecise = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 const shortDate = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" });
 const $ = (id) => document.getElementById(id);
@@ -78,8 +80,9 @@ async function loadData() {
     if (paymentResult.error) throw paymentResult.error;
     if (refundResult.error) throw refundResult.error;
     businesses = businessResult.data || [];
-    plans = planResult.data || [];
-    products = productResult.data || [];
+    products = (productResult.data || []).filter((product) => product.code === "menu");
+    plans = (planResult.data || []).filter((plan) => products.some((product) => product.id === plan.product_id));
+
     subscriptions = subscriptionResult.data || [];
     users = (userResult.data?.users || []).filter((profile) => profile.id !== sessionStorage.getItem("japaUserId"));
     billingCustomers = customerResult.data || [];
@@ -88,32 +91,46 @@ async function loadData() {
     refunds = refundResult.data || [];
 }
 
+function isMenuBusiness(business) {
+    const customer = billingCustomers.find((item) => item.saas_client_id === business.id);
+    return subscriptions.some((item) => item.billing_customer_id === customer?.id && products.some((product) => product.id === item.product_id));
+}
+function canOperateMenu(business) {
+    return business?.status === "Ativo" && products.some((product) => {
+        const subscription = subscriptionFor(business, product);
+        return subscription && ["active", "trial", "grace_period"].includes(subscription.status) && (!subscription.current_period_end || new Date(subscription.current_period_end) > new Date());
+    });
+}
 function renderSummary() {
-    const active = businesses.filter((business) => business.status === "Ativo");
-    $("businessCount").textContent = businesses.length;
-    $("segmentCount").textContent = new Set(businesses.map((business) => business.segment)).size;
+    const menuBusinesses = businesses.filter(isMenuBusiness);
+    const active = menuBusinesses.filter(canOperateMenu);
+    $("businessCount").textContent = menuBusinesses.length;
+    $("segmentCount").textContent = new Set(menuBusinesses.map((business) => business.segment)).size;
     $("activeCount").textContent = active.length;
     const realBusinesses = active.filter((business) => business.origin === "Cliente real");
     $("monthlyRevenue").textContent = money.format(realBusinesses.reduce((sum, business) => sum + Number(business.monthly_fee), 0));
 }
 
 function renderSegments() {
-    $("segmentGrid").innerHTML = [...new Set(businesses.map((business) => business.segment))].map((segment) => {
+    const menuBusinesses = businesses.filter(isMenuBusiness);
+    $("segmentSummary").textContent = `${menuBusinesses.length} negócio(s) com Cardápio · ${businesses.length - menuBusinesses.length} cadastro(s) no histórico`;
+    $("segmentGrid").innerHTML = [...new Set(menuBusinesses.map((business) => business.segment))].map((segment) => {
         const meta = SEGMENTS[segment] || SEGMENTS.Outro;
-        const count = businesses.filter((business) => business.segment === segment).length;
+        const count = menuBusinesses.filter((business) => business.segment === segment).length;
         return `<article class="segment-card" style="--segment-color:${meta.color}"><i>${meta.icon}</i><div><strong>${escapeHtml(segment)}</strong><span>${count} negócio${count === 1 ? "" : "s"}</span></div><b>${count}</b></article>`;
-    }).join("");
+    }).join("") || '<p class="admin-muted">Os segmentos aparecerão quando o primeiro negócio tiver uma assinatura de Cardápio.</p>';
 }
 
 function renderBusinesses() {
     const query = $("businessSearch").value.trim().toLocaleLowerCase("pt-BR"), segment = $("segmentFilter").value;
-    const filtered = businesses.filter((business) => `${business.name} ${business.contact_name} ${business.owner_email || ""}`.toLocaleLowerCase("pt-BR").includes(query) && (segment === "all" || business.segment === segment));
+    const scope = $("businessScope").value;
+    const filtered = businesses.filter((business) => (scope === "all" || (scope === "menu" ? isMenuBusiness(business) : !isMenuBusiness(business))) && `${business.name} ${business.contact_name} ${business.owner_email || ""}`.toLocaleLowerCase("pt-BR").includes(query) && (segment === "all" || business.segment === segment));
     $("businessTableBody").innerHTML = filtered.map((business) => {
         const meta = SEGMENTS[business.segment] || SEGMENTS.Outro;
         return `<tr><td><button class="business-link" data-action="detail" data-id="${business.id}"><span style="--segment-color:${meta.color}">${meta.icon}</span><strong>${escapeHtml(business.name)}</strong></button></td>
         <td>${escapeHtml(business.segment)}</td><td>${escapeHtml(business.contact_name)}</td><td><strong>${escapeHtml(business.phone || "Telefone pendente")}</strong><br><small>${escapeHtml(business.owner_email || "E-mail pendente")}</small></td><td><span class="origin-badge">${escapeHtml(business.origin)}</span></td>
-        <td><span class="plan-badge">${escapeHtml(business.plan)}</span></td><td>${money.format(business.monthly_fee)}</td><td><span class="${business.status === "Ativo" ? "active-badge" : "suspended-badge"}">${escapeHtml(business.status)}</span></td>
-        <td><div class="admin-row-actions"><button data-action="operate" data-id="${business.id}">Operar</button><button data-action="edit" data-id="${business.id}">Editar</button><button class="danger" data-action="delete" data-id="${business.id}">Arquivar</button></div></td></tr>`;
+        <td><span class="plan-badge">${escapeHtml(isMenuBusiness(business) ? business.plan : "Histórico · " + business.plan)}</span></td><td>${money.format(business.monthly_fee)}</td><td><span class="${business.status === "Ativo" ? "active-badge" : "suspended-badge"}">${escapeHtml(business.status)}</span></td>
+        <td><div class="admin-row-actions"><button data-action="operate" data-id="${business.id}" ${canOperateMenu(business) ? "" : 'disabled title="A operação exige uma assinatura de Cardápio com acesso ativo"'}>Operar</button><button data-action="edit" data-id="${business.id}">Editar</button><button class="danger" data-action="delete" data-id="${business.id}">Arquivar</button></div></td></tr>`;
     }).join("");
     $("businessEmpty").classList.toggle("hidden", filtered.length > 0);
     document.querySelector(".business-table-wrap").classList.toggle("hidden", filtered.length === 0);
@@ -123,7 +140,7 @@ function renderPlans() {
     $("plansGrid").innerHTML = plans.map((plan) => {
         const features = Array.isArray(plan.features) ? plan.features : [];
         const limit = (value) => value == null ? "Ilimitado" : Number(value).toLocaleString("pt-BR");
-        return `<article class="plan-card ${plan.featured ? "featured" : ""}">${plan.featured ? '<span class="recommended-plan">MAIS ESCOLHIDO</span>' : ""}<p class="platform-kicker">${escapeHtml(plan.name)}</p><strong>${money.format(plan.monthly_fee)}<small>/mês</small></strong><p>${escapeHtml(plan.description)}</p><div class="plan-limits"><span>${limit(plan.max_users)} usuários</span><span>${limit(plan.max_professionals)} profissionais</span><span>${limit(plan.max_services)} serviços</span></div><ul>${features.map((feature) => `<li>✓ ${escapeHtml(feature)}</li>`).join("")}</ul><button type="button" class="outline-cyan-button full" data-edit-plan="${plan.id}">Editar regras</button></article>`;
+        return `<article class="plan-card ${plan.featured ? "featured" : ""}">${plan.featured ? '<span class="recommended-plan">MAIS ESCOLHIDO</span>' : ""}<p class="platform-kicker">${escapeHtml(plan.name)}</p><strong>${money.format(plan.monthly_fee)}<small>/mês</small></strong><p>${escapeHtml(plan.description)}</p><div class="plan-limits"><span>${limit(plan.max_users)} usuários</span></div><ul>${features.map((feature) => `<li>✓ ${escapeHtml(feature)}</li>`).join("")}</ul><button type="button" class="outline-cyan-button full" data-edit-plan="${plan.id}">Editar regras</button></article>`;
     }).join("");
 }
 
@@ -144,7 +161,7 @@ function openPlanForm(plan) {
     $("planFeatures").value = (Array.isArray(plan.features) ? plan.features : []).join("\n");
     $("planFeatured").checked = Boolean(plan.featured);
     $("planModalTitle").textContent = `Editar plano ${plan.name}`;
-    $("planModal").classList.remove("hidden");
+    openAdminModal("planModal");
 }
 
 async function savePlan(event) {
@@ -217,24 +234,25 @@ function subscriptionFor(business, product) {
 const productStatusLabels = { trial: "Teste", active: "Ativo", pending_activation: "Pendente", past_due: "Em atraso", grace_period: "Carência", suspended: "Suspenso", cancelled: "Cancelado" };
 function renderProductAccess() {
     if (!$('productAccessTableBody')) return;
-    const business = businesses.find((item) => item.id === $('productBusinessFilter').value) || businesses[0];
+    const business = businesses.find((item) => item.id === $('productBusinessFilter').value) || businesses.find(isMenuBusiness);
+    if (!business) { $('productAccessTableBody').innerHTML = '<tr><td colspan="5">Nenhum negócio com Cardápio cadastrado. Use “Criar cardápio” na área Negócios para começar.</td></tr>'; return; }
     $('productAccessTableBody').innerHTML = products.map((product) => {
         const subscription = subscriptionFor(business,product);
         const plan = plans.find((item) => item.id === subscription?.plan_id) || plans.find((item) => item.product_id === product.id);
         const status = subscription?.status || 'not_subscribed';
-        const canActivate = business && plan && product.code !== 'agenda';
+        const canActivate = business && plan && product.code === 'menu';
         const action = subscription
             ? `<button class="danger" data-product-action="cancel" data-product-code="${product.code}" data-plan-id="${plan?.id || ''}">Cancelar</button>`
-            : canActivate ? `<button data-product-action="activate" data-product-code="${product.code}" data-plan-id="${plan.id}">Ativar</button>` : '<span>Gerido pelo fluxo Agenda</span>';
+            : canActivate ? `<button data-product-action="activate" data-product-code="${product.code}" data-plan-id="${plan.id}">Ativar</button>` : '<span>Plano indisponível</span>';
         return `<tr><td><strong>${escapeHtml(product.name)}</strong><br><small>${escapeHtml(product.launch_state)}</small></td><td>${escapeHtml(plan?.name || 'Plano não configurado')}</td><td>${subscription ? moneyPrecise.format(subscription.base_amount) : '—'}</td><td><span class="${subscription ? 'active-badge' : 'suspended-badge'}">${escapeHtml(productStatusLabels[status] || 'Não contratado')}</span></td><td><div class="admin-row-actions">${action}</div></td></tr>`;
     }).join('');
 }
 
 async function changeProductSubscription(button) {
-    const business = businesses.find((item) => item.id === $('productBusinessFilter').value) || businesses[0];
-    if (!business) return;
+    const business = businesses.find((item) => item.id === $('productBusinessFilter').value) || businesses.find(isMenuBusiness);
+    if (!business || button.dataset.productCode !== 'menu') return;
     const cancelling = button.dataset.productAction === 'cancel';
-    if (cancelling && !confirm(`Cancelar somente ${button.dataset.productCode} para ${business.name}? As outras soluções permanecerão intactas.`)) return;
+    if (cancelling && !confirm(`Cancelar somente o acesso ao Cardápio de ${business.name}? O histórico de pedidos será preservado.`)) return;
     button.disabled = true;
     const { error } = await supabaseClient.rpc('platform_set_product_subscription', {
         target_saas_client_id: business.id,
@@ -248,17 +266,20 @@ async function changeProductSubscription(button) {
     await loadData(); populateSelectors(); refreshViews();
 }
 
-function refreshViews() { renderSummary(); renderSegments(); renderBusinesses(); renderPlans(); renderProductAccess(); renderUsers(); renderBilling(); }
+function refreshViews() { renderSummary(); renderSegments(); renderBusinesses(); renderPlans(); renderProductAccess(); renderUsers(); renderBilling(); decorateAdminTables(); }
 function populateSelectors() {
+    const selectionIds = ["segmentFilter", "userBusinessFilter", "productBusinessFilter", "invoiceBusiness"];
+    const priorSelection = Object.fromEntries(selectionIds.map((id) => [id, $(id)?.value]));
     $("businessSegment").innerHTML = Object.keys(SEGMENTS).map((segment) => `<option>${segment}</option>`).join("");
     $("segmentFilter").innerHTML = '<option value="all">Todos os segmentos</option>' + Object.keys(SEGMENTS).map((segment) => `<option>${segment}</option>`).join("");
-    const agendaProduct = products.find((product) => product.code === 'agenda');
-    $("businessPlan").innerHTML = plans.filter((plan) => plan.product_id === agendaProduct?.id).map((plan) => `<option value="${escapeHtml(plan.name)}" data-price="${plan.monthly_fee}">${escapeHtml(plan.name)}</option>`).join("");
-    const businessOptions = businesses.filter((business) => business.barbershop_id).map((business) => `<option value="${business.barbershop_id}">${escapeHtml(business.name)}</option>`).join("");
+    const menuProduct = products.find((product) => product.code === 'menu');
+    $("businessPlan").innerHTML = plans.filter((plan) => plan.product_id === menuProduct?.id).map((plan) => `<option value="${escapeHtml(plan.name)}" data-price="${plan.monthly_fee}">${escapeHtml(plan.name)}</option>`).join("");
+    const businessOptions = businesses.filter((business) => business.barbershop_id && isMenuBusiness(business)).map((business) => `<option value="${business.barbershop_id}">${escapeHtml(business.name)}</option>`).join("");
     if ($("userBusiness")) $("userBusiness").innerHTML = businessOptions;
     if ($("userBusinessFilter")) $("userBusinessFilter").innerHTML = '<option value="all">Todos os negócios</option>' + businessOptions;
-    if ($("invoiceBusiness")) $("invoiceBusiness").innerHTML = businesses.filter((business) => business.status !== "Arquivado").map((business) => `<option value="${business.id}">${escapeHtml(business.name)}</option>`).join("");
-    if ($("productBusinessFilter")) $("productBusinessFilter").innerHTML = businesses.filter((business) => business.barbershop_id).map((business) => `<option value="${business.id}">${escapeHtml(business.name)}</option>`).join("");
+    if ($("invoiceBusiness")) $("invoiceBusiness").innerHTML = businesses.filter((business) => business.status !== "Arquivado" && isMenuBusiness(business)).map((business) => `<option value="${business.id}">${escapeHtml(business.name)}</option>`).join("");
+    if ($("productBusinessFilter")) $("productBusinessFilter").innerHTML = businesses.filter((business) => business.barbershop_id && isMenuBusiness(business)).map((business) => `<option value="${business.id}">${escapeHtml(business.name)}</option>`).join("");
+    selectionIds.forEach((id) => { const select = $(id); if (select && [...select.options].some((option) => option.value === priorSelection[id])) select.value = priorSelection[id]; });
 }
 
 function isoDateWithOffset(days) { const date = new Date(); date.setDate(date.getDate() + days); return date.toISOString().slice(0, 10); }
@@ -289,7 +310,7 @@ async function saveInvoice(event) {
     const { error } = await supabaseClient.rpc('platform_create_invoice', { target_saas_client_id: $('invoiceBusiness').value, invoice_due_date: $('invoiceDueDate').value, invoice_items: [{ item_type: $('invoiceItemType').value, description: $('invoiceDescription').value.trim(), quantity, unit_amount: unitAmount }], invoice_discount: discount, invoice_credit: credit, invoice_notes: $('invoiceNotes').value.trim() });
     $('saveInvoiceButton').disabled = false;
     if (error) { $('invoiceFormMessage').textContent = error.message || 'Não foi possível gerar a fatura.'; $('invoiceFormMessage').className = 'form-message error'; return; }
-    await loadData(); refreshViews(); closeModals(); document.querySelector('#billing').scrollIntoView({ behavior: 'smooth' });
+    await loadData(); refreshViews(); closeModals(); location.hash = "billing"; selectAdminView(true);
 }
 function openPaymentForm(invoice) {
     const balance = Number(invoice.total) - Number(invoice.paid_total);
@@ -321,22 +342,36 @@ function openBusinessForm(business = null) {
     $("businessEmail").required = !business;
     if (business) {
         $("businessName").value = business.name; $("businessSegment").value = business.segment; $("businessOwner").value = business.contact_name;
-        $("businessEmail").value = business.owner_email || ""; $("businessPhone").value = business.phone || ""; $("businessPlan").value = business.plan;
+        $("businessEmail").value = business.owner_email || ""; $("businessPhone").value = business.phone || ""; if (![...$("businessPlan").options].some((option) => option.value === business.plan)) { const option = new Option(business.plan + " (histórico)", business.plan); $("businessPlan").append(option); }
+        $("businessPlan").value = business.plan;
         $("businessPrice").value = business.monthly_fee; $("businessOrigin").value = business.origin; $("businessNotes").value = business.notes || "";
     } else syncPlanPrice();
-    $("businessModal").classList.remove("hidden");
+    openAdminModal("businessModal");
 }
 
 function openBusinessDetail(business) {
     selectedBusinessId = business.id; $("detailBusinessName").textContent = business.name;
     $("detailBusinessMeta").textContent = `${business.segment} • ${business.plan} • ${business.status}`;
-    $("detailStats").innerHTML = `<article><span>Usuários</span><strong>${business.user_count || 0}</strong></article><article><span>Clientes</span><strong>${business.client_count || 0}</strong></article><article><span>Agendamentos</span><strong>${business.appointment_count || 0}</strong></article><article><span>Faturamento</span><strong>${money.format(business.business_revenue || 0)}</strong></article>`;
+    $("detailOperateButton").disabled = !canOperateMenu(business);
+    $("detailAddUserButton").disabled = !isMenuBusiness(business);
+    $("detailStatusButton").disabled = !isMenuBusiness(business);
+    $("detailBillingButton").disabled = !isMenuBusiness(business);
+    $("detailStats").innerHTML = `<article><span>Produto</span><strong>${isMenuBusiness(business) ? "Cardápio" : "Histórico"}</strong></article><article><span>Acesso operacional</span><strong>${canOperateMenu(business) ? "Liberado" : "Indisponível"}</strong></article><article><span>Mensalidade cadastrada</span><strong>${money.format(business.monthly_fee || 0)}</strong></article><article><span>Origem</span><strong>${escapeHtml(business.origin)}</strong></article>`;
     $("detailInformation").innerHTML = `<p><span>Responsável</span><strong>${escapeHtml(business.contact_name)}</strong></p><p><span>E-mail</span><strong>${escapeHtml(business.owner_email || "Não informado")}</strong></p><p><span>Telefone</span><strong>${escapeHtml(business.phone || "Não informado")}</strong></p><p><span>Convite</span><strong>${escapeHtml(business.invite_status || "Pendente")}</strong></p><p class="full-detail"><span>Observações</span><strong>${escapeHtml(business.notes || "Sem observações")}</strong></p>`;
     $("detailStatusButton").textContent = business.status === "Ativo" ? "Suspender" : "Reativar";
-    $("businessDetailModal").classList.remove("hidden");
+    openAdminModal("businessDetailModal");
 }
 
-function closeModals() { document.querySelectorAll(".platform-modal").forEach((modal) => modal.classList.add("hidden")); }
+let modalOpener = null;
+function openAdminModal(id) {
+    if (!document.activeElement?.closest(".platform-modal")) modalOpener = document.activeElement;
+    const modal = $(id); modal.classList.remove("hidden"); document.body.classList.add("admin-modal-open");
+    const focusTarget = modal.querySelector("input:not([type=hidden]),select,textarea,button"); focusTarget?.focus();
+}
+function closeModals() {
+    document.querySelectorAll(".platform-modal").forEach((modal) => modal.classList.add("hidden"));
+    document.body.classList.remove("admin-modal-open"); $("temporaryPasswordValue").value = ""; modalOpener?.focus();
+}
 function syncPlanPrice() { const option = $("businessPlan").selectedOptions[0]; if (option) $("businessPrice").value = option.dataset.price; }
 
 async function saveBusiness(event) {
@@ -378,6 +413,7 @@ async function deleteBusiness(business) {
 }
 
 function operateBusiness(business) {
+    if (!canOperateMenu(business)) return alert("Este cadastro não tem acesso ativo ao Cardápio. Consulte a assinatura do negócio.");
     if (!business.barbershop_id) return alert("Este cadastro ainda não está vinculado a uma unidade operacional.");
     sessionStorage.setItem("ogritechMasterMode", "true");
     sessionStorage.setItem("ogritechMasterBusinessId", business.barbershop_id);
@@ -390,8 +426,8 @@ function operateBusiness(business) {
 
 function updateEmployeeFields() { document.querySelectorAll(".employee-field").forEach((field) => field.classList.toggle("hidden", $("userRole").value !== "employee")); }
 function generateTemporaryPassword() { const bytes = crypto.getRandomValues(new Uint8Array(12)); return `Og!${Array.from(bytes, (value) => value.toString(36).padStart(2, "0")).join("")}aA7`; }
-function showTemporaryPassword(password) { $("temporaryPasswordValue").value = password; $("temporaryPasswordMessage").textContent = ""; $("temporaryPasswordModal").classList.remove("hidden"); $("temporaryPasswordValue").focus(); $("temporaryPasswordValue").select(); }
-function openUserForm(businessId = "", user = null) { if (!$("userForm")) return alert("Atualize a página para carregar o módulo de usuários."); $("userForm").reset(); $("userFormMessage").textContent = ""; $("userId").value = user?.id || ""; $("userModalTitle").textContent = user ? "Editar usuário" : "Adicionar usuário"; $("saveUserButton").textContent = user ? "Salvar alterações" : "Enviar convite"; if (businessId) $("userBusiness").value = businessId; if (user) { $("userBusiness").value = user.barbershop_id; $("userRole").value = user.role; $("userName").value = user.full_name; $("userEmail").value = user.email; } updateEmployeeFields(); $("userModal").classList.remove("hidden"); }
+function showTemporaryPassword(password) { $("temporaryPasswordValue").value = password; $("temporaryPasswordMessage").textContent = ""; openAdminModal("temporaryPasswordModal"); $("temporaryPasswordValue").focus(); $("temporaryPasswordValue").select(); }
+function openUserForm(businessId = "", user = null) { if (!$("userForm")) return alert("Atualize a página para carregar o módulo de usuários."); $("userForm").reset(); $("userFormMessage").textContent = ""; $("userId").value = user?.id || ""; $("userModalTitle").textContent = user ? "Editar usuário" : "Adicionar usuário"; $("saveUserButton").textContent = user ? "Salvar alterações" : "Enviar convite"; if (businessId) $("userBusiness").value = businessId; if (user) { $("userBusiness").value = user.barbershop_id; $("userRole").value = user.role; $("userName").value = user.full_name; $("userEmail").value = user.email; } updateEmployeeFields(); openAdminModal("userModal"); }
 async function saveUser(event) {
     event.preventDefault(); $("saveUserButton").disabled = true; $("userFormMessage").textContent = $("userId").value ? "Salvando alterações..." : "Enviando convite...";
     const { data, error } = await supabaseClient.functions.invoke("platform-users", { body: { action: $("userId").value ? "update" : "invite", user_id: $("userId").value || undefined, barbershop_id: $("userBusiness").value, role: $("userRole").value, full_name: $("userName").value.trim(), email: $("userEmail").value.trim().toLowerCase(), specialty: $("userSpecialty").value.trim(), commission: Number($("userCommission").value || 0) } });
@@ -401,8 +437,8 @@ async function saveUser(event) {
 }
 
 function bindEvents() {
-    $("businessSearch").addEventListener("input", renderBusinesses); $("segmentFilter").addEventListener("change", renderBusinesses);
-    $("newBusinessButton").addEventListener("click", () => openBusinessForm()); $("businessPlan").addEventListener("change", syncPlanPrice); $("businessForm").addEventListener("submit", saveBusiness);
+    $("businessSearch").addEventListener("input", () => { renderBusinesses(); decorateAdminTables(); }); $("segmentFilter").addEventListener("change", () => { renderBusinesses(); decorateAdminTables(); }); $("businessScope").addEventListener("change", () => { renderBusinesses(); decorateAdminTables(); });
+    $("newBusinessButton").addEventListener("click", () => window.location.assign(environmentUrl("criar-cardapio/"))); $("businessPlan").addEventListener("change", syncPlanPrice); $("businessForm").addEventListener("submit", saveBusiness);
     $("plansGrid").addEventListener("click", (event) => { const button = event.target.closest("[data-edit-plan]"); if (button) openPlanForm(plans.find((plan) => plan.id === button.dataset.editPlan)); });
     $("planForm").addEventListener("submit", savePlan);
     document.querySelectorAll("[data-close-modal]").forEach((button) => button.addEventListener("click", closeModals));
@@ -417,22 +453,61 @@ function bindEvents() {
     $("detailAddUserButton")?.addEventListener("click", () => { const business = businesses.find((item) => item.id === selectedBusinessId); closeModals(); openUserForm(business?.barbershop_id); });
     $("detailBillingButton")?.addEventListener("click", () => { closeModals(); openInvoiceForm(selectedBusinessId); });
     $("newInvoiceButton")?.addEventListener("click", () => openInvoiceForm());
-    $("billingStatusFilter")?.addEventListener("change", renderBilling);
-    $("productBusinessFilter")?.addEventListener("change", renderProductAccess);
+    $("billingStatusFilter")?.addEventListener("change", () => { renderBilling(); decorateAdminTables(); });
+    $("productBusinessFilter")?.addEventListener("change", () => { renderProductAccess(); decorateAdminTables(); });
     $("productAccessTableBody")?.addEventListener("click", (event) => { const button=event.target.closest('[data-product-action]'); if (button) changeProductSubscription(button); });
     $("invoiceBusiness")?.addEventListener("change", syncInvoiceBusiness);
     $("invoiceItemType")?.addEventListener("change", () => { if ($('invoiceItemType').value === 'subscription') syncInvoiceBusiness(); else { $('invoiceDescription').value = ''; $('invoiceUnitAmount').value = ''; updateInvoicePreview(); } });
     ["invoiceQuantity", "invoiceUnitAmount", "invoiceDiscount", "invoiceCredit"].forEach((id) => $(id)?.addEventListener("input", updateInvoicePreview));
     $("invoiceForm")?.addEventListener("submit", saveInvoice); $("paymentForm")?.addEventListener("submit", savePayment); $("refundForm")?.addEventListener("submit", saveRefund);
     $("billingTableBody")?.addEventListener("click", (event) => { const button = event.target.closest("[data-billing-action]"); if (!button) return; if (button.dataset.billingAction === "pay") { const invoice = invoices.find((item) => item.id === button.dataset.id); if (invoice) openPaymentForm(invoice); } else { const payment = payments.find((item) => item.id === button.dataset.id); if (payment) openRefundForm(payment); } });
-    $("newUserButton")?.addEventListener("click", () => openUserForm()); $("userRole")?.addEventListener("change", updateEmployeeFields); $("userForm")?.addEventListener("submit", saveUser); $("userBusinessFilter")?.addEventListener("change", renderUsers);
+    $("newUserButton")?.addEventListener("click", () => openUserForm()); $("userRole")?.addEventListener("change", updateEmployeeFields); $("userForm")?.addEventListener("submit", saveUser); $("userBusinessFilter")?.addEventListener("change", () => { renderUsers(); decorateAdminTables(); });
     $("usersTableBody")?.addEventListener("click", async (event) => { const button = event.target.closest("[data-user-action]"); if (!button) return; const user = users.find((item) => item.id === button.dataset.id); if (!user) return; if (button.dataset.userAction === "edit") return openUserForm(user.barbershop_id, user); if (button.dataset.userAction === "reset-password") { if (!confirm(`Gerar uma nova senha temporária para ${user.full_name}? A senha atual deixará de funcionar.`)) return; const temporaryPassword = generateTemporaryPassword(); button.disabled = true; const result = await supabaseClient.functions.invoke("platform-users", { body: { action: "reset_password", user_id: user.id, temporary_password: temporaryPassword } }); button.disabled = false; if (result.error || result.data?.error) return alert(result.data?.error || "Não foi possível redefinir a senha."); showTemporaryPassword(temporaryPassword); return; } if (button.dataset.userAction === "toggle") { const result = await supabaseClient.functions.invoke("platform-users", { body: { action: "set_active", user_id: user.id, active: !user.active } }); if (result.error || result.data?.error) return alert("Não foi possível alterar o usuário."); } else if (button.dataset.userAction === "delete") { if (!confirm(`Arquivar o acesso de ${user.full_name}? O histórico será preservado.`)) return; const result = await supabaseClient.functions.invoke("platform-users", { body: { action: "delete", user_id: user.id } }); if (result.error || result.data?.error) return alert("Não foi possível arquivar o usuário."); } await loadData(); refreshViews(); });
     $("copyTemporaryPassword")?.addEventListener("click", async () => { try { await navigator.clipboard.writeText($("temporaryPasswordValue").value); $("temporaryPasswordMessage").textContent = "Senha copiada."; } catch { $("temporaryPasswordValue").focus(); $("temporaryPasswordValue").select(); $("temporaryPasswordMessage").textContent = "Selecione e copie a senha manualmente."; } });
     $("platformLogout").addEventListener("click", async () => { const loginUrl = environmentUrl("login/"); await supabaseClient.auth.signOut(); sessionStorage.clear(); window.location.replace(loginUrl); });
 }
 
 async function initializeDashboard() {
-    try { if (!await validatePlatformAdmin()) return; await loadData(); populateSelectors(); refreshViews(); bindEvents(); $("adminLoading").classList.add("hidden"); }
+    try { if (!await validatePlatformAdmin()) return; await loadData(); populateSelectors(); refreshViews(); bindEvents(); initializeAdminNavigation(); $("adminLoading").classList.add("hidden"); }
     catch (error) { $("adminLoading").textContent = `Não foi possível carregar a administração da Ogritech. ${error?.message || "Tente atualizar a página."}`; console.error("Erro no painel Ogritech:", error); }
+}
+function decorateAdminTables() {
+    document.querySelectorAll(".business-table").forEach((table) => {
+        const labels = [...table.querySelectorAll("thead th")].map((heading) => heading.textContent.trim());
+        table.querySelectorAll("tbody tr").forEach((row) => [...row.children].forEach((cell, index) => { cell.dataset.label = labels[index] || ""; }));
+    });
+    $("newUserButton").disabled = !businesses.some(isMenuBusiness);
+    $("newInvoiceButton").disabled = !businesses.some(isMenuBusiness);
+}
+const adminViews = {
+    overview: ["Visão geral", "Acompanhe sua carteira de Cardápio e acesse as tarefas do dia.", ["adminSummary", "adminShortcuts", "segments"]],
+    businesses: ["Negócios", "Consulte os cardápios e mantenha os cadastros organizados.", ["businesses"]],
+    users: ["Acessos", "Gerencie proprietários e equipe dos seus clientes.", ["users"]],
+    plans: ["Plano do Cardápio", "Confira os valores e as regras cadastrados para o produto.", ["plans"]],
+    products: ["Assinaturas", "Consulte e gerencie o acesso ao Cardápio por negócio.", ["products"]],
+    billing: ["Cobranças", "Acompanhe faturas, recebimentos e registros financeiros.", ["billing"]]
+};
+function selectAdminView(focus = false) {
+    const requested = location.hash.slice(1); const key = Object.hasOwn(adminViews, requested) ? requested : "overview";
+    const [title, description, visible] = adminViews[key];
+    $("adminViewTitle").textContent = title; $("adminViewDescription").textContent = description;
+    ["adminSummary", "adminShortcuts", "segments", "businesses", "users", "plans", "products", "billing"].forEach((id) => { $(id).hidden = !visible.includes(id); });
+    document.querySelectorAll(".platform-menu a").forEach((link) => {
+        const active = link.getAttribute("href") === `#${key}`; link.classList.toggle("active", active);
+        if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
+    });
+    if (focus) { $("adminViewTitle").focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: "instant" }); }
+}
+function initializeAdminNavigation() {
+    selectAdminView(); window.addEventListener("hashchange", () => selectAdminView(true));
+    document.addEventListener("keydown", (event) => {
+        const modal = document.querySelector(".platform-modal:not(.hidden)"); if (!modal) return;
+        if (event.key === "Escape") { event.preventDefault(); closeModals(); return; }
+        if (event.key !== "Tab") return;
+        const controls = [...modal.querySelectorAll('button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),a[href]')].filter((element) => element.getClientRects().length);
+        const first = controls[0], last = controls.at(-1);
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    });
 }
 initializeDashboard();

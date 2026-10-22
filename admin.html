@@ -11,7 +11,8 @@
     <link rel="icon" type="image/png" href="ogritech-brand-symbol.png">
     <link rel="apple-touch-icon" href="ogritech-brand-symbol.png">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="stylesheet" href="style.css?v=20260821.2">
+    <link rel="stylesheet" href="style.css?v=20261022.1">
+    <link rel="stylesheet" href="admin.css?v=20261022.1">
 </head>
 <body class="platform-admin-page">
     <div class="platform-shell">
@@ -25,10 +26,10 @@
             <nav class="platform-menu" aria-label="Navegação administrativa">
                 <a href="#overview" class="active"><span>⌂</span>Visão geral</a>
                 <a href="#businesses"><span>▦</span>Negócios</a>
-                <a href="#users"><span>♙</span>Usuários</a>
-                <a href="#segments"><span>◫</span>Segmentos</a>
-                <a href="#plans"><span>◈</span>Planos</a>
-                <a href="#products"><span>▦</span>Produtos</a>
+                <a href="#users"><span>♙</span>Acessos</a>
+
+                <a href="#plans"><span>◈</span>Plano do Cardápio</a>
+                <a href="#products"><span>▦</span>Assinaturas</a>
                 <a href="#billing"><span>R$</span>Cobranças</a>
             </nav>
 
@@ -39,27 +40,28 @@
             </div>
         </aside>
 
-        <main class="platform-content">
+        <main class="platform-content" id="adminMain">
             <header class="platform-topbar" id="overview">
                 <div>
                     <p class="platform-kicker">PAINEL EXCLUSIVO DO PROPRIETÁRIO</p>
-                    <h1>Sua carteira de clientes</h1>
-                    <p>Acompanhe os negócios atendidos pela Ogritech em um só lugar.</p>
+                    <h1 id="adminViewTitle" tabindex="-1">Visão geral</h1>
+                    <p><span id="adminViewDescription">Acompanhe seus clientes de Cardápio e acesse as tarefas do dia.</span></p>
                 </div>
                 <div class="security-pill"><span></span>Acesso privado</div>
             </header>
 
-            <section class="platform-stats" aria-label="Resumo da carteira">
-                <article><span>Negócios na carteira</span><strong id="businessCount">0</strong><small>Cadastros demonstrativos</small></article>
-                <article><span>Segmentos atendidos</span><strong id="segmentCount">0</strong><small>Cenários simulados</small></article>
-                <article><span>Negócios ativos</span><strong id="activeCount">0</strong><small class="cyan-positive">Nenhuma operação real</small></article>
-                <article><span>Receita mensal estimada</span><strong id="monthlyRevenue">R$ 0</strong><small>Planos simulados</small></article>
+            <section id="adminSummary" class="platform-stats" aria-label="Resumo da carteira">
+                <article><span>Negócios com Cardápio</span><strong id="businessCount">0</strong><small>Cadastros do produto atual</small></article>
+                <article><span>Segmentos atendidos</span><strong id="segmentCount">0</strong><small>Segmentos com Cardápio</small></article>
+                <article><span>Cardápios com acesso ativo</span><strong id="activeCount">0</strong><small class="cyan-positive">Conforme assinatura e cadastro</small></article>
+                <article><span>Receita mensal estimada</span><strong id="monthlyRevenue">R$ 0</strong><small>Estimativa dos clientes reais</small></article>
             </section>
 
+            <section class="admin-shortcuts" id="adminShortcuts" aria-label="Ações rápidas"><a href="#businesses"><strong>Gerenciar negócios</strong><span>Cadastros e acesso aos cardápios →</span></a><a href="#billing"><strong>Conferir cobranças</strong><span>Faturas e recebimentos →</span></a><a href="#users"><strong>Gerenciar acessos</strong><span>Proprietários e equipe →</span></a></section>
             <section class="platform-panel" id="segments">
                 <div class="platform-section-title">
                     <div><p class="platform-kicker">DISTRIBUIÇÃO</p><h2>Clientes por segmento</h2></div>
-                    <span>1 negócio em cada segmento</span>
+                    <span id="segmentSummary">Distribuição da carteira de Cardápio</span>
                 </div>
                 <div class="segment-grid" id="segmentGrid"></div>
             </section>
@@ -68,24 +70,24 @@
                 <div class="platform-section-title business-heading">
                     <div><p class="platform-kicker">CARTEIRA</p><h2>Negócios cadastrados</h2></div>
                     <div class="business-controls">
-                        <input type="search" id="businessSearch" placeholder="Buscar negócio ou responsável..." aria-label="Buscar negócio">
+                        <select id="businessScope" aria-label="Exibir cadastros"><option value="menu">Cardápios</option><option value="legacy">Histórico de soluções encerradas</option><option value="all">Todos os cadastros</option></select><input type="search" id="businessSearch" placeholder="Buscar negócio ou responsável..." aria-label="Buscar negócio">
                         <select id="segmentFilter" aria-label="Filtrar por segmento"><option value="all">Todos os segmentos</option></select>
-                        <button type="button" class="cyan-button" id="newBusinessButton">+ Novo negócio</button>
+                        <button type="button" class="cyan-button" id="newBusinessButton">Criar cardápio</button>
                     </div>
                 </div>
-                <p class="demo-notice">Esta carteira reúne demonstrações e pilotos privados. Clique no nome do negócio para conferir contato e cadastro, ou use “Operar” para acessar o painel daquele estabelecimento.</p>
+                <p class="demo-notice">Clique no nome para consultar o cadastro. “Operar” abre um Cardápio com acesso ativo. Os cadastros das soluções encerradas ficam disponíveis no filtro de histórico.</p>
                 <div class="business-table-wrap">
                     <table class="business-table">
                         <thead><tr><th>Negócio</th><th>Segmento</th><th>Responsável</th><th>Contato</th><th>Origem</th><th>Plano</th><th>Mensalidade</th><th>Status</th><th>Ações</th></tr></thead>
                         <tbody id="businessTableBody"></tbody>
                     </table>
                 </div>
-                <div class="empty-state hidden" id="businessEmpty"><strong>Nenhum negócio encontrado.</strong><span>Tente alterar a busca ou o segmento.</span></div>
+                <div class="empty-state hidden" id="businessEmpty"><strong>Nenhum negócio encontrado.</strong><span>Tente alterar a busca, o segmento ou o filtro de cadastros. Novos clientes podem começar pelo botão “Criar cardápio”.</span></div>
             </section>
 
             <section class="platform-panel" id="plans">
                 <div class="platform-section-title">
-                    <div><p class="platform-kicker">ASSINATURAS</p><h2>Planos da Ogritech</h2></div>
+                    <div><p class="platform-kicker">ASSINATURAS</p><h2>Plano do Cardápio</h2></div>
                     <span>Valores, recursos e limites contratados</span>
                 </div>
                 <div class="plans-grid" id="plansGrid"></div>
@@ -93,16 +95,16 @@
 
             <section class="platform-panel" id="products">
                 <div class="platform-section-title business-heading">
-                    <div><p class="platform-kicker">ACESSO MULTIPRODUTO</p><h2>Produtos por negócio</h2></div>
+                    <div><p class="platform-kicker">ACESSO AO CARDÁPIO</p><h2>Assinaturas do Cardápio</h2></div>
                     <div class="business-controls"><select id="productBusinessFilter" aria-label="Selecionar negócio"></select></div>
                 </div>
-                <p class="demo-notice">Ative ou cancele uma solução sem alterar as demais. Toda mudança é validada e auditada no servidor.</p>
+                <p class="demo-notice">Consulte o acesso ao Cardápio de cada negócio. Alterações de assinatura são validadas e auditadas no servidor.</p>
                 <div class="business-table-wrap"><table class="business-table"><thead><tr><th>Produto</th><th>Plano</th><th>Valor</th><th>Status</th><th>Ação</th></tr></thead><tbody id="productAccessTableBody"></tbody></table></div>
             </section>
 
             <section class="platform-panel" id="billing">
                 <div class="platform-section-title business-heading">
-                    <div><p class="platform-kicker">FINANCEIRO OGRITECH</p><h2>Cobranças dos clientes SaaS</h2></div>
+                    <div><p class="platform-kicker">FINANCEIRO OGRITECH</p><h2>Cobranças e recebimentos</h2></div>
                     <div class="business-controls">
                         <select id="billingStatusFilter" aria-label="Filtrar cobranças por status">
                             <option value="all">Todos os status</option><option value="open">Em aberto</option><option value="overdue">Atrasada</option><option value="paid">Paga</option><option value="partially_refunded">Devolução parcial</option><option value="refunded">Devolvida</option><option value="void">Cancelada</option>
@@ -129,9 +131,9 @@
 
             <section class="platform-panel" id="users">
                 <div class="platform-section-title business-heading"><div><p class="platform-kicker">ACESSOS</p><h2>Usuários dos negócios</h2></div><div class="business-controls"><select id="userBusinessFilter" aria-label="Filtrar usuários por negócio"></select><button type="button" class="cyan-button" id="newUserButton">+ Adicionar usuário</button></div></div>
-                <p class="demo-notice">Esta seção mostra somente pessoas que receberam acesso ao sistema. Para abrir o painel da Diniz Doces, vá a <a href="#businesses">Negócios</a> e escolha “Operar”.</p>
+                <p class="demo-notice">Esta seção mostra somente pessoas que receberam acesso ao sistema. Para abrir um cardápio, vá a <a href="#businesses">Negócios</a> e escolha “Operar”.</p>
                 <div class="business-table-wrap"><table class="business-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Negócio</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody id="usersTableBody"></tbody></table></div>
-                <div class="empty-state hidden" id="usersEmpty"><strong>Nenhum usuário encontrado.</strong><span>Adicione gestores, funcionários ou clientes finais.</span></div>
+                <div class="empty-state hidden" id="usersEmpty"><strong>Nenhum usuário encontrado.</strong><span>Adicione proprietários ou pessoas da equipe a um Cardápio cadastrado.</span></div>
             </section>
         </main>
     </div>
@@ -141,7 +143,7 @@
             <button type="button" class="modal-close" data-close-modal aria-label="Fechar">×</button>
             <p class="platform-kicker">ONBOARDING</p>
             <h2 id="businessModalTitle">Cadastrar novo negócio</h2>
-            <p class="modal-description">Cadastre a empresa e deixe o convite do proprietário preparado.</p>
+            <p class="modal-description">Confira os dados do negócio. A edição do cadastro não altera a cobrança do provedor.</p>
             <form id="businessForm">
                 <input type="hidden" id="businessId">
                 <div class="platform-form-grid">
@@ -155,7 +157,7 @@
                     <label>Origem<select id="businessOrigin"><option selected>Demonstração</option><option>Cliente real</option></select></label>
                     <label class="full-field">Observações<textarea id="businessNotes" rows="3" maxlength="500"></textarea></label>
                 </div>
-                <p class="form-message" id="businessFormMessage"></p>
+                <p role="status" aria-live="polite" class="form-message" id="businessFormMessage"></p>
                 <button type="submit" class="cyan-button full" id="saveBusinessButton">Salvar negócio</button>
             </form>
         </div>
@@ -171,12 +173,12 @@
                 <label>Nome<input id="planName" required maxlength="80" readonly></label>
                 <label>Mensalidade<input id="planPrice" type="number" min="0" step="0.01" required></label>
                 <label>Usuários com acesso<input id="planMaxUsers" type="number" min="1" step="1" placeholder="Ilimitado"></label>
-                <label>Profissionais na agenda<input id="planMaxProfessionals" type="number" min="1" step="1" placeholder="Ilimitado"></label>
-                <label>Tipos de serviço<input id="planMaxServices" type="number" min="1" step="1" placeholder="Ilimitado"></label>
+                <label hidden>Profissionais na agenda<input id="planMaxProfessionals" type="number" min="1" step="1" placeholder="Ilimitado"></label>
+                <label hidden>Tipos de serviço<input id="planMaxServices" type="number" min="1" step="1" placeholder="Ilimitado"></label>
                 <label class="full-field">Descrição<textarea id="planDescription" rows="3" maxlength="300" required></textarea></label>
                 <label class="full-field">Recursos (um por linha)<textarea id="planFeatures" rows="5" maxlength="1000"></textarea></label>
                 <label><input id="planFeatured" type="checkbox"> Destacar como recomendado</label>
-            </div><p class="form-message" id="planFormMessage"></p><button type="submit" class="cyan-button full" id="savePlanButton">Salvar plano</button></form>
+            </div><p role="status" aria-live="polite" class="form-message" id="planFormMessage"></p><button type="submit" class="cyan-button full" id="savePlanButton">Salvar plano</button></form>
         </div>
     </div>
 
@@ -216,7 +218,7 @@
                     <label class="full-field">Observações<textarea id="invoiceNotes" rows="3" maxlength="500"></textarea></label>
                 </div>
                 <div class="invoice-preview"><span>Total previsto</span><strong id="invoicePreviewTotal">R$ 0,00</strong></div>
-                <p class="form-message" id="invoiceFormMessage"></p><button type="submit" class="cyan-button full" id="saveInvoiceButton">Gerar fatura</button>
+                <p role="status" aria-live="polite" class="form-message" id="invoiceFormMessage"></p><button type="submit" class="cyan-button full" id="saveInvoiceButton">Gerar fatura</button>
             </form>
         </div>
     </div>
@@ -231,7 +233,7 @@
                 <label>Valor recebido<input id="paymentAmount" type="number" min="0.01" step="0.01" required></label>
                 <label>Taxa do provedor<input id="paymentFee" type="number" min="0" step="0.01" value="0" required></label>
                 <label>Identificador externo<input id="paymentExternalId" maxlength="120" placeholder="Opcional"></label>
-            </div><p class="form-message" id="paymentFormMessage"></p><button type="submit" class="cyan-button full" id="savePaymentButton">Confirmar recebimento</button></form>
+            </div><p role="status" aria-live="polite" class="form-message" id="paymentFormMessage"></p><button type="submit" class="cyan-button full" id="savePaymentButton">Confirmar recebimento</button></form>
         </div>
     </div>
 
@@ -244,7 +246,7 @@
                 <label>Tratamento<select id="refundType" required><option value="refund">Reembolso</option><option value="credit">Crédito para próxima fatura</option><option value="chargeback">Chargeback</option></select></label>
                 <label>Valor<input id="refundAmount" type="number" min="0.01" step="0.01" required></label>
                 <label class="full-field">Motivo<textarea id="refundReason" rows="3" maxlength="500" required></textarea></label>
-            </div><p class="form-message" id="refundFormMessage"></p><button type="submit" class="cyan-button full" id="saveRefundButton">Confirmar devolução</button></form>
+            </div><p role="status" aria-live="polite" class="form-message" id="refundFormMessage"></p><button type="submit" class="cyan-button full" id="saveRefundButton">Confirmar devolução</button></form>
         </div>
     </div>
 
@@ -260,7 +262,7 @@
                 <label>E-mail<input id="userEmail" type="email" required maxlength="160"></label>
                 <label class="employee-field">Especialidade<input id="userSpecialty" maxlength="120"></label>
                 <label class="employee-field">Comissão (%)<input id="userCommission" type="number" min="0" max="100" step="0.01" value="0"></label>
-            </div><p class="form-message" id="userFormMessage"></p><button type="submit" class="cyan-button full" id="saveUserButton">Enviar convite</button></form>
+            </div><p role="status" aria-live="polite" class="form-message" id="userFormMessage"></p><button type="submit" class="cyan-button full" id="saveUserButton">Enviar convite</button></form>
         </div>
     </div>
 
@@ -271,7 +273,7 @@
             <p class="modal-description">Copie esta senha agora. Ela não será exibida novamente após fechar esta janela.</p>
             <label class="full-field">Senha temporária<input id="temporaryPasswordValue" type="text" readonly autocomplete="off"></label>
             <button type="button" class="cyan-button full" id="copyTemporaryPassword">Copiar senha</button>
-            <p class="form-message" id="temporaryPasswordMessage" aria-live="polite"></p>
+            <p role="status" aria-live="polite" class="form-message" id="temporaryPasswordMessage" aria-live="polite"></p>
         </div>
     </div>
 
@@ -280,7 +282,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
     <script src="supabase-config.js"></script>
-    <script src="admin.js?v=20260922.2"></script>
+    <script src="admin.js?v=20261022.1"></script>
     <script src="pwa.js?v=20260831.2"></script>
 </body>
 </html>

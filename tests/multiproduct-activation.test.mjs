@@ -4,14 +4,14 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 
-test("painel master administra produtos isoladamente", async () => {
+test("painel master administra assinaturas do Cardápio", async () => {
   const [html,admin,sql] = await Promise.all([
     readFile(new URL("admin.html",root),"utf8"),
     readFile(new URL("admin.js",root),"utf8"),
     readFile(new URL("supabase/migrations/20260908200932_multiproduct_activation.sql",root),"utf8")
   ]);
   assert.match(html,/id="products"/);
-  assert.match(html,/Produtos por negócio/);
+  assert.match(html,/Assinaturas do Cardápio/);
   assert.match(admin,/platform_set_product_subscription/);
   assert.match(admin,/Cancelar somente/);
   assert.match(sql,/target_product_code/);
