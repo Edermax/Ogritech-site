@@ -388,3 +388,11 @@ test("revisão e publicação têm etapa própria e cardápio publicado abre ped
  const page=browser();await page.load();assert.match(page.element("menuJourneyTitle").textContent,/4\. Revise/);
  page.state.menu.published=true;await page.load();assert.match(page.element("menuJourneyTitle").textContent,/5\. Acompanhe/);
 });
+
+
+test("revisão publicada orienta manutenção sem pedir um teste que está oculto", async () => {
+ const state=fixture();state.menu.published=true;const page=browser(state);await page.load();
+ await page.fire("menuJourneyBack");
+ assert.match(page.element("menuJourneyDescription").textContent,/Seu cardápio está no ar/);
+ assert.doesNotMatch(page.element("menuJourneyDescription").textContent,/faça o pedido de teste/);
+});
