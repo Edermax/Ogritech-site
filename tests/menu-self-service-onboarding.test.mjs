@@ -115,7 +115,7 @@ function browser(state = fixture(), options = {}) {
         return selector.includes(":checked") ? list.filter((input) => input.checked) : list;
       }
     },
-    Intl, Date, console, BARBERSHOP_ID: "business-1", IS_DEMO: false, businessConfig: { name: "Meu negócio" }, supabaseClient,
+    Intl, Date, URLSearchParams, console, BARBERSHOP_ID: "business-1", IS_DEMO: false, businessConfig: { name: "Meu negócio" }, supabaseClient,
     escapeHtml: (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;"),
     ogritechEnvironmentUrl: (path) => `https://local.invalid${path}`
   });
@@ -365,4 +365,26 @@ test("cardápio publicado protege a configuração, permite rascunho e pode ser 
   await page.fire("menuPublicationButton");
   assert.equal(page.element("menuTitle").disabled, false);
   assert.equal(page.element("menuPublicLink").classList.contains("hidden"), true);
+});
+
+
+test("primeiro acesso começa no modelo e mantém as etapas posteriores fora da tela", async () => {
+ const state=fixture();state.menu=null;state.status={exists:false,next_step:"segment",checks:{},completed_count:0,total_count:8};
+ const page=browser(state);await page.load();
+ assert.match(page.element("menuJourneyTitle").textContent,/1\. Comece/);
+ assert.equal(page.element("menuTemplatePanel").classList.contains("menu-workspace-hidden"),false);
+ assert.equal(page.element("menuCatalogWorkspace").classList.contains("menu-workspace-hidden"),true);
+ assert.equal(page.element("menuJourneyNext").disabled,true);
+});
+test("configuração vem antes de produtos mesmo se o servidor apontar catálogo incompleto", async () => {
+ const state=fixture();state.status={...state.status,next_step:"catalog",checks:{...allChecks,catalog:false,payments:false}};
+ const page=browser(state);await page.load();
+ assert.match(page.element("menuJourneyTitle").textContent,/2\. Configure/);
+ assert.equal(page.element("menuJourneyNext").disabled,true);
+ state.status.checks.payments=true;await page.load();
+ assert.match(page.element("menuJourneyTitle").textContent,/3\. Cadastre/);
+});
+test("revisão e publicação têm etapa própria e cardápio publicado abre pedidos", async () => {
+ const page=browser();await page.load();assert.match(page.element("menuJourneyTitle").textContent,/4\. Revise/);
+ page.state.menu.published=true;await page.load();assert.match(page.element("menuJourneyTitle").textContent,/5\. Acompanhe/);
 });

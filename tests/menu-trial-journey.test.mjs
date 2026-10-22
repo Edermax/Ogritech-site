@@ -29,7 +29,7 @@ test("painel autenticado rejeita sessão demonstrativa e oferece cadastro real",
   assert.match(auth, /const \{ data: \{ session \}, error: sessionError \} = await supabaseClient\.auth\.getSession\(\)/);
   assert.match(auth, /hadLegacyDemo \? "criar-cardapio\/" : "login\/"/);
   assert.match(auth, /function saveVerifiedSession[\s\S]*removeItem\("japaDemo"\)/);
-  assert.match(dashboard, /menuWorkspaceTitle\.textContent = `Operação de \$\{businessConfig\.name\}`/);
+  assert.match(dashboard, /menuWorkspaceTitle\.textContent = `Cardápio de \$\{businessConfig\.name\}`/);
   assert.doesNotMatch(panel, /Operação da Diniz Doces/);
   assert.doesNotMatch(login, /window\.location\.replace\(window\.ogritechEnvironmentUrl\(role === "client"/);
   assert.match(login, /sessionStorage\.removeItem\(key\)/);
@@ -37,10 +37,10 @@ test("painel autenticado rejeita sessão demonstrativa e oferece cadastro real",
   assert.doesNotMatch(loginPage, /Criar meu cardápio grátis/);
   assert.doesNotMatch(loginPage, /signup-callout/);
   assert.match(commercial, /businessConfig\.name = menu\.title/);
-  assert.match(commercial, /!menu\?\.template_code \|\| onboarding\?\.next_step === "catalog"/);
-  assert.match(commercial, /selectMenuWorkspace\("settings"\)/);
+  assert.match(commercial, /nextMenuWorkspace/);
+  assert.match(commercial, /return "settings"/);
   assert.match(commercial, /tabs\.addEventListener\("click"/);
-  assert.match(commercial, /tabs\.addEventListener\("pointerdown"/);
+  assert.match(commercial, /tabs\.addEventListener\("keydown"/);
   assert.match(commercial, /event\.target\.closest\?\.\("\[data-menu-workspace\]"\)/);
   assert.match(commercial, /menuWorkspaceNavigationBound = true/);
 });
