@@ -173,7 +173,7 @@ function applyBusinessCustomization() {
     const tenantIcon = document.getElementById("tenantIcon");
     document.title = `Ogritech | ${businessConfig.name}`;
     document.getElementById("tenantName").textContent = businessConfig.name;
-    document.getElementById("businessPanelEyebrow").textContent = `${businessConfig.name.toUpperCase()} • PAINEL ADMINISTRATIVO`;
+    document.getElementById("businessPanelEyebrow").textContent = `${businessConfig.name.toUpperCase()} • PAINEL DO SEU CARDÁPIO`;
     const menuWorkspaceTitle = document.getElementById("menuWorkspaceTitle");
     if (menuWorkspaceTitle) menuWorkspaceTitle.textContent = `Operação de ${businessConfig.name}`;
     document.getElementById("businessRevenue").textContent = currency.format(businessConfig.revenue);
