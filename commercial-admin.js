@@ -19,26 +19,75 @@
     let menuMetricsBusy = false;
     let menuAssistantBusy = false;
     let menuDataReady = false;
+    let menuLoadFailed = false;
     let menuSettingsDirty = false;
     let menuLoadVersion = 0;
     let menuCatalogCategories = [];
     let menuCatalogDraftDirty = false;
     let menuImageRemoveRequested = false;
     let menuWorkspaceNavigationBound = false;
+    let selectedMenuWorkspace = "start";
+    const journeyOrder = ["start", "settings", "catalog", "review", "operation"];
+    const journeyContent = {
+        start: ["1. Comece pelo seu negócio", "Escolha o tipo de negócio e um nome curto para o link. Clique em Criar meu cardápio para salvar esta etapa.", "Escolher meu modelo", "menuTemplateCode"],
+        settings: ["2. Configure o atendimento", "Confira o nome, escolha entrega ou retirada, marque os pagamentos aceitos e informe dias e horários. Salve no fim do formulário. Logo e capa são opcionais.", "Preencher configurações", "menuTitle"],
+        catalog: ["3. Cadastre seus produtos", "Comece com um produto: informe categoria, nome e preço e clique em Salvar produto. Depois, adicione os demais. Foto, adicionais e variações são opcionais.", "Cadastrar produto", "menuCategoryName"],
+        review: ["4. Revise e publique", "Confira o resumo, faça o pedido de teste e confirme a revisão. Por último, clique em Publicar cardápio. Só então o link estará disponível para seus clientes.", "Conferir minha revisão", "menuOnboardingPanel"],
+        operation: ["5. Acompanhe os pedidos", "Compartilhe o link do cardápio. Quando chegar um pedido, confira os dados, confirme e marque como concluído ao finalizar. Volte às etapas anteriores quando quiser editar.", "Ver meus pedidos", "menuOrdersPanel"]
+    };
+    function nextMenuWorkspace() {
+        if (menuRecord?.published) return "operation";
+        if (!menuRecord?.template_code) return "start";
+        const checks = menuOnboarding?.checks || {};
+        if (!["identity", "fulfillment", "payments", "hours"].every(key => checks[key])) return "settings";
+        if (!checks.catalog) return "catalog";
+        return "review";
+    }
+    function renderMenuJourney() {
+        const next = nextMenuWorkspace();
+        const content = [...journeyContent[selectedMenuWorkspace]];
+        if (menuRecord?.published && selectedMenuWorkspace === "settings") content[1] = "A configuração geral está protegida enquanto o cardápio está no ar. Para mudar atendimento, pagamentos ou horários, abra Publicar e despublique primeiro. Publique novamente ao terminar.";
+        if (menuRecord?.published && selectedMenuWorkspace === "catalog") content[1] = "Edite e salve seus produtos. As mudanças ficam em rascunho; seus clientes continuam vendo a versão atual. Quando terminar, abra Publicar e use Publicar alterações.";
+        const checks = menuOnboarding?.checks || {};
+        const complete = { start: Boolean(menuRecord?.template_code), settings: ["identity", "fulfillment", "payments", "hours"].every(key => checks[key]), catalog: Boolean(checks.catalog), review: Boolean(menuRecord?.published), operation: false };
+        if (byId("menuJourneyTitle")) byId("menuJourneyTitle").textContent = content[0];
+        if (byId("menuJourneyDescription")) byId("menuJourneyDescription").textContent = content[1];
+        if (byId("menuJourneyStatus")) byId("menuJourneyStatus").textContent = menuLoadFailed ? "Não foi possível carregar suas etapas. Confira sua conexão e tente novamente." : !menuDataReady ? "Carregando suas etapas salvas..." : menuSettingsDirty ? "Há alterações não salvas. Volte a Configurar e salve antes de continuar." : menuRecord?.published ? "Seu cardápio está no ar. As etapas anteriores continuam disponíveis para edição." : `Próximo passo: ${journeyContent[next][0]}. Nada será publicado sem sua confirmação.`;
+        const action = byId("menuJourneyAction");
+        if (action) { action.textContent = menuRecord?.published && selectedMenuWorkspace === "settings" ? "Ver opções de publicação" : menuRecord?.published && menuCatalogDraftDirty ? "Revisar alterações para publicar" : menuLoadFailed ? "Tentar novamente" : menuSettingsDirty ? "Voltar para salvar configurações" : journeyContent[next][2]; action.disabled = menuBusy || (!menuDataReady && !menuLoadFailed); }
+        document.querySelectorAll("[data-menu-workspace]").forEach(button => {
+            const key = button.dataset.menuWorkspace;
+            button.disabled = menuBusy || !menuDataReady || (key !== "start" && !menuRecord?.template_code);
+            button.setAttribute("aria-label", `${journeyContent[key][0]}${complete[key] ? ", concluído" : ""}`);
+            button.setAttribute("data-complete", String(complete[key]));
+        });
+        if (byId("menuJourneyBack")) byId("menuJourneyBack").disabled = journeyOrder.indexOf(selectedMenuWorkspace) === 0 || menuBusy;
+        if (byId("menuJourneyNext")) {
+            const index = journeyOrder.indexOf(selectedMenuWorkspace);
+            const allowed = index < journeyOrder.indexOf(next) || complete[selectedMenuWorkspace];
+            byId("menuJourneyNext").textContent = index < 4 ? `Continuar: ${journeyContent[journeyOrder[index + 1]][0].slice(3)}` : "Você está na rotina de pedidos";
+            byId("menuJourneyNext").disabled = !allowed || index === 4 || menuSettingsDirty || menuBusy || !menuDataReady;
+        }
+        byId("menuStartComplete")?.classList.toggle("hidden", !menuRecord?.template_code);
+    }
     const menuWorkspaceGroups = {
         operation: ["menuPilotMetricsPanel", "menuOrdersPanel"],
-        settings: ["menuOnboardingPanel", "menuAssistantSettingsPanel", "menuSettingsPanel"],
-        catalog: ["menuTemplatePanel", "menuCatalogWorkspace"]
+        start: ["menuTemplatePanel", "menuStartComplete"],
+        settings: ["menuAssistantSettingsPanel", "menuSettingsPanel"],
+        catalog: ["menuCatalogWorkspace"],
+        review: ["menuOnboardingPanel"]
     };
 
     function selectMenuWorkspace(workspace) {
-        const selected = menuWorkspaceGroups[workspace] ? workspace : "operation";
+        const selected = menuWorkspaceGroups[workspace] ? workspace : "start";
+        selectedMenuWorkspace = selected;
         document.querySelectorAll("[data-menu-workspace]").forEach((button) => {
             const active = button.dataset.menuWorkspace === selected;
             button.classList.toggle("active", active);
             button.setAttribute("aria-selected", String(active));
         });
         Object.entries(menuWorkspaceGroups).forEach(([group, ids]) => ids.forEach((id) => byId(id)?.classList.toggle("menu-workspace-hidden", group !== selected)));
+        renderMenuJourney();
     }
     function setupMenuWorkspace() {
         const tabs = byId("menuWorkspaceTabs");
@@ -49,27 +98,60 @@
                 selectMenuWorkspace(button.dataset.menuWorkspace);
                 tabs.scrollIntoView({ behavior: "smooth", block: "start" });
             };
-            tabs.addEventListener("pointerdown", activateWorkspace);
             tabs.addEventListener("click", activateWorkspace);
+            tabs.addEventListener("keydown", event => {
+                if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key)) return;
+                const buttons = [...tabs.querySelectorAll("[data-menu-workspace]")].filter(button => !button.disabled);
+                if (!buttons.length) return;
+                event.preventDefault();
+                const current = buttons.indexOf(event.target);
+                const index = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 : (current + (event.key === "ArrowRight" ? 1 : -1) + buttons.length) % buttons.length;
+                buttons[index].focus();
+                selectMenuWorkspace(buttons[index].dataset.menuWorkspace);
+            });
             menuWorkspaceNavigationBound = true;
         }
         byId("menuAssistantSettingsPanel")?.querySelectorAll("details").forEach((details) => { details.open = false; });
-        selectMenuWorkspace("operation");
+        byId("menuJourneyAction")?.addEventListener("click", () => {
+            if (menuLoadFailed) { loadMenuAdmin(); return; }
+            const next = menuSettingsDirty ? "settings" : menuRecord?.published && (selectedMenuWorkspace === "settings" || menuCatalogDraftDirty) ? "review" : nextMenuWorkspace();
+            selectMenuWorkspace(next);
+            const target = byId(journeyContent[next][3]);
+            target?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+            if (target?.focus && target.tagName !== "ARTICLE") target.focus({ preventScroll: true });
+        });
+        byId("menuJourneyBack")?.addEventListener("click", () => selectMenuWorkspace(journeyOrder[Math.max(0, journeyOrder.indexOf(selectedMenuWorkspace) - 1)]));
+        byId("menuJourneyNext")?.addEventListener("click", () => {
+            if (byId("menuJourneyNext").disabled) return;
+            selectMenuWorkspace(journeyOrder[Math.min(4, journeyOrder.indexOf(selectedMenuWorkspace) + 1)]);
+            byId("menuJourneyGuide")?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+        });
+        selectMenuWorkspace("start");
     }
 
     function prioritizeMenuOperations() {
-        const tabs = byId("menuWorkspaceTabs");
+        const tabs = byId("menuJourneyGuide") || byId("menuWorkspaceTabs");
         const health = byId("menuPilotMetricsPanel");
         const orders = byId("menuOrdersPanel");
         if (!tabs || !health || !orders || typeof tabs.after !== "function" || typeof health.after !== "function") return;
-        tabs.after(health);
-        health.after(orders);
+        tabs.after(orders);
+        orders.after(health);
     }
 
+    const fulfillment = byId("menuFulfillmentChoices");
+    const settingsFirstRow = byId("menuSettingsForm")?.querySelector?.(".form-row");
+    if (fulfillment && typeof settingsFirstRow?.after === "function") settingsFirstRow.after(fulfillment);
+    const appearance = byId("menuAppearanceOptional");
+    const settingsForm = byId("menuSettingsForm");
+    if (appearance && typeof settingsForm?.after === "function") settingsForm.after(appearance);
+    const prices = byId("menuProductPrices");
+    const firstProductRow = byId("menuItemForm")?.querySelector?.(".form-row");
+    if (prices && typeof firstProductRow?.after === "function") firstProductRow.after(prices);
     prioritizeMenuOperations();
     setupMenuWorkspace();
 
     function updateMenuControls() {
+        renderMenuJourney();
         const unavailable = menuBusy || !menuDataReady;
         const settingsEditable = !unavailable && !menuRecord?.published;
         const catalogEditable = !unavailable && Boolean(menuRecord) && !menuSettingsDirty;
@@ -118,6 +200,7 @@
             if (result?.error) throw result.error;
             menuSettingsDirty = false;
             const refreshed = await loadMenuAdmin();
+            if (refreshed && messageId === "menuItemMessage") selectMenuWorkspace("catalog");
             const message = typeof successMessage === "function" ? successMessage(result?.data) : successMessage;
             notify(byId(messageId), refreshed ? message : `${message} Use “Atualizar etapas” para conferir o estado salvo.`, !refreshed);
         } catch (error) {
@@ -183,7 +266,7 @@
 
     function addMenuDeliveryZoneRow(value = {}) {
         const row=document.createElement("div"); row.className="menu-delivery-zone-row menu-option-group-editor";
-        row.innerHTML=`<div class="form-row"><label>Código<input data-zone-code pattern="[a-z0-9](?:[a-z0-9]|_|-){1,31}" maxlength="32" value="${escapeHtml(value.code||"")}" placeholder="centro" required></label><label>Nome da região<input data-zone-name maxlength="120" value="${escapeHtml(value.name||"")}" placeholder="Centro" required></label></div><div class="form-row"><label>Taxa<input data-zone-fee type="number" min="0" step="0.01" value="${escapeHtml(value.fee??0)}" required></label><label>Pedido mínimo<input data-zone-minimum type="number" min="0" step="0.01" value="${escapeHtml(value.minimum_order??0)}" required></label></div><button class="table-button" data-remove-zone type="button">Remover região</button>`;
+        row.innerHTML=`<div class="form-row"><input data-zone-code type="hidden" value="${escapeHtml(value.code||`regiao-${crypto.randomUUID().slice(0,8)}`)}"><label>Nome da região<input data-zone-name maxlength="120" value="${escapeHtml(value.name||"")}" placeholder="Centro" required></label></div><div class="form-row"><label>Taxa de entrega (R$)<input data-zone-fee type="number" min="0" step="0.01" value="${escapeHtml(value.fee??0)}" required></label><label>Pedido mínimo da região (R$)<input data-zone-minimum type="number" min="0" step="0.01" value="${escapeHtml(value.minimum_order??0)}" required></label></div><button class="table-button" data-remove-zone type="button">Remover região</button>`;
         byId("menuDeliveryZoneRows").append(row);
     }
 
@@ -356,12 +439,12 @@
         }
         const orders = Number(metrics.orders_count || 0);
         const consumers = Number(metrics.consumers_count || 0);
-        byId("menuMetricOrders").textContent = `${orders} de ${Number(metrics.limits?.maximum_orders || 15)}`;
-        byId("menuMetricConsumers").textContent = `${consumers} de ${Number(metrics.limits?.maximum_consumers || 7)}`;
+        byId("menuMetricOrders").textContent = String(orders);
+        byId("menuMetricConsumers").textContent = String(consumers);
         byId("menuMetricDuplicates").textContent = String(Number(metrics.possible_duplicate_groups || 0));
         byId("menuMetricPrices").textContent = String(Number(metrics.price_divergences || 0));
-        byId("menuMetricOrdersLimit").textContent = `${Number(metrics.orders_usage_percent || 0).toLocaleString("pt-BR")} % do limite do piloto`;
-        byId("menuMetricConsumersLimit").textContent = `${Number(metrics.consumers_usage_percent || 0).toLocaleString("pt-BR")} % do limite do piloto`;
+        byId("menuMetricOrdersLimit").textContent = "Pedidos registrados";
+        byId("menuMetricConsumersLimit").textContent = "Pessoas atendidas";
         const operational = [];
         operational.push(`${Number(metrics.status_counts?.received || 0)} recebidos`);
         operational.push(`${Number(metrics.status_counts?.confirmed || 0)} confirmados`);
@@ -370,12 +453,12 @@
         operational.push(`${Number(metrics.received_over_24h || 0)} recebidos há mais de 24 horas`);
         byId("menuMetricOperational").textContent = operational.join(" · ");
         const warnings = [];
-        if (metrics.approaching_order_limit || metrics.approaching_consumer_limit) warnings.push("O piloto está próximo de um limite operacional.");
-        if (metrics.order_limit_reached || metrics.consumer_limit_reached) warnings.push("Um limite do piloto foi atingido; interrompa novas entradas e acione o suporte.");
+        if (new URLSearchParams(window.location?.search || "").get("pilot") === "private" && (metrics.approaching_order_limit || metrics.approaching_consumer_limit)) warnings.push("O piloto está próximo de um limite operacional.");
+        if (new URLSearchParams(window.location?.search || "").get("pilot") === "private" && (metrics.order_limit_reached || metrics.consumer_limit_reached)) warnings.push("Um limite do piloto foi atingido; interrompa novas entradas e acione o suporte.");
         if (Number(metrics.possible_duplicate_groups || 0)) warnings.push("Confira as possíveis duplicidades antes de confirmar pedidos.");
-        if (Number(metrics.price_divergences || 0)) warnings.push("Há divergência de preço; pause o piloto e acione o suporte.");
-        if (Number(metrics.missing_consent || 0)) warnings.push("Há pedido sem registro de consentimento; pause o piloto e acione o suporte.");
-        notify(message, warnings.join(" ") || "Indicadores atualizados. Nenhuma condição de interrupção foi detectada.", warnings.length > 0);
+        if (Number(metrics.price_divergences || 0)) warnings.push("Há divergência de preço; confira o pedido e fale com o suporte antes de atendê-lo.");
+        if (Number(metrics.missing_consent || 0)) warnings.push("Há pedido sem registro de consentimento; confira o pedido e fale com o suporte antes de atendê-lo.");
+        notify(message, warnings.join(" ") || "Resumo atualizado. Confira os pedidos recebidos para continuar.", warnings.length > 0);
     }
 
     async function loadMenuPilotMetrics() {
@@ -413,17 +496,19 @@
     async function loadMenuAdmin() {
         if (!BARBERSHOP_ID || IS_DEMO) return false;
         const loadVersion = ++menuLoadVersion;
+        menuLoadFailed = false;
         menuDataReady = false;
         updateMenuControls();
         try {
-            const [{ data: menu, error }, { data: orders, error: ordersError }, { data: templates, error: templateError }, { data: onboarding, error: onboardingError }] = await Promise.all([
+            const [{ data: menu, error }, { data: orders, error: ordersError }, { data: templates, error: templateError }, { data: onboarding, error: onboardingError }, { data: business, error: businessError }] = await Promise.all([
                 supabaseClient.from("online_menus").select("*,menu_delivery_zones(code,name,fee,minimum_order,active),menu_categories(id,name,description,active,sort_order,menu_items(id,name,description,image_url,item_type,unit_label,minimum_quantity,maximum_quantity,lead_time_hours,active,available,sort_order,menu_item_prices(id,label,price,promotional_price,active,sort_order),menu_item_option_groups(sort_order,menu_option_groups(id,name,selection_type,minimum_selections,maximum_selections,free_selections,active,menu_options(id,name,price_delta,maximum_quantity,available,sort_order)))))").eq("barbershop_id", BARBERSHOP_ID).maybeSingle(),
                 supabaseClient.from("menu_orders").select("id,public_reference,customer_name,fulfillment_type,status,total_amount,created_at,is_test").eq("barbershop_id", BARBERSHOP_ID).order("created_at", { ascending: false }).limit(100),
                 supabaseClient.from("menu_catalog_templates").select("code,name,description,segment,definition").eq("active", true).order("name"),
-                supabaseClient.rpc("menu_onboarding_status", { target_barbershop_id: BARBERSHOP_ID })
+                supabaseClient.rpc("menu_onboarding_status", { target_barbershop_id: BARBERSHOP_ID }),
+                supabaseClient.from("barbershops").select("name,segment").eq("id", BARBERSHOP_ID).maybeSingle()
             ]);
             if (loadVersion !== menuLoadVersion) return false;
-            if (error || templateError || onboardingError) throw error || templateError || onboardingError;
+            if (error || templateError || onboardingError || businessError) throw error || templateError || onboardingError || businessError;
             let draftStatus = null;
             if (menu?.published) {
                 const draftResult = await supabaseClient.rpc("menu_catalog_draft_status", { target_barbershop_id: BARBERSHOP_ID });
@@ -433,6 +518,10 @@
             menuTemplates = templates || [];
             menuOnboarding = onboarding;
             menuRecord = menu;
+            if (business?.name && businessConfig.name === "Seu negócio") {
+                businessConfig.name = business.name;
+                applyBusinessCustomization();
+            }
             if (menu?.title && businessConfig.name === "Seu negócio") {
                 businessConfig.name = menu.title;
                 applyBusinessCustomization();
@@ -515,14 +604,14 @@
                 return runMenuAction("menuOperationMessage", completing ? "Concluindo pedido..." : "Confirmando pedido...", () => supabaseClient.from("menu_orders").update({ status: button.dataset.orderStatus, [timestamp]: new Date().toISOString() }).eq("id", button.dataset.order).eq("barbershop_id", BARBERSHOP_ID).select("id,status").single(), completing ? "Pedido concluído." : "Pedido confirmado. Quando estiver pronto, use “Concluir”.");
             }));
             if (menu?.published) selectMenuWorkspace("operation");
-            else if (!menu?.template_code || onboarding?.next_step === "catalog") selectMenuWorkspace("catalog");
-            else selectMenuWorkspace("settings");
+            else selectMenuWorkspace(nextMenuWorkspace());
             loadMenuAssistantAdmin().catch(() => notify(byId("menuAssistantSettingsMessage"), "O assistente está temporariamente indisponível; o restante do Cardápio continua funcionando.", true));
             loadMenuPilotMetrics().catch((metricsError) => renderMenuPilotMetrics(null, metricsError));
             return true;
         } catch (error) {
             if (loadVersion === menuLoadVersion) {
                 menuDataReady = false;
+                menuLoadFailed = true;
                 notify(byId("menuOnboardingMessage"), `${menuError(error)} Use “Atualizar etapas” para tentar novamente.`, true);
             }
             return false;
@@ -557,7 +646,7 @@
             const { error } = await supabaseClient.rpc("save_menu_assistant_settings", { target_barbershop_id: BARBERSHOP_ID, target_enabled: byId("menuAssistantEnabled").checked, target_monthly_limit: monthly, target_session_limit: session });
             if (error) return notify(byId("menuAssistantSettingsMessage"), menuError(error), true);
             await loadMenuAssistantAdmin();
-            notify(byId("menuAssistantSettingsMessage"), byId("menuAssistantEnabled").checked ? "Assistente ativado. Ele continuará sem modelo externo até nova autorização." : "Assistente desativado no cardápio público.");
+            notify(byId("menuAssistantSettingsMessage"), byId("menuAssistantEnabled").checked ? "Assistente ativado. Ele ajudará seus clientes a escolher entre os produtos cadastrados." : "Assistente desativado no cardápio público.");
         } catch (error) {
             notify(byId("menuAssistantSettingsMessage"), menuError(error), true);
         } finally {
@@ -616,7 +705,7 @@
             target_barbershop_id:BARBERSHOP_ID,
             target_template_code:byId("menuTemplateCode").value,
             target_slug:byId("menuTemplateSlug").value.trim().toLowerCase()
-        }), "Estrutura criada. Personalize a configuração e adicione seus produtos para continuar.");
+        }), "Modelo salvo. Agora confira as configurações do atendimento e salve para continuar.");
     });
 
     byId("menuAddPrice")?.addEventListener("click",()=>addMenuPriceRow({label:"",price:""}));

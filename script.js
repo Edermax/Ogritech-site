@@ -175,7 +175,7 @@ function applyBusinessCustomization() {
     document.getElementById("tenantName").textContent = businessConfig.name;
     document.getElementById("businessPanelEyebrow").textContent = `${businessConfig.name.toUpperCase()} • PAINEL DO SEU CARDÁPIO`;
     const menuWorkspaceTitle = document.getElementById("menuWorkspaceTitle");
-    if (menuWorkspaceTitle) menuWorkspaceTitle.textContent = `Operação de ${businessConfig.name}`;
+    if (menuWorkspaceTitle) menuWorkspaceTitle.textContent = `Cardápio de ${businessConfig.name}`;
     document.getElementById("businessRevenue").textContent = currency.format(businessConfig.revenue);
     document.getElementById("businessTicket").textContent = currency.format(businessConfig.ticket);
     const ticketSubtitle = document.getElementById("businessTicketSubtitle");

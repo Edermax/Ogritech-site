@@ -26,8 +26,9 @@ test("painel mostra limites e condições de interrupção sem listar identidade
   assert.match(script, /supabaseClient\.rpc\("menu_pilot_metrics"/);
   assert.match(script, /target_max_consumers:\s*7/);
   assert.match(script, /target_max_orders:\s*15/);
-  assert.match(html, /Limite do piloto: 15/);
-  assert.match(html, /Limite do piloto: 7/);
+  assert.match(html, /Pedidos registrados/);
+  assert.match(html, /Pessoas atendidas/);
+  assert.match(script, /get\("pilot"\) === "private"/);
   assert.match(script, /approaching_order_limit/);
   assert.match(script, /consumer_limit_reached/);
   assert.match(script, /price_divergences/);
