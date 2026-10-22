@@ -104,6 +104,20 @@ select extensions.throws_ok($$select public.save_menu_onboarding_settings('a1000
 select extensions.lives_ok($$select public.save_menu_onboarding_settings('a1000000-0000-4000-8000-000000000001','{"slug":"loja-autonoma-menu","title":"Loja Autônoma","description":"Pedido direto","minimum_order":100,"delivery_fee":5,"accepts_delivery":true,"visual_identity":{"primary_color":"#111827","accent_color":"#F59E0B"},"payment_methods":["pix","cash"],"weekdays":[1,2,3,4,5,6],"opens_at":"10:00","closes_at":"22:00","delivery_zone":{"code":"centro","name":"Centro","fee":5,"minimum_order":100},"accepts_pickup":false}')$$,'permite estabelecimento somente com entrega');
 select extensions.is((select accepts_pickup from public.online_menus where barbershop_id='a1000000-0000-4000-8000-000000000001'),false,'opção de retirada é persistida');
 select extensions.throws_ok($$select public.set_menu_publication('a1000000-0000-4000-8000-000000000001',null)$$,'22023','Publicação inválida','ação de publicação nula é rejeitada');
+-- Regression: publishing a draft over a populated catalog must preserve order history.
+select public.run_menu_test_order('a1000000-0000-4000-8000-000000000001');
+select public.confirm_menu_review('a1000000-0000-4000-8000-000000000001');
+select public.set_menu_publication('a1000000-0000-4000-8000-000000000001',true);
+select extensions.lives_ok($$select public.save_menu_catalog_draft('a1000000-0000-4000-8000-000000000001','{"categories":[{"name":"Nova categoria","menu_items":[{"name":"Novo lanche","menu_item_prices":[{"label":"Unidade","price":-1}]}]}]}')$$,'salva rascunho separado para testar rollback');
+select extensions.throws_ok($$select public.publish_menu_catalog_draft('a1000000-0000-4000-8000-000000000001')$$,'22023',null,'publicacao invalida reverte a troca inteira');
+select extensions.ok((select published from public.online_menus where barbershop_id='a1000000-0000-4000-8000-000000000001'),'falha mantem cardapio publicado');
+select extensions.ok(exists(select 1 from public.menu_items where id='a4000000-0000-4000-8000-000000000001'),'falha preserva o catalogo anterior');
+select extensions.lives_ok($$select public.save_menu_catalog_draft('a1000000-0000-4000-8000-000000000001','{"categories":[{"name":"Nova categoria","menu_items":[{"name":"Novo lanche","menu_item_prices":[{"label":"Unidade","price":27.5}]}]}]}')$$,'salva rascunho valido sobre produtos existentes');
+select extensions.lives_ok($$select public.publish_menu_catalog_draft('a1000000-0000-4000-8000-000000000001')$$,'publica rascunho removendo produtos antes das categorias');
+select extensions.ok((select published from public.online_menus where barbershop_id='a1000000-0000-4000-8000-000000000001'),'troca deixa cardapio publicado');
+select extensions.is((select price from public.menu_item_prices p join public.menu_items i on i.id=p.menu_item_id where i.barbershop_id='a1000000-0000-4000-8000-000000000001'),27.5::numeric,'novo preco passa a ser publico');
+select extensions.ok(exists(select 1 from public.menu_order_items where barbershop_id='a1000000-0000-4000-8000-000000000001' and item_name='Lanche teste' and unit_price=25 and menu_item_id is null),'historico preserva nome e preco sem depender do produto removido');
+select extensions.is(public.menu_catalog_draft_status('a1000000-0000-4000-8000-000000000001')->>'exists','false','rascunho consumido apos publicar');
 reset role;
 update public.profiles set role='employee' where id='a2000000-0000-4000-8000-000000000001';
 set local role authenticated;

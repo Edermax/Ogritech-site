@@ -16,7 +16,7 @@
     "sourceCommit": "6c9ec456bb8b44d21e2966c6a0ddffd14e8c4cca"
   },
   "productionDryRun": {
-    "status": "PASSED",
+    "status": "NEEDS_REFRESH",
     "executedAt": "2026-10-20",
     "command": "supabase db push --workdir <isolated-alias-copy> --project-ref mvzcoaiiwytycdqcvydf --include-all --skip-vault --dry-run",
     "migrationCount": 23,
@@ -70,6 +70,9 @@
       "diniz_automatic_delivery_distance",
       "restore_diniz_delivery_zones_after_geocode_validation",
       "enable_diniz_geoapify_delivery"
+    ],
+    "catalog_corrective": [
+      "fix_menu_catalog_draft_delete_order"
     ]
   },
   "releaseConditions": [

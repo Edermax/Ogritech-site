@@ -21,7 +21,7 @@ function fixture() {
 test("release package pins production inputs and preserves all launch blockers", () => {
   const source = fixture();
   const report = buildReleasePackage(source);
-  assert.equal(report.database.pendingCount, 23);
+  assert.equal(report.database.pendingCount, 24);
   assert.equal(report.functions.length, 7);
   assert.equal(report.functions.find((item) => item.name === "cep-lookup").verifyJwt, false);
   assert.equal(report.functions.find((item) => item.name === "platform-users").verifyJwt, true);

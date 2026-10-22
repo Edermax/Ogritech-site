@@ -80,7 +80,8 @@
       "billing_rejected_email_event",
       "menu_billing_lifecycle_reliability",
       "menu_visual_identity_assets",
-      "menu_pix_expiry_recovery"
+      "menu_pix_expiry_recovery",
+      "fix_menu_catalog_draft_delete_order"
     ],
     "remoteVersionAliases": {},
     "observedMigrationNames": [
@@ -281,6 +282,10 @@
       {
         "name": "menu_pix_expiry_recovery",
         "reason": "Recuperacao de Pix vencido e QR atual exigem validacao de banco e provedor antes de promover."
+      },
+      {
+        "name": "fix_menu_catalog_draft_delete_order",
+        "reason": "Correcao da ordem de exclusao do catalogo, pendente de CI e verificacao isolada antes da aplicacao."
       }
     ],
     "observationEvidence": "config/menu-environment-inventory.json",
