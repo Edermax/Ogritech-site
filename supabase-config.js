@@ -49,7 +49,8 @@ window.ogritechEnvironmentUrl = (path) => {
 
 const supabaseClient = window.supabase.createClient(
     OGRITECH_SUPABASE.url,
-    OGRITECH_SUPABASE.publishableKey
+    OGRITECH_SUPABASE.publishableKey,
+    { auth: { detectSessionInUrl: !new URL(window.location.href).pathname.endsWith("/update-password.html") } }
 );
 
 if (OGRITECH_ENV === "staging") {

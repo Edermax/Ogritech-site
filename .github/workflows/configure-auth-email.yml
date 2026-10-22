@@ -1,0 +1,28 @@
+name: Configure authentication email
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Apply Portuguese invite and recovery templates
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 5
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      APPLY_AUTH_EMAIL: ${{ inputs.apply || 'false' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22 }
+      - run: node scripts/configure-auth-email.mjs
+      - uses: actions/upload-artifact@v7
+        with:
+          name: auth-email-report
+          path: auth-email-report.json
+          retention-days: 7

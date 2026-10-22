@@ -466,10 +466,10 @@ test('Orders signature accepts raw and canonical IDs but rejects a different res
 
 test("signup validates and persists the service invoice preference without changing the trial price", async () => {
   for (const preference of ["requested", "not_requested", undefined]) {
-    let clientRecord;
+    let clientRecord, invitationRedirect;
     const admin = {
       rpc: async name => ({ data: name === "backend_billing_signup_create" ? signup.id : null, error: null }),
-      auth: { admin: { inviteUserByEmail: async () => ({ data: { user: { id: "fixture-owner" } }, error: null }) } },
+      auth: { admin: { inviteUserByEmail: async (email, options) => { invitationRedirect=options.redirectTo; return { data: { user: { id: "fixture-owner" } }, error: null }; } } },
       from(table) {
         const chain = {
           insert(value) { if (table === "saas_clients") clientRecord = value; return chain; },
@@ -480,7 +480,8 @@ test("signup validates and persists the service invoice preference without chang
       }
     };
     const handler = await loadHandler("ogritech-billing", admin, async () => { throw Error("Unexpected provider payment"); }, {
-      BILLING_TERMS_VERSION: "fixture", BILLING_TERMS_SHA256: "a".repeat(64)
+      BILLING_TERMS_VERSION: "fixture", BILLING_TERMS_SHA256: "a".repeat(64),
+      ...(preference === "requested" ? { SUPABASE_URL: "https://fuesdztsvrkkgnbqhcxi.supabase.co", PUBLIC_APP_URL: "https://ogritech.com.br" } : {})
     });
     const body = { action: "start_trial", product: "menu", business_name: "Fixture", responsible_name: "Fixture",
       tax_document: "11222333000181", email: "fixture@example.invalid", phone: "11999999999", segment: "Restaurante",
@@ -488,6 +489,9 @@ test("signup validates and persists the service invoice preference without chang
       recurring_authorized: false, ...(preference === undefined ? {} : { service_invoice_preference: preference }) };
     const response = await handler(new Request("https://fixture.invalid/billing", { method: "POST", body: JSON.stringify(body) }));
     assert.equal(response.status, 201);
+    const result = await response.json();
+    assert.equal(new URL(invitationRedirect).searchParams.get("env"), preference === "requested" ? "staging" : null);
+    assert.equal(new URL(result.data.login_url).searchParams.get("env"), preference === "requested" ? "staging" : null);
     assert.equal(clientRecord.monthly_fee, 49.9);
     assert.match(clientRecord.notes, preference === "requested" ? /solicitada pelo cliente/ : preference === "not_requested" ? /Não constitui dispensa/ : /não informada/);
     const invalid = await handler(new Request("https://fixture.invalid/billing", { method: "POST", body: JSON.stringify({ ...body, service_invoice_preference: "skip_tax" }) }));
