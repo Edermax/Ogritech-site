@@ -1,5 +1,4 @@
 User-agent: *
-Disallow: /admin.html
-Disallow: /cliente.html
+Allow: /
 
 Sitemap: https://ogritech.com.br/sitemap.xml
