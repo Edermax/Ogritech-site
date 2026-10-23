@@ -396,3 +396,11 @@ test("revisão publicada orienta manutenção sem pedir um teste que está ocult
  assert.match(page.element("menuJourneyDescription").textContent,/Seu cardápio está no ar/);
  assert.doesNotMatch(page.element("menuJourneyDescription").textContent,/faça o pedido de teste/);
 });
+
+
+test("detalhes do pedido mostram itens e atendimento com escape de dados do cliente", async () => {
+ const state=fixture();Object.assign(state.orders[1],{customer_phone:"11999999999",notes:"<script>alert(1)</script>",fulfillment_type:"delivery",delivery_address:{text:"Rua de teste, 10",cep:"00000000"},payment_status:"pending",items:[{item_name:"Marmita <especial>",quantity:2,price_label:"Padrão",line_total:60,options:[{group_name:"Escolha",quantity:1,option_name:"Sem cebola"}]}]});
+ const page=browser(state);await page.load();const content=page.element("menuOrdersList").innerHTML;
+ assert.match(content,/11999999999/);assert.match(content,/Rua de teste, 10/);assert.match(content,/Marmita &lt;especial&gt;/);assert.match(content,/Sem cebola/);assert.match(content,/&lt;script&gt;/);assert.doesNotMatch(content,/<script>/);
+ assert.match(content,/não registra recebimento de pagamento/);
+});
