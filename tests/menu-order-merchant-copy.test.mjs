@@ -15,7 +15,7 @@ test('order tracking keeps another merchant independent from the Diniz contact',
     await new Promise(resolve=>setImmediate(resolve));
     assert.match(root.innerHTML,/Pagamento pendente/);
     if(slug==='outra-loja'){
-      assert.match(root.innerHTML,/ao estabelecimento/);
+      assert.match(root.innerHTML,/estabelecimento poderá entrar em contato/);
       assert.doesNotMatch(root.innerHTML,/Diniz|wa\.me|Enviar código pelo WhatsApp/);
     }else{
       assert.match(root.innerHTML,/à Diniz Doces/);

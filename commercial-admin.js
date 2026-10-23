@@ -494,6 +494,28 @@
         byId("menuAiCostResult").textContent = `Cenário estimado: ${formatMoney.format(brl)} por mês · ${formatMoney.format(perInteraction)} por interação. Premissas manuais; nenhuma chamada externa foi realizada.`;
     });
 
+    function renderMenuOrderDetails(order) {
+        const rows = [
+            ["Recebimento", order.fulfillment_type === "delivery" ? "Entrega" : "Retirada no local"],
+            ["Telefone do cliente", order.customer_phone || "Não informado"],
+            ["E-mail", order.customer_email || "Não informado"],
+            ["Pagamento", ({pending:"Pendente — combine diretamente com o cliente",paid:"Confirmado",refunded:"Devolvido",failed:"Não confirmado"})[order.payment_status] || "Não informado"]
+        ];
+        if (order.fulfillment_type === "delivery") {
+            const address = order.delivery_address || {};
+            rows.push(["Endereço de entrega", typeof address === "string" ? address : [address.text, address.cep ? `CEP ${address.cep}` : ""].filter(Boolean).join(" · ") || "Não informado"]);
+            if (order.delivery_zone_code) rows.push(["Região", order.delivery_zone_code]);
+        }
+        if (order.scheduled_for) {
+            const date = new Date(order.scheduled_for);
+            if (!Number.isNaN(date.getTime())) rows.push(["Data solicitada (Brasília)", new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short",timeZone:"America/Sao_Paulo"}).format(date)]);
+        }
+        if (order.notes) rows.push(["Observações do cliente", order.notes]);
+        const items = (order.items || []).map(item => `<li><strong>${escapeHtml(item.quantity)} × ${escapeHtml(item.item_name)}</strong> · ${escapeHtml(item.price_label || "Padrão")} · ${formatMoney.format(Number(item.line_total || 0))}${(item.options || []).map(option => `<p>${escapeHtml(option.group_name)}: ${escapeHtml(option.quantity)} × ${escapeHtml(option.option_name)}</p>`).join("")}${item.notes ? `<p>Observação: ${escapeHtml(item.notes)}</p>` : ""}</li>`).join("");
+        const totals = [["Produtos",order.subtotal],["Entrega",order.delivery_fee],["Desconto",order.discount_amount]].filter(([,amount])=>amount !== null && amount !== undefined).map(([label,amount])=>`<span>${label}: ${formatMoney.format(Number(amount))}</span>`).join(" · ");
+        return `<details class="menu-order-details"><summary>Ver itens e atendimento</summary><dl>${rows.map(([label,value])=>`<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}</dl><h4>Itens para preparar</h4>${items ? `<ul>${items}</ul>` : "<p>Nenhum item disponível neste registro.</p>"}<p>${totals}</p><p>Confirmar ou concluir o pedido não registra recebimento de pagamento.</p></details>`;
+    }
+
     async function loadMenuAdmin() {
         if (!BARBERSHOP_ID || IS_DEMO) return false;
         const loadVersion = ++menuLoadVersion;
@@ -503,7 +525,7 @@
         try {
             const [{ data: menu, error }, { data: orders, error: ordersError }, { data: templates, error: templateError }, { data: onboarding, error: onboardingError }, { data: business, error: businessError }] = await Promise.all([
                 supabaseClient.from("online_menus").select("*,menu_delivery_zones(code,name,fee,minimum_order,active),menu_categories(id,name,description,active,sort_order,menu_items(id,name,description,image_url,item_type,unit_label,minimum_quantity,maximum_quantity,lead_time_hours,active,available,sort_order,menu_item_prices(id,label,price,promotional_price,active,sort_order),menu_item_option_groups(sort_order,menu_option_groups(id,name,selection_type,minimum_selections,maximum_selections,free_selections,active,menu_options(id,name,price_delta,maximum_quantity,available,sort_order)))))").eq("barbershop_id", BARBERSHOP_ID).maybeSingle(),
-                supabaseClient.from("menu_orders").select("id,public_reference,customer_name,fulfillment_type,status,total_amount,created_at,is_test").eq("barbershop_id", BARBERSHOP_ID).order("created_at", { ascending: false }).limit(100),
+                supabaseClient.from("menu_orders").select("id,public_reference,customer_name,customer_email,customer_phone,fulfillment_type,delivery_address,delivery_zone_code,scheduled_for,notes,status,payment_status,subtotal,delivery_fee,discount_amount,total_amount,created_at,is_test,items:menu_order_items(item_name,price_label,quantity,unit_price,line_total,notes,options:menu_order_item_options(group_name,option_name,quantity))").eq("barbershop_id", BARBERSHOP_ID).order("created_at", { ascending: false }).limit(100),
                 supabaseClient.from("menu_catalog_templates").select("code,name,description,segment,definition").eq("active", true).order("name"),
                 supabaseClient.rpc("menu_onboarding_status", { target_barbershop_id: BARBERSHOP_ID }),
                 supabaseClient.from("barbershops").select("name,segment").eq("id", BARBERSHOP_ID).maybeSingle()
@@ -597,7 +619,7 @@
             byId("menuOrdersList").innerHTML = ordersError ? `<p role="status">${escapeHtml(menuError(ordersError))} Use “Atualizar etapas” para recarregar os pedidos.</p>` : (orders || []).map((order) => {
                 const status = order.status === "pending" ? "received" : order.status;
                 const action = status === "received" ? { next: "confirmed", label: "Confirmar" } : status === "confirmed" ? { next: "completed", label: "Concluir" } : null;
-                return `<article><header><div><strong>#${escapeHtml(order.public_reference)} · ${escapeHtml(order.customer_name)}</strong><p>${formatMoney.format(Number(order.total_amount))}${order.is_test ? " · Pedido de teste, sem cobrança real" : ""}</p></div><span class="commercial-badge">${order.is_test ? "Teste concluído" : escapeHtml(menuOrderStatusLabels[status] || "Em processamento")}</span></header>${!order.is_test && action ? `<div class="commercial-actions"><button type="button" class="table-button edit" data-order-status="${action.next}" data-order="${order.id}">${action.label}</button></div>` : ""}</article>`;
+                return `<article><header><div><strong>#${escapeHtml(order.public_reference)} · ${escapeHtml(order.customer_name)}</strong><p>${formatMoney.format(Number(order.total_amount))}${order.is_test ? " · Pedido de teste, sem cobrança real" : ""}</p></div><span class="commercial-badge">${order.is_test ? "Teste concluído" : escapeHtml(menuOrderStatusLabels[status] || "Em processamento")}</span></header>${renderMenuOrderDetails(order)}${!order.is_test && action ? `<div class="commercial-actions"><button type="button" class="table-button edit" data-order-status="${action.next}" data-order="${order.id}">${action.label}</button></div>` : ""}</article>`;
             }).join("") || "<p class='section-description'>Nenhum pedido recebido.</p>";
             byId("menuOrdersList").querySelectorAll("[data-order]").forEach((button) => button.addEventListener("click", () => {
                 const completing = button.dataset.orderStatus === "completed";
