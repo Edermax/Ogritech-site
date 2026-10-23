@@ -24,9 +24,9 @@ test('order tracking keeps another merchant independent from the Diniz contact',
   }
 });
 
-test('image policy permits only the production menu image storage beyond local images',async()=>{
+test('image policy permits local previews and only the two trusted menu image buckets',async()=>{
   const headers=await readFile(new URL('../_headers',import.meta.url),'utf8');
   const directive=headers.match(/img-src ([^;]+);/)[1].split(/\s+/);
-  assert.deepEqual(directive,["'self'",'data:','https://mvzcoaiiwytycdqcvydf.supabase.co/storage/v1/object/public/menu-images/']);
+  assert.deepEqual(directive,["'self'",'data:','blob:','https://fuesdztsvrkkgnbqhcxi.supabase.co/storage/v1/object/public/menu-images/','https://mvzcoaiiwytycdqcvydf.supabase.co/storage/v1/object/public/menu-images/']);
   assert.doesNotMatch(headers,/img-src[^;]*(?:\*|https:;)/);
 });
