@@ -6,17 +6,15 @@ on:
       run_id:
         description: GitHub Actions run ID that produced the backup
         required: true
-        default: "33334370195"
         type: string
       artifact_name:
         description: Exact encrypted backup artifact name
         required: true
-        default: ogritech-production-20260830T204344Z
         type: string
       expect_menu_schema:
-        description: Require Cardápio schema and pgTAP suites after its production promotion
+        description: Require Cardápio schema and order tests; disable only for historical backups before its promotion
         required: true
-        default: false
+        default: true
         type: boolean
 
 permissions:

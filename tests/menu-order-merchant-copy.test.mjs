@@ -9,7 +9,7 @@ test('order tracking keeps another merchant independent from the Diniz contact',
     const root={innerHTML:''};
     runInNewContext(source,{
       location:{search:`?referencia=FIXTURE&token=fixture&empresa=${slug}`},URLSearchParams,Intl,
-      document:{getElementById:()=>root},
+      document:{getElementById:(id)=>id==='order'?root:{addEventListener(){},disabled:false,textContent:''}},
       supabaseClient:{rpc:async()=>({data:{reference:'FIXTURE',customer_name:'Teste',fulfillment_type:'pickup',status:'received',payment_status:'pending',items:[],total_amount:25}})}
     });
     await new Promise(resolve=>setImmediate(resolve));
