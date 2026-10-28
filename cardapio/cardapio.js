@@ -3,7 +3,7 @@
   const isDinizMenu = slug === "diniz-doces-previa-7d1";
   const dinizWhatsapp = "5516991596865";
   const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }), cart = new Map(), prices = new Map();
-  let page = null, pendingRequestId = null;
+  let page = null, pendingRequestId = null, assistantSessionToken = null;
   const createUuid = () => globalThis.crypto?.randomUUID?.() || "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => { const value = Math.floor(Math.random() * 16); return (char === "x" ? value : (value & 3) | 8).toString(16); });
   const clean = (value) => String(value || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
   const isQuoteItem = (item) => item.metadata?.order_mode === "quote";
@@ -127,7 +127,7 @@
   }
   function updateCart() { let count = 0, total = 0, hasQuote = false; cart.forEach((entry) => { count += entry.quantity; total += entry.quantity * estimatedUnitPrice(entry); hasQuote ||= entry.isQuote; }); $("cartCount").textContent = count; $("cartTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total); $("checkoutButton").textContent = hasQuote ? "Continuar solicitação" : "Finalizar pedido"; $("checkoutTitle").textContent = hasQuote ? "Enviar solicitação para análise" : "Finalizar pedido"; $("orderSubmitButton").textContent = hasQuote ? "Enviar solicitação" : "Enviar pedido"; $("cartBar").classList.toggle("hidden", !count); renderCartReview(total, hasQuote); if (!count) { $("cartReview").classList.add("hidden"); $("checkout").classList.add("hidden"); } updateSchedulingRequirement(); }
   function addConfigured(price, selections = [], quantity = 1) { const signature = `${price.id}:${selections.map((item) => `${item.menu_option_id}x${item.quantity}`).sort().join(",")}`; const entry = cart.get(signature) || { menu_item_price_id: price.id, name: price.item.name, label: price.label, price: price.amount, quantity: 0, minimumQuantity: Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1)), maximumQuantity: price.item.maximum_quantity == null ? 100 : Math.floor(Number(price.item.maximum_quantity)), selections, optionGroups: price.item.option_groups || [], isQuote: isQuoteItem(price.item), leadTimeHours: price.item.lead_time_hours }; entry.quantity = Math.min(entry.maximumQuantity, entry.quantity + quantity); cart.set(signature, entry); pendingRequestId = null; updateCart(); }
-  function configure(price, quantity = 1) {
+  function configure(price, quantity = Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1))) {
     const groups = price.item.option_groups || []; if (!groups.length) return addConfigured(price, [], quantity);
     $("configuratorTitle").textContent = price.item.name;
     $("configuratorGroups").innerHTML = groups.map((group) => `<fieldset data-min="${group.minimum_selections}" data-max="${group.maximum_selections}"><legend>${clean(group.name)} <small>Escolha de ${group.minimum_selections} a ${group.maximum_selections}${Number(group.free_selections) ? ` · ${group.free_selections} incluídos` : ""}</small></legend>${group.options.map((option) => `<label><input type="${group.selection_type === "single" ? "radio" : "checkbox"}" name="group-${group.id}" value="${option.id}" data-price="${option.price_delta}" data-option-name="${clean(option.name)}"> <span>${clean(option.name)}${Number(option.price_delta) ? ` + ${money.format(option.price_delta)}` : ""}</span>${group.selection_type !== "single" && Number(option.maximum_quantity) > 1 ? `<input aria-label="Quantidade de ${clean(option.name)}" data-option-quantity="${option.id}" type="number" min="1" max="${option.maximum_quantity}" step="1" value="1">` : ""}</label>`).join("")}</fieldset>`).join("");
@@ -153,9 +153,10 @@
     $("menuAssistantNotice").textContent = data.notice || "Confira as informações antes de continuar.";
   }
   async function initAssistant() {
-    const { data, error } = await supabaseClient.rpc("public_menu_assistant_status", { target_slug: slug });
-    if (error || !data?.available) return;
-    $("menuAssistant").classList.remove("hidden");
+    try {
+      const { data, error } = await supabaseClient.rpc("public_menu_assistant_status", { target_slug: slug });
+      if (!error && data?.available) $("menuAssistant").classList.remove("hidden");
+    } catch { /* Optional help must not interrupt the catalog. */ }
   }
   $("menuAssistantToggle").addEventListener("click", () => { const opening = $("menuAssistantPanel").classList.contains("hidden"); $("menuAssistantPanel").classList.toggle("hidden", !opening); document.body.classList.toggle("menu-assistant-open", opening); $("menuAssistantToggle").setAttribute("aria-expanded", String(opening)); $("menuAssistantToggle").setAttribute("aria-label", opening ? "Fechar assistente Ogritech" : "Abrir assistente Ogritech"); if (opening) $("menuAssistantInput").focus(); });
   $("menuAssistantClose").addEventListener("click", () => { $("menuAssistantPanel").classList.add("hidden"); document.body.classList.remove("menu-assistant-open"); $("menuAssistantToggle").setAttribute("aria-expanded", "false"); $("menuAssistantToggle").focus(); });
@@ -169,11 +170,21 @@
     if (/(horario|abre|fecha|funciona|atendimento|domingo)/.test(normalizedMessage)) {
       assistantMessage(formatHours(page?.menu?.weekly_hours) || "O horário ainda não foi informado pelo estabelecimento."); $("menuAssistantNotice").textContent = "Horário informado pelo estabelecimento. A confirmação do pedido continua sendo humana."; button.disabled = false; input.focus(); return;
     }
-    let sessionToken = sessionStorage.getItem(`ogritechMenuAssistant:${slug}`); if (!sessionToken) { sessionToken = createUuid().replaceAll("-", ""); sessionStorage.setItem(`ogritechMenuAssistant:${slug}`, sessionToken); }
-    const { data, error } = await supabaseClient.rpc("public_menu_assistant_message", { target_slug: slug, session_token: sessionToken, supplied_message: message }); button.disabled = false;
-    if (error) return assistantMessage(error.message?.includes("Limite") ? error.message : "Não consegui responder agora. Continue pelo cardápio ou fale com o estabelecimento.");
-    const reply = data.intent === "greeting" && isDinizMenu ? "Posso ajudar a encontrar bolos, doces, recheios, informações de pagamento ou a estimar o rendimento por peso. O que você gostaria de saber?" : data.reply;
-    assistantMessage(reply); assistantControls(data); input.focus();
+    try {
+      let sessionToken = assistantSessionToken;
+      try { sessionToken = sessionStorage.getItem(`ogritechMenuAssistant:${slug}`) || sessionToken; } catch { /* Private browsing can block storage. */ }
+      if (!sessionToken) sessionToken = createUuid().replaceAll("-", "");
+      assistantSessionToken = sessionToken;
+      try { sessionStorage.setItem(`ogritechMenuAssistant:${slug}`, sessionToken); } catch { /* Keep this conversation in memory. */ }
+      const { data, error } = await supabaseClient.rpc("public_menu_assistant_message", { target_slug: slug, session_token: sessionToken, supplied_message: message });
+      if (error || !data) { input.value = message; assistantMessage(error?.message?.includes("Limite") ? error.message : "Não consegui responder agora. Continue pelo cardápio ou tente novamente."); return; }
+      const reply = data.intent === "greeting" && isDinizMenu ? "Posso ajudar a encontrar bolos, doces, recheios, informações de pagamento ou a estimar o rendimento por peso. O que você gostaria de saber?" : data.reply;
+      assistantMessage(reply); assistantControls(data);
+    } catch {
+      input.value = message;
+      assistantMessage("Confira sua conexão e tente novamente. Você também pode continuar pelo cardápio.");
+    } finally { button.disabled = false; input.focus(); }
+
   });
   $("configuratorForm").addEventListener("submit", (event) => {
     event.preventDefault(); const selections = [];
@@ -192,8 +203,20 @@
     addConfigured(prices.get($("configurator").dataset.priceId), selections, Number($("configurator").dataset.quantity) || 1); $("configurator").close();
   });
   $("closeConfigurator").addEventListener("click", () => $("configurator").close());
+  async function loadMenuData() {
+    $("loading").innerHTML = '<p role="status">Carregando cardápio...</p>';
+    try {
+      const { data, error } = await supabaseClient.rpc("public_menu", { target_slug: slug });
+      if (error || !data?.menu) throw new Error("menu_unavailable");
+      return data;
+    } catch {
+      $("loading").innerHTML = '<h1>Não foi possível abrir o cardápio</h1><p>Confira sua conexão e o endereço recebido.</p><button id="retryMenuLoad" type="button" class="public-button">Tentar novamente</button>';
+      $("retryMenuLoad").addEventListener("click", init);
+      return null;
+    }
+  }
   async function init() {
-    const { data, error } = await supabaseClient.rpc("public_menu", { target_slug: slug }); if (error || !data) { $("loading").innerHTML = "<h1>Cardápio indisponível</h1><p>Confira o endereço ou tente novamente.</p>"; return; }
+    const data = await loadMenuData(); if (!data) return;
     const menuTitle = isDinizMenu ? data.menu.title.replace(/\s*[—-]\s*piloto privado\s*$/i, "").trim() : data.menu.title;
     data.categories = (data.categories || []).filter(category => (category.items || []).length > 0);
     page = data; applyVisualIdentity(data.menu.visual_identity); document.title = `${menuTitle} | Ogritech`; $("menuTitle").textContent = menuTitle; $("menuDescription").textContent = data.menu.description; $("menuDescription").classList.toggle("hidden", !data.menu.description?.trim());
@@ -217,9 +240,9 @@
       const initialPrice = first ? (customQuantity ? `${minimumQuantity} unidades · ${money.format(first.amount * minimumQuantity)}` : (quote ? `A partir de ${money.format(first.amount)}` : money.format(first.amount))) : "Indisponível";
       const pricePicker = records.length ? `<label class="menu-price-picker"><span>${weightPickerLabel(records, quote)}</span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(displayPriceLabel(record.label))}</option>`).join("")}</select></label>${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button class="public-button" data-add-selected="${item.id}">${quote ? "Solicitar análise" : ((item.option_groups || []).length ? "Personalizar" : "Adicionar")}</button></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
       const illustration = dinizIllustration(category, item), media = item.image_url
-        ? `<div class="menu-item-media"><img class="menu-item-image" src="${clean(item.image_url)}" alt=""></div>`
+        ? `<div class="menu-item-media"><img class="menu-item-image" loading="lazy" decoding="async" src="${clean(item.image_url)}" alt=""></div>`
         : illustration
-          ? `<div class="menu-item-media"><img class="menu-item-image" src="${illustration.src}" alt="${illustration.alt}"><span class="menu-image-note">Imagem ilustrativa</span></div>`
+          ? `<div class="menu-item-media"><img class="menu-item-image" loading="lazy" decoding="async" src="${illustration.src}" alt="${illustration.alt}"><span class="menu-image-note">Imagem ilustrativa</span></div>`
           : `<div class="menu-item-placeholder" aria-hidden="true"><small>${item.item_type === "preorder" || Number(item.lead_time_hours) > 0 ? "Feito por encomenda" : "Confira as opções"}</small></div>`;
       return `<article class="menu-item-card" data-item="${item.id}">${media}<div class="menu-item-content"><div class="menu-item-heading"><h3>${clean(item.name)}</h3>${quote ? '<span class="menu-item-badge">Sob consulta</span>' : ((item.option_groups || []).length ? '<span class="menu-item-badge">Personalizável</span>' : "")}</div><p>${clean(item.description)}</p>${pricePicker}</div></article>`;
     }).join("")}</div></section>`).join("");

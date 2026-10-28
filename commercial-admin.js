@@ -771,9 +771,10 @@
                 category.name=payload.category_name;
                 const draftItem={id:payload.id||crypto.randomUUID(),name:payload.name,description:payload.description,image_url:payload.image_url,item_type:payload.item_type,unit_label:payload.unit_label,minimum_quantity:payload.minimum_quantity,maximum_quantity:payload.maximum_quantity,lead_time_hours:payload.lead_time_hours,active:payload.active,available:payload.available,sort_order:((category.menu_items||[]).length+1)*10,menu_item_prices:prices.map((price,index)=>({...price,active:true,sort_order:(index+1)*10})),menu_item_option_groups:optionGroups.map((group,index)=>({sort_order:(index+1)*10,menu_option_groups:{...group,active:true,menu_options:group.options.map((option,optionIndex)=>({...option,available:true,sort_order:(optionIndex+1)*10}))}}))};
                 const priorCategory=menuCatalogCategories.find((entry)=>entry.menu_items?.some((item)=>item.id===draftItem.id));
-                if(priorCategory) priorCategory.menu_items=priorCategory.menu_items.filter((item)=>item.id!==draftItem.id);
+                if(priorCategory && priorCategory!==category) priorCategory.menu_items=priorCategory.menu_items.filter((item)=>item.id!==draftItem.id);
                 category.menu_items=category.menu_items||[]; const existingIndex=category.menu_items.findIndex((item)=>item.id===draftItem.id);
-                if(existingIndex>=0){ draftItem.sort_order=category.menu_items[existingIndex].sort_order; category.menu_items[existingIndex]=draftItem; } else category.menu_items.push(draftItem);
+                if(existingIndex>=0){ draftItem.sort_order=category.menu_items[existingIndex].sort_order; category.menu_items[existingIndex]=draftItem; }
+                else { draftItem.sort_order=Math.max(0,...category.menu_items.map((item)=>Number(item.sort_order)||0))+10; category.menu_items.push(draftItem); }
                 menuCatalogCategories=menuCatalogCategories.filter((entry)=>entry.menu_items?.length);
                 const result=await savePublishedMenuDraft();
                 if(result.error){ if(uploadedPath) await supabaseClient.storage.from("menu-images").remove([uploadedPath]); return result; }
