@@ -1,3 +1,5 @@
+import { collectLaunchEvidence } from "./launch-evidence.mjs";
+import { consolidateReadiness } from "./launch-readiness-result.mjs";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
@@ -12,26 +14,19 @@ async function json(name) {
 const gate = await json("gate.json");
 const audit = await json("public-audit.json");
 const integrity = await json("integrity-audit.json");
-const evidenceFiles = [
-  "docs/evidencias/homologacao-interna-staging-2026-08-31.md",
-  "docs/evidencias/backup-producao-2026-08-30.md",
-  "docs/evidencias/restauracao-backup-producao-2026-08-30.md",
-  "docs/evidencias/monitoramento-producao-2026-08-31.md",
-  "docs/evidencias/cloudflare-dns-2026-08-31.md",
-  "docs/evidencias/auditoria-publica-2026-09-01.md",
-  "docs/evidencias/captacao-contato-staging-2026-09-01.md",
-  "docs/evidencias/jornadas-comerciais-staging-2026-09-01.md",
-  "docs/evidencias/auditoria-automacoes-2026-09-02.md",
-  "docs/PLANO_ENTRADA_OPERACAO_STATUS.md",
-  "docs/SLA_SUPORTE_ESCALONAMENTO.md"
-];
-const manifest = [];
+const launch = JSON.parse(await readFile(new URL("config/menu-production-launch.json", root), "utf8"));
+const evidence = await collectLaunchEvidence(root, ["config/menu-production-launch.json", ...launch.gates.flatMap((gate) => gate.evidence)]);
+const evidenceFiles = evidence.files;
+const manifest = evidence.missing.map((path) => ({ path, missing: true }));
 for (const path of evidenceFiles) {
-  const bytes = await readFile(new URL(path, root));
-  manifest.push({ path, sha256: createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length });
+  try {
+    const bytes = await readFile(new URL(path, root));
+    manifest.push({ path, sha256: createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length });
+  } catch { manifest.push({ path, missing: true }); }
 }
 
-const overall = !gate || !audit || !integrity ? "INCOMPLETO" : [audit.verdict, integrity.verdict].includes("NAO_APROVADO") ? "NAO_APROVADO" : gate.verdict;
+const databaseStatus = process.env.DATABASE_VALIDATION_STATUS || "not_run";
+const overall = consolidateReadiness({ gate, audit, integrity, databaseStatus, missingEvidence: manifest.some((file) => file.missing) });
 const summary = [
   "# Pacote automático de evidências de go-live",
   "",
@@ -41,6 +36,7 @@ const summary = [
   `- Gate operacional: ${gate?.verdict || "ausente"}`,
   `- Auditoria pública: ${audit?.verdict || "ausente"}`,
   `- Integridade, links e semântica: ${integrity?.verdict || "ausente"}`,
+  `- Banco isolado, permissões e pedidos: ${databaseStatus}`,
   `- Incidentes abertos: ${gate?.openIncidents ?? "desconhecido"}`,
   `- Evidências ausentes: ${gate?.missingEvidence?.length ?? "desconhecido"}`,
   "",
@@ -52,9 +48,9 @@ const summary = [
   ...(gate?.humanBlockers?.length ? gate.humanBlockers.map((item) => `- ${item}`) : ["- Nenhum detectado."]),
   "",
   "## Integridade das evidências",
-  ...manifest.map((item) => `- \`${item.path}\` — ${item.sha256} (${item.bytes} bytes)`),
+  ...manifest.map((item) => item.missing ? `- \`${item.path}\` — AUSENTE` : `- \`${item.path}\` — ${item.sha256} (${item.bytes} bytes)`),
   ""
 ].join("\n");
 await writeFile(new URL("SUMMARY.md", output), summary);
-await writeFile(new URL("manifest.json", output), `${JSON.stringify({ generatedAt: new Date().toISOString(), overall, files: manifest }, null, 2)}\n`);
+await writeFile(new URL("manifest.json", output), `${JSON.stringify({ generatedAt: new Date().toISOString(), overall, databaseStatus, files: manifest }, null, 2)}\n`);
 console.log(JSON.stringify({ overall, evidenceFiles: manifest.length }, null, 2));

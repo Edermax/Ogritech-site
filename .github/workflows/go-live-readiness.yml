@@ -21,7 +21,9 @@ jobs:
       - run: npm ci
       - name: Validate repository
         run: npm run validate
-      - name: Evaluate go-live gate
+      - name: Evaluate Cardapio go-live gate
+        id: launch_gate
+        continue-on-error: true
         env:
           VALIDATION_STATUS: passed
           GITHUB_TOKEN: ${{ github.token }}
@@ -34,12 +36,19 @@ jobs:
         id: integrity_audit
         continue-on-error: true
         run: npm run audit:integrity
-      - name: Validate staging concurrency and isolation
+      - uses: supabase/setup-cli@v3
+        with: { version: 2.116.0 }
+      - name: Validate database permissions and Cardapio orders in isolated local database
         id: resilience
         continue-on-error: true
-        run: npm run test:agenda-bot
+        run: |
+          supabase start
+          supabase db reset
+          supabase test db
       - name: Build evidence package
         if: always()
+        env:
+          DATABASE_VALIDATION_STATUS: ${{ steps.resilience.outcome }}
         run: npm run evidence:go-live
       - name: Upload evidence package
         if: always()
@@ -49,5 +58,5 @@ jobs:
           path: outputs/go-live/
           retention-days: 30
       - name: Enforce technical readiness
-        if: steps.public_audit.outcome != 'success' || steps.integrity_audit.outcome != 'success' || steps.resilience.outcome != 'success'
+        if: steps.launch_gate.outcome != 'success' || steps.public_audit.outcome != 'success' || steps.integrity_audit.outcome != 'success' || steps.resilience.outcome != 'success'
         run: exit 1
