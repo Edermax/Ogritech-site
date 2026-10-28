@@ -50,10 +50,14 @@ test("gate executa em todo push e considera todos os incidentes operacionais", a
   ]);
   assert.match(workflow, /push:\s*\n\s*branches: \[main\]/);
   assert.doesNotMatch(workflow, /\n\s+paths:/);
-  for (const label of ["synthetic-agenda-pilot", "staging-agenda-monitor", "production-monitor", "production-backup", "production-schema-drift", "auth-security-monitor"]) {
+  for (const label of ["production-monitor", "production-backup", "production-schema-drift", "auth-security-monitor"]) {
     assert.match(gate, new RegExp(`labels=${label}`));
   }
-  assert.match(gate, /auditoria-automacoes-2026-09-02\.md/);
+  assert.match(gate, /menu-production-launch\.json/);
+  assert.doesNotMatch(gate, /synthetic-agenda-pilot|staging-agenda-monitor|issues\/7|issues\/8/);
+  assert.doesNotMatch(workflow, /test:agenda-bot/);
+  assert.match(workflow, /supabase test db/);
+  assert.match(workflow, /steps.launch_gate.outcome/);
 });
 
 test("auditoria Auth arquiva somente campos redigidos e alerta regressões", async () => {
@@ -84,8 +88,8 @@ test("auditoria diária detecta drift real de schema sem bloquear o backup", asy
   assert.match(workflow, /supabase db query --db-url/);
   assert.match(workflow, /production-schema-drift/);
   assert.match(sql, /supabase_migrations\.schema_migrations/);
-  assert.match(sql, /actual <> 55/);
-  assert.match(sql, /billing_rejected_email_event/);
+  assert.match(sql, /actual <> 79/);
+  assert.match(sql, /fix_menu_catalog_draft_delete_order/);
   assert.match(sql, /not c\.relrowsecurity/);
   assert.match(sql, /has_function_privilege\('anon'/);
   assert.doesNotMatch(backup, /audit-production-schema\.sql/);
