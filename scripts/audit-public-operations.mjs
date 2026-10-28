@@ -2,7 +2,9 @@ import { resolveMx, resolveTxt } from "node:dns/promises";
 import { mkdir, writeFile } from "node:fs/promises";
 
 const domain = "ogritech.com.br";
-const routes = ["/", "/agenda-online/", "/contato/", "/login/", "/agendar/?empresa=ogritech-agenda-bot&env=staging", "/privacidade.html", "/termos.html", "/404.html"];
+// Audit the active acquisition journey without creating accounts or orders.
+// Retired products and synthetic staging tenants are not production health checks.
+const routes = ["/", "/cardapio-digital/", "/criar-cardapio/", "/contato/", "/login/", "/painel/", "/privacidade.html", "/termos.html", "/404.html"];
 
 async function txt(name) {
   try { return (await resolveTxt(name)).map((parts) => parts.join("")); } catch { return []; }
