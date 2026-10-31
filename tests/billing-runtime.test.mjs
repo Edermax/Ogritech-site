@@ -414,6 +414,36 @@ test('Pix selection after expiry keeps past_due and the paid access boundary',as
 const orderFixture=()=>({id:'ORD01TESTPIX2026102000000001',user_id:'3778177682',country_code:'BRA',total_amount:'49.90',external_reference:`signup_${signup.id}_pix_fixture`,status:'processed',status_detail:'accredited',transactions:{payments:[{id:'PAY01TESTPIX2026102000000001',amount:'49.90',status:'processed',status_detail:'accredited',payment_method:{id:'pix',qr_code:'fixture-qr'}}]}});
 const ordersEnv={SUPABASE_URL:'https://fuesdztsvrkkgnbqhcxi.supabase.co',MP_MENU_SANDBOX_ACCESS_TOKEN:'sandbox-token',MP_MENU_SANDBOX_WEBHOOK_SECRET:'sandbox-secret',MP_MENU_SANDBOX_PIX_ORDERS:'true'};
 
+test('production Pix uses Payments API and its production webhook even when the sandbox Orders flag is set',async()=>{
+ const productionUrl='https://mvzcoaiiwytycdqcvydf.supabase.co';
+ let sent,written,providerCalls=0;
+ const db={rpc:async(name,args)=>name.endsWith('pix_due')?{data:[signup]}:name.endsWith('prepare_pix')?{data:pixAttempt}:name.endsWith('expired')?{data:[]}:(written=args,{error:null})};
+ const handler=await loadHandler('billing-lifecycle',db,async(url,options)=>{
+  providerCalls++;assert.equal(url,'https://api.mercadopago.com/v1/payments');
+  assert.equal(options.headers.Authorization,'Bearer production-fixture-token');
+  assert.equal(options.headers['X-Idempotency-Key'],pixAttempt.request_id);
+  sent=JSON.parse(options.body);
+  return Response.json({id:'production-fixture-payment',payment_method_id:'pix',status:'pending',currency_id:'BRL',transaction_amount:49.9,point_of_interaction:{transaction_data:{qr_code:'fixture-qr'}}});
+ },{...ordersEnv,SUPABASE_URL:productionUrl,MERCADO_PAGO_ACCESS_TOKEN:'production-fixture-token'});
+ const response=await handler(new Request('https://fixture.invalid/lifecycle',{method:'POST',headers:{'x-cron-secret':'fixture-cron'}}));
+ assert.equal(response.status,200);assert.equal(providerCalls,1);
+ assert.equal(sent.notification_url,`${productionUrl}/functions/v1/mercado-pago-webhook`);
+ assert.equal(sent.payment_method_id,'pix');assert.equal(sent.transaction_amount,49.9);
+ assert.equal(sent.external_reference,pixAttempt.external_reference);
+ assert.equal(written.payload.provider_payment_id,'production-fixture-payment');
+ assert.equal((await response.json()).data.pix_created,1);
+});
+
+test('production ignores signed Orders notifications before querying the provider or recording an event',async()=>{
+ const db=webhookDb();
+ const handler=await loadHandler('mercado-pago-webhook',db,async()=>assert.fail('a sandbox Orders flag cannot enable Orders processing in production'),{
+  ...ordersEnv,SUPABASE_URL:'https://mvzcoaiiwytycdqcvydf.supabase.co'
+ });
+ const response=await handler(signedNotice({dataId:orderFixture().id.toLowerCase(),path:'mercado-pago-webhook',type:'order',liveMode:true}));
+ assert.equal(response.status,200);assert.equal(await response.text(),'ignored');
+ assert.equal(db.events.size,0);assert.equal(db.calls,0);
+});
+
 test('Orders Pix worker is opt-in and records the order ID with a stable amount',async()=>{
  let sent,written;
  const db={rpc:async(name,args)=>name.endsWith('pix_due')?{data:[signup]}:name.endsWith('prepare_pix')?{data:pixAttempt}:name.endsWith('expired')?{data:[]}:(written=args,{error:null})};
