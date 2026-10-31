@@ -1,56 +1,44 @@
-# Ogritech Billing — ativação
+# Cardápio Ogritech — cadastro e pagamento
 
-## Verificação de 19/10/2026
+## Situação conferida em 31/10/2026
 
-Atualização posterior da mesma data: após autorização e conclusão do formulário pelo usuário, o painel autenticado confirmou as credenciais de teste ativadas. Elas ainda não foram copiadas para o staging, que também não possui os dois nomes de plano do Cardápio. A homologação externa não está concluída; ver [evidência atual](evidencias/cardapio-backup-restauracao-corrigida-2026-10-19.md) e `config/menu-payment-readiness.json`.
+O cadastro está disponível em https://ogritech.com.br/criar-cardapio/ e começa com 14 dias gratuitos, sem cartão. Mensal R$49,90 ou anual R$499. Os parâmetros públicos de versão/hash dos termos estão sincronizados com o backend; isso não substitui os aceites do cliente ou a revisão jurídica pendente.
 
-A oferta abaixo está implementada, mas a prontidão pública de produção retorna `product_catalog_unavailable`. Foram preparadas correções de permissões do backend, desconto anual, períodos de acesso, reenvio/idempotência e isolamento por produto. O candidato passou em 26 asserções transacionais com rollback e 11 testes dos handlers, sem chamadas ao provedor. Ainda não está publicado; a homologação externa permanece pendente. Ver [evidência atual](evidencias/cardapio-retomada-2026-10-19.md).
+As funções financeiras estão publicadas e as configurações necessárias estão presentes. O preflight seguro passou para preços, cadastro e rejeição de webhook sem assinatura. A rotina agendada executou sem falhas, com fila vazia. Veja a evidência de configuração em [31/10](evidencias/cardapio-preflight-producao-2026-10-31.md).
 
-## Oferta implementada
+Ainda não foi comprovada uma cobrança real completa em produção. A homologação de Pix, webhook, acesso e idempotência documentada em [20/10](evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md) ocorreu com dados fictícios no staging. O Pix fictício usou Orders; produção usa Payments. Não declarar uma trilha real validada a partir desse teste.
 
-- plano único `Agenda`, mensalidade-base de R$ 97,00;
-- um teste de 14 dias por CNPJ;
-- mensal R$ 97,00; trimestral R$ 282,27; semestral R$ 552,90; anual R$ 1.047,60;
-- cartão recorrente ou Pix; boleto, Pix Automático e Point não são aceitos;
-- termos padronizados, aceite auditável e cancelamento self-service.
+## Jornada implementada
 
-### Cardápio
+1. Cliente informa dados empresariais, e-mail e telefone, registra preferência de nota e realiza os aceites no cadastro oficial.
+2. Recebe convite, define a própria senha e acessa o painel como proprietário.
+3. Cria o cardápio e escolhe no painel como continuar após o teste.
+4. Cartão recorrente depende de autorização expressa no checkout do Mercado Pago. Pix é por período; não é Pix Automático nem débito recorrente.
+5. A rotina gera o Pix perto do vencimento e enfileira o aviso financeiro. O webhook deve confirmar o pagamento antes de ampliar o acesso.
+6. Reenvios são tratados de forma idempotente. Cancelamento e encerramento respeitam o período de acesso e os estados da assinatura.
 
-- 14 dias gratuitos sem cartão;
-- escolha feita no painel após o início do teste;
-- mensal por R$ 49,90 ou anual por R$ 499,00;
-- Pix por vencimento ou cartão com renovação automática autorizada expressamente;
-- ausência de pagamento suspende novos pedidos sem apagar imediatamente catálogo e configurações.
+O pedido do consumidor à loja é separado: enviar o pedido não cria cobrança automática. O pagamento é combinado diretamente com o estabelecimento.
 
-## Sequência operacional implementada
+## Conferir sem criar transações
 
-1. O checkout valida CNPJ, telefone, periodicidade e os aceites.
-2. O backend confirma que Mercado Pago e a versão dos termos estão configurados antes de aceitar o cadastro.
-3. O ambiente e o usuário proprietário são criados e o teste de 14 dias é liberado.
-4. No cartão, o cliente conclui a autorização recorrente no Mercado Pago; o plano do provedor aplica o trial.
-5. No Pix, nenhuma cobrança é antecipada: `billing-lifecycle` gera o Pix 48 horas antes do fim do acesso e o envia por e-mail.
-6. O webhook aprovado estende o acesso pelo período comprado e reativa automaticamente uma conta suspensa.
-7. Sem pagamento, o candidato de 19/10 suspende somente a assinatura Cardápio quando o período termina, preservando a Agenda. A implementação ainda publicada usa a suspensão legada do estabelecimento e precisa da correção antes da liberação.
-8. O cancelamento interrompe novas cobranças e preserva o acesso até `access_until`; ao final, a rotina conclui o cancelamento.
-9. `billing-email-dispatch` envia início do teste, Pix, comprovante, cancelamento e suspensão, com retentativa e idempotência.
+Executar `npm run check:menu-production-preflight`.
 
-## Dependências de produção
+O script chama apenas quote mensal/anual, trial_readiness e uma notificação deliberadamente sem assinatura. Salva relatório em outputs/menu-production-preflight.json; não precisa de chave administrativa. Não informa prontidão financeira real: livePaymentValidated e financialReleaseApproved permanecem falsos.
 
-1. Criar quatro planos no Mercado Pago, todos com 14 dias grátis e frequências mensal, trimestral, semestral e anual.
-2. Cadastrar os IDs como `MP_PLAN_*_ID` e as demais variáveis do `.env.example` nos Secrets do Supabase. Nunca versionar valores reais.
-   Para o Cardápio, cadastrar também `MP_MENU_MONTHLY_ID` e `MP_MENU_ANNUAL_ID` com os valores próprios da oferta.
-3. Configurar o webhook do Mercado Pago em `https://<project-ref>.supabase.co/functions/v1/mercado-pago-webhook` para pagamentos, assinaturas e pagamentos autorizados.
-4. Execute primeiro o preflight, sem publicar: `npm run billing:preflight -- -ProjectRef <ref-staging> -SecretsFile <arquivo-local.env>`.
-5. O inventário remoto de 19/10 não confirmou os oito aliases históricos do staging; o mapeamento foi reconciliado sem alterar o histórico. Não usar `-RepairMigrationHistory` para ocultar divergências. Conferir a lista remota e a política antes de cada promoção.
-6. O publicador recusa o `ProjectRef` de produção e qualquer projeto que não seja o staging autorizado. Ele configura secrets, aplica migrations e publica `ogritech-billing`, `mercado-pago-webhook`, `billing-lifecycle` e `billing-email-dispatch`.
-7. Configure no Mercado Pago o webhook `https://<project-ref>.supabase.co/functions/v1/mercado-pago-webhook` para pagamentos, assinaturas e pagamentos autorizados.
-8. Agende `billing-lifecycle` a cada 30 minutos e `billing-email-dispatch` a cada 5 minutos, ambos por POST e com o header `x-cron-secret`. Guarde o segredo no Vault; não o grave na migration.
-9. Valide no sandbox, nesta ordem: preflight; teste novo; CNPJ duplicado; cartão aprovado; cartão recusado; Pix emitido perto do vencimento; Pix aprovado/expirado; webhook repetido; cancelamento; acesso até o fim; suspensão e reativação.
-10. Somente depois da evidência no staging, retire as duas migrations de billing da lista de retenção e promova para produção.
+A lista de nomes do cofre e os estados das funções podem ser consultados pelo administrador, sem imprimir valores. Os nomes atuais relevantes são MERCADO_PAGO_ACCESS_TOKEN, MERCADO_PAGO_WEBHOOK_SECRET, MP_MENU_MONTHLY_ID, MP_MENU_ANNUAL_ID, BILLING_TERMS_VERSION, BILLING_TERMS_SHA256, BILLING_CRON_SECRET, ALLOWED_ORIGINS, PUBLIC_APP_URL e RESEND_API_KEY.
 
-O script exige um arquivo de secrets fora do repositório e recusa placeholders. Sem `-Apply`, ele é somente leitura, exceto pelos arquivos temporários normais dos testes.
+Não executar billing-lifecycle nem billing-email-dispatch como teste de leitura: essas funções podem criar cobranças, enviar mensagens ou suspender acesso. Consultar o resultado das execuções agendadas existentes.
 
-O hash em `BILLING_TERMS_SHA256` deve ser recalculado sempre que `termos.html` mudar. Uma mudança nos termos exige nova versão; nunca sobrescrever a evidência aceita anteriormente.
-# Atualização da homologação em 19/10/2026
+## Ambientes e publicação
 
-Token exclusivo salvo no staging, vendedor de teste verificado e planos mensal/anual criados e conferidos. Pagamento e assinatura ainda bloqueados pelos retornos 401/400 do provedor; integração completa pendente. Consulte a [evidência atual](evidencias/cardapio-homologacao-mercadopago-2026-10-19.md), que substitui o estado anterior sobre instalação do token e ausência dos planos.
+Produção: mvzcoaiiwytycdqcvydf. Homologação: fuesdztsvrkkgnbqhcxi. Os recursos de sandbox não podem ser promovidos nem apontados para produção.
+
+O publicador antigo scripts/deploy-ogritech-billing.ps1 é uma ferramenta de staging com requisitos legados; não é o preflight de leitura de produção. Não remover seu bloqueio de produção nem usar reparo de histórico para ocultar divergências.
+
+Antes de qualquer alteração financeira, preservar a evidência, validar em CI e revisar a publicação explícita das funções. Alterar termos exige nova versão e preservação dos aceites anteriores. Não criar ou trocar credenciais, planos, cobrança real ou webhook sem a autorização correspondente.
+
+## Pendência da primeira ativação
+
+A proprietária precisa concluir o cadastro e os aceites. Depois o catálogo aprovado pode ser transferido e revisado, preservando produtos sob consulta. O primeiro pagamento real deve ser legítimo e autorizado; conferir confirmação do provedor, webhook, acesso e idempotência antes de registrar a operação financeira como validada.
+
+A revisão fiscal/jurídica e os canais de suporte continuam pendentes conforme o contrato de lançamento. Nenhuma aprovação foi inferida a partir de HTTP200 ou de nomes de secrets presentes.
