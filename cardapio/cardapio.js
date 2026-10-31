@@ -1,6 +1,6 @@
 (() => {
   const $ = (id) => document.getElementById(id), slug = new URLSearchParams(location.search).get("empresa") || "";
-  const isDinizMenu = slug === "diniz-doces-previa-7d1";
+  const isDinizMenu = slug === "diniz-doces" || slug === "diniz-doces-previa-7d1";
   const dinizWhatsapp = "5516991596865";
   const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }), cart = new Map(), prices = new Map();
   let page = null, pendingRequestId = null, assistantSessionToken = null;

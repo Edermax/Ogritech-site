@@ -5,7 +5,7 @@ import test from 'node:test';
 
 const source=await readFile(new URL('../pedido/pedido.js',import.meta.url),'utf8');
 test('order tracking keeps another merchant independent from the Diniz contact',async()=>{
-  for(const slug of ['outra-loja','diniz-doces-previa-7d1']){
+  for(const slug of ['outra-loja','diniz-doces','diniz-doces-previa-7d1']){
     const root={innerHTML:''};
     runInNewContext(source,{
       location:{search:`?referencia=FIXTURE&token=fixture&empresa=${slug}`},URLSearchParams,Intl,

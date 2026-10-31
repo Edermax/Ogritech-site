@@ -16,7 +16,7 @@ const ViaCepResponse = z.object({
 }).passthrough();
 const GeocodeResponse = z.object({ results: z.array(z.object({ lat: z.number(), lon: z.number() }).passthrough()).min(1) }).passthrough();
 const RoutingResponse = z.object({ features: z.array(z.object({ properties: z.object({ distance: z.number().positive(), time: z.number().nonnegative().optional() }).passthrough() }).passthrough()).min(1) }).passthrough();
-const DINIZ_SLUG = "diniz-doces-previa-7d1";
+const DINIZ_SLUGS = new Set(["diniz-doces", "diniz-doces-previa-7d1"]);
 const DINIZ_ORIGIN_ADDRESS = "Rua Judy Villar Benedine, 319, Parque dos Servidores, Ribeirão Preto, SP, Brasil";
 let dinizOriginPromise: Promise<{ lat: number; lon: number }> | null = null;
 
@@ -72,7 +72,7 @@ export default { fetch: withSupabase({ auth: "publishable" }, async (request) =>
     if (!address.success) return reply({ error: { code: "invalid_provider_response" } }, 502, origin);
     if (address.data.erro) return reply({ error: { code: "cep_not_found" } }, 404, origin);
     const data: Record<string, unknown> = { cep: address.data.cep || parsed.data.cep, logradouro: address.data.logradouro, complemento: address.data.complemento, bairro: address.data.bairro, localidade: address.data.localidade, uf: address.data.uf };
-    if (parsed.data.target_slug === DINIZ_SLUG && parsed.data.address) {
+    if (DINIZ_SLUGS.has(parsed.data.target_slug || "") && parsed.data.address) {
       if (!/ribeir[aã]o preto/i.test(address.data.localidade)) return reply({ error: { code: "outside_service_city" } }, 422, origin);
       if (!/\d/.test(parsed.data.address)) return reply({ error: { code: "address_number_required" } }, 422, origin);
       const destination = await geocode(`${parsed.data.address}, CEP ${parsed.data.cep}, Brasil`);
