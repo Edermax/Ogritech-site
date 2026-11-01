@@ -331,6 +331,10 @@
       {
         "version": "20261031214724",
         "name": "preserve_menu_catalog_metadata"
+      },
+      {
+        "version": "20261101192056",
+        "name": "allow_cpf_menu_signup"
       }
     ],
     "functions": [
@@ -702,6 +706,10 @@
       {
         "version": "20261031214724",
         "name": "preserve_menu_catalog_metadata"
+      },
+      {
+        "version": "20261101192056",
+        "name": "allow_cpf_menu_signup"
       }
     ],
     "migrationsObservedAt": "2026-11-01"

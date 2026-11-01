@@ -1,40 +1,36 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-01",
-  "baseline": "preserve_menu_catalog_metadata",
+  "baseline": "allow_cpf_menu_signup",
   "strategy": "contiguous_tail",
-  "authorized": false,
-  "decision": "PENDING_VALIDATION",
+  "authorized": true,
+  "decision": "APPROVED",
   "localReplay": {
-    "status": "NEEDS_REFRESH",
+    "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
     "migrationCount": 81,
-    "testFiles": 21,
-    "assertions": 561,
+    "testFiles": 22,
+    "assertions": 567,
     "evidence": "docs/evidencias/diniz-publicacao-2026-11-01.md",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41335550041",
-    "sourceCommit": "66aa190706793678445a8ca41870afde68452f1d"
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41342121412",
+    "sourceCommit": "bac39bd28312e12602a51c3e97da83ee40a7acee"
   },
   "productionDryRun": {
-    "status": "NEEDS_REFRESH",
+    "status": "PASSED",
     "executedAt": "2026-11-01",
     "command": "supabase db push --workdir <isolated-alias-copy> --project-ref mvzcoaiiwytycdqcvydf --include-all --skip-vault --dry-run",
-    "migrationCount": 1,
+    "migrationCount": 0,
     "remoteChangesPerformed": false,
     "evidence": "docs/evidencias/diniz-publicacao-2026-11-01.md",
     "aliasCompatibility": "billing_rejected_email_event: 20261003025228 -> 20261003162614, identical file hash; no history repair",
     "mode": "POST_PROMOTION_READ_ONLY"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "allow_cpf_menu_signup"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
-    "commercial_callbacks_and_billing": [
-      "allow_cpf_menu_signup"
-    ],
+    "commercial_callbacks_and_billing": [],
     "menu_release_required": [],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],

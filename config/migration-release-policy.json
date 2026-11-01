@@ -172,14 +172,9 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "preserve_menu_catalog_metadata",
+    "appliedThrough": "allow_cpf_menu_signup",
     "appliedOutOfOrder": [],
-    "heldMigrations": [
-      {
-        "name": "allow_cpf_menu_signup",
-        "reason": "Cadastro CPF/CNPJ aguardando CI e homologacao."
-      }
-    ],
+    "heldMigrations": [],
     "observationEvidence": "config/menu-environment-inventory.json",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614"
