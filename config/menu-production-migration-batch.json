@@ -1,79 +1,41 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-21",
-  "baseline": "move_profile_rls_helpers_private",
+  "updatedAt": "2026-11-01",
+  "baseline": "preserve_menu_catalog_metadata",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
-    "migrationCount": 78,
-    "testFiles": 20,
-    "assertions": 522,
-    "evidence": "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/39529232043",
-    "sourceCommit": "6c9ec456bb8b44d21e2966c6a0ddffd14e8c4cca"
+    "migrationCount": 80,
+    "testFiles": 21,
+    "assertions": 561,
+    "evidence": "docs/evidencias/diniz-publicacao-2026-11-01.md",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41335550041",
+    "sourceCommit": "66aa190706793678445a8ca41870afde68452f1d"
   },
   "productionDryRun": {
-    "status": "NEEDS_REFRESH",
-    "executedAt": "2026-10-20",
+    "status": "PASSED",
+    "executedAt": "2026-11-01",
     "command": "supabase db push --workdir <isolated-alias-copy> --project-ref mvzcoaiiwytycdqcvydf --include-all --skip-vault --dry-run",
-    "migrationCount": 23,
+    "migrationCount": 0,
     "remoteChangesPerformed": false,
-    "evidence": "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md",
-    "aliasCompatibility": "billing_rejected_email_event: 20261003025228 -> 20261003162614, identical file hash; no history repair"
+    "evidence": "docs/evidencias/diniz-publicacao-2026-11-01.md",
+    "aliasCompatibility": "billing_rejected_email_event: 20261003025228 -> 20261003162614, identical file hash; no history repair",
+    "mode": "POST_PROMOTION_READ_ONLY"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "menu_assistant_foundation",
-    "menu_self_service_catalog_editor",
-    "menu_catalog_order_and_delivery_zones",
-    "menu_catalog_draft_publication",
-    "menu_billing_lifecycle_reliability",
-    "menu_visual_identity_assets",
-    "menu_pix_expiry_recovery"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
-    "shared_hardening": [
-      "platform_contact_leads",
-      "deny_platform_contact_attempt_reads",
-      "index_remaining_foreign_keys",
-      "remove_legacy_rls_policies"
-    ],
-    "agenda_or_identity": [
-      "add_appointment_reassignment_offers",
-      "link_public_bookings_to_client_auth",
-      "harden_authenticated_booking_actions"
-    ],
+    "shared_hardening": [],
+    "agenda_or_identity": [],
     "commercial_callbacks_and_billing": [],
-    "menu_release_required": [
-      "menu_assistant_foundation",
-      "menu_self_service_catalog_editor",
-      "menu_catalog_order_and_delivery_zones",
-      "menu_catalog_draft_publication",
-      "menu_billing_lifecycle_reliability",
-      "menu_visual_identity_assets",
-      "menu_pix_expiry_recovery"
-    ],
-    "ai_staging_disabled": [
-      "menu_ai_staging_controls",
-      "menu_ai_staging_inference",
-      "fix_menu_ai_staging_telemetry_authorization",
-      "allow_menu_ai_service_private_schema"
-    ],
-    "private_pilot_observability": [
-      "menu_private_pilot_metrics"
-    ],
-    "tenant_specific_diniz": [
-      "diniz_sunday_hours_and_sweets_quantity",
-      "diniz_automatic_delivery_distance",
-      "restore_diniz_delivery_zones_after_geocode_validation",
-      "enable_diniz_geoapify_delivery"
-    ],
-    "catalog_corrective": [
-      "fix_menu_catalog_draft_delete_order"
-    ]
+    "menu_release_required": [],
+    "ai_staging_disabled": [],
+    "private_pilot_observability": [],
+    "tenant_specific_diniz": [],
+    "catalog_corrective": []
   },
   "releaseConditions": [
     "Every migration in the contiguous tail receives an explicit production disposition.",
@@ -95,12 +57,45 @@
     "menu_cart_orders",
     "menu_self_service_onboarding",
     "commercial_self_service_lifecycle",
+    "menu_assistant_foundation",
+    "menu_ai_staging_controls",
+    "menu_ai_staging_inference",
+    "fix_menu_ai_staging_telemetry_authorization",
+    "allow_menu_ai_service_private_schema",
+    "menu_private_pilot_metrics",
+    "menu_self_service_catalog_editor",
+    "menu_catalog_order_and_delivery_zones",
+    "menu_catalog_draft_publication",
     "menu_trial_self_service",
     "billing_private_backend_rpcs",
     "fix_menu_trial_plan_sync",
     "billing_service_role_bridge",
     "billing_explicit_backend_rpcs",
-    "billing_rejected_email_event"
+    "billing_rejected_email_event",
+    "menu_billing_lifecycle_reliability",
+    "menu_visual_identity_assets",
+    "menu_pix_expiry_recovery",
+    "fix_menu_catalog_draft_delete_order",
+    "preserve_menu_catalog_metadata"
   ],
-  "authorizationSource": "Pedido explícito do responsável: quero essas atualizações no ar, faça agora. Autoriza promoção técnica de produção; não atesta validação fiscal ou jurídica."
+  "authorizationSource": "Pedido explícito do responsável: quero essas atualizações no ar, faça agora. Autoriza promoção técnica de produção; não atesta validação fiscal ou jurídica.",
+  "authorizationScope": "Completed preserve_menu_catalog_metadata correction only. Any future migration requires a new reviewed release decision.",
+  "lastPromotion": {
+    "status": "APPLIED_AND_VERIFIED",
+    "executedAt": "2026-11-01",
+    "migrations": [
+      "preserve_menu_catalog_metadata"
+    ],
+    "reviewedPendingCount": 1,
+    "sourceCommit": "66aa190706793678445a8ca41870afde68452f1d",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41335550041",
+    "stagingMigrationCount": 80,
+    "productionMigrationCount": 80,
+    "postPromotionPendingCount": 0,
+    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41298316841",
+    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41335545853",
+    "restoreStatus": "SUCCESS",
+    "commercialReleaseAuthorized": false,
+    "evidence": "docs/evidencias/diniz-publicacao-2026-11-01.md"
+  }
 }

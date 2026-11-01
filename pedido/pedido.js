@@ -2,7 +2,7 @@
   const params = new URLSearchParams(location.search);
   const reference = params.get("referencia"), token = params.get("token"), root = document.getElementById("order");
   const menuSlug = params.get("empresa") || "";
-  const whatsappByMenu = { "diniz-doces-previa-7d1": "5516991596865" };
+  const whatsappByMenu = { "diniz-doces": "5516991596865", "diniz-doces-previa-7d1": "5516991596865" };
   const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
   const statusNames = { received: "Recebido", confirmed: "Confirmado", preparing: "Em preparo", ready: "Pronto para retirada", out_for_delivery: "Saiu para entrega", completed: "Concluído", cancelled: "Cancelado" };
   const paymentNames = { pending: "Pagamento pendente", paid: "Pagamento confirmado", refunded: "Pagamento devolvido", failed: "Falha no pagamento" };

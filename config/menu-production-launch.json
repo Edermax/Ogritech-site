@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "product": "Ogritech Cardápio",
   "environment": "production",
-  "updatedAt": "2026-10-31",
+  "updatedAt": "2026-11-01",
   "releaseAuthorized": false,
   "gates": [
     {
@@ -59,7 +59,7 @@
     {
       "id": "database_promotion",
       "label": "Migrations promovidas de forma controlada",
-      "status": "PARTIAL",
+      "status": "APPROVED",
       "evidence": [
         "config/migration-release-policy.json",
         "config/menu-production-migration-batch.json",
@@ -70,9 +70,13 @@
         "docs/evidencias/cardapio-retomada-2026-10-19.md",
         "docs/evidencias/cardapio-preparacao-release-2026-10-20.md",
         "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md",
-        "docs/evidencias/cardapio-preflight-producao-2026-10-31.md"
+        "docs/evidencias/cardapio-preflight-producao-2026-10-31.md",
+        "docs/evidencias/diniz-publicacao-2026-11-01.md",
+        "https://github.com/Edermax/Ogritech-site/actions/runs/41335550041",
+        "https://github.com/Edermax/Ogritech-site/actions/runs/41298316841",
+        "https://github.com/Edermax/Ogritech-site/actions/runs/41335545853"
       ],
-      "remaining": "Produção consultada em 31/10 tem 79 migrations. Auditoria de schema reconciliada e aprovada em 27/10. A política histórica de release ainda registra 55 aplicadas e 24 retidas; reconciliar esse inventário e suas evidências sem reparar artificialmente o histórico remoto."
+      "remaining": ""
     },
     {
       "id": "application_publication",
@@ -153,7 +157,7 @@
     }
   ],
   "currentProduction": {
-    "commit": "b5902c5ac576667fef0f9fedc264f1fabfe6acf7",
+    "commit": "7954337e5cbc99deadd88a179997c935d47bcb8f",
     "inventory": "config/menu-environment-inventory.json",
     "releaseAuthorized": false,
     "observedAt": "2026-10-31"

@@ -1,15 +1,13 @@
 {
   "schemaVersion": 1,
-  "observedAt": "2026-10-20",
-  "source": "Supabase MCP read-only, staging CLI migration deployment and GitHub Pages API",
+  "observedAt": "2026-11-01",
+  "source": "Supabase CLI read-only migration inventories after the reviewed metadata correction; function metadata retains its separately dated observation.",
   "frontend": {
-    "commit": "1771d9c5d737682329e775b22d8e4ba171f7075e",
+    "commit": "7954337e5cbc99deadd88a179997c935d47bcb8f",
     "url": "https://ogritech.com.br/",
-    "status": "built",
-    "publishedAt": "2026-10-19T16:55:46Z",
-    "applicationBaseCommit": "a51eec70580ba606d7c187e5e38c4d0fffdb0829",
-    "operationalPullRequest": "https://github.com/Edermax/Ogritech-site/pull/17",
-    "applicationCodeChanged": false
+    "status": "published_before_pending_diniz_release",
+    "observedAt": "2026-11-01",
+    "dinizFrontendReleasePending": true
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
@@ -159,12 +157,40 @@
         "name": "move_profile_rls_helpers_private"
       },
       {
+        "version": "20260901214241",
+        "name": "platform_contact_leads"
+      },
+      {
+        "version": "20260901215201",
+        "name": "deny_platform_contact_attempt_reads"
+      },
+      {
+        "version": "20260901220712",
+        "name": "index_remaining_foreign_keys"
+      },
+      {
+        "version": "20260902102152",
+        "name": "remove_legacy_rls_policies"
+      },
+      {
+        "version": "20260902204329",
+        "name": "add_appointment_reassignment_offers"
+      },
+      {
+        "version": "20260903143540",
+        "name": "link_public_bookings_to_client_auth"
+      },
+      {
         "version": "20260903163213",
         "name": "enforce_plan_capacity"
       },
       {
         "version": "20260903201148",
         "name": "fix_plan_capacity_access"
+      },
+      {
+        "version": "20260904023556",
+        "name": "harden_authenticated_booking_actions"
       },
       {
         "version": "20260904184313",
@@ -207,6 +233,58 @@
         "name": "commercial_self_service_lifecycle"
       },
       {
+        "version": "20260910131725",
+        "name": "menu_assistant_foundation"
+      },
+      {
+        "version": "20260910162119",
+        "name": "menu_ai_staging_controls"
+      },
+      {
+        "version": "20260910213617",
+        "name": "menu_ai_staging_inference"
+      },
+      {
+        "version": "20260910215503",
+        "name": "fix_menu_ai_staging_telemetry_authorization"
+      },
+      {
+        "version": "20260910215856",
+        "name": "allow_menu_ai_service_private_schema"
+      },
+      {
+        "version": "20260918123817",
+        "name": "diniz_sunday_hours_and_sweets_quantity"
+      },
+      {
+        "version": "20260919150051",
+        "name": "menu_private_pilot_metrics"
+      },
+      {
+        "version": "20260920171325",
+        "name": "diniz_automatic_delivery_distance"
+      },
+      {
+        "version": "20260920173002",
+        "name": "restore_diniz_delivery_zones_after_geocode_validation"
+      },
+      {
+        "version": "20260920184240",
+        "name": "enable_diniz_geoapify_delivery"
+      },
+      {
+        "version": "20260928145729",
+        "name": "menu_self_service_catalog_editor"
+      },
+      {
+        "version": "20260928150615",
+        "name": "menu_catalog_order_and_delivery_zones"
+      },
+      {
+        "version": "20260928153519",
+        "name": "menu_catalog_draft_publication"
+      },
+      {
         "version": "20260928173425",
         "name": "menu_trial_self_service"
       },
@@ -233,6 +311,26 @@
       {
         "version": "20261003162614",
         "name": "billing_rejected_email_event"
+      },
+      {
+        "version": "20261019154554",
+        "name": "menu_billing_lifecycle_reliability"
+      },
+      {
+        "version": "20261020151727",
+        "name": "menu_visual_identity_assets"
+      },
+      {
+        "version": "20261020204455",
+        "name": "menu_pix_expiry_recovery"
+      },
+      {
+        "version": "20261022002154",
+        "name": "fix_menu_catalog_draft_delete_order"
+      },
+      {
+        "version": "20261031214724",
+        "name": "preserve_menu_catalog_metadata"
       }
     ],
     "functions": [
@@ -278,7 +376,9 @@
         "verify_jwt": false,
         "ezbr_sha256": "dfcda94d14d10156d29f443f2a0b91da1edf5d83f05d2f71e4bbe5ef58dc6624"
       }
-    ]
+    ],
+    "migrationsObservedAt": "2026-11-01",
+    "functionsObservedAt": "2026-10-20"
   },
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
@@ -594,8 +694,17 @@
       {
         "version": "20261020204455",
         "name": "menu_pix_expiry_recovery"
+      },
+      {
+        "version": "20261022002154",
+        "name": "fix_menu_catalog_draft_delete_order"
+      },
+      {
+        "version": "20261031214724",
+        "name": "preserve_menu_catalog_metadata"
       }
-    ]
+    ],
+    "migrationsObservedAt": "2026-11-01"
   },
   "userAcceptance": {
     "recordedAt": "2026-10-19",

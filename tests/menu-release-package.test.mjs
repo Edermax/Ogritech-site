@@ -18,10 +18,26 @@ function fixture() {
     read: (path) => overrides.get(path) || readFileSync(new URL(path, root)) };
 }
 
+function setMigrationTail(source, appliedThrough, pendingNames) {
+  const policy = JSON.parse(source.read("config/migration-release-policy.json"));
+  const batch = JSON.parse(source.read("config/menu-production-migration-batch.json"));
+  policy.production.appliedThrough = appliedThrough;
+  policy.production.appliedOutOfOrder = [];
+  policy.production.heldMigrations = pendingNames.map((name) => ({ name, reason: "Controlled test inventory" }));
+  batch.baseline = appliedThrough;
+  batch.requiredMenuMigrations = [...pendingNames];
+  batch.classifications = { catalog_corrective: [...pendingNames] };
+  source.overrides.set("config/migration-release-policy.json", Buffer.from(JSON.stringify(policy)));
+  source.overrides.set("config/menu-production-migration-batch.json", Buffer.from(JSON.stringify(batch)));
+}
+
 test("release package pins production inputs and preserves all launch blockers", () => {
   const source = fixture();
+  const policy = JSON.parse(source.read("config/migration-release-policy.json"));
+  const launch = JSON.parse(source.read("config/menu-production-launch.json"));
   const report = buildReleasePackage(source);
-  assert.equal(report.database.pendingCount, 24);
+  assert.equal(report.database.pendingCount, policy.production.heldMigrations.length);
+  assert.deepEqual(report.database.migrations.map((item) => item.name), policy.production.heldMigrations.map((item) => item.name));
   assert.equal(report.functions.length, 7);
   assert.equal(report.functions.find((item) => item.name === "cep-lookup").verifyJwt, false);
   assert.equal(report.functions.find((item) => item.name === "platform-users").verifyJwt, true);
@@ -29,10 +45,26 @@ test("release package pins production inputs and preserves all launch blockers",
   assert.equal(report.releaseAuthorized, false);
   assert.equal(report.applySupported, false);
   assert.equal(report.deploymentPerformed, false);
-  assert.equal(report.pendingDecisions.length, 7);
-  const file = report.database.migrations[0];
+  assert.deepEqual(report.pendingDecisions.map((gate) => gate.id), launch.gates.filter((gate) => gate.status !== "APPROVED").map((gate) => gate.id));
+  for (const id of ["legal_review", "commercial_definition", "support_and_incidents"]) {
+    assert.ok(report.pendingDecisions.some((gate) => gate.id === id && gate.status === "BLOCKED_HUMAN"), `${id} remains subject to its human approval`);
+  }
+  const file = report.database.migrations[0] || report.functions.find((item) => item.name === "cep-lookup").files.find((item) => item.path.endsWith("/index.ts"));
   assert.equal(file.sha256, createHash("sha256").update(source.read(file.path)).digest("hex"));
   assert.equal(report.database.remoteVersionAliases.billing_rejected_email_event, "20261003162614");
+});
+
+test("a promoted migration leaves an empty tail without losing immutable function hashes or release blockers", () => {
+  const source = fixture();
+  setMigrationTail(source, "preserve_menu_catalog_metadata", []);
+  const report = buildReleasePackage(source);
+  assert.equal(report.database.pendingCount, 0);
+  assert.deepEqual(report.database.migrations, []);
+  const entrypoint = report.functions.find((item) => item.name === "cep-lookup").files.find((item) => item.path.endsWith("/index.ts"));
+  assert.equal(entrypoint.sha256, createHash("sha256").update(source.read(entrypoint.path)).digest("hex"));
+  assert.equal(report.releaseAuthorized, false);
+  assert.equal(report.deploymentPerformed, false);
+  assert.ok(report.pendingDecisions.length > 0);
 });
 
 test("sandbox or external AI handlers cannot enter the production function list", () => {
@@ -50,7 +82,11 @@ test("release package rejects a staging project or an incomplete migration inven
   source.overrides.set("config/menu-release-package.json", Buffer.from(JSON.stringify(source.config)));
   assert.throws(() => buildReleasePackage(source), /produção/);
   const missing = fixture();
-  missing.paths = missing.paths.filter((path) => !path.includes("menu_pix_expiry_recovery.sql"));
+  setMigrationTail(missing, "fix_menu_catalog_draft_delete_order", ["preserve_menu_catalog_metadata"]);
+  assert.doesNotThrow(() => buildReleasePackage(missing), "The controlled inventory must be complete before removing its pending file");
+  const metadataPath = "supabase/migrations/20261031214724_preserve_menu_catalog_metadata.sql";
+  assert.ok(missing.paths.includes(metadataPath));
+  missing.paths = missing.paths.filter((path) => path !== metadataPath);
   assert.throws(() => buildReleasePackage(missing), /divergem/);
 });
 
