@@ -44,8 +44,8 @@ select extensions.is((public.public_menu('pedido-seguro')->'delivery_zones'->0->
 select extensions.is((public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','delivery','{"text":"Rua Teste, 1","zone_code":"centro"}','', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[{"menu_option_id":"97000000-0000-4000-8000-000000000001","quantity":1}]}]',true,'98000000-0000-4000-8000-000000000001',null,'')->>'total_amount')::numeric,31::numeric,'servidor calcula item, adicional e entrega');
 reset role;
 select extensions.is((select count(*) from public.menu_orders where menu_id=(select id from public.online_menus where slug='pedido-seguro')),1::bigint,'primeiro envio cria um pedido');
-select extensions.is((select subtotal from public.menu_orders where client_request_id='98000000-0000-4000-8000-000000000001'),25::numeric,'subtotal ignora qualquer cálculo do navegador');
-select extensions.is((select line_total from public.menu_order_item_options limit 1),5::numeric,'adicional é salvo como snapshot financeiro');
+select extensions.is((select subtotal from public.menu_orders where barbershop_id='91000000-0000-4000-8000-000000000001' and client_request_id='98000000-0000-4000-8000-000000000001'),25::numeric,'subtotal ignora qualquer cálculo do navegador');
+select extensions.is((select line_total from public.menu_order_item_options where barbershop_id='91000000-0000-4000-8000-000000000001' and menu_option_id='97000000-0000-4000-8000-000000000001'),5::numeric,'adicional é salvo como snapshot financeiro');
 set local role anon;
 select extensions.lives_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','delivery','{"text":"Rua Teste, 1","zone_code":"centro"}','', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[{"menu_option_id":"97000000-0000-4000-8000-000000000001","quantity":1}]}]',true,'98000000-0000-4000-8000-000000000001',null,'')$$,'reenvio idêntico devolve a resposta anterior');
 reset role;
@@ -55,13 +55,14 @@ select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-
 select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','pickup',null,'', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[]}]',true,'98000000-0000-4000-8000-000000000002',null,'')$$,'22023','Seleções obrigatórias inválidas','grupo obrigatório é validado no servidor');
 select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','delivery','{"text":"Rua Teste, 1","zone_code":"fora"}','', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[{"menu_option_id":"97000000-0000-4000-8000-000000000001","quantity":1}]}]',true,'98000000-0000-4000-8000-000000000003',null,'')$$,'22023','Área de entrega inválida','área não cadastrada é rejeitada');
 reset role;
-select extensions.is((select count(*) from public.menu_orders),1::bigint,'tentativas inválidas não deixam pedidos parciais');
+select extensions.is((select count(*) from public.menu_orders where barbershop_id='91000000-0000-4000-8000-000000000001'),1::bigint,'tentativas inválidas não deixam pedidos parciais');
 
 -- Rollback drill: use only this transaction's synthetic order. No production
 -- fixture, provider call or persistent publication change is involved.
 do $$ declare payload jsonb; begin
   select response into strict payload from private.menu_order_idempotency
-    where client_request_id='98000000-0000-4000-8000-000000000001';
+    where client_request_id='98000000-0000-4000-8000-000000000001'
+      and menu_id=(select id from public.online_menus where barbershop_id='91000000-0000-4000-8000-000000000001');
   perform set_config('rollback_test.reference',payload->>'reference',true);
   perform set_config('rollback_test.token',payload->>'token',true);
 end $$;

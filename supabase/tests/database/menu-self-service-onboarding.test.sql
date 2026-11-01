@@ -44,7 +44,7 @@ select extensions.throws_ok($$select public.confirm_menu_review('a1000000-0000-4
 select extensions.lives_ok($$select public.run_menu_test_order('a1000000-0000-4000-8000-000000000001')$$,'pedido de teste é executado pelo servidor');
 reset role;
 select extensions.is((select count(*) from public.menu_orders where barbershop_id='a1000000-0000-4000-8000-000000000001' and is_test),1::bigint,'pedido de teste é gravado');
-select extensions.is((select total_amount from public.menu_orders where is_test),30::numeric,'pedido de teste usa preço real e região de entrega');
+select extensions.is((select total_amount from public.menu_orders where barbershop_id='a1000000-0000-4000-8000-000000000001' and is_test),30::numeric,'pedido de teste usa preço real e região de entrega');
 select extensions.is((select onboarding_step from public.online_menus where barbershop_id='a1000000-0000-4000-8000-000000000001'),'review','onboarding avança para revisão');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"a2000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
@@ -83,9 +83,9 @@ select extensions.is(public.menu_onboarding_status('a1000000-0000-4000-8000-0000
 select extensions.throws_ok($$select public.set_menu_publication('a1000000-0000-4000-8000-000000000001',true)$$,'23514','Conclua todas as etapas antes de publicar','revisão antiga não autoriza nova versão');
 select extensions.is((public.run_menu_test_order('a1000000-0000-4000-8000-000000000001')->>'total_amount')::numeric,110::numeric,'teste respeita mínimo, adicionais parcialmente grátis e frete');
 select extensions.is((public.run_menu_test_order('a1000000-0000-4000-8000-000000000001')->>'total_amount')::numeric,110::numeric,'repetir teste da mesma versão é idempotente');
-select extensions.is((select count(*) from public.menu_orders where is_test),2::bigint,'repetição não gera outro pedido');
-select extensions.ok((select scheduled_for>=now()+interval '24 hours' and public_token_hash is null from public.menu_orders where is_test and scheduled_for is not null),'encomenda de teste respeita antecedência sem token público');
-select extensions.is((select quantity from public.menu_order_items where order_id=(select id from public.menu_orders where scheduled_for is not null)),3,'teste usa quantidade mínima real');
+select extensions.is((select count(*) from public.menu_orders where barbershop_id='a1000000-0000-4000-8000-000000000001' and is_test),2::bigint,'repetição não gera outro pedido');
+select extensions.ok((select scheduled_for>=now()+interval '24 hours' and public_token_hash is null from public.menu_orders where barbershop_id='a1000000-0000-4000-8000-000000000001' and is_test and scheduled_for is not null),'encomenda de teste respeita antecedência sem token público');
+select extensions.is((select quantity from public.menu_order_items where barbershop_id='a1000000-0000-4000-8000-000000000001' and order_id=(select id from public.menu_orders where barbershop_id='a1000000-0000-4000-8000-000000000001' and is_test and scheduled_for is not null)),3,'teste usa quantidade mínima real');
 select extensions.lives_ok($$select public.confirm_menu_review('a1000000-0000-4000-8000-000000000001')$$,'revisão atual pode ser confirmada');
 select extensions.lives_ok($$select public.set_menu_publication('a1000000-0000-4000-8000-000000000001',true)$$,'publica configuração testada');
 select extensions.throws_ok($$update public.menu_item_prices set price=40 where menu_item_id='a4000000-0000-4000-8000-000000000001'$$,'23514','Despublique o cardápio antes de alterar o catálogo','impede mudança publicada sem revisão');
