@@ -42,7 +42,7 @@ jobs:
         id: resilience
         continue-on-error: true
         run: |
-          supabase start
+          supabase start --exclude mailpit
           supabase db reset
           supabase test db
       - name: Build evidence package

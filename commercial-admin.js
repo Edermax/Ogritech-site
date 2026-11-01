@@ -769,7 +769,9 @@
                 let category=menuCatalogCategories.find((entry)=>entry.id===payload.category_id) || menuCatalogCategories.find((entry)=>entry.name.toLowerCase()===payload.category_name.toLowerCase());
                 if(!category){ category={id:crypto.randomUUID(),name:payload.category_name,active:true,sort_order:(menuCatalogCategories.length+1)*10,menu_items:[]}; menuCatalogCategories.push(category); }
                 category.name=payload.category_name;
+                const previousItem=menuCatalogCategories.flatMap((entry)=>entry.menu_items||[]).find((item)=>item.id===payload.id);
                 const draftItem={id:payload.id||crypto.randomUUID(),name:payload.name,description:payload.description,image_url:payload.image_url,item_type:payload.item_type,unit_label:payload.unit_label,minimum_quantity:payload.minimum_quantity,maximum_quantity:payload.maximum_quantity,lead_time_hours:payload.lead_time_hours,active:payload.active,available:payload.available,sort_order:((category.menu_items||[]).length+1)*10,menu_item_prices:prices.map((price,index)=>({...price,active:true,sort_order:(index+1)*10})),menu_item_option_groups:optionGroups.map((group,index)=>({sort_order:(index+1)*10,menu_option_groups:{...group,active:true,menu_options:group.options.map((option,optionIndex)=>({...option,available:true,sort_order:(optionIndex+1)*10}))}}))};
+                draftItem.metadata={...(previousItem?.metadata||{})};
                 const priorCategory=menuCatalogCategories.find((entry)=>entry.menu_items?.some((item)=>item.id===draftItem.id));
                 if(priorCategory && priorCategory!==category) priorCategory.menu_items=priorCategory.menu_items.filter((item)=>item.id!==draftItem.id);
                 category.menu_items=category.menu_items||[]; const existingIndex=category.menu_items.findIndex((item)=>item.id===draftItem.id);

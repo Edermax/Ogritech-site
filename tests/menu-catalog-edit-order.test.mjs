@@ -78,3 +78,11 @@ test("moving a published product appends it after the destination order without 
   assert.equal(saved[0].menu_items[1].sort_order, 100);
   assert.deepEqual(saved[0].menu_items[0], categories[1].menu_items[0]);
 });
+
+test("editing a published quote product keeps its order mode and existing metadata in the draft", async () => {
+  const metadata = { order_mode: "quote", configuration_required: true, requires_human_confirmation: true };
+  const categories = [{ id: "cakes", name: "Bolos", menu_items: [{ id: "quote-cake", name: "Bolo personalizado", sort_order: 10, metadata }] }];
+  const saved = await editor({ categories, itemId: "quote-cake", categoryId: "cakes", categoryName: "Bolos" }).save();
+  assert.deepEqual(saved[0].menu_items[0].metadata, metadata);
+  assert.equal(saved[0].menu_items[0].name, "Nome atualizado");
+});
