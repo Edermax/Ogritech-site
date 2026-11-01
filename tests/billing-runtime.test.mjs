@@ -495,7 +495,7 @@ test('Orders signature accepts raw and canonical IDs but rejects a different res
 });
 
 test("signup validates and persists the service invoice preference without changing the trial price", async () => {
-  for (const preference of ["requested", "not_requested", undefined]) {
+  for (const taxDocument of ["11222333000181", "52998224725"]) for (const preference of ["requested", "not_requested", undefined]) {
     let clientRecord, invitationRedirect;
     const admin = {
       rpc: async name => ({ data: name === "backend_billing_signup_create" ? signup.id : null, error: null }),
@@ -514,7 +514,7 @@ test("signup validates and persists the service invoice preference without chang
       ...(preference === "requested" ? { SUPABASE_URL: "https://fuesdztsvrkkgnbqhcxi.supabase.co", PUBLIC_APP_URL: "https://ogritech.com.br" } : {})
     });
     const body = { action: "start_trial", product: "menu", business_name: "Fixture", responsible_name: "Fixture",
-      tax_document: "11222333000181", email: "fixture@example.invalid", phone: "11999999999", segment: "Restaurante",
+      tax_document: taxDocument, email: "fixture@example.invalid", phone: "11999999999", segment: "Restaurante",
       cycle: "monthly", payment_method: "pix", terms_version: "fixture", accepted_terms: true, accepted_privacy: true,
       recurring_authorized: false, ...(preference === undefined ? {} : { service_invoice_preference: preference }) };
     const response = await handler(new Request("https://fixture.invalid/billing", { method: "POST", body: JSON.stringify(body) }));
@@ -523,7 +523,7 @@ test("signup validates and persists the service invoice preference without chang
     assert.equal(new URL(invitationRedirect).searchParams.get("env"), preference === "requested" ? "staging" : null);
     assert.equal(new URL(result.data.login_url).searchParams.get("env"), preference === "requested" ? "staging" : null);
     assert.equal(clientRecord.monthly_fee, 49.9);
-    assert.match(clientRecord.notes, preference === "requested" ? /solicitada pelo cliente/ : preference === "not_requested" ? /Não constitui dispensa/ : /não informada/);
+    assert.match(clientRecord.notes, preference === "requested" ? /solicitada pelo cliente/ : (preference === "not_requested" || taxDocument.length === 11) ? /Não constitui dispensa/ : /não informada/);
     const invalid = await handler(new Request("https://fixture.invalid/billing", { method: "POST", body: JSON.stringify({ ...body, service_invoice_preference: "skip_tax" }) }));
     assert.equal(invalid.status, 422);
   }

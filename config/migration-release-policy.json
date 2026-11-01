@@ -82,7 +82,8 @@
       "menu_visual_identity_assets",
       "menu_pix_expiry_recovery",
       "fix_menu_catalog_draft_delete_order",
-      "preserve_menu_catalog_metadata"
+      "preserve_menu_catalog_metadata",
+      "allow_cpf_menu_signup"
     ],
     "remoteVersionAliases": {},
     "observedMigrationNames": [
@@ -171,7 +172,7 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "preserve_menu_catalog_metadata",
+    "appliedThrough": "allow_cpf_menu_signup",
     "appliedOutOfOrder": [],
     "heldMigrations": [],
     "observationEvidence": "config/menu-environment-inventory.json",

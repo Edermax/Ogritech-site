@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-01",
-  "baseline": "preserve_menu_catalog_metadata",
+  "baseline": "allow_cpf_menu_signup",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
-    "migrationCount": 80,
-    "testFiles": 21,
-    "assertions": 561,
+    "migrationCount": 81,
+    "testFiles": 22,
+    "assertions": 567,
     "evidence": "docs/evidencias/diniz-publicacao-2026-11-01.md",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41335550041",
-    "sourceCommit": "66aa190706793678445a8ca41870afde68452f1d"
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41342121412",
+    "sourceCommit": "bac39bd28312e12602a51c3e97da83ee40a7acee"
   },
   "productionDryRun": {
     "status": "PASSED",

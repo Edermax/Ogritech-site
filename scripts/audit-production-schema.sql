@@ -8,14 +8,14 @@ declare
     latest_name text;
 begin
     select count(*) into actual from supabase_migrations.schema_migrations;
-    if actual <> 80 then
-        raise exception 'Unexpected production migration count: %, expected 80', actual;
+    if actual <> 81 then
+        raise exception 'Unexpected production migration count: %, expected 81', actual;
     end if;
 
     select name into latest_name
     from supabase_migrations.schema_migrations
     order by version::numeric desc limit 1;
-    if latest_name is distinct from 'preserve_menu_catalog_metadata' then
+    if latest_name is distinct from 'allow_cpf_menu_signup' then
         raise exception 'Unexpected production migration baseline: %', latest_name;
     end if;
 

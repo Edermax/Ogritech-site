@@ -88,8 +88,8 @@ test("auditoria diária detecta drift real de schema sem bloquear o backup", asy
   assert.match(workflow, /supabase db query --db-url/);
   assert.match(workflow, /production-schema-drift/);
   assert.match(sql, /supabase_migrations\.schema_migrations/);
-  assert.match(sql, /actual <> 80/);
-  assert.match(sql, /preserve_menu_catalog_metadata/);
+  assert.match(sql, /actual <> 81/);
+  assert.match(sql, /allow_cpf_menu_signup/);
   assert.match(sql, /not c\.relrowsecurity/);
   assert.match(sql, /has_function_privilege\('anon'/);
   assert.doesNotMatch(backup, /audit-production-schema\.sql/);

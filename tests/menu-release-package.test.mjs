@@ -56,6 +56,7 @@ test("release package pins production inputs and preserves all launch blockers",
 
 test("a promoted migration leaves an empty tail without losing immutable function hashes or release blockers", () => {
   const source = fixture();
+  source.paths = source.paths.filter(path => !path.includes("allow_cpf_menu_signup.sql"));
   setMigrationTail(source, "preserve_menu_catalog_metadata", []);
   const report = buildReleasePackage(source);
   assert.equal(report.database.pendingCount, 0);
@@ -82,6 +83,7 @@ test("release package rejects a staging project or an incomplete migration inven
   source.overrides.set("config/menu-release-package.json", Buffer.from(JSON.stringify(source.config)));
   assert.throws(() => buildReleasePackage(source), /produção/);
   const missing = fixture();
+  missing.paths = missing.paths.filter(path => !path.includes("allow_cpf_menu_signup.sql"));
   setMigrationTail(missing, "fix_menu_catalog_draft_delete_order", ["preserve_menu_catalog_metadata"]);
   assert.doesNotThrow(() => buildReleasePackage(missing), "The controlled inventory must be complete before removing its pending file");
   const metadataPath = "supabase/migrations/20261031214724_preserve_menu_catalog_metadata.sql";
