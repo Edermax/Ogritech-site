@@ -1,6 +1,7 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
 import { z } from "npm:zod@4.1.5";
+import { deliveryHouseNumber, validatedDinizGeocode, type DeliveryGeocodeAddress } from "./geocode-validation.ts";
 
 const Env = z.object({ ALLOWED_ORIGINS: z.string().min(1), GEOAPIFY_API_KEY: z.string().min(20) }).parse(Deno.env.toObject());
 const allowedOrigins = Env.ALLOWED_ORIGINS.split(",").map((value) => value.trim()).filter(Boolean);
@@ -17,7 +18,10 @@ const ViaCepResponse = z.object({
 const GeocodeResponse = z.object({ results: z.array(z.object({ lat: z.number(), lon: z.number() }).passthrough()).min(1) }).passthrough();
 const RoutingResponse = z.object({ features: z.array(z.object({ properties: z.object({ distance: z.number().positive(), time: z.number().nonnegative().optional() }).passthrough() }).passthrough()).min(1) }).passthrough();
 const DINIZ_SLUGS = new Set(["diniz-doces", "diniz-doces-previa-7d1"]);
-const DINIZ_ORIGIN_ADDRESS = "Rua Judy Villar Benedine, 319, Parque dos Servidores, Ribeirão Preto, SP, Brasil";
+const DINIZ_ORIGIN_ADDRESS: DeliveryGeocodeAddress = {
+  street: "Rua Judy Villar Benedine", housenumber: "319", postcode: "14094205",
+  city: "Ribeirão Preto", state: "São Paulo", country: "Brasil"
+};
 let dinizOriginPromise: Promise<{ lat: number; lon: number }> | null = null;
 
 const reply = (body: unknown, status: number, origin: string | null) => Response.json(body, { status, headers: {
@@ -33,13 +37,16 @@ const fetchJson = async (url: URL, timeoutMs = 10000) => {
     return await response.json();
   } finally { clearTimeout(timeout); }
 };
-const geocode = async (address: string) => {
+const geocode = async (address: DeliveryGeocodeAddress) => {
   const url = new URL("https://api.geoapify.com/v1/geocode/search");
-  url.searchParams.set("text", address); url.searchParams.set("filter", "countrycode:br"); url.searchParams.set("format", "json");
+  for (const [component, value] of Object.entries(address)) url.searchParams.set(component, value);
+  url.searchParams.set("filter", "countrycode:br"); url.searchParams.set("format", "json");
   url.searchParams.set("limit", "1"); url.searchParams.set("apiKey", Env.GEOAPIFY_API_KEY);
   const parsed = GeocodeResponse.safeParse(await fetchJson(url));
   if (!parsed.success) throw new Error("geocode_not_found");
-  return { lat: parsed.data.results[0].lat, lon: parsed.data.results[0].lon };
+  const coordinates = validatedDinizGeocode(parsed.data.results[0], address);
+  if (!coordinates) throw new Error("geocode_imprecise");
+  return coordinates;
 };
 const dinizOrigin = () => dinizOriginPromise ||= geocode(DINIZ_ORIGIN_ADDRESS).catch((error) => { dinizOriginPromise = null; throw error; });
 const straightLineMeters = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) => {
@@ -74,8 +81,12 @@ export default { fetch: withSupabase({ auth: "publishable" }, async (request) =>
     const data: Record<string, unknown> = { cep: address.data.cep || parsed.data.cep, logradouro: address.data.logradouro, complemento: address.data.complemento, bairro: address.data.bairro, localidade: address.data.localidade, uf: address.data.uf };
     if (DINIZ_SLUGS.has(parsed.data.target_slug || "") && parsed.data.address) {
       if (!/ribeir[aã]o preto/i.test(address.data.localidade)) return reply({ error: { code: "outside_service_city" } }, 422, origin);
-      if (!/\d/.test(parsed.data.address)) return reply({ error: { code: "address_number_required" } }, 422, origin);
-      const destination = await geocode(`${parsed.data.address}, CEP ${parsed.data.cep}, Brasil`);
+      const number = deliveryHouseNumber(parsed.data.address, address.data.logradouro);
+      if ("error" in number) return reply({ error: { code: number.error } }, 422, origin);
+      const destination = await geocode({
+        street: address.data.logradouro, housenumber: number.housenumber, postcode: parsed.data.cep,
+        city: address.data.localidade, state: address.data.uf, country: "Brasil"
+      });
       const route = await routeFromDiniz(destination); const distanceKm = route.distance / 1000;
       const billingDistance = Math.max(1, Math.ceil(distanceKm));
       if (billingDistance > 50) return reply({ error: { code: "outside_service_area" } }, 422, origin);

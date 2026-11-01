@@ -47,7 +47,8 @@ test("cálculo de entrega Diniz mantém validação estrita e isola outros estab
   assert.match(source, /target_slug: z\.string\(\)\.regex\(\/\^\[a-z0-9\]\[a-z0-9-\]\{2,62\}\$\/\)\.optional\(\)/);
   assert.match(source, /\}\)\.strict\(\)/);
   assert.match(source, /outside_service_city/);
-  assert.match(source, /address_number_required/);
+  const geocodeValidation = await readFile(new URL("../supabase/functions/cep-lookup/geocode-validation.ts", import.meta.url), "utf8");
+  assert.match(geocodeValidation, /address_number_required/);
   assert.match(source, /billingDistance > 50/);
 });
 

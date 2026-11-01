@@ -103,12 +103,12 @@
     const cep = $("deliveryCep").value.replace(/\D/g, ""), address = $("deliveryAddress").value.trim(), button = $("calculateDeliveryButton"), message = $("cepMessage");
     resetAutomaticDelivery();
     if (cep.length !== 8) { message.textContent = "Informe e busque um CEP válido antes de calcular a entrega."; $("deliveryCep").focus(); return; }
-    if (address.length < 8 || !/\d/.test(address)) { message.textContent = "Complete o endereço com o número antes de calcular a entrega."; $("deliveryAddress").focus(); return; }
+    if (address.length < 8 || !/\d/.test(address) || address.includes("[informe o número]")) { message.textContent = "Complete o endereço com o número antes de calcular a entrega."; $("deliveryAddress").focus(); return; }
     button.disabled = true; message.textContent = "Calculando a melhor rota para entrega...";
     try {
       const { data: result, error } = await supabaseClient.functions.invoke("cep-lookup", { body: { cep, target_slug: slug, address } });
       const quote = result?.data?.delivery_quote, option = quote && [...$("deliveryZone").options].find((item) => item.value === quote.zone_code);
-      if (error || !quote || !option) { message.textContent = "Não foi possível calcular a rota para este endereço. Confira o número e tente novamente."; return; }
+      if (error || !quote || !option) { message.textContent = "Não foi possível localizar o endereço com precisão. Clique em Buscar CEP, confira a rua e complete o número antes de tentar novamente."; return; }
       $("deliveryZone").value = quote.zone_code; $("deliveryQuoteValue").textContent = money.format(Number(quote.fee));
       const duration = quote.duration_minutes ? ` · cerca de ${Number(quote.duration_minutes)} min de carro` : "";
       $("deliveryQuoteDetail").textContent = `Rota estimada: ${Number(quote.distance_km).toLocaleString("pt-BR")} km${duration}. A taxa é incluída automaticamente no pedido.`;

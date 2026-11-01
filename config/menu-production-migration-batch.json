@@ -1,33 +1,32 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-31",
-  "baseline": "fix_menu_catalog_draft_delete_order",
+  "updatedAt": "2026-11-01",
+  "baseline": "preserve_menu_catalog_metadata",
   "strategy": "contiguous_tail",
-  "authorized": false,
-  "decision": "PENDING_VALIDATION",
+  "authorized": true,
+  "decision": "APPROVED",
   "localReplay": {
-    "status": "NEEDS_REFRESH",
+    "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
     "migrationCount": 80,
-    "testFiles": 20,
-    "assertions": 522,
-    "evidence": "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/39529232043",
-    "sourceCommit": "6c9ec456bb8b44d21e2966c6a0ddffd14e8c4cca"
+    "testFiles": 21,
+    "assertions": 561,
+    "evidence": "docs/evidencias/diniz-publicacao-2026-11-01.md",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41335550041",
+    "sourceCommit": "66aa190706793678445a8ca41870afde68452f1d"
   },
   "productionDryRun": {
-    "status": "NEEDS_REFRESH",
-    "executedAt": "2026-10-20",
+    "status": "PASSED",
+    "executedAt": "2026-11-01",
     "command": "supabase db push --workdir <isolated-alias-copy> --project-ref mvzcoaiiwytycdqcvydf --include-all --skip-vault --dry-run",
-    "migrationCount": 1,
+    "migrationCount": 0,
     "remoteChangesPerformed": false,
-    "evidence": "docs/evidencias/cardapio-checkout-pix-recuperacao-2026-10-20.md",
-    "aliasCompatibility": "billing_rejected_email_event: 20261003025228 -> 20261003162614, identical file hash; no history repair"
+    "evidence": "docs/evidencias/diniz-publicacao-2026-11-01.md",
+    "aliasCompatibility": "billing_rejected_email_event: 20261003025228 -> 20261003162614, identical file hash; no history repair",
+    "mode": "POST_PROMOTION_READ_ONLY"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "preserve_menu_catalog_metadata"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
@@ -36,9 +35,7 @@
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],
-    "catalog_corrective": [
-      "preserve_menu_catalog_metadata"
-    ]
+    "catalog_corrective": []
   },
   "releaseConditions": [
     "Every migration in the contiguous tail receives an explicit production disposition.",
@@ -78,7 +75,27 @@
     "menu_billing_lifecycle_reliability",
     "menu_visual_identity_assets",
     "menu_pix_expiry_recovery",
-    "fix_menu_catalog_draft_delete_order"
+    "fix_menu_catalog_draft_delete_order",
+    "preserve_menu_catalog_metadata"
   ],
-  "authorizationSource": "Pedido explícito do responsável: quero essas atualizações no ar, faça agora. Autoriza promoção técnica de produção; não atesta validação fiscal ou jurídica."
+  "authorizationSource": "Pedido explícito do responsável: quero essas atualizações no ar, faça agora. Autoriza promoção técnica de produção; não atesta validação fiscal ou jurídica.",
+  "authorizationScope": "Completed preserve_menu_catalog_metadata correction only. Any future migration requires a new reviewed release decision.",
+  "lastPromotion": {
+    "status": "APPLIED_AND_VERIFIED",
+    "executedAt": "2026-11-01",
+    "migrations": [
+      "preserve_menu_catalog_metadata"
+    ],
+    "reviewedPendingCount": 1,
+    "sourceCommit": "66aa190706793678445a8ca41870afde68452f1d",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41335550041",
+    "stagingMigrationCount": 80,
+    "productionMigrationCount": 80,
+    "postPromotionPendingCount": 0,
+    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41298316841",
+    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41335545853",
+    "restoreStatus": "SUCCESS",
+    "commercialReleaseAuthorized": false,
+    "evidence": "docs/evidencias/diniz-publicacao-2026-11-01.md"
+  }
 }

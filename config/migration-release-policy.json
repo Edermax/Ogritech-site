@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-10-31",
+  "auditedAt": "2026-11-01",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -163,20 +163,17 @@
       "billing_rejected_email_event",
       "menu_billing_lifecycle_reliability",
       "menu_visual_identity_assets",
-      "menu_pix_expiry_recovery"
+      "menu_pix_expiry_recovery",
+      "fix_menu_catalog_draft_delete_order",
+      "preserve_menu_catalog_metadata"
     ],
     "observationEvidence": "config/menu-environment-inventory.json"
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "fix_menu_catalog_draft_delete_order",
+    "appliedThrough": "preserve_menu_catalog_metadata",
     "appliedOutOfOrder": [],
-    "heldMigrations": [
-      {
-        "name": "preserve_menu_catalog_metadata",
-        "reason": "Correção compatível de preservação de metadados do catálogo, aguardando CI, homologação e promoção controlada."
-      }
-    ],
+    "heldMigrations": [],
     "observationEvidence": "config/menu-environment-inventory.json",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614"
