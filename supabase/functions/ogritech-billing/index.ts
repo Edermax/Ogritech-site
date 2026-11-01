@@ -61,6 +61,17 @@ function validCnpj(value: string) {
   };
   return check(12) === Number(digits[12]) && check(13) === Number(digits[13]) ? digits : "";
 }
+function validCpf(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (!/^\d{11}$/.test(digits) || /^(\d)\1{10}$/.test(digits)) return "";
+  for (const length of [9, 10]) {
+    let sum = 0;
+    for (let i = 0; i < length; i++) sum += Number(digits[i]) * (length + 1 - i);
+    const check = (sum * 10 % 11) % 10;
+    if (check !== Number(digits[length])) return "";
+  }
+  return digits;
+}
 async function sha256(value: string) {
   const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return [...new Uint8Array(bytes)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -240,10 +251,11 @@ Deno.serve(async (request) => {
     const parsed = StartBody.safeParse(json);
     if (!parsed.success) return reply({ error: { code: "invalid_input", fields: parsed.error.flatten().fieldErrors } }, 422, origin);
     if (parsed.data.product !== "menu") return reply({ error: { code: "product_retired", message: "A Ogritech oferece exclusivamente o Cardápio." } }, 410, origin);
-    const input = parsed.data, cnpj = validCnpj(input.tax_document), phone = input.phone.replace(/\D/g, "");
-    if (!cnpj || !/^\d{10,11}$/.test(phone)) return reply({ error: { code: "invalid_company_data", message: "Confira o CNPJ e o telefone." } }, 422, origin);
+    const input = parsed.data, taxDocument = validCnpj(input.tax_document) || validCpf(input.tax_document), phone = input.phone.replace(/\D/g, "");
+    if (!taxDocument || !/^\d{10,11}$/.test(phone)) return reply({ error: { code: "invalid_company_data", message: "Confira o CPF ou CNPJ e o telefone." } }, 422, origin);
     if (input.payment_method === "card" && !input.recurring_authorized) return reply({ error: { code: "recurring_authorization_required" } }, 422, origin);
     if (input.product === "menu" && (input.cycle !== "monthly" || input.payment_method !== "pix")) return reply({ error: { code: "invalid_menu_offer" } }, 422, origin);
+    if (taxDocument.length === 11 && input.service_invoice_preference === "not_informed") input.service_invoice_preference = "not_requested";
     const accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN") || "";
     const providerPlanId = input.payment_method === "card" ? Deno.env.get(`MP_PLAN_${input.cycle.toUpperCase()}_ID`) || "" : "";
     if ((input.product === "agenda" && !accessToken) || (input.payment_method === "card" && !providerPlanId)) return reply({ error: { code: "billing_not_configured", message: "A contratação está temporariamente indisponível." } }, 503, origin);
@@ -255,12 +267,12 @@ Deno.serve(async (request) => {
     const cycle = quote(input.cycle, input.product), token = crypto.randomUUID() + crypto.randomUUID(), tokenHash = await sha256(token);
     const trialEndsAt = new Date(Date.now() + 14 * 86_400_000).toISOString();
     const { data: signupId, error: signupError } = await admin.rpc("backend_billing_signup_create", { payload: {
-      product_code: input.product, tax_document: cnpj, business_name: clean(input.business_name), responsible_name: clean(input.responsible_name),
+      product_code: input.product, tax_document: taxDocument, business_name: clean(input.business_name), responsible_name: clean(input.responsible_name),
       email: input.email, phone, segment: clean(input.segment), cycle: input.cycle, payment_method: input.payment_method,
       base_monthly_cents: cycle.base_monthly_cents, cycle_months: cycle.months, discount_bps: cycle.discount_bps, total_cents: cycle.total_cents,
       terms_version: termsVersion, management_token_hash: tokenHash, trial_ends_at: trialEndsAt,
     } });
-    if (signupError?.code === "23505") return reply({ error: { code: "trial_already_used", message: "Este CNPJ já utilizou o teste gratuito." } }, 409, origin);
+    if (signupError?.code === "23505") return reply({ error: { code: "trial_already_used", message: "Este documento já utilizou o teste gratuito." } }, 409, origin);
     if (signupError || !signupId) {
       console.error("start_trial.billing_signup", { code: signupError?.code, message: signupError?.message });
       return reply({ error: { code: "signup_failed" } }, 500, origin);
@@ -281,7 +293,7 @@ Deno.serve(async (request) => {
       if (input.product === "menu") {
         const { data: product } = await admin.from("platform_products").select("id").eq("code", "menu").single();
         const { data: plan } = await admin.from("saas_plans").select("id").eq("product_id", product?.id || "").eq("code", "foundation").single();
-        const { data: customer, error: customerError } = await admin.from("billing_customers").insert({ saas_client_id: client.id, billing_email: input.email, tax_document: cnpj, payment_method: "pix" }).select("id").single();
+        const { data: customer, error: customerError } = await admin.from("billing_customers").insert({ saas_client_id: client.id, billing_email: input.email, tax_document: taxDocument, payment_method: "pix" }).select("id").single();
         if (customerError || !product || !plan || !customer) throw customerError || new Error("Catálogo comercial do Cardápio indisponível");
         const subscription = await admin.from("platform_subscriptions").insert({ billing_customer_id: customer.id, product_id: product.id, plan_id: plan.id, status: "trial", base_amount: cycle.base_monthly_cents / 100, starts_on: new Date().toISOString().slice(0,10), next_billing_on: trialEndsAt.slice(0,10), current_period_start: new Date().toISOString(), current_period_end: trialEndsAt });
         if (subscription.error) throw subscription.error;

@@ -82,7 +82,8 @@
       "menu_visual_identity_assets",
       "menu_pix_expiry_recovery",
       "fix_menu_catalog_draft_delete_order",
-      "preserve_menu_catalog_metadata"
+      "preserve_menu_catalog_metadata",
+      "allow_cpf_menu_signup"
     ],
     "remoteVersionAliases": {},
     "observedMigrationNames": [
@@ -173,7 +174,12 @@
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "preserve_menu_catalog_metadata",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      {
+        "name": "allow_cpf_menu_signup",
+        "reason": "Cadastro CPF/CNPJ aguardando CI e homologacao."
+      }
+    ],
     "observationEvidence": "config/menu-environment-inventory.json",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614"
