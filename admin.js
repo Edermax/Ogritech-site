@@ -272,7 +272,8 @@ function populateSelectors() {
     const selectionIds = ["segmentFilter", "userBusinessFilter", "productBusinessFilter", "invoiceBusiness"];
     const priorSelection = Object.fromEntries(selectionIds.map((id) => [id, $(id)?.value]));
     $("businessSegment").innerHTML = Object.keys(SEGMENTS).map((segment) => `<option>${segment}</option>`).join("");
-    $("segmentFilter").innerHTML = '<option value="all">Todos os segmentos</option>' + Object.keys(SEGMENTS).map((segment) => `<option>${segment}</option>`).join("");
+    const segments = [...new Set([...Object.keys(SEGMENTS), ...businesses.map((business) => business.segment).filter(Boolean)])];
+    $("segmentFilter").innerHTML = '<option value="all">Todos os segmentos</option>' + segments.map((segment) => `<option>${escapeHtml(segment)}</option>`).join("");
     const menuProduct = products.find((product) => product.code === 'menu');
     $("businessPlan").innerHTML = plans.filter((plan) => plan.product_id === menuProduct?.id).map((plan) => `<option value="${escapeHtml(plan.name)}" data-price="${plan.monthly_fee}">${escapeHtml(plan.name)}</option>`).join("");
     const businessOptions = businesses.filter((business) => business.barbershop_id && isMenuBusiness(business)).map((business) => `<option value="${business.barbershop_id}">${escapeHtml(business.name)}</option>`).join("");
@@ -337,15 +338,23 @@ async function saveRefund(event) {
     await loadData(); refreshViews(); closeModals();
 }
 
+function selectExistingBusinessValue(id, value) {
+    const select = $(id);
+    if (value && ![...select.options].some((option) => option.value === value)) {
+        select.append(new Option(value, value));
+    }
+    select.value = value || "";
+}
+
 function openBusinessForm(business = null) {
     $("businessForm").reset(); $("businessFormMessage").textContent = ""; $("businessId").value = business?.id || "";
     $("businessModalTitle").textContent = business ? "Editar negócio" : "Cadastrar novo negócio";
     $("businessEmail").required = !business;
     if (business) {
-        $("businessName").value = business.name; $("businessSegment").value = business.segment; $("businessOwner").value = business.contact_name;
+        $("businessName").value = business.name; selectExistingBusinessValue("businessSegment", business.segment); $("businessOwner").value = business.contact_name;
         $("businessEmail").value = business.owner_email || ""; $("businessPhone").value = business.phone || ""; if (![...$("businessPlan").options].some((option) => option.value === business.plan)) { const option = new Option(business.plan + " (histórico)", business.plan); $("businessPlan").append(option); }
         $("businessPlan").value = business.plan;
-        $("businessPrice").value = business.monthly_fee; $("businessOrigin").value = business.origin; $("businessNotes").value = business.notes || "";
+        $("businessPrice").value = business.monthly_fee; selectExistingBusinessValue("businessOrigin", business.origin); $("businessNotes").value = business.notes || "";
     } else syncPlanPrice();
     openAdminModal("businessModal");
 }
