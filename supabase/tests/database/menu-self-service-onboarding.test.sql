@@ -36,10 +36,31 @@ insert into public.menu_items(id,barbershop_id,category_id,name,item_type)
 select 'a4000000-0000-4000-8000-000000000001',barbershop_id,id,'Lanche teste','simple' from public.menu_categories where menu_id=(select id from public.online_menus where barbershop_id='a1000000-0000-4000-8000-000000000001') order by sort_order limit 1;
 insert into public.menu_item_prices(barbershop_id,menu_item_id,label,price) values('a1000000-0000-4000-8000-000000000001','a4000000-0000-4000-8000-000000000001','Padrão',25);
 
+-- Seed legacy server-managed schedule metadata before an ordinary owner save.
+update public.online_menus
+set weekly_hours = weekly_hours || '{"special_hours":[{"weekdays":[0],"opens_at":"09:00","closes_at":"13:00"}],"timezone":"America/Sao_Paulo"}'::jsonb
+where barbershop_id='a1000000-0000-4000-8000-000000000001';
+
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"a2000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select extensions.lives_ok($$select public.save_menu_onboarding_settings('a1000000-0000-4000-8000-000000000001','{"slug":"loja-autonoma-menu","title":"Loja Autônoma","description":"Pedido direto","minimum_order":10,"delivery_fee":5,"accepts_delivery":true,"visual_identity":{"primary_color":"#111827","accent_color":"#F59E0B"},"payment_methods":["pix","cash"],"weekdays":[1,2,3,4,5,6],"opens_at":"10:00","closes_at":"22:00","delivery_zone":{"code":"centro","name":"Centro","fee":5,"minimum_order":10}}')$$,'salva configuração validada');
 select extensions.is(public.menu_onboarding_status('a1000000-0000-4000-8000-000000000001')->>'next_step','test_order','configuração completa libera teste');
+select extensions.is(
+  (select weekly_hours->'special_hours' from public.online_menus where barbershop_id='a1000000-0000-4000-8000-000000000001'),
+  '[{"weekdays":[0],"opens_at":"09:00","closes_at":"13:00"}]'::jsonb,
+  'salvar horários gerais preserva domingo especial cadastrado anteriormente'
+);
+select extensions.is(
+  (select weekly_hours->>'timezone' from public.online_menus where barbershop_id='a1000000-0000-4000-8000-000000000001'),
+  'America/Sao_Paulo',
+  'salvar configurações preserva metadados de horário mantidos no servidor'
+);
+select extensions.is(
+  (select weekly_hours->>'opens_at' from public.online_menus where barbershop_id='a1000000-0000-4000-8000-000000000001'),
+  '10:00',
+  'horário geral validado é atualizado junto com a preservação dos horários especiais'
+);
+
 select extensions.throws_ok($$select public.confirm_menu_review('a1000000-0000-4000-8000-000000000001')$$,'23514','Faça o pedido de teste antes da revisão','revisão exige teste');
 select extensions.lives_ok($$select public.run_menu_test_order('a1000000-0000-4000-8000-000000000001')$$,'pedido de teste é executado pelo servidor');
 reset role;
@@ -71,6 +92,12 @@ select extensions.throws_ok($$select public.save_menu_onboarding_settings('a1000
 select extensions.throws_ok($$select public.save_menu_onboarding_settings('a1000000-0000-4000-8000-000000000001','{"slug":"loja-autonoma-menu","title":"Loja Autônoma","description":"Pedido direto","minimum_order":100,"delivery_fee":5,"accepts_delivery":true,"visual_identity":{"primary_color":"#111827","accent_color":"#F59E0B"},"payment_methods":["pix","cash"],"weekdays":[null],"opens_at":"10:00","closes_at":"22:00","delivery_zone":{"code":"centro","name":"Centro","fee":5,"minimum_order":100}}')$$,'22023','Configuração inválida','rejeita configuração inválida 3 sem salvar parcialmente');
 select extensions.throws_ok($$select public.save_menu_onboarding_settings('a1000000-0000-4000-8000-000000000001','{"slug":"loja-autonoma-menu","title":"Loja Autônoma","description":"Pedido direto","minimum_order":100,"delivery_fee":5,"accepts_delivery":true,"visual_identity":{"primary_color":"#111827","accent_color":"#F59E0B"},"payment_methods":["pix","cash"],"weekdays":[1,2,3,4,5,6],"opens_at":"10:00","closes_at":"22:00","delivery_zone":{"code":"centro","name":null,"fee":5,"minimum_order":100}}')$$,'22023','Região de entrega inválida','rejeita configuração inválida 4 sem salvar parcialmente');
 select extensions.lives_ok($$select public.save_menu_onboarding_settings('a1000000-0000-4000-8000-000000000001','{"slug":"loja-autonoma-menu","title":"Loja Autônoma","description":"Pedido direto","minimum_order":100,"delivery_fee":5,"accepts_delivery":true,"visual_identity":{"primary_color":"#111827","accent_color":"#F59E0B"},"payment_methods":["pix","cash"],"weekdays":[1,2,3,4,5,6],"opens_at":"10:00","closes_at":"22:00","delivery_zone":{"code":"centro","name":"Centro","fee":5,"minimum_order":100}}')$$,'salva mínimo de pedido para testar paridade');
+select extensions.is(
+  (select weekly_hours->'special_hours' from public.online_menus where barbershop_id='a1000000-0000-4000-8000-000000000001'),
+  '[{"weekdays":[0],"opens_at":"09:00","closes_at":"13:00"}]'::jsonb,
+  'repetir o salvamento após falhas de validação mantém os horários especiais'
+);
+
 update public.menu_item_prices set price=30 where menu_item_id='a4000000-0000-4000-8000-000000000001';
 update public.menu_items set minimum_quantity=3,maximum_quantity=5,lead_time_hours=24 where id='a4000000-0000-4000-8000-000000000001';
 insert into public.menu_option_groups(id,barbershop_id,menu_id,name,minimum_selections,maximum_selections,free_selections)

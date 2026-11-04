@@ -115,7 +115,7 @@ function browser(state = fixture(), options = {}) {
         return selector.includes(":checked") ? list.filter((input) => input.checked) : list;
       }
     },
-    Intl, Date, URLSearchParams, console, BARBERSHOP_ID: "business-1", IS_DEMO: false, businessConfig: { name: "Meu negócio" }, supabaseClient,
+    Intl, Date, URLSearchParams, console, confirm: () => options.confirm !== false, BARBERSHOP_ID: "business-1", IS_DEMO: false, businessConfig: { name: "Meu negócio" }, supabaseClient,
     escapeHtml: (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;"),
     ogritechEnvironmentUrl: (path) => `https://local.invalid${path}`
   });
@@ -178,7 +178,9 @@ test("cardápio publicado simplifica a configuração sem esconder a opção de 
   await page.load();
   assert.equal(page.element("menuSettingsForm").classList.contains("hidden"), true);
   assert.equal(page.element("menuReviewDetails").open, false);
-  assert.equal(page.element("menuPublicationButton").textContent, "Despublicar cardápio");
+  assert.equal(page.element("menuPublicationButton").textContent, "Publicar alterações");
+  assert.equal(page.element("menuPublicationButton").disabled, true);
+  assert.equal(page.element("menuUnpublishButton").classList.contains("hidden"), false);
   assert.equal(page.element("menuPublicationButton").classList.contains("hidden"), false);
   assert.match(html, /id="menuPublicationButton"[^]*id="menuReloadButton"[^]*<\/div>/);
 });
@@ -360,9 +362,10 @@ test("cardápio publicado protege a configuração, permite rascunho e pode ser 
   assert.equal(page.element("menuCatalogLockNotice").classList.contains("hidden"), false);
   assert.equal(page.element("menuItemForm").classList.contains("hidden"), false);
   assert.equal(page.element("menuItemName").disabled, false);
-  assert.equal(page.element("menuPublicationButton").textContent, "Despublicar cardápio");
+  assert.equal(page.element("menuPublicationButton").disabled, true);
+  assert.equal(page.element("menuUnpublishButton").disabled, false);
   assert.equal(page.element("menuPublicLink").href, "https://local.invalid/cardapio/?empresa=pizzaria-centro");
-  await page.fire("menuPublicationButton");
+  await page.fire("menuUnpublishButton");
   assert.equal(page.element("menuTitle").disabled, false);
   assert.equal(page.element("menuPublicLink").classList.contains("hidden"), true);
 });
@@ -386,7 +389,7 @@ test("configuração vem antes de produtos mesmo se o servidor apontar catálogo
 });
 test("revisão e publicação têm etapa própria e cardápio publicado abre pedidos", async () => {
  const page=browser();await page.load();assert.match(page.element("menuJourneyTitle").textContent,/4\. Revise/);
- page.state.menu.published=true;await page.load();assert.match(page.element("menuJourneyTitle").textContent,/5\. Acompanhe/);
+ const published=fixture();published.menu.published=true;const returning=browser(published);await returning.load();assert.match(returning.element("menuJourneyTitle").textContent,/5\. Acompanhe/);
 });
 
 

@@ -26,6 +26,7 @@
     let menuCatalogDraftDirty = false;
     let menuImageRemoveRequested = false;
     let menuWorkspaceNavigationBound = false;
+    const canManageMenu = () => typeof currentRole === "undefined" || ["owner", "admin"].includes(currentRole);
     let selectedMenuWorkspace = "start";
     const journeyOrder = ["start", "settings", "catalog", "review", "operation"];
     const journeyContent = {
@@ -36,7 +37,7 @@
         operation: ["5. Acompanhe os pedidos", "Compartilhe o link do cardápio. Quando chegar um pedido, confira os dados, confirme e marque como concluído ao finalizar. Volte às etapas anteriores quando quiser editar.", "Ver meus pedidos", "menuOrdersPanel"]
     };
     function nextMenuWorkspace() {
-        if (menuRecord?.published) return "operation";
+        if (menuRecord?.published || !canManageMenu()) return "operation";
         if (!menuRecord?.template_code) return "start";
         const checks = menuOnboarding?.checks || {};
         if (!["identity", "fulfillment", "payments", "hours"].every(key => checks[key])) return "settings";
@@ -46,9 +47,25 @@
     function renderMenuJourney() {
         const published = Boolean(menuRecord?.published);
         const next = nextMenuWorkspace();
+        const managing = published || !canManageMenu();
         byId("menuWorkspaceTabs")?.classList.toggle("menu-workspace-published", published);
+        byId("menuWorkspaceTabs")?.classList.toggle("menu-workspace-staff", !canManageMenu());
+        if (byId("menuWorkspaceTitle")) byId("menuWorkspaceTitle").textContent = menuRecord?.title || "Seu cardápio";
+        if (byId("menuWorkspaceDescription")) byId("menuWorkspaceDescription").textContent = !canManageMenu()
+            ? "Acompanhe e atualize os pedidos do seu estabelecimento."
+            : published ? "Seu cardápio está no ar. Gerencie pedidos, edite produtos e confira a versão pública."
+            : "Conclua uma etapa por vez. O que você salvar fica guardado para continuar depois.";
+        if (byId("menuReviewHeading")) byId("menuReviewHeading").textContent = published ? "Publicação do cardápio" : "Revise e publique";
+        if (byId("menuReviewEyebrow")) byId("menuReviewEyebrow").textContent = published ? "VERSÃO PÚBLICA" : "ÚLTIMA ETAPA";
+        if (byId("menuReviewDescription")) byId("menuReviewDescription").textContent = published
+            ? "Confira os dados e publique as alterações de produtos quando estiverem prontas."
+            : "Confira seus dados, execute o pedido de teste e confirme a revisão para liberar o link público.";
+        if (byId("menuReviewSummaryLabel")) byId("menuReviewSummaryLabel").textContent = menuCatalogDraftDirty ? "Conferir rascunho antes de publicar" : "Conferir configuração salva";
+        byId("menuTestOrderDescription")?.classList.toggle("hidden", managing);
+        byId("menuWorkspaceRetry")?.classList.toggle("hidden", !menuLoadFailed);
+        if (byId("menuWorkspaceRetry")) byId("menuWorkspaceRetry").disabled = menuBusy;
         for (const id of ["menuJourneyGuide", "menuJourneyNavigation", "menuTabStart", "menuOnboardingProgress", "menuOnboardingBar", "menuOnboardingChecklist"]) {
-            byId(id)?.classList.toggle("hidden", published);
+            byId(id)?.classList.toggle("hidden", managing);
         }
         const content = [...journeyContent[selectedMenuWorkspace]];
         if (menuRecord?.published && selectedMenuWorkspace === "settings") content[1] = "A configuração geral está protegida enquanto o cardápio está no ar. Para mudar atendimento, pagamentos ou horários, abra Publicar e despublique primeiro. Publique novamente ao terminar.";
@@ -63,7 +80,12 @@
         if (action) { action.textContent = menuRecord?.published && selectedMenuWorkspace === "settings" ? "Ver opções de publicação" : menuRecord?.published && menuCatalogDraftDirty ? "Revisar alterações para publicar" : menuLoadFailed ? "Tentar novamente" : menuSettingsDirty ? "Voltar para salvar configurações" : journeyContent[next][2]; action.disabled = menuBusy || (!menuDataReady && !menuLoadFailed); }
         document.querySelectorAll("[data-menu-workspace]").forEach(button => {
             const key = button.dataset.menuWorkspace;
-            button.disabled = menuBusy || !menuDataReady || (published && key === "start") || (!published && journeyOrder.indexOf(key) > journeyOrder.indexOf(next));
+            const managerTab = key !== "operation";
+            const hidden = (!canManageMenu() && managerTab) || (published && key === "start");
+            button.classList.toggle("hidden", hidden);
+            button.disabled = hidden || menuBusy || !menuDataReady || (menuSettingsDirty && key !== "settings") || (!published && journeyOrder.indexOf(key) > journeyOrder.indexOf(next));
+            const labels = { start: "Começar", settings: "Configurar", catalog: "Produtos", review: "Publicação", operation: "Pedidos" };
+            button.innerHTML = managing ? labels[key] : `<span>${journeyOrder.indexOf(key) + 1}</span>${labels[key]}`;
             button.setAttribute("aria-label", published ? button.textContent.trim().replace(/^\d+\s*/, "") : `${journeyContent[key][0]}${complete[key] ? ", concluído" : ""}`);
             button.setAttribute("data-complete", String(complete[key]));
         });
@@ -85,7 +107,11 @@
     };
 
     function selectMenuWorkspace(workspace) {
-        const selected = menuWorkspaceGroups[workspace] ? workspace : "start";
+        if (menuSettingsDirty && workspace !== "settings") {
+            notify(byId("menuWorkspaceMessage"), "Salve suas configurações antes de mudar de seção.", true);
+            return;
+        }
+        const selected = !canManageMenu() ? "operation" : menuWorkspaceGroups[workspace] ? workspace : "start";
         selectedMenuWorkspace = selected;
         document.querySelectorAll("[data-menu-workspace]").forEach((button) => {
             const active = button.dataset.menuWorkspace === selected;
@@ -100,14 +126,14 @@
         if (!menuWorkspaceNavigationBound && tabs) {
             const activateWorkspace = (event) => {
                 const button = event.target.closest?.("[data-menu-workspace]");
-                if (!button) return;
+                if (!button || button.disabled) return;
                 selectMenuWorkspace(button.dataset.menuWorkspace);
                 tabs.scrollIntoView({ behavior: "smooth", block: "start" });
             };
             tabs.addEventListener("click", activateWorkspace);
             tabs.addEventListener("keydown", event => {
                 if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key)) return;
-                const buttons = [...tabs.querySelectorAll("[data-menu-workspace]")].filter(button => !button.disabled);
+                const buttons = [...tabs.querySelectorAll("[data-menu-workspace]")].filter(button => !button.disabled && !button.classList.contains("hidden"));
                 if (!buttons.length) return;
                 event.preventDefault();
                 const current = buttons.indexOf(event.target);
@@ -159,22 +185,24 @@
     function updateMenuControls() {
         renderMenuJourney();
         const unavailable = menuBusy || !menuDataReady;
-        const settingsEditable = !unavailable && !menuRecord?.published;
-        const catalogEditable = !unavailable && Boolean(menuRecord) && !menuSettingsDirty;
+        const settingsEditable = canManageMenu() && !unavailable && !menuRecord?.published;
+        const catalogEditable = canManageMenu() && !unavailable && Boolean(menuRecord) && !menuSettingsDirty;
         for (const id of ["menuSettingsForm", "menuItemForm", "menuTemplateForm"]) {
             const editable = id === "menuItemForm" ? catalogEditable : settingsEditable;
             byId(id)?.querySelectorAll("input,select,textarea,button").forEach((input) => { input.disabled = !editable || (id !== "menuSettingsForm" && menuSettingsDirty); });
             byId(id)?.setAttribute("aria-busy", String(menuBusy));
         }
         byId("menuOnboardingPanel")?.setAttribute("aria-busy", String(menuBusy));
-        byId("menuTestOrderButton").disabled = unavailable || menuSettingsDirty || !menuRecord || menuRecord.published || !["test_order", "review", "ready"].includes(menuOnboarding?.next_step);
-        byId("menuReviewButton").disabled = unavailable || menuSettingsDirty || !menuOnboarding?.checks?.test_order || Boolean(menuOnboarding?.checks?.review) || Boolean(menuRecord?.published);
-        byId("menuPublicationButton").textContent = menuRecord?.published && menuCatalogDraftDirty ? "Publicar alterações" : menuRecord?.published ? "Despublicar cardápio" : "Publicar cardápio";
-        byId("menuPublicationButton").disabled = unavailable || menuSettingsDirty || (!menuRecord?.published && menuOnboarding?.next_step !== "ready");
+        byId("menuTestOrderButton").disabled = !canManageMenu() || unavailable || menuSettingsDirty || !menuRecord || menuRecord.published || !["test_order", "review", "ready"].includes(menuOnboarding?.next_step);
+        byId("menuReviewButton").disabled = !canManageMenu() || unavailable || menuSettingsDirty || !menuOnboarding?.checks?.test_order || Boolean(menuOnboarding?.checks?.review) || Boolean(menuRecord?.published);
+        byId("menuPublicationButton").textContent = menuRecord?.published ? "Publicar alterações" : "Publicar cardápio";
+        byId("menuPublicationButton").disabled = !canManageMenu() || unavailable || menuSettingsDirty || (menuRecord?.published ? !menuCatalogDraftDirty : menuOnboarding?.next_step !== "ready");
+        if (byId("menuUnpublishButton")) byId("menuUnpublishButton").disabled = !canManageMenu() || unavailable;
+        byId("menuUnpublishButton")?.classList.toggle("hidden", !canManageMenu() || !menuRecord?.published);
         byId("menuReloadButton").disabled = menuBusy;
         byId("menuOrdersReload").disabled = unavailable;
         byId("menuPilotMetricsReload").disabled = menuMetricsBusy;
-        byId("menuAssistantSettingsForm")?.querySelectorAll("input,button").forEach((input) => { input.disabled = menuAssistantBusy; });
+        byId("menuAssistantSettingsForm")?.querySelectorAll("input,button").forEach((input) => { input.disabled = !canManageMenu() || menuAssistantBusy; });
         byId("menuOrdersList")?.querySelectorAll("[data-order]").forEach((button) => { button.disabled = unavailable; });
         const published = Boolean(menuRecord?.published);
         byId("menuTestOrderButton")?.classList.toggle("hidden", published);
@@ -183,9 +211,12 @@
         byId("menuSettingsLockNotice")?.classList.toggle("hidden", !published);
         byId("menuCatalogLockNotice")?.classList.toggle("hidden", !published);
         if (published && byId("menuCatalogLockNotice")) byId("menuCatalogLockNotice").textContent = menuCatalogDraftDirty ? "Há alterações em rascunho. Clientes continuam vendo a versão anterior até você usar “Publicar alterações”." : "Você pode editar produtos com segurança: as mudanças ficarão em rascunho e não interromperão os pedidos.";
-        byId("menuSettingsForm")?.classList.toggle("hidden", published);
-        byId("menuItemForm")?.classList.remove("hidden");
-        if (byId("menuReviewDetails")) byId("menuReviewDetails").open = !published;
+        byId("menuSettingsForm")?.classList.toggle("hidden", published || !canManageMenu());
+        byId("menuSavedSettingsSummary")?.classList.toggle("hidden", !published);
+        byId("menuItemForm")?.classList.toggle("hidden", !canManageMenu());
+        byId("menuCatalogList")?.querySelectorAll("button").forEach((button) => { button.disabled = !catalogEditable; });
+        byId("menuPilotMetricsPanel")?.classList.toggle("hidden", !canManageMenu());
+        if (byId("menuReviewDetails")) byId("menuReviewDetails").open = !published || menuCatalogDraftDirty;
     }
 
     const menuError = (error) => {
@@ -198,23 +229,40 @@
 
     async function runMenuAction(messageId, pendingMessage, operation, successMessage) {
         if (menuBusy || !menuDataReady) return;
+        const previousCatalog = JSON.parse(JSON.stringify(menuCatalogCategories));
+        const wasPublished = Boolean(menuRecord?.published);
         menuBusy = true;
         updateMenuControls();
         notify(byId(messageId), pendingMessage);
+        notify(byId("menuWorkspaceMessage"), pendingMessage);
         try {
             const result = await operation();
             if (result?.error) throw result.error;
             menuSettingsDirty = false;
             const refreshed = await loadMenuAdmin();
-            if (refreshed && messageId === "menuItemMessage") selectMenuWorkspace("catalog");
+            if (refreshed) {
+                const destinations = { menuTemplateMessage: "settings", menuMessage: "catalog", menuItemMessage: "catalog", menuOperationMessage: "operation", menuOnboardingMessage: menuRecord?.published && !wasPublished ? "operation" : "review" };
+                selectMenuWorkspace(destinations[messageId] || selectedMenuWorkspace);
+            }
             const message = typeof successMessage === "function" ? successMessage(result?.data) : successMessage;
-            notify(byId(messageId), refreshed ? message : `${message} Use “Atualizar etapas” para conferir o estado salvo.`, !refreshed);
+            const feedback = refreshed ? message : `${message} Use “Atualizar dados” para conferir o estado salvo.`;
+            notify(byId(messageId), feedback, !refreshed);
+            notify(byId("menuWorkspaceMessage"), feedback, !refreshed);
         } catch (error) {
+            menuCatalogCategories = previousCatalog;
             notify(byId(messageId), menuError(error), true);
+            notify(byId("menuWorkspaceMessage"), menuError(error), true);
         } finally {
             menuBusy = false;
             updateMenuControls();
         }
+    }
+
+    function menuHoursSummary(hours = {}) {
+        return [hours, ...(hours.special_hours || [])]
+            .filter(period => period.weekdays?.length && period.opens_at && period.closes_at)
+            .map(period => `${period.weekdays.map(day => menuWeekdayLabels[Number(day)]).join(", ")} · ${period.opens_at} às ${period.closes_at}`)
+            .join(" / ") || "A configurar";
     }
 
     function renderMenuReview(menu, categories) {
@@ -234,10 +282,16 @@
             ["Pedido mínimo", formatMoney.format(Number(menu.minimum_order || 0))],
             ["Regiões de entrega", menu.accepts_delivery ? zones.map((zone) => `${zone.name}: taxa ${formatMoney.format(Number(zone.fee))}, mínimo ${formatMoney.format(Math.max(Number(menu.minimum_order || 0), Number(zone.minimum_order || 0)))}`).join("; ") || "Nenhuma região ativa" : "Entrega desativada"],
             ["Pagamento combinado com o cliente", (menu.accepted_payment_methods || []).map((method) => menuPaymentLabels[method] || method).join(", ")],
-            ["Horário informado", `${(menu.weekly_hours?.weekdays || []).map((day) => menuWeekdayLabels[Number(day)]).join(", ")} · ${menu.weekly_hours?.opens_at || "—"} às ${menu.weekly_hours?.closes_at || "—"}`],
+            ["Horário informado", menuHoursSummary(menu.weekly_hours)],
             ["Cores", `${menu.visual_identity?.primary_color || "—"} e ${menu.visual_identity?.accent_color || "—"}`]
         ];
         byId("menuReviewSummary").innerHTML = `<dl>${rows.map(([label, value]) => `<dt><strong>${escapeHtml(label)}</strong></dt><dd>${escapeHtml(value)}</dd>`).join("")}</dl>`;
+        if (byId("menuSavedSettingsSummary")) byId("menuSavedSettingsSummary").innerHTML = `<dl>${rows.filter(([label]) => label !== "Catálogo disponível").map(([label, value]) => `<dt><strong>${escapeHtml(label)}</strong></dt><dd>${escapeHtml(value)}</dd>`).join("")}</dl>`;
+        if (byId("menuSpecialHoursNotice")) {
+            const specialHours = menu.weekly_hours?.special_hours || [];
+            byId("menuSpecialHoursNotice").textContent = specialHours.length ? `Horários adicionais salvos: ${menuHoursSummary({ special_hours: specialHours })}. Eles são preservados ao salvar o horário geral.` : "";
+            byId("menuSpecialHoursNotice").classList.toggle("hidden", !specialHours.length);
+        }
     }
 
     const menuImagePathFromUrl = (url) => {
@@ -325,17 +379,20 @@
         return supabaseClient.rpc("save_menu_catalog_draft", { target_barbershop_id: BARBERSHOP_ID, draft_payload: menuDraftPayload() });
     }
 
-    async function moveMenuCatalogEntry(kind,id,direction) {
-        if(kind==="category"){
-            const index=menuCatalogCategories.findIndex((entry)=>entry.id===id), target=index+direction; if(index<0||target<0||target>=menuCatalogCategories.length)return;
-            [menuCatalogCategories[index],menuCatalogCategories[target]]=[menuCatalogCategories[target],menuCatalogCategories[index]];
-        } else {
-            const category=menuCatalogCategories.find((entry)=>entry.menu_items?.some((item)=>item.id===id)); if(!category)return;
-            const index=category.menu_items.findIndex((item)=>item.id===id),target=index+direction;if(target<0||target>=category.menu_items.length)return;
-            [category.menu_items[index],category.menu_items[target]]=[category.menu_items[target],category.menu_items[index]];
-        }
-        const categoryIds=menuCatalogCategories.map((entry)=>entry.id),itemIds=menuCatalogCategories.flatMap((entry)=>entry.menu_items||[]).map((item)=>item.id);
-        await runMenuAction("menuItemMessage","Salvando ordem...",()=>menuRecord?.published?savePublishedMenuDraft():supabaseClient.rpc("reorder_menu_catalog",{target_barbershop_id:BARBERSHOP_ID,category_ids:categoryIds,item_ids:itemIds}),menuRecord?.published?"Ordem salva no rascunho. Publique as alterações quando terminar.":"Ordem do catálogo atualizada.");
+    async function moveMenuCatalogEntry(kind, id, direction) {
+        if (!canManageMenu() || menuBusy || !menuDataReady) return;
+        const entries = kind === "category" ? menuCatalogCategories : menuCatalogCategories.find(category => category.menu_items?.some(item => item.id === id))?.menu_items;
+        if (!entries) return;
+        const index = entries.findIndex(entry => entry.id === id);
+        const target = index + direction;
+        if (index < 0 || target < 0 || target >= entries.length) return;
+        await runMenuAction("menuItemMessage", "Salvando ordem...", () => {
+            [entries[index], entries[target]] = [entries[target], entries[index]];
+            entries.forEach((entry, position) => { entry.sort_order = (position + 1) * 10; });
+            const categoryIds = menuCatalogCategories.map(entry => entry.id);
+            const itemIds = menuCatalogCategories.flatMap(entry => entry.menu_items || []).map(item => item.id);
+            return menuRecord?.published ? savePublishedMenuDraft() : supabaseClient.rpc("reorder_menu_catalog", { target_barbershop_id: BARBERSHOP_ID, category_ids: categoryIds, item_ids: itemIds });
+        }, menuRecord?.published ? "Ordem salva no rascunho. Publique as alterações quando terminar." : "Ordem do catálogo atualizada.");
     }
 
     async function loadLandingAdmin() {
@@ -428,7 +485,7 @@
     });
 
     async function loadMenuAssistantAdmin() {
-        if (!BARBERSHOP_ID || IS_DEMO || !menuRecord) return;
+        if (!BARBERSHOP_ID || IS_DEMO || !menuRecord || !canManageMenu()) return;
         const { data, error } = await supabaseClient.rpc("menu_assistant_admin_settings", { target_barbershop_id: BARBERSHOP_ID });
         if (error) return notify(byId("menuAssistantSettingsMessage"), menuError(error), true);
         byId("menuAssistantEnabled").checked = Boolean(data.enabled);
@@ -468,7 +525,7 @@
     }
 
     async function loadMenuPilotMetrics() {
-        if (!BARBERSHOP_ID || IS_DEMO || menuMetricsBusy) return;
+        if (!BARBERSHOP_ID || IS_DEMO || menuMetricsBusy || !canManageMenu()) return;
         menuMetricsBusy = true;
         updateMenuControls();
         notify(byId("menuPilotMetricsMessage"), "Atualizando indicadores...");
@@ -523,13 +580,18 @@
 
     async function loadMenuAdmin() {
         if (!BARBERSHOP_ID || IS_DEMO) return false;
+        if (menuSettingsDirty) {
+            notify(byId("menuWorkspaceMessage"), "Salve suas configurações antes de atualizar os dados.", true);
+            return false;
+        }
+        const previousWorkspace = menuDataReady ? selectedMenuWorkspace : null;
         const loadVersion = ++menuLoadVersion;
         menuLoadFailed = false;
         menuDataReady = false;
         updateMenuControls();
         try {
             const [{ data: menu, error }, { data: orders, error: ordersError }, { data: templates, error: templateError }, { data: onboarding, error: onboardingError }, { data: business, error: businessError }] = await Promise.all([
-                supabaseClient.from("online_menus").select("*,menu_delivery_zones(code,name,fee,minimum_order,active),menu_categories(id,name,description,active,sort_order,menu_items(id,name,description,image_url,item_type,unit_label,minimum_quantity,maximum_quantity,lead_time_hours,active,available,sort_order,menu_item_prices(id,label,price,promotional_price,active,sort_order),menu_item_option_groups(sort_order,menu_option_groups(id,name,selection_type,minimum_selections,maximum_selections,free_selections,active,menu_options(id,name,price_delta,maximum_quantity,available,sort_order)))))").eq("barbershop_id", BARBERSHOP_ID).maybeSingle(),
+                supabaseClient.from("online_menus").select("*,menu_delivery_zones(code,name,fee,minimum_order,active),menu_categories(id,name,description,active,sort_order,menu_items(id,name,description,image_url,metadata,item_type,unit_label,minimum_quantity,maximum_quantity,lead_time_hours,active,available,sort_order,menu_item_prices(id,label,price,promotional_price,active,sort_order),menu_item_option_groups(sort_order,menu_option_groups(id,name,selection_type,minimum_selections,maximum_selections,free_selections,active,menu_options(id,name,price_delta,maximum_quantity,available,sort_order)))))").eq("barbershop_id", BARBERSHOP_ID).maybeSingle(),
                 supabaseClient.from("menu_orders").select("id,public_reference,customer_name,customer_email,customer_phone,fulfillment_type,delivery_address,delivery_zone_code,scheduled_for,notes,status,payment_status,subtotal,delivery_fee,discount_amount,total_amount,created_at,is_test,items:menu_order_items(item_name,price_label,quantity,unit_price,line_total,notes,options:menu_order_item_options(group_name,option_name,quantity))").eq("barbershop_id", BARBERSHOP_ID).order("created_at", { ascending: false }).limit(100),
                 supabaseClient.from("menu_catalog_templates").select("code,name,description,segment,definition").eq("active", true).order("name"),
                 supabaseClient.rpc("menu_onboarding_status", { target_barbershop_id: BARBERSHOP_ID }),
@@ -538,11 +600,12 @@
             if (loadVersion !== menuLoadVersion) return false;
             if (error || templateError || onboardingError || businessError) throw error || templateError || onboardingError || businessError;
             let draftStatus = null;
-            if (menu?.published) {
+            if (menu?.published && canManageMenu()) {
                 const draftResult = await supabaseClient.rpc("menu_catalog_draft_status", { target_barbershop_id: BARBERSHOP_ID });
                 if (draftResult.error) throw draftResult.error;
                 draftStatus = draftResult.data;
             }
+            if (loadVersion !== menuLoadVersion) return false;
             menuTemplates = templates || [];
             menuOnboarding = onboarding;
             menuRecord = menu;
@@ -621,7 +684,7 @@
             }));
             byId("menuCatalogList").querySelectorAll("[data-move-category]").forEach((button)=>button.addEventListener("click",()=>moveMenuCatalogEntry("category",button.dataset.moveCategory,Number(button.dataset.direction))));
             byId("menuCatalogList").querySelectorAll("[data-move-menu-item]").forEach((button)=>button.addEventListener("click",()=>moveMenuCatalogEntry("item",button.dataset.moveMenuItem,Number(button.dataset.direction))));
-            byId("menuOrdersList").innerHTML = ordersError ? `<p role="status">${escapeHtml(menuError(ordersError))} Use “Atualizar etapas” para recarregar os pedidos.</p>` : (orders || []).map((order) => {
+            byId("menuOrdersList").innerHTML = ordersError ? `<p role="status">${escapeHtml(menuError(ordersError))} Use “Atualizar pedidos” para tentar novamente.</p>` : (orders || []).map((order) => {
                 const status = order.status === "pending" ? "received" : order.status;
                 const action = status === "received" ? { next: "confirmed", label: "Confirmar" } : status === "confirmed" ? { next: "completed", label: "Concluir" } : null;
                 return `<article><header><div><strong>#${escapeHtml(order.public_reference)} · ${escapeHtml(order.customer_name)}</strong><p>${formatMoney.format(Number(order.total_amount))}${order.is_test ? " · Pedido de teste, sem cobrança real" : ""}</p></div><span class="commercial-badge">${order.is_test ? "Teste concluído" : escapeHtml(menuOrderStatusLabels[status] || "Em processamento")}</span></header>${renderMenuOrderDetails(order)}${!order.is_test && action ? `<div class="commercial-actions"><button type="button" class="table-button edit" data-order-status="${action.next}" data-order="${order.id}">${action.label}</button></div>` : ""}</article>`;
@@ -631,7 +694,7 @@
                 const timestamp = completing ? "completed_at" : "confirmed_at";
                 return runMenuAction("menuOperationMessage", completing ? "Concluindo pedido..." : "Confirmando pedido...", () => supabaseClient.from("menu_orders").update({ status: button.dataset.orderStatus, [timestamp]: new Date().toISOString() }).eq("id", button.dataset.order).eq("barbershop_id", BARBERSHOP_ID).select("id,status").single(), completing ? "Pedido concluído." : "Pedido confirmado. Quando estiver pronto, use “Concluir”.");
             }));
-            if (menu?.published) selectMenuWorkspace("operation");
+            if (menu?.published) selectMenuWorkspace(previousWorkspace && previousWorkspace !== "start" ? previousWorkspace : "operation");
             else selectMenuWorkspace(nextMenuWorkspace());
             loadMenuAssistantAdmin().catch(() => notify(byId("menuAssistantSettingsMessage"), "O assistente está temporariamente indisponível; o restante do Cardápio continua funcionando.", true));
             loadMenuPilotMetrics().catch((metricsError) => renderMenuPilotMetrics(null, metricsError));
@@ -640,7 +703,8 @@
             if (loadVersion === menuLoadVersion) {
                 menuDataReady = false;
                 menuLoadFailed = true;
-                notify(byId("menuOnboardingMessage"), `${menuError(error)} Use “Atualizar etapas” para tentar novamente.`, true);
+                notify(byId("menuOnboardingMessage"), `${menuError(error)} Use “Atualizar dados” para tentar novamente.`, true);
+                notify(byId("menuWorkspaceMessage"), `${menuError(error)} Atualize os dados para tentar novamente.`, true);
             }
             return false;
         } finally {
@@ -650,7 +714,7 @@
 
     byId("menuSettingsForm")?.addEventListener("submit", async (event) => {
         event.preventDefault();
-        if (menuRecord?.published) return;
+        if (menuRecord?.published || !canManageMenu()) return;
         const acceptsDelivery=byId("menuAcceptsDelivery").checked;
         const zones=typeof document.createElement==="function"&&byId("menuDeliveryZoneRows")?[...byId("menuDeliveryZoneRows").querySelectorAll(".menu-delivery-zone-row")].map((row)=>({code:row.querySelector("[data-zone-code]").value.trim().toLowerCase(),name:row.querySelector("[data-zone-name]").value.trim(),fee:Number(row.querySelector("[data-zone-fee]").value||0),minimum_order:Number(row.querySelector("[data-zone-minimum]").value||0)})):(byId("menuZoneCode")?[{code:byId("menuZoneCode").value.trim().toLowerCase(),name:byId("menuZoneName").value.trim(),fee:Number(byId("menuZoneFee").value||0),minimum_order:Number(byId("menuZoneMinimum").value||0)}]:[]);
         const firstZone=zones[0]||null;
@@ -659,12 +723,12 @@
         if (!settings.payment_methods.length) return notify(byId("menuMessage"), "Selecione ao menos uma forma de pagamento.", true);
         if (!settings.weekdays.length || !settings.opens_at || settings.opens_at >= settings.closes_at) return notify(byId("menuMessage"), "Escolha os dias e um horário de encerramento posterior à abertura, no mesmo dia.", true);
         if (acceptsDelivery && (!zones.length || zones.some((zone)=>!zone.code||!zone.name))) return notify(byId("menuMessage"), "Cadastre ao menos uma região completa para entrega.", true);
-        await runMenuAction("menuMessage", "Salvando configuração...", async()=>{ const saved=await supabaseClient.rpc("save_menu_onboarding_settings", { target_barbershop_id: BARBERSHOP_ID, settings }); if(saved.error)return saved; return supabaseClient.rpc("save_menu_delivery_zones",{target_barbershop_id:BARBERSHOP_ID,zones:acceptsDelivery?zones:[]}); }, "Configuração salva. Confira as etapas e faça o pedido de teste quando estiver pronto.");
+        await runMenuAction("menuMessage", "Salvando configuração...", async()=>{ const saved=await supabaseClient.rpc("save_menu_onboarding_settings", { target_barbershop_id: BARBERSHOP_ID, settings }); if(saved.error)return saved; return supabaseClient.rpc("save_menu_delivery_zones",{target_barbershop_id:BARBERSHOP_ID,zones:acceptsDelivery?zones:[]}); }, "Configuração salva. Agora confira os produtos e preços. Quando terminar, continue para a revisão.");
     });
 
     byId("menuAssistantSettingsForm")?.addEventListener("submit", async (event) => {
         event.preventDefault();
-        if (menuAssistantBusy) return;
+        if (menuAssistantBusy || !canManageMenu()) return;
         const monthly = Number(byId("menuAssistantMonthlyLimit").value), session = Number(byId("menuAssistantSessionLimit").value);
         if (!Number.isInteger(monthly) || monthly < 0 || monthly > 100000 || !Number.isInteger(session) || session < 1 || session > 100) return notify(byId("menuAssistantSettingsMessage"), "Use limites inteiros dentro das faixas informadas.", true);
         menuAssistantBusy = true;
@@ -689,11 +753,19 @@
         updateMenuControls();
     });
     byId("menuAcceptsDelivery")?.addEventListener("change", updateMenuDeliveryZoneAvailability);
+    byId("menuWorkspaceRetry")?.addEventListener("click", async () => {
+        if (menuBusy) return;
+        notify(byId("menuWorkspaceMessage"), "Carregando seu cardápio...");
+        if (await loadMenuAdmin()) notify(byId("menuWorkspaceMessage"), "Dados carregados. Você pode continuar.");
+    });
     byId("menuReloadButton")?.addEventListener("click", async () => {
         if (menuBusy) return;
         if (menuSettingsDirty) return notify(byId("menuOnboardingMessage"), "Salve suas alterações antes de atualizar as etapas.", true);
-        notify(byId("menuOnboardingMessage"), "Atualizando etapas...");
-        if (await loadMenuAdmin()) notify(byId("menuOnboardingMessage"), "Etapas atualizadas com a configuração salva.");
+        notify(byId("menuWorkspaceMessage"), "Atualizando dados...");
+        if (await loadMenuAdmin()) {
+            notify(byId("menuOnboardingMessage"), "Dados atualizados com a configuração salva.");
+            notify(byId("menuWorkspaceMessage"), "Dados atualizados com a configuração salva.");
+        }
     });
     byId("menuOrdersReload")?.addEventListener("click", async () => {
         if (menuBusy || !menuDataReady) return;
@@ -720,15 +792,20 @@
     byId("menuPublicationButton")?.addEventListener("click", () => {
         if (byId("menuPublicationButton").disabled) return;
         if (menuRecord?.published && menuCatalogDraftDirty) {
-            return runMenuAction("menuOnboardingMessage", "Publicando alterações do catálogo...", () => supabaseClient.rpc("publish_menu_catalog_draft", { target_barbershop_id: BARBERSHOP_ID }), "Alterações publicadas de forma atômica. O cardápio permaneceu disponível durante a troca.");
+            return runMenuAction("menuOnboardingMessage", "Publicando alterações do catálogo...", () => supabaseClient.rpc("publish_menu_catalog_draft", { target_barbershop_id: BARBERSHOP_ID }), "Alterações publicadas. Confira a nova versão em Ver cardápio público.");
         }
-        const shouldPublish = !menuRecord?.published;
-        return runMenuAction("menuOnboardingMessage", shouldPublish ? "Publicando cardápio..." : "Despublicando cardápio...", () => supabaseClient.rpc("set_menu_publication", { target_barbershop_id: BARBERSHOP_ID, should_publish: shouldPublish }), shouldPublish ? "Cardápio publicado. Seu link está disponível no painel." : "Cardápio despublicado. Você pode ajustar e publicar novamente após a revisão.");
+        if (menuRecord?.published || !canManageMenu()) return;
+        return runMenuAction("menuOnboardingMessage", "Publicando cardápio...", () => supabaseClient.rpc("set_menu_publication", { target_barbershop_id: BARBERSHOP_ID, should_publish: true }), "Cardápio publicado. Use Ver cardápio público para conferir e compartilhar seu link.");
+    });
+    byId("menuUnpublishButton")?.addEventListener("click", () => {
+        if (!canManageMenu() || menuBusy || !menuDataReady || !menuRecord?.published) return;
+        if (!confirm("Retirar o cardápio do ar? Seus clientes não poderão fazer novos pedidos até você publicar novamente.")) return;
+        return runMenuAction("menuOnboardingMessage", "Retirando cardápio do ar...", () => supabaseClient.rpc("set_menu_publication", { target_barbershop_id: BARBERSHOP_ID, should_publish: false }), "Cardápio retirado do ar. Ajuste as configurações, revise e publique novamente quando terminar.");
     });
 
     byId("menuTemplateForm")?.addEventListener("submit",async(event)=>{
         event.preventDefault();
-        if (menuRecord?.published || menuSettingsDirty) return;
+        if (menuRecord?.published || menuSettingsDirty || !canManageMenu()) return;
         return runMenuAction("menuTemplateMessage", "Criando estrutura...", () => supabaseClient.rpc("apply_menu_catalog_template", {
             target_barbershop_id:BARBERSHOP_ID,
             target_template_code:byId("menuTemplateCode").value,
@@ -757,6 +834,7 @@
 
     byId("menuItemForm")?.addEventListener("submit", async (event) => {
         event.preventDefault();
+        if (!canManageMenu()) return;
         if (!menuRecord) return notify(byId("menuItemMessage"), "Escolha um modelo de cardápio antes de adicionar itens.", true);
         if (menuSettingsDirty) return;
         await runMenuAction("menuItemMessage", byId("menuItemId").value ? "Atualizando produto..." : "Adicionando produto...", async () => {

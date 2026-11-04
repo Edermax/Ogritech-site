@@ -1,32 +1,24 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-01",
+  "updatedAt": "2026-11-04",
   "baseline": "allow_cpf_menu_signup",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
-    "status": "PASSED",
-    "mode": "CLEAN_CI_REPLAY",
-    "migrationCount": 81,
-    "testFiles": 22,
-    "assertions": 567,
-    "evidence": "docs/evidencias/diniz-publicacao-2026-11-01.md",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41342121412",
-    "sourceCommit": "bac39bd28312e12602a51c3e97da83ee40a7acee"
+    "status": "PENDING",
+    "migrationCount": 82,
+    "reason": "Replay completo exigido no CI deste commit antes da aplicação em produção."
   },
   "productionDryRun": {
-    "status": "PASSED",
-    "executedAt": "2026-11-01",
-    "command": "supabase db push --workdir <isolated-alias-copy> --project-ref mvzcoaiiwytycdqcvydf --include-all --skip-vault --dry-run",
-    "migrationCount": 0,
-    "remoteChangesPerformed": false,
-    "evidence": "docs/evidencias/diniz-publicacao-2026-11-01.md",
-    "aliasCompatibility": "billing_rejected_email_event: 20261003025228 -> 20261003162614, identical file hash; no history repair",
-    "mode": "POST_PROMOTION_READ_ONLY"
+    "status": "PENDING",
+    "migrationCount": 1,
+    "remoteChangesPerformed": false
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [],
+  "requiredMenuMigrations": [
+    "preserve_menu_special_hours"
+  ],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
@@ -35,7 +27,9 @@
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],
-    "catalog_corrective": []
+    "catalog_corrective": [
+      "preserve_menu_special_hours"
+    ]
   },
   "releaseConditions": [
     "Every migration in the contiguous tail receives an explicit production disposition.",
@@ -78,8 +72,8 @@
     "fix_menu_catalog_draft_delete_order",
     "preserve_menu_catalog_metadata"
   ],
-  "authorizationSource": "Pedido explícito do responsável: quero essas atualizações no ar, faça agora. Autoriza promoção técnica de produção; não atesta validação fiscal ou jurídica.",
-  "authorizationScope": "Completed preserve_menu_catalog_metadata correction only. Any future migration requires a new reviewed release decision.",
+  "authorizationSource": "Pedido do responsável nesta conversa para concluir, testar e publicar a jornada funcional do Cardápio.",
+  "authorizationScope": "Correção preserve_menu_special_hours e jornada de criação e gestão do Cardápio.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
     "executedAt": "2026-11-01",

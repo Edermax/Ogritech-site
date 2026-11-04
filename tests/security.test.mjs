@@ -88,6 +88,19 @@ test("env=staging cria o cliente de staging e persiste somente na sessão", asyn
   assert.equal(saved.get("ogritechEnvironment"), "staging");
   assert.equal(context.window.ogritechEnvironmentUrl("update-password.html"), "http://localhost:8080/update-password.html?env=staging");
 
+  // Opening the official login directly must not inherit a previous test visit.
+  context.window.location = {
+    hostname: "ogritech.com.br", search: "", href: "https://ogritech.com.br/login/"
+  };
+  vm.runInNewContext(source, { ...context });
+  assert.equal(context.window.OGRITECH_ENV, "production");
+  assert.equal(clientConfig.url, "https://mvzcoaiiwytycdqcvydf.supabase.co");
+
+  context.window.location.search = "?env=staging";
+  context.window.location.href = "https://ogritech.com.br/login/?env=staging";
+  vm.runInNewContext(source, { ...context });
+  assert.equal(context.window.OGRITECH_ENV, "staging");
+
   context.window.location = {
     hostname: "ogritech.com.br",
     search: "?env=production",

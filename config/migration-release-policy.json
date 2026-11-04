@@ -83,7 +83,8 @@
       "menu_pix_expiry_recovery",
       "fix_menu_catalog_draft_delete_order",
       "preserve_menu_catalog_metadata",
-      "allow_cpf_menu_signup"
+      "allow_cpf_menu_signup",
+      "preserve_menu_special_hours"
     ],
     "remoteVersionAliases": {},
     "observedMigrationNames": [
@@ -174,7 +175,12 @@
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "allow_cpf_menu_signup",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      {
+        "name": "preserve_menu_special_hours",
+        "reason": "Aguarda testes de regressão e aplicação coordenada em staging e produção para preservar horários especiais ao salvar configurações."
+      }
+    ],
     "observationEvidence": "config/menu-environment-inventory.json",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614"

@@ -1873,3 +1873,27 @@ textarea:focus {
 
 .menu-workspace-tabs.menu-workspace-published { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .menu-workspace-published .menu-workspace-tab > span { display: none; }
+
+/* Published menus open in daily operations, with setup kept out of the way. */
+.menu-workspace-published #menuTabOperation { order: -1; }
+.menu-workspace-tabs.menu-workspace-staff { grid-template-columns: minmax(0, 1fr); }
+.menu-workspace-feedback:not(:empty) {
+    padding: 14px 18px;
+    margin: 0 0 18px;
+    border: 1px solid rgba(var(--accent-rgb), 0.4);
+    border-radius: 12px;
+    background: rgba(var(--accent-rgb), 0.08);
+    color: #bceff5;
+    line-height: 1.5;
+}
+.menu-workspace-feedback.error { border-color: #e06f6f; color: #ffc0c0; }
+.menu-settings-summary dl { display: grid; grid-template-columns: minmax(140px, 1fr) minmax(0, 2fr); gap: 10px 18px; margin: 20px 0; }
+.menu-settings-summary dd { margin: 0; overflow-wrap: anywhere; color: #d5e6e9; }
+#menuView .table-button { color: #bceff5; border: 1px solid rgba(var(--accent-rgb), 0.4); min-height: 40px; }
+#menuView .table-button.delete { color: #ffc0c0; border-color: #e06f6f; }
+#menuView button:focus-visible { outline: 3px solid #7cdeed; outline-offset: 3px; }
+#menuView button:disabled { opacity: 0.6; cursor: default; }
+@media (max-width: 700px) {
+    .menu-settings-summary dl { grid-template-columns: minmax(0, 1fr); }
+    .menu-settings-summary dd { margin-bottom: 10px; }
+}

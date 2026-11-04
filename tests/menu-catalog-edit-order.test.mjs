@@ -40,6 +40,7 @@ function editor({ categories, itemId, categoryId, categoryName }) {
     menuSettingsDirty: false,
     menuImageRemoveRequested: false,
     menuCatalogCategories: structuredClone(categories),
+    canManageMenu: () => true,
     crypto: { randomUUID: () => "new-id" },
     resetMenuItemEditor() {},
     runMenuAction: async (_messageId, _message, operation) => operation(),
