@@ -17,6 +17,7 @@ const OGRITECH_ENVIRONMENTS = Object.freeze({
 const OGRITECH_ENV_STORAGE_KEY = "ogritechEnvironment";
 const OGRITECH_VALID_ENVIRONMENTS = new Set(Object.keys(OGRITECH_ENVIRONMENTS));
 const IS_LOCAL_HOST = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const IS_PRODUCTION_HOST = ["ogritech.com.br", "www.ogritech.com.br"].includes(window.location.hostname);
 const REQUESTED_OGRITECH_ENV = new URLSearchParams(window.location.search).get("env");
 
 let storedOgritechEnvironment = null;
@@ -34,7 +35,7 @@ try {
 
 const OGRITECH_ENV = OGRITECH_VALID_ENVIRONMENTS.has(REQUESTED_OGRITECH_ENV)
     ? REQUESTED_OGRITECH_ENV
-    : (storedOgritechEnvironment || (IS_LOCAL_HOST ? "local" : "production"));
+    : (IS_PRODUCTION_HOST ? "production" : storedOgritechEnvironment || (IS_LOCAL_HOST ? "local" : "production"));
 const OGRITECH_SUPABASE = OGRITECH_ENVIRONMENTS[OGRITECH_ENV];
 
 window.OGRITECH_ENV = OGRITECH_ENV;

@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-11-01",
+  "auditedAt": "2026-11-04",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -83,7 +83,8 @@
       "menu_pix_expiry_recovery",
       "fix_menu_catalog_draft_delete_order",
       "preserve_menu_catalog_metadata",
-      "allow_cpf_menu_signup"
+      "allow_cpf_menu_signup",
+      "preserve_menu_special_hours"
     ],
     "remoteVersionAliases": {},
     "observedMigrationNames": [
@@ -172,10 +173,10 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "allow_cpf_menu_signup",
+    "appliedThrough": "preserve_menu_special_hours",
     "appliedOutOfOrder": [],
     "heldMigrations": [],
-    "observationEvidence": "config/menu-environment-inventory.json",
+    "observationEvidence": "docs/evidencias/jornada-cardapio-2026-11-04.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614"
     }
