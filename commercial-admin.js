@@ -44,10 +44,15 @@
         return "review";
     }
     function renderMenuJourney() {
+        const published = Boolean(menuRecord?.published);
         const next = nextMenuWorkspace();
+        byId("menuWorkspaceTabs")?.classList.toggle("menu-workspace-published", published);
+        for (const id of ["menuJourneyGuide", "menuJourneyNavigation", "menuTabStart", "menuOnboardingProgress", "menuOnboardingBar", "menuOnboardingChecklist"]) {
+            byId(id)?.classList.toggle("hidden", published);
+        }
         const content = [...journeyContent[selectedMenuWorkspace]];
         if (menuRecord?.published && selectedMenuWorkspace === "settings") content[1] = "A configuração geral está protegida enquanto o cardápio está no ar. Para mudar atendimento, pagamentos ou horários, abra Publicar e despublique primeiro. Publique novamente ao terminar.";
-        if (menuRecord?.published && selectedMenuWorkspace === "review") content[1] = menuCatalogDraftDirty ? "Seu cardápio está no ar. Confira o resumo das alterações e clique em Publicar alterações para atualizar o que seus clientes veem." : "Seu cardápio está no ar. Compartilhe o link em Pedidos. Se precisar mudar as configurações gerais, use Despublicar cardápio e publique novamente ao terminar.";
+        if (menuRecord?.published && selectedMenuWorkspace === "review") content[1] = menuCatalogDraftDirty ? "Seu cardápio está no ar. Confira o resumo das alterações e clique em Publicar alterações para atualizar o que seus clientes veem." : "Seu cardápio está no ar. Use Ver cardápio público para conferir e compartilhar a versão que seus clientes veem. Se precisar mudar as configurações gerais, use Despublicar cardápio e publique novamente ao terminar.";
         if (menuRecord?.published && selectedMenuWorkspace === "catalog") content[1] = "Edite e salve seus produtos. As mudanças ficam em rascunho; seus clientes continuam vendo a versão atual. Quando terminar, abra Publicar e use Publicar alterações.";
         const checks = menuOnboarding?.checks || {};
         const complete = { start: Boolean(menuRecord?.template_code), settings: ["identity", "fulfillment", "payments", "hours"].every(key => checks[key]), catalog: Boolean(checks.catalog), review: Boolean(menuRecord?.published), operation: false };
@@ -58,8 +63,8 @@
         if (action) { action.textContent = menuRecord?.published && selectedMenuWorkspace === "settings" ? "Ver opções de publicação" : menuRecord?.published && menuCatalogDraftDirty ? "Revisar alterações para publicar" : menuLoadFailed ? "Tentar novamente" : menuSettingsDirty ? "Voltar para salvar configurações" : journeyContent[next][2]; action.disabled = menuBusy || (!menuDataReady && !menuLoadFailed); }
         document.querySelectorAll("[data-menu-workspace]").forEach(button => {
             const key = button.dataset.menuWorkspace;
-            button.disabled = menuBusy || !menuDataReady || (key !== "start" && !menuRecord?.template_code);
-            button.setAttribute("aria-label", `${journeyContent[key][0]}${complete[key] ? ", concluído" : ""}`);
+            button.disabled = menuBusy || !menuDataReady || (published && key === "start") || (!published && journeyOrder.indexOf(key) > journeyOrder.indexOf(next));
+            button.setAttribute("aria-label", published ? button.textContent.trim().replace(/^\d+\s*/, "") : `${journeyContent[key][0]}${complete[key] ? ", concluído" : ""}`);
             button.setAttribute("data-complete", String(complete[key]));
         });
         if (byId("menuJourneyBack")) byId("menuJourneyBack").disabled = journeyOrder.indexOf(selectedMenuWorkspace) === 0 || menuBusy;
