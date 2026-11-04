@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-11-01",
+  "auditedAt": "2026-11-04",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -173,15 +173,10 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "allow_cpf_menu_signup",
+    "appliedThrough": "preserve_menu_special_hours",
     "appliedOutOfOrder": [],
-    "heldMigrations": [
-      {
-        "name": "preserve_menu_special_hours",
-        "reason": "Aguarda testes de regressão e aplicação coordenada em staging e produção para preservar horários especiais ao salvar configurações."
-      }
-    ],
-    "observationEvidence": "config/menu-environment-inventory.json",
+    "heldMigrations": [],
+    "observationEvidence": "docs/evidencias/jornada-cardapio-2026-11-04.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614"
     }

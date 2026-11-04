@@ -1,24 +1,31 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-04",
-  "baseline": "allow_cpf_menu_signup",
+  "baseline": "preserve_menu_special_hours",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
-    "status": "PENDING",
+    "status": "PASSED",
+    "mode": "CLEAN_CI_REPLAY",
     "migrationCount": 82,
-    "reason": "Replay completo exigido no CI deste commit antes da aplicação em produção."
+    "testFiles": 22,
+    "assertions": 571,
+    "evidence": "docs/evidencias/jornada-cardapio-2026-11-04.md",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41842463893",
+    "sourceCommit": "cb558031f6c1dcef0802798d11c32396061eb60d"
   },
   "productionDryRun": {
-    "status": "PENDING",
-    "migrationCount": 1,
-    "remoteChangesPerformed": false
+    "status": "PASSED",
+    "executedAt": "2026-11-04",
+    "migrationCount": 0,
+    "remoteChangesPerformed": false,
+    "mode": "POST_PROMOTION_READ_ONLY",
+    "evidence": "docs/evidencias/jornada-cardapio-2026-11-04.md",
+    "aliasCompatibility": "Existing billing_rejected_email_event filename alias in isolated deployment directory; history unchanged."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "preserve_menu_special_hours"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
@@ -27,9 +34,7 @@
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],
-    "catalog_corrective": [
-      "preserve_menu_special_hours"
-    ]
+    "catalog_corrective": []
   },
   "releaseConditions": [
     "Every migration in the contiguous tail receives an explicit production disposition.",
@@ -70,26 +75,26 @@
     "menu_visual_identity_assets",
     "menu_pix_expiry_recovery",
     "fix_menu_catalog_draft_delete_order",
-    "preserve_menu_catalog_metadata"
+    "preserve_menu_catalog_metadata",
+    "preserve_menu_special_hours"
   ],
   "authorizationSource": "Pedido do responsável nesta conversa para concluir, testar e publicar a jornada funcional do Cardápio.",
   "authorizationScope": "Correção preserve_menu_special_hours e jornada de criação e gestão do Cardápio.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
-    "executedAt": "2026-11-01",
+    "executedAt": "2026-11-04",
     "migrations": [
-      "preserve_menu_catalog_metadata"
+      "preserve_menu_special_hours"
     ],
     "reviewedPendingCount": 1,
-    "sourceCommit": "66aa190706793678445a8ca41870afde68452f1d",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41335550041",
-    "stagingMigrationCount": 80,
-    "productionMigrationCount": 80,
+    "sourceCommit": "cb558031f6c1dcef0802798d11c32396061eb60d",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41842463893",
+    "stagingMigrationCount": 82,
+    "productionMigrationCount": 82,
     "postPromotionPendingCount": 0,
-    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41298316841",
-    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41335545853",
+    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41818989689",
+    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41843052561",
     "restoreStatus": "SUCCESS",
-    "commercialReleaseAuthorized": false,
-    "evidence": "docs/evidencias/diniz-publicacao-2026-11-01.md"
+    "evidence": "docs/evidencias/jornada-cardapio-2026-11-04.md"
   }
 }
