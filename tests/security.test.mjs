@@ -87,6 +87,17 @@ test("env=staging cria o cliente de staging e persiste somente na sessão", asyn
   assert.match(clientConfig.key, /^sb_publishable_/);
   assert.equal(saved.get("ogritechEnvironment"), "staging");
   assert.equal(context.window.ogritechEnvironmentUrl("update-password.html"), "http://localhost:8080/update-password.html?env=staging");
+
+  context.window.location = {
+    hostname: "ogritech.com.br",
+    search: "?env=production",
+    href: "https://ogritech.com.br/painel/?env=production"
+  };
+  vm.runInNewContext(source, { ...context });
+  assert.equal(
+    context.window.ogritechEnvironmentUrl("/cardapio/?empresa=loja-teste"),
+    "https://ogritech.com.br/cardapio/?empresa=loja-teste&env=production"
+  );
 });
 
 test("troca de função reconcilia vínculos operacionais e compensa falhas", async () => {
