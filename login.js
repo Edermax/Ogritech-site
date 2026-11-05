@@ -105,45 +105,51 @@ loginForm.addEventListener("submit", async (event) => {
     loginMessage.textContent = "Entrando...";
     loginMessage.className = "login-message";
 
-    const { data, error: loginError } = await supabaseClient.auth
-        .signInWithPassword({
-            email: emailInput.value.trim().toLowerCase(),
-            password: passwordInput.value
-        });
+    try {
+        const { data, error: loginError } = await supabaseClient.auth
+            .signInWithPassword({
+                email: emailInput.value.trim().toLowerCase(),
+                password: passwordInput.value
+            });
 
-    if (loginError || !data.user) {
-        loginMessage.textContent = "E-mail ou senha incorretos.";
+        if (loginError || !data.user) {
+            loginMessage.textContent = "E-mail ou senha incorretos.";
+            loginMessage.className = "login-message error";
+            submitButton.disabled = false;
+            return;
+        }
+
+        const { data: profile, error: profileError } = await supabaseClient
+            .from("profiles")
+            .select("barbershop_id, full_name, role, active")
+            .eq("id", data.user.id)
+            .single();
+
+        if (profileError || !profile) {
+            await supabaseClient.auth.signOut();
+            loginMessage.textContent = "Usuário sem perfil cadastrado.";
+            loginMessage.className = "login-message error";
+            submitButton.disabled = false;
+            return;
+        }
+
+        if (!profile.active) {
+            await supabaseClient.auth.signOut();
+            loginMessage.textContent = "Este usuário está desativado.";
+            loginMessage.className = "login-message error";
+            submitButton.disabled = false;
+            return;
+        }
+
+        saveLocalSession(data.user, profile);
+        loginMessage.textContent = "Login realizado com sucesso.";
+        loginMessage.className = "login-message success";
+        window.location.replace(await destinationFor(profile.role));
+    } catch {
+        loginMessage.textContent = "Não foi possível concluir o acesso. Confira sua conexão e tente novamente.";
         loginMessage.className = "login-message error";
         submitButton.disabled = false;
-        return;
     }
-
-    const { data: profile, error: profileError } = await supabaseClient
-        .from("profiles")
-        .select("barbershop_id, full_name, role, active")
-        .eq("id", data.user.id)
-        .single();
-
-    if (profileError || !profile) {
-        await supabaseClient.auth.signOut();
-        loginMessage.textContent = "Usuário sem perfil cadastrado.";
-        loginMessage.className = "login-message error";
-        submitButton.disabled = false;
-        return;
-    }
-
-    if (!profile.active) {
-        await supabaseClient.auth.signOut();
-        loginMessage.textContent = "Este usuário está desativado.";
-        loginMessage.className = "login-message error";
-        submitButton.disabled = false;
-        return;
-    }
-
-    saveLocalSession(data.user, profile);
-    loginMessage.textContent = "Login realizado com sucesso.";
-    loginMessage.className = "login-message success";
-    window.location.replace(await destinationFor(profile.role));
 });
 
 forgotPasswordButton.addEventListener("click", async () => {
