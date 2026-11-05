@@ -4,11 +4,14 @@ import { runInNewContext } from 'node:vm';
 import test from 'node:test';
 
 const source=await readFile(new URL('../pedido/pedido.js',import.meta.url),'utf8');
+const whatsappSource=await readFile(new URL('../menu-whatsapp.js',import.meta.url),'utf8');
 test('order tracking keeps another merchant independent from the Diniz contact',async()=>{
   for(const slug of ['outra-loja','diniz-doces','diniz-doces-previa-7d1']){
     const root={innerHTML:''};
+    const globalThis={};
+    runInNewContext(whatsappSource,{globalThis,Intl});
     runInNewContext(source,{
-      location:{search:`?referencia=FIXTURE&token=fixture&empresa=${slug}`},URLSearchParams,Intl,
+      location:{search:`?referencia=FIXTURE&token=fixture&empresa=${slug}`},URLSearchParams,Intl,globalThis,
       document:{getElementById:(id)=>id==='order'?root:{addEventListener(){},disabled:false,textContent:''}},
       supabaseClient:{rpc:async()=>({data:{reference:'FIXTURE',customer_name:'Teste',fulfillment_type:'pickup',status:'received',payment_status:'pending',items:[],total_amount:25}})}
     });
@@ -20,6 +23,7 @@ test('order tracking keeps another merchant independent from the Diniz contact',
     }else{
       assert.match(root.innerHTML,/à Diniz Doces/);
       assert.match(root.innerHTML,/https:\/\/wa\.me\/5516991596865/);
+      assert.match(root.innerHTML,/Enviar resumo pelo WhatsApp/);
     }
   }
 });
