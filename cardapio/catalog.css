@@ -322,6 +322,27 @@ body.menu-checkout-active #ogritechStagingBadge { display:none !important; }
 .menu-hero h1,.menu-hero p,.menu-hero small,.menu-hero-trust span{color:inherit}
 .menu-hero::after{border-color:var(--accent);opacity:.2;box-shadow:none}
 .menu-hero-trust span{background:transparent;border-color:currentColor}
+
+/* The catalog should begin within the first mobile screen. */
+@media (max-width:560px) {
+  .public-shell { padding-top:10px; }
+  .public-nav { margin-bottom:8px; }
+  .public-nav img { width:82px; }
+  .menu-hero { padding:16px 18px; }
+  .menu-brand-lockup { gap:8px; margin-bottom:8px; padding:4px 8px 4px 4px; }
+  .menu-hero .menu-brand-lockup img { width:42px; height:42px; }
+  .menu-brand-lockup span { font-size:9px; }
+  .menu-hero h1 { margin:4px 0 8px; font-size:38px; }
+  .menu-hero p { margin:0; font-size:14px; line-height:1.4; }
+  .menu-hero-trust { display:none; }
+  .menu-store-info { margin-top:10px; }
+  .menu-store-info > div { padding:10px 14px; }
+  .menu-store-info p { margin-top:4px; font-size:13px; line-height:1.35; }
+  .category-nav { margin-top:10px; }
+  .catalog-section { margin-top:18px; }
+  .menu-item-placeholder { min-height:42px; padding:7px; }
+  .menu-cover-image { height:120px; }
+}
 .public-button:not(.secondary){background:var(--accent);color:var(--menu-on-accent,#000)}
 input[type=checkbox],input[type=radio]{accent-color:var(--accent)}
 .menu-brand-lockup img{object-fit:contain;flex-shrink:0}
