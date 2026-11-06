@@ -19,9 +19,9 @@ select public.platform_set_product_subscription('c8300000-0000-4000-8000-0000000
 reset role;
 delete from public.platform_admins where user_id='c8200000-0000-4000-8000-000000000001';
 
-insert into public.online_menus(id,barbershop_id,slug,title,published,accepts_delivery)
-values('c8400000-0000-4000-8000-000000000001','c8100000-0000-4000-8000-000000000001','standard-menu-public','Loja padrão',true,true),
-      ('c8400000-0000-4000-8000-000000000002','c8100000-0000-4000-8000-000000000002','standard-menu-other','Outra loja',true,false);
+insert into public.online_menus(id,barbershop_id,slug,title,published,published_at,accepts_delivery)
+values('c8400000-0000-4000-8000-000000000001','c8100000-0000-4000-8000-000000000001','standard-menu-public','Loja padrão',true,now(),true),
+      ('c8400000-0000-4000-8000-000000000002','c8100000-0000-4000-8000-000000000002','standard-menu-other','Outra loja',true,now(),false);
 insert into public.menu_delivery_zones(barbershop_id,menu_id,code,name,fee,minimum_order,active)
 values('c8100000-0000-4000-8000-000000000001','c8400000-0000-4000-8000-000000000001','centro','Centro',8,0,true);
 insert into public.menu_orders(id,barbershop_id,menu_id,customer_name,customer_phone,fulfillment_type,consent_at)
