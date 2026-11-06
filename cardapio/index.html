@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' https://cdn.jsdelivr.net;style-src 'self';img-src 'self' data: https:;connect-src 'self' http://127.0.0.1:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co https://viacep.com.br;object-src 'none';base-uri 'self';form-action 'self'">
   <title>Cardápio | Ogritech</title>
   <link rel="stylesheet" href="../commercial-public.css">
-  <link rel="stylesheet" href="catalog.css?v=20261105.1">
+  <link rel="stylesheet" href="catalog.css?v=20261105.2">
   <link rel="icon" href="../ogritech-favicon.ico">
 </head>
 <body>
@@ -18,6 +18,7 @@
       <img id="menuCoverImage" class="menu-cover-image" alt="" hidden><header class="public-hero menu-hero"><div id="menuBrandLockup" class="menu-brand-lockup hidden"><img id="menuBrandLogo" alt=""><span>Cardápio digital</span></div><small>CARDÁPIO ONLINE</small><h1 id="menuTitle"></h1><p id="menuDescription"></p><div class="menu-hero-trust"><span>Pedido direto</span><span>Confirmação humana</span><span>Sem taxa de aplicativo</span></div></header>
       <aside class="public-card menu-store-info"><div><small>ATENDIMENTO</small><p id="menuHours"></p></div><div><small>PAGAMENTO</small><p id="menuPayments"></p></div></aside>
       <nav id="categoryNav" class="category-nav" aria-label="Categorias do cardápio"></nav>
+      <div class="menu-search"><label for="menuSearch">Buscar no cardápio</label><input id="menuSearch" type="search" placeholder="Nome do produto ou categoria" autocomplete="off"><p id="menuSearchResult" role="status" aria-live="polite"></p></div>
       <div id="catalog"></div>
       <div id="cartBar" class="cart-bar hidden"><span><strong id="cartCount">0</strong> itens · <strong id="cartTotal">R$ 0</strong></span><div class="cart-bar-actions"><button id="cartReviewButton" class="public-button secondary" type="button">Revisar itens</button><button id="checkoutButton" class="public-button" type="button">Finalizar pedido</button></div></div>
       <section id="cartReview" class="public-card cart-review hidden" aria-labelledby="cartReviewTitle">
@@ -45,6 +46,8 @@
           <label>Observações<textarea name="notes" maxlength="2000"></textarea></label>
           <label class="honeypot">Site<input name="website" tabindex="-1"></label>
           <label><span><input name="privacy" type="checkbox" required> Aceito o aviso de privacidade.</span></label>
+          <aside class="checkout-estimate" aria-live="polite"><div><span>Produtos</span><strong id="checkoutSubtotal"></strong></div><div><span>Entrega</span><strong id="checkoutDelivery"></strong></div><div><span>Total estimado</span><strong id="checkoutEstimateTotal"></strong></div><p id="checkoutEstimateNote"></p></aside>
+          <p class="order-confirmation-notice">Ao enviar, o pedido será registrado para o estabelecimento confirmar. O envio não confirma o pedido nem realiza pagamento.</p>
           <p id="orderMessage" class="public-message"></p>
           <button id="orderSubmitButton" class="public-button">Enviar pedido</button>
         </form>
@@ -71,6 +74,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="../supabase-config.js"></script>
   <script src="../menu-pricing.js?v=20261020.1"></script>
-  <script src="../menu-branding.js?v=20261020.1"></script><script src="../menu-whatsapp.js?v=20261105.2"></script><script src="cardapio.js?v=20261105.2"></script>
+  <script src="../menu-branding.js?v=20261020.1"></script><script src="../menu-whatsapp.js?v=20261105.2"></script><script src="cardapio.js?v=20261105.3"></script>
 </body>
 </html>
