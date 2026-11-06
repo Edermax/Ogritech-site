@@ -90,7 +90,7 @@
     input.value = cep.replace(/^(\d{5})(\d{3})$/, "$1-$2"); input.removeAttribute("aria-invalid"); button.disabled = true; message.textContent = "Buscando endereço...";
     try {
       const { data: result, error } = await supabaseClient.functions.invoke("cep-lookup", { body: { cep, target_slug: slug } });
-      if (error || !result?.data) { resetAutomaticDelivery(); message.textContent = "Não foi possível calcular a entrega para este CEP. Confira se o endereço fica em Ribeirão Preto e tente novamente."; return; }
+      if (error || !result?.data) { resetAutomaticDelivery(); message.textContent = isDinizMenu ? "Não foi possível calcular a entrega para este CEP. Confira se o endereço fica em Ribeirão Preto e tente novamente." : "Não foi possível consultar este CEP. Confira o número e tente novamente."; return; }
       const address = result.data;
       const city = address.localidade && address.uf ? `${address.localidade} - ${address.uf}` : address.localidade || address.uf, numberPlaceholder = "[informe o número]", parts = [address.logradouro ? `${address.logradouro}, ${numberPlaceholder}` : "", address.bairro, city].filter(Boolean);
       $("deliveryAddress").value = parts.join(", ");

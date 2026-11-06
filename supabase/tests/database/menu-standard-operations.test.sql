@@ -20,10 +20,12 @@ reset role;
 delete from public.platform_admins where user_id='c8200000-0000-4000-8000-000000000001';
 
 insert into public.online_menus(id,barbershop_id,slug,title,published,published_at,accepts_delivery)
-values('c8400000-0000-4000-8000-000000000001','c8100000-0000-4000-8000-000000000001','standard-menu-public','Loja padrão',true,now(),true),
-      ('c8400000-0000-4000-8000-000000000002','c8100000-0000-4000-8000-000000000002','standard-menu-other','Outra loja',true,now(),false);
+values('c8400000-0000-4000-8000-000000000001','c8100000-0000-4000-8000-000000000001','standard-menu-public','Loja padrão',false,null,true),
+      ('c8400000-0000-4000-8000-000000000002','c8100000-0000-4000-8000-000000000002','standard-menu-other','Outra loja',false,null,false);
 insert into public.menu_delivery_zones(barbershop_id,menu_id,code,name,fee,minimum_order,active)
 values('c8100000-0000-4000-8000-000000000001','c8400000-0000-4000-8000-000000000001','centro','Centro',8,0,true);
+update public.online_menus set published=true,published_at=now()
+where id in ('c8400000-0000-4000-8000-000000000001','c8400000-0000-4000-8000-000000000002');
 insert into public.menu_orders(id,barbershop_id,menu_id,customer_name,customer_phone,fulfillment_type,consent_at)
 values('c8500000-0000-4000-8000-000000000001','c8100000-0000-4000-8000-000000000001','c8400000-0000-4000-8000-000000000001','Cliente teste','11999999999','pickup',now()),
       ('c8500000-0000-4000-8000-000000000002','c8100000-0000-4000-8000-000000000002','c8400000-0000-4000-8000-000000000002','Cliente outra loja','11999999999','pickup',now());

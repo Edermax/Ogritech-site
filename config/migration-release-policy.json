@@ -85,7 +85,8 @@
       "preserve_menu_catalog_metadata",
       "allow_cpf_menu_signup",
       "preserve_menu_special_hours",
-      "standard_menu_contact_and_orders"
+      "standard_menu_contact_and_orders",
+      "live_delivery_zone_updates"
     ],
     "remoteVersionAliases": {},
     "observedMigrationNames": [
@@ -180,6 +181,10 @@
       {
         "name": "standard_menu_contact_and_orders",
         "reason": "Aguardando verificação em staging e aplicação em produção antes da publicação do frontend."
+      },
+      {
+        "name": "live_delivery_zone_updates",
+        "reason": "Libera atualização de taxas publicadas somente pela função validada do gestor."
       }
     ],
     "observationEvidence": "docs/evidencias/jornada-cardapio-2026-11-04.md",

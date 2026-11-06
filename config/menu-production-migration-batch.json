@@ -18,7 +18,7 @@
   "productionDryRun": {
     "status": "PENDING",
     "executedAt": "2026-11-04",
-    "migrationCount": 1,
+    "migrationCount": 2,
     "remoteChangesPerformed": false,
     "mode": "POST_PROMOTION_READ_ONLY",
     "evidence": "docs/evidencias/jornada-cardapio-2026-11-04.md",
@@ -26,14 +26,16 @@
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [
-    "standard_menu_contact_and_orders"
+    "standard_menu_contact_and_orders",
+    "live_delivery_zone_updates"
   ],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
     "commercial_callbacks_and_billing": [],
     "menu_release_required": [
-      "standard_menu_contact_and_orders"
+      "standard_menu_contact_and_orders",
+      "live_delivery_zone_updates"
     ],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
