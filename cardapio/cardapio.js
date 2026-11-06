@@ -2,11 +2,12 @@
   const $ = (id) => document.getElementById(id), slug = new URLSearchParams(location.search).get("empresa") || "";
   const isDinizMenu = slug === "diniz-doces" || slug === "diniz-doces-previa-7d1";
   const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }), cart = new Map(), prices = new Map();
-  let page = null, pendingRequestId = null, assistantSessionToken = null;
+  let page = null, pendingRequestId = null, assistantSessionToken = null, calculatedDeliveryFee = null;
   const createUuid = () => globalThis.crypto?.randomUUID?.() || "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => { const value = Math.floor(Math.random() * 16); return (char === "x" ? value : (value & 3) | 8).toString(16); });
   const clean = (value) => String(value || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
   const isQuoteItem = (item) => item.metadata?.order_mode === "quote";
   const categoryId = (index) => `categoria-${index + 1}`;
+  const normalizeSearch = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR").trim();
   const displayPriceLabel = (label) => String(label || "")
     .replace(/\s*[·|-]\s*\d+\s*pessoas?\b/gi, "")
     .replace(/\s*\(\s*\d+\s*pessoas?\s*\)/gi, "")
@@ -73,16 +74,33 @@
   }
   function resetAutomaticDelivery() {
     if (!isDinizMenu) return;
+    calculatedDeliveryFee = null;
     $("deliveryZone").value = "";
     $("deliveryQuote").classList.add("hidden");
     $("deliveryQuoteValue").textContent = "";
     $("deliveryQuoteDetail").textContent = "";
+    updateCheckoutEstimate();
+  }
+  function updateCheckoutEstimate() {
+    const subtotal = [...cart.values()].reduce((sum, entry) => sum + entry.quantity * estimatedUnitPrice(entry), 0);
+    const delivery = $("fulfillment").value === "delivery";
+    const zone = (page?.delivery_zones || []).find((entry) => entry.code === $("deliveryZone").value);
+    const fee = delivery && zone ? Number(zone.fee) : 0;
+    const automaticFee = delivery && isDinizMenu ? calculatedDeliveryFee : null;
+    const knownFee = !delivery || (isDinizMenu ? automaticFee !== null && Number.isFinite(automaticFee) : Boolean(zone));
+    const deliveryFee = isDinizMenu && automaticFee !== null ? automaticFee : fee;
+    const quote = [...cart.values()].some((entry) => entry.isQuote);
+    $("checkoutSubtotal").textContent = money.format(subtotal);
+    $("checkoutDelivery").textContent = !delivery ? "Retirada · sem taxa" : knownFee ? money.format(deliveryFee) : "A calcular";
+    $("checkoutEstimateTotal").textContent = knownFee ? money.format(subtotal + deliveryFee) : `${money.format(subtotal)} + entrega`;
+    $("checkoutEstimateNote").textContent = quote ? "Produtos sob orçamento: os valores exibidos são referências e dependem de confirmação." : !knownFee ? "Informe a região ou calcule a entrega para ver o total estimado. O valor final será confirmado ao enviar." : "Estimativa antes do envio. O valor final será confirmado ao registrar o pedido.";
   }
   function updateFulfillmentFields() {
     const delivery = $("fulfillment").value === "delivery", hasZones = (page?.delivery_zones || []).length > 0;
     $("deliveryAddressFields").classList.toggle("hidden", !delivery); $("deliveryZoneLabel").classList.toggle("hidden", !delivery || !hasZones || isDinizMenu);
     $("deliveryCep").required = delivery; $("deliveryAddress").required = delivery; $("deliveryZone").required = delivery && hasZones && !isDinizMenu;
     if (!delivery) resetAutomaticDelivery();
+    updateCheckoutEstimate();
   }
   async function lookupCep() {
     const input = $("deliveryCep"), button = $("lookupCepButton"), message = $("cepMessage"), cep = input.value.replace(/\D/g, "");
@@ -108,10 +126,11 @@
       const { data: result, error } = await supabaseClient.functions.invoke("cep-lookup", { body: { cep, target_slug: slug, address } });
       const quote = result?.data?.delivery_quote, option = quote && [...$("deliveryZone").options].find((item) => item.value === quote.zone_code);
       if (error || !quote || !option) { message.textContent = "Não foi possível localizar o endereço com precisão. Clique em Buscar CEP, confira a rua e complete o número antes de tentar novamente."; return; }
-      $("deliveryZone").value = quote.zone_code; $("deliveryQuoteValue").textContent = money.format(Number(quote.fee));
+      $("deliveryZone").value = quote.zone_code; calculatedDeliveryFee = Number(quote.fee); $("deliveryQuoteValue").textContent = money.format(calculatedDeliveryFee);
       const duration = quote.duration_minutes ? ` · cerca de ${Number(quote.duration_minutes)} min de carro` : "";
       $("deliveryQuoteDetail").textContent = `Rota estimada: ${Number(quote.distance_km).toLocaleString("pt-BR")} km${duration}. A taxa é incluída automaticamente no pedido.`;
       $("deliveryQuote").classList.remove("hidden"); message.textContent = "Entrega calculada. Confira o valor antes de enviar o pedido.";
+      updateCheckoutEstimate();
     } catch { message.textContent = "Não foi possível calcular a entrega agora. Tente novamente em instantes."; }
     finally { button.disabled = false; }
   }
@@ -124,7 +143,7 @@
     }).join("");
     $("cartReviewTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total);
   }
-  function updateCart() { let count = 0, total = 0, hasQuote = false; cart.forEach((entry) => { count += entry.quantity; total += entry.quantity * estimatedUnitPrice(entry); hasQuote ||= entry.isQuote; }); $("cartCount").textContent = count; $("cartTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total); $("checkoutButton").textContent = hasQuote ? "Continuar solicitação" : "Finalizar pedido"; $("checkoutTitle").textContent = hasQuote ? "Enviar solicitação para análise" : "Finalizar pedido"; $("orderSubmitButton").textContent = hasQuote ? "Enviar solicitação" : "Enviar pedido"; $("cartBar").classList.toggle("hidden", !count); renderCartReview(total, hasQuote); if (!count) { $("cartReview").classList.add("hidden"); $("checkout").classList.add("hidden"); } updateSchedulingRequirement(); }
+  function updateCart() { let count = 0, total = 0, hasQuote = false; cart.forEach((entry) => { count += entry.quantity; total += entry.quantity * estimatedUnitPrice(entry); hasQuote ||= entry.isQuote; }); $("cartCount").textContent = count; $("cartTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total); $("checkoutButton").textContent = hasQuote ? "Continuar solicitação" : "Finalizar pedido"; $("checkoutTitle").textContent = hasQuote ? "Enviar solicitação para análise" : "Finalizar pedido"; $("orderSubmitButton").textContent = hasQuote ? "Enviar solicitação" : "Enviar pedido"; $("cartBar").classList.toggle("hidden", !count); renderCartReview(total, hasQuote); if (!count) { $("cartReview").classList.add("hidden"); $("checkout").classList.add("hidden"); } updateSchedulingRequirement(); updateCheckoutEstimate(); }
   function addConfigured(price, selections = [], quantity = 1) { const signature = `${price.id}:${selections.map((item) => `${item.menu_option_id}x${item.quantity}`).sort().join(",")}`; const entry = cart.get(signature) || { menu_item_price_id: price.id, name: price.item.name, label: price.label, price: price.amount, quantity: 0, minimumQuantity: Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1)), maximumQuantity: price.item.maximum_quantity == null ? 100 : Math.floor(Number(price.item.maximum_quantity)), selections, optionGroups: price.item.option_groups || [], isQuote: isQuoteItem(price.item), leadTimeHours: price.item.lead_time_hours }; entry.quantity = Math.min(entry.maximumQuantity, entry.quantity + quantity); cart.set(signature, entry); pendingRequestId = null; updateCart(); }
   function configure(price, quantity = Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1))) {
     const groups = price.item.option_groups || []; if (!groups.length) return addConfigured(price, [], quantity);
@@ -245,6 +264,25 @@
           : `<div class="menu-item-placeholder" aria-hidden="true"><small>${item.item_type === "preorder" || Number(item.lead_time_hours) > 0 ? "Feito por encomenda" : "Confira as opções"}</small></div>`;
       return `<article class="menu-item-card" data-item="${item.id}">${media}<div class="menu-item-content"><div class="menu-item-heading"><h3>${clean(item.name)}</h3>${quote ? '<span class="menu-item-badge">Sob consulta</span>' : ((item.option_groups || []).length ? '<span class="menu-item-badge">Personalizável</span>' : "")}</div><p>${clean(item.description)}</p>${pricePicker}</div></article>`;
     }).join("")}</div></section>`).join("");
+    const filterCatalog = () => {
+      const query = normalizeSearch($("menuSearch").value);
+      let matches = 0;
+      data.categories.forEach((category, index) => {
+        const section = $(categoryId(index)), categoryMatch = normalizeSearch(category.name).includes(query);
+        let categoryCount = 0;
+        section.querySelectorAll(".menu-item-card").forEach((card, itemIndex) => {
+          const item = category.items[itemIndex];
+          const found = !query || categoryMatch || normalizeSearch(`${item.name} ${item.description || ""}`).includes(query);
+          card.classList.toggle("hidden", !found);
+          if (found) categoryCount++;
+        });
+        section.classList.toggle("hidden", !categoryCount);
+        $("categoryNav").children[index]?.classList.toggle("hidden", !categoryCount);
+        matches += categoryCount;
+      });
+      $("menuSearchResult").textContent = query ? matches ? `${matches} ${matches === 1 ? "produto encontrado" : "produtos encontrados"}.` : "Nenhum produto encontrado. Tente outro nome." : "";
+    };
+    $("menuSearch").addEventListener("input", filterCatalog);
     const refreshSelectedPrice = (itemId) => { const select = $("catalog").querySelector(`[data-price-select="${itemId}"]`), quantityInput = $("catalog").querySelector(`[data-quantity-select="${itemId}"]`), price = prices.get(select.value), output = $("catalog").querySelector(`[data-selected-price="${itemId}"]`), quantity = quantityInput ? Number(quantityInput.value) : 1; output.textContent = quantityInput ? `${quantity} unidades · ${money.format(price.amount * quantity)}` : `${isQuoteItem(price.item) ? "A partir de " : ""}${money.format(price.amount)}`; };
     $("catalog").querySelectorAll("[data-price-select]").forEach((select) => select.addEventListener("change", () => refreshSelectedPrice(select.dataset.priceSelect)));
     $("catalog").querySelectorAll("[data-quantity-select]").forEach((input) => input.addEventListener("input", () => { if (!input.validity.valid) return; refreshSelectedPrice(input.dataset.quantitySelect); }));
@@ -268,6 +306,7 @@
     pendingRequestId = null; updateCart();
   });
   $("fulfillment").addEventListener("change", updateFulfillmentFields);
+  $("deliveryZone").addEventListener("change", updateCheckoutEstimate);
   $("lookupCepButton").addEventListener("click", lookupCep);
   $("calculateDeliveryButton").addEventListener("click", calculateDelivery);
   $("deliveryCep").addEventListener("input", (event) => { const digits = event.target.value.replace(/\D/g, "").slice(0, 8); event.target.value = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits; $("cepMessage").textContent = ""; resetAutomaticDelivery(); });

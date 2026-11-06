@@ -344,6 +344,18 @@ body.menu-checkout-active #ogritechStagingBadge { display:none !important; }
   .menu-cover-image { height:120px; }
 }
 .public-button:not(.secondary){background:var(--accent);color:var(--menu-on-accent,#000)}
+.menu-search{display:grid;gap:7px;margin:18px 0 4px}
+.menu-search label{color:#eaf8fa;font-size:13px;font-weight:800}
+.menu-search input{width:100%;min-height:48px;padding:12px 15px;border:1px solid #ffffff38;border-radius:12px;background:#0b1518;color:#fff;font:inherit}
+.menu-search input:focus-visible{outline:3px solid #42d9ed77;outline-offset:2px}
+.menu-search p{min-height:20px;margin:0;color:#a8bdc1;font-size:12px}
+.checkout-estimate{display:grid;gap:9px;padding:16px;border:1px solid #42d9ed55;border-radius:14px;background:#0b2025}
+.checkout-estimate>div{display:flex;justify-content:space-between;gap:16px;color:#d5e3e6}
+.checkout-estimate>div:last-of-type{padding-top:10px;border-top:1px solid #ffffff24;font-weight:800}
+.checkout-estimate strong{color:#f4fbfc;text-align:right}
+.checkout-estimate>div:last-of-type strong{color:#42d9ed}
+.checkout-estimate p{margin:0;color:#a8bdc1;font-size:12px;line-height:1.5}
+.order-confirmation-notice{margin:0;padding:12px 14px;border-left:3px solid #42d9ed;border-radius:8px;background:#123039;color:#e7f7f9;font-size:13px;line-height:1.5}
 input[type=checkbox],input[type=radio]{accent-color:var(--accent)}
 .menu-brand-lockup img{object-fit:contain;flex-shrink:0}
 @media(max-width:600px){.menu-cover-image{border-radius:16px;height:180px}.menu-brand-lockup img{width:60px;height:60px}}
