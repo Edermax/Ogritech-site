@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-04",
+  "updatedAt": "2026-11-05",
   "baseline": "preserve_menu_special_hours",
   "strategy": "contiguous_tail",
-  "authorized": true,
-  "decision": "APPROVED",
+  "authorized": false,
+  "decision": "PENDING",
   "localReplay": {
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
@@ -16,21 +16,25 @@
     "sourceCommit": "cb558031f6c1dcef0802798d11c32396061eb60d"
   },
   "productionDryRun": {
-    "status": "PASSED",
+    "status": "PENDING",
     "executedAt": "2026-11-04",
-    "migrationCount": 0,
+    "migrationCount": 1,
     "remoteChangesPerformed": false,
     "mode": "POST_PROMOTION_READ_ONLY",
     "evidence": "docs/evidencias/jornada-cardapio-2026-11-04.md",
     "aliasCompatibility": "Existing billing_rejected_email_event filename alias in isolated deployment directory; history unchanged."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [],
+  "requiredMenuMigrations": [
+    "standard_menu_contact_and_orders"
+  ],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
     "commercial_callbacks_and_billing": [],
-    "menu_release_required": [],
+    "menu_release_required": [
+      "standard_menu_contact_and_orders"
+    ],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],

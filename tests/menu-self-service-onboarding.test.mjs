@@ -47,13 +47,13 @@ function browser(state = fixture(), options = {}) {
           if (selector === "input,select,textarea,button") return formControls[id] || [];
           if (selector === "input,button") return formControls[id] || [];
           if (id === "menuOrdersList" && selector === "[data-order]") {
-            const matches = [...this.innerHTML.matchAll(/data-order-status="([^"]+)" data-order="([^"]+)"/g)];
+            const matches = [...this.innerHTML.matchAll(/data-order-action="([^"]+)" data-order="([^"]+)"/g)];
             const visible = new Set(matches.map((match) => `${match[2]}:${match[1]}`));
             for (const key of orderButtons.keys()) if (!visible.has(key)) orderButtons.delete(key);
             return matches.map((match) => {
               const key = `${match[2]}:${match[1]}`;
               if (!orderButtons.has(key)) orderButtons.set(key, {
-                dataset: { orderStatus: match[1], order: match[2] }, disabled: false, handlers: {},
+                dataset: { orderAction: match[1], order: match[2] }, disabled: false, handlers: {},
                 addEventListener(name, callback) { this.handlers[name] = callback; }
               });
               return orderButtons.get(key);
@@ -99,6 +99,16 @@ function browser(state = fixture(), options = {}) {
     },
     async rpc(name, args) {
       calls.push({ name, args });
+      if (name === "update_menu_order_operation") {
+        if (options.updateError) return { data: null, error: options.updateError };
+        const order = state.orders.find((entry) => entry.id === args.target_order_id);
+        if (!order) return { data: null, error: { code: "22023", message: "Pedido indisponível" } };
+        if (args.target_action === "confirm") order.status = "confirmed";
+        if (args.target_action === "reject") order.status = "rejected";
+        if (args.target_action === "complete") order.status = "completed";
+        if (args.target_action === "mark_paid") order.payment_status = "paid";
+        return { data: { id: order.id, status: order.status, payment_status: order.payment_status }, error: null };
+      }
       if (name === "menu_onboarding_status") {
         if (state.statusError) return { data: null, error: state.statusError };
         return { data: state.status, error: null };
@@ -176,7 +186,7 @@ test("cardápio publicado simplifica a configuração sem esconder a opção de 
   state.menu.published = true;
   const page = browser(state);
   await page.load();
-  assert.equal(page.element("menuSettingsForm").classList.contains("hidden"), true);
+  assert.equal(page.element("menuSettingsForm").classList.contains("hidden"), false);
   assert.equal(page.element("menuReviewDetails").open, false);
   assert.equal(page.element("menuPublicationButton").textContent, "Publicar alterações");
   assert.equal(page.element("menuPublicationButton").disabled, true);
@@ -193,8 +203,9 @@ test("pedidos de teste ficam identificados e não recebem ações operacionais",
   assert.match(orders, /Pedido de teste, sem cobrança real/);
   assert.doesNotMatch(orders, /data-order="test-order"/);
   assert.match(orders, /data-order="real-order"/);
-  assert.match(orders, /data-order-status="confirmed"/);
-  assert.doesNotMatch(orders, /data-order-status="completed"[^]*data-order="real-order"/);
+  assert.match(orders, /data-order-action="confirm"/);
+  assert.match(orders, /data-order-action="reject"/);
+  assert.doesNotMatch(orders, /data-order-action="complete"[^]*data-order="real-order"/);
 });
 
 test("operação permite atualizar a lista de pedidos sem alterar nenhum pedido", async () => {
@@ -236,29 +247,30 @@ test("pedido mostra uma ação por etapa e confirma a atualização na própria 
   state.orders[1].status = "received";
   const page = browser(state);
   await page.load();
-  assert.ok(page.orderButton("real-order", "confirmed"));
-  assert.equal(page.orderButton("real-order", "completed"), undefined);
-  await page.fireOrder("real-order", "confirmed");
+  assert.ok(page.orderButton("real-order", "confirm"));
+  assert.ok(page.orderButton("real-order", "reject"));
+  assert.equal(page.orderButton("real-order", "complete"), undefined);
+  await page.fireOrder("real-order", "confirm");
   assert.equal(state.orders[1].status, "confirmed");
   assert.match(page.element("menuOperationMessage").textContent, /Pedido confirmado/);
-  assert.ok(page.orderButton("real-order", "completed"));
-  assert.equal(page.orderButton("real-order", "confirmed"), undefined);
-  await page.fireOrder("real-order", "completed");
+  assert.ok(page.orderButton("real-order", "complete"));
+  assert.equal(page.orderButton("real-order", "confirm"), undefined);
+  await page.fireOrder("real-order", "complete");
   assert.equal(state.orders[1].status, "completed");
   assert.match(page.element("menuOperationMessage").textContent, /Pedido concluído/);
-  assert.equal(page.orderButton("real-order", "completed"), undefined);
-  assert.equal(page.calls.filter((call) => call.name === "update_menu_order").length, 2);
+  assert.equal(page.orderButton("real-order", "complete"), undefined);
+  assert.equal(page.calls.filter((call) => call.name === "update_menu_order_operation").length, 2);
 });
 
 test("falha ao atualizar pedido aparece na aba de operação e preserva a ação", async () => {
   const state = fixture();
   state.orders[1].status = "received";
-  const page = browser(state, { updateError: { code: "PGRST116" } });
+  const page = browser(state, { updateError: { code: "22023", message: "Transição de pedido inválida" } });
   await page.load();
-  await page.fireOrder("real-order", "confirmed");
+  await page.fireOrder("real-order", "confirm");
   assert.equal(state.orders[1].status, "received");
-  assert.match(page.element("menuOperationMessage").textContent, /não foi encontrado ou já mudou de situação/);
-  assert.ok(page.orderButton("real-order", "confirmed"));
+  assert.match(page.element("menuOperationMessage").textContent, /Transição de pedido inválida/);
+  assert.ok(page.orderButton("real-order", "confirm"));
 });
 
 test("duplo clique gera somente um pedido de teste e aguarda o estado atualizado do servidor", async () => {
@@ -344,7 +356,7 @@ test("falha ao retomar bloqueia publicação até atualizar com sucesso", async 
   assert.equal(page.element("menuPublicationButton").disabled, false);
 });
 
-test("cardápio publicado protege a configuração, permite rascunho e pode ser despublicado explicitamente", async () => {
+test("cardápio publicado permite editar a configuração sem impedir o rascunho e pode ser despublicado", async () => {
   const state = fixture();
   state.menu.published = true;
   const page = browser(state, { rpc: async (name, args) => {
@@ -355,7 +367,8 @@ test("cardápio publicado protege a configuração, permite rascunho e pode ser 
     return { data: state.status, error: null };
   } });
   await page.load();
-  assert.equal(page.element("menuTitle").disabled, true);
+  assert.equal(page.element("menuTitle").disabled, false);
+  assert.equal(page.element("menuSlug").disabled, true);
   assert.equal(page.element("menuTestOrderButton").disabled, true);
   assert.equal(page.element("menuTestOrderButton").classList.contains("hidden"), true);
   assert.equal(page.element("menuSettingsLockNotice").classList.contains("hidden"), false);
@@ -368,6 +381,32 @@ test("cardápio publicado protege a configuração, permite rascunho e pode ser 
   await page.fire("menuUnpublishButton");
   assert.equal(page.element("menuTitle").disabled, false);
   assert.equal(page.element("menuPublicLink").classList.contains("hidden"), true);
+});
+
+test("loja publicada atualiza taxa e WhatsApp sem retirar o cardápio do ar", async () => {
+  const state = fixture();
+  state.menu.published = true;
+  const page = browser(state, { rpc: async (name, args) => {
+    if (name === "menu_catalog_draft_status") return { data: { exists: false }, error: null };
+    if (name === "save_published_menu_settings") {
+      assert.equal(args.settings.slug, "pizzaria-centro");
+      assert.equal(args.zones[0].fee, 12);
+      return { data: { saved: true, published: true }, error: null };
+    }
+    if (name === "save_menu_contact") {
+      assert.equal(args.target_whatsapp_phone, "5511999999999");
+      return { data: { whatsapp_phone: args.target_whatsapp_phone }, error: null };
+    }
+    return { data: {}, error: null };
+  } });
+  await page.load();
+  page.element("menuZoneFee").value = "12";
+  await page.fire("menuSettingsForm", "submit");
+  assert.equal(page.calls.filter(call => call.name === "save_published_menu_settings").length, 1);
+  assert.equal(page.calls.filter(call => call.name === "set_menu_publication").length, 0);
+  page.element("menuWhatsappPhone").value = "55 (11) 99999-9999";
+  await page.fire("menuContactForm", "submit");
+  assert.equal(page.calls.filter(call => call.name === "save_menu_contact").length, 1);
 });
 
 
