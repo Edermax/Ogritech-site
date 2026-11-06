@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-04",
-  "baseline": "preserve_menu_special_hours",
+  "updatedAt": "2026-11-05",
+  "baseline": "guard_paid_menu_rejections",
   "strategy": "contiguous_tail",
-  "authorized": true,
-  "decision": "APPROVED",
+  "authorized": false,
+  "decision": "PENDING",
   "localReplay": {
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
@@ -16,12 +16,12 @@
     "sourceCommit": "cb558031f6c1dcef0802798d11c32396061eb60d"
   },
   "productionDryRun": {
-    "status": "PASSED",
-    "executedAt": "2026-11-04",
+    "status": "PENDING",
+    "executedAt": "2026-11-05",
     "migrationCount": 0,
     "remoteChangesPerformed": false,
     "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/jornada-cardapio-2026-11-04.md",
+    "evidence": "docs/evidencias/menu-standard-operations-2026-11-05.md",
     "aliasCompatibility": "Existing billing_rejected_email_event filename alias in isolated deployment directory; history unchanged."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
