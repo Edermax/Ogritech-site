@@ -90,9 +90,10 @@
         "config/menu-release-package.json",
         "scripts/menu-release-package.mjs",
         "docs/CARDAPIO_PACOTE_PUBLICACAO.md",
-        "docs/evidencias/cardapio-preflight-producao-2026-10-31.md"
+        "docs/evidencias/cardapio-preflight-producao-2026-10-31.md",
+        "docs/evidencias/cardapio-monitor-diniz-2026-11-05.md"
       ],
-      "remaining": "Frontend b5902c5 publicado, sete funções ativas. Código remoto de billing, lifecycle e webhook idêntico ao repositório em 31/10; configurações necessárias presentes e preflight seguro aprovado. Cobrança real e entrega de notificação financeira real ainda não comprovadas."
+      "remaining": "Frontend 42366e2 publicado no GitHub Pages; cardápio da Diniz ativo. Código remoto de billing, lifecycle e webhook conferido em 31/10. Sondas de preços, teste grátis e rejeição de webhook sem assinatura passaram em 5/11. Cobrança real e entrega de notificação financeira real ainda não comprovadas."
     },
     {
       "id": "production_synthetic_test",
@@ -122,7 +123,7 @@
     {
       "id": "production_monitor",
       "label": "Disponibilidade e criação de pedidos monitoradas",
-      "status": "PARTIAL",
+      "status": "APPROVED",
       "evidence": [
         ".github/workflows/monitor-production.yml",
         "scripts/monitor-production.mjs",
@@ -134,9 +135,11 @@
         "docs/CARDAPIO_MONITORAMENTO.md",
         "docs/evidencias/cardapio-monitoramento-funcional-2026-10-20.md",
         "docs/CARDAPIO_PACOTE_PUBLICACAO.md",
-        "docs/evidencias/cardapio-preflight-producao-2026-10-31.md"
+        "docs/evidencias/cardapio-preflight-producao-2026-10-31.md",
+        "docs/evidencias/cardapio-monitor-diniz-2026-11-05.md",
+        "https://github.com/Edermax/Ogritech-site/actions/runs/42149277938"
       ],
-      "remaining": "Página e cadastro de produção respondem normalmente. Alerta de catálogo permanece porque não há cardápio real publicado; configurar alvo e confirmar execução saudável após publicação autorizada do primeiro cliente. Não publicar exemplo para encobrir o alerta."
+      "remaining": ""
     },
     {
       "id": "rollback_rehearsal",
@@ -157,10 +160,10 @@
     }
   ],
   "currentProduction": {
-    "commit": "7954337e5cbc99deadd88a179997c935d47bcb8f",
+    "commit": "42366e2525c2214b6da5f6e5009f4e45ab3eb9bc",
     "inventory": "config/menu-environment-inventory.json",
     "releaseAuthorized": false,
-    "observedAt": "2026-10-31"
+    "observedAt": "2026-11-05"
   },
   "acceptedJourneys": {
     "recordedAt": "2026-10-19",
