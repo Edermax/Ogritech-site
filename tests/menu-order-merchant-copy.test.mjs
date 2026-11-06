@@ -27,6 +27,23 @@ test('order tracking uses the contact returned for the order, independent from t
   }
 });
 
+test('rejected order does not ask for payment and offers a status question',async()=>{
+  const root={innerHTML:''};
+  const globalThis={};
+  runInNewContext(whatsappSource,{globalThis,Intl});
+  runInNewContext(source,{
+    location:{search:'?referencia=FIXTURE&token=fixture'},URLSearchParams,Intl,globalThis,
+    document:{getElementById:(id)=>id==='order'?root:{addEventListener(){},disabled:false,textContent:''}},
+    supabaseClient:{rpc:async()=>({data:{reference:'FIXTURE',customer_name:'Teste',fulfillment_type:'pickup',status:'rejected',payment_status:'pending',items:[],total_amount:25,whatsapp_phone:'5511999999999',menu_title:'Loja teste'}})}
+  });
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.match(root.innerHTML,/Este pedido não seguirá para pagamento/);
+  assert.doesNotMatch(root.innerHTML,/Pagamento pendente/);
+  assert.match(decodeURIComponent(root.innerHTML),/pedido FIXT-URE foi recusado/);
+  assert.match(root.innerHTML,/Recusado/);
+  assert.match(root.innerHTML,/Falar pelo WhatsApp/);
+});
+
 test('image policy permits local previews and only the two trusted menu image buckets',async()=>{
   const headers=await readFile(new URL('../_headers',import.meta.url),'utf8');
   const directive=headers.match(/img-src ([^;]+);/)[1].split(/\s+/);

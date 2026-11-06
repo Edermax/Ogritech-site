@@ -24,7 +24,7 @@ function fixture() {
     status: { exists: true, next_step: "ready", completed_count: 8, total_count: 8, checks: { ...allChecks } },
     orders: [
       { id: "test-order", public_reference: "TEST-1", customer_name: "Teste", status: "completed", total_amount: 40, is_test: true },
-      { id: "real-order", public_reference: "REAL-1", customer_name: "Cliente", status: "pending", total_amount: 47, is_test: false }
+      { id: "real-order", public_reference: "REAL-1", customer_name: "Cliente", status: "pending", payment_status: "pending", total_amount: 47, is_test: false }
     ],
     templates: [{ code: "pizzeria", name: "Pizzaria" }]
   };
@@ -271,6 +271,17 @@ test("falha ao atualizar pedido aparece na aba de operação e preserva a ação
   assert.equal(state.orders[1].status, "received");
   assert.match(page.element("menuOperationMessage").textContent, /Transição de pedido inválida/);
   assert.ok(page.orderButton("real-order", "confirm"));
+});
+
+test("pedido pago não oferece recusa nem novo registro de pagamento", async () => {
+  const state = fixture();
+  state.orders[1].status = "received";
+  state.orders[1].payment_status = "paid";
+  const page = browser(state);
+  await page.load();
+  assert.ok(page.orderButton("real-order", "confirm"));
+  assert.equal(page.orderButton("real-order", "reject"), undefined);
+  assert.equal(page.orderButton("real-order", "mark_paid"), undefined);
 });
 
 test("duplo clique gera somente um pedido de teste e aguarda o estado atualizado do servidor", async () => {

@@ -28,7 +28,8 @@ update public.online_menus set published=true,published_at=now()
 where id in ('c8400000-0000-4000-8000-000000000001','c8400000-0000-4000-8000-000000000002');
 insert into public.menu_orders(id,barbershop_id,menu_id,customer_name,customer_phone,fulfillment_type,consent_at)
 values('c8500000-0000-4000-8000-000000000001','c8100000-0000-4000-8000-000000000001','c8400000-0000-4000-8000-000000000001','Cliente teste','11999999999','pickup',now()),
-      ('c8500000-0000-4000-8000-000000000002','c8100000-0000-4000-8000-000000000002','c8400000-0000-4000-8000-000000000002','Cliente outra loja','11999999999','pickup',now());
+      ('c8500000-0000-4000-8000-000000000002','c8100000-0000-4000-8000-000000000002','c8400000-0000-4000-8000-000000000002','Cliente outra loja','11999999999','pickup',now()),
+      ('c8500000-0000-4000-8000-000000000003','c8100000-0000-4000-8000-000000000001','c8400000-0000-4000-8000-000000000001','Cliente pago','11999999999','pickup',now());
 
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"c8200000-0000-4000-8000-000000000001","role":"authenticated"}',true);
@@ -41,7 +42,8 @@ select extensions.lives_ok($$select public.save_published_menu_settings('c810000
 select extensions.ok((select published from public.online_menus where id='c8400000-0000-4000-8000-000000000001'),'menu remains published');
 select extensions.is((select fee::text from public.menu_delivery_zones where menu_id='c8400000-0000-4000-8000-000000000001' and code='centro'),'9.00','delivery fee changes');
 select extensions.throws_ok($$select public.save_published_menu_settings('c8100000-0000-4000-8000-000000000002','{}','[]')$$,'42501','Acesso negado','settings are tenant scoped');
-select extensions.lives_ok($$select public.update_menu_order_operation('c8100000-0000-4000-8000-000000000001','c8500000-0000-4000-8000-000000000001','mark_paid')$$,'owner records payment');
+select extensions.lives_ok($$select public.update_menu_order_operation('c8100000-0000-4000-8000-000000000001','c8500000-0000-4000-8000-000000000003','mark_paid')$$,'owner records payment');
+select extensions.throws_ok($$select public.update_menu_order_operation('c8100000-0000-4000-8000-000000000001','c8500000-0000-4000-8000-000000000003','reject')$$,'22023','Transição de pedido inválida','paid order cannot be rejected');
 select extensions.lives_ok($$select public.update_menu_order_operation('c8100000-0000-4000-8000-000000000001','c8500000-0000-4000-8000-000000000001','reject')$$,'owner rejects request');
 select extensions.throws_ok($$select public.update_menu_order_operation('c8100000-0000-4000-8000-000000000001','c8500000-0000-4000-8000-000000000001','confirm')$$,'22023','Transição de pedido inválida','rejected order cannot be confirmed');
 select extensions.throws_ok($$select public.update_menu_order_operation('c8100000-0000-4000-8000-000000000002','c8500000-0000-4000-8000-000000000002','reject')$$,'42501','Acesso negado','orders are tenant scoped');

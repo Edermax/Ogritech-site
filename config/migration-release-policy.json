@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-11-04",
+  "auditedAt": "2026-11-05",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -86,7 +86,8 @@
       "allow_cpf_menu_signup",
       "preserve_menu_special_hours",
       "standard_menu_contact_and_orders",
-      "live_delivery_zone_updates"
+      "live_delivery_zone_updates",
+      "guard_paid_menu_rejections"
     ],
     "remoteVersionAliases": {},
     "observedMigrationNames": [
@@ -175,19 +176,15 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "preserve_menu_special_hours",
+    "appliedThrough": "live_delivery_zone_updates",
     "appliedOutOfOrder": [],
     "heldMigrations": [
       {
-        "name": "standard_menu_contact_and_orders",
-        "reason": "Aguardando verificação em staging e aplicação em produção antes da publicação do frontend."
-      },
-      {
-        "name": "live_delivery_zone_updates",
-        "reason": "Libera atualização de taxas publicadas somente pela função validada do gestor."
+        "name": "guard_paid_menu_rejections",
+        "reason": "Bloqueia recusa de pedido já pago até haver fluxo de estorno."
       }
     ],
-    "observationEvidence": "docs/evidencias/jornada-cardapio-2026-11-04.md",
+    "observationEvidence": "docs/evidencias/menu-standard-operations-2026-11-05.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614"
     }
