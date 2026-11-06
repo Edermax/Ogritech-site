@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-05",
-  "baseline": "live_delivery_zone_updates",
+  "baseline": "guard_paid_menu_rejections",
   "strategy": "contiguous_tail",
   "authorized": false,
   "decision": "PENDING",
@@ -18,23 +18,19 @@
   "productionDryRun": {
     "status": "PENDING",
     "executedAt": "2026-11-05",
-    "migrationCount": 1,
+    "migrationCount": 0,
     "remoteChangesPerformed": false,
     "mode": "POST_PROMOTION_READ_ONLY",
     "evidence": "docs/evidencias/menu-standard-operations-2026-11-05.md",
     "aliasCompatibility": "Existing billing_rejected_email_event filename alias in isolated deployment directory; history unchanged."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "guard_paid_menu_rejections"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
     "commercial_callbacks_and_billing": [],
-    "menu_release_required": [
-      "guard_paid_menu_rejections"
-    ],
+    "menu_release_required": [],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],
