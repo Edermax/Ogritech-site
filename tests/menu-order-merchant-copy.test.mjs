@@ -5,25 +5,24 @@ import test from 'node:test';
 
 const source=await readFile(new URL('../pedido/pedido.js',import.meta.url),'utf8');
 const whatsappSource=await readFile(new URL('../menu-whatsapp.js',import.meta.url),'utf8');
-test('order tracking keeps another merchant independent from the Diniz contact',async()=>{
-  for(const slug of ['outra-loja','diniz-doces','diniz-doces-previa-7d1']){
+test('order tracking uses the contact returned for the order, independent from the URL slug',async()=>{
+  for(const [slug,phone,name] of [['outra-loja','5511988887777','Outra Loja'],['diniz-doces','5516991596865','Diniz Doces'],['diniz-doces-previa-7d1','','Diniz Doces']]){
     const root={innerHTML:''};
     const globalThis={};
     runInNewContext(whatsappSource,{globalThis,Intl});
     runInNewContext(source,{
       location:{search:`?referencia=FIXTURE&token=fixture&empresa=${slug}`},URLSearchParams,Intl,globalThis,
       document:{getElementById:(id)=>id==='order'?root:{addEventListener(){},disabled:false,textContent:''}},
-      supabaseClient:{rpc:async()=>({data:{reference:'FIXTURE',customer_name:'Teste',fulfillment_type:'pickup',status:'received',payment_status:'pending',items:[],total_amount:25}})}
+      supabaseClient:{rpc:async()=>({data:{reference:'FIXTURE',customer_name:'Teste',fulfillment_type:'pickup',status:'received',payment_status:'pending',items:[],total_amount:25,whatsapp_phone:phone,menu_title:name}})}
     });
     await new Promise(resolve=>setImmediate(resolve));
     assert.match(root.innerHTML,/Pagamento pendente/);
-    if(slug==='outra-loja'){
-      assert.match(root.innerHTML,/estabelecimento poderá entrar em contato/);
-      assert.doesNotMatch(root.innerHTML,/Diniz|wa\.me|Enviar código pelo WhatsApp/);
+    if(!phone){
+      assert.doesNotMatch(root.innerHTML,/wa\.me|Enviar resumo pelo WhatsApp/);
     }else{
-      assert.match(root.innerHTML,/à Diniz Doces/);
-      assert.match(root.innerHTML,/https:\/\/wa\.me\/5516991596865/);
+      assert.match(root.innerHTML,new RegExp(`https:\\/\\/wa\\.me\\/${phone}`));
       assert.match(root.innerHTML,/Enviar resumo pelo WhatsApp/);
+      assert.match(decodeURIComponent(root.innerHTML),new RegExp(name));
     }
   }
 });

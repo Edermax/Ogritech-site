@@ -115,7 +115,8 @@ test("sucesso preserva o pedido, não redireciona e orienta o pagamento no Whats
     readFile(new URL("pedido/pedido.js", root), "utf8")
   ]);
   assert.match(html, /id="orderSuccess"/);
-  assert.match(script, /const dinizWhatsapp = "5516991596865"/);
+  assert.match(script, /page\.menu\.whatsapp_phone/);
+  assert.doesNotMatch(script, /const dinizWhatsapp/);
   assert.match(script, /Código do pedido/);
   assert.match(script, /Pagamento ainda pendente/);
   assert.match(script, /target="_blank" rel="noopener noreferrer"/);
