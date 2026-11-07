@@ -347,8 +347,19 @@
       scheduledFor: data.scheduled_for, notes: form.get("notes"), quote: hasQuote
     }) : "";
     const whatsappUrl = whatsappPhone ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappText)}` : "";
+    const pixKey = hasQuote ? "" : page.menu.pix_key;
+    const pixPayment = pixKey ? `<aside class="order-payment-alert"><strong>Pagar por Pix</strong><p>Valor do pedido: ${clean(money.format(Number(data.total_amount)))}</p><p>Chave Pix: <code>${clean(pixKey)}</code></p><button type="button" class="public-button secondary" id="copyOrderPixKey">Copiar chave Pix</button><p role="status" id="copyOrderPixStatus"></p><p>Confira o destinatário no seu banco. A loja confirma o pagamento após receber o Pix.</p></aside>` : "";
     cart.clear(); updateCart();
     $("orderSuccess").innerHTML = `<div class="order-success-heading"><span class="order-success-mark" aria-hidden="true">✓</span><div><small>PEDIDO REGISTRADO</small><h2>Recebemos sua solicitação</h2></div></div><div class="order-code-box"><span>Código do pedido</span><strong>${clean(formattedCode)}</strong></div><aside class="order-payment-alert"><strong>Pagamento ainda pendente</strong><p>${whatsappUrl ? `Envie o resumo do pedido <b>${clean(formattedCode)}</b> ao estabelecimento para confirmar os detalhes e combinar o pagamento.` : "Acompanhe a confirmação pelo link abaixo. O estabelecimento poderá entrar em contato pelo telefone informado para conferir os dados e combinar o pagamento."} O envio do pedido não realiza cobrança automática.</p></aside><div class="order-success-actions">${whatsappUrl ? `<a class="public-button order-whatsapp-action" href="${clean(whatsappUrl)}" target="_blank" rel="noopener noreferrer">Enviar resumo pelo WhatsApp</a>` : ""}<a class="public-button secondary" href="${clean(trackingUrl)}">Acompanhar pedido no site</a></div>${whatsappUrl ? '<p class="order-success-note">O WhatsApp será aberto somente se você escolher essa opção, em uma nova aba.</p>' : ""}`;
+    $("orderSuccess").insertAdjacentHTML("beforeend", pixPayment);
+    $("copyOrderPixKey")?.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(pixKey);
+        $("copyOrderPixStatus").textContent = "Chave Pix copiada.";
+      } catch {
+        $("copyOrderPixStatus").textContent = "Selecione e copie a chave Pix exibida acima.";
+      }
+    });
     $("orderSuccess").classList.remove("hidden"); $("orderSuccess").scrollIntoView({ behavior: "smooth", block: "center" }); event.target.reset();
   });
   init();
