@@ -316,7 +316,7 @@ body.menu-checkout-active #ogritechStagingBadge { display:none !important; }
   .order-success .public-button { width: 100%; }
 }
 /* Visual identity uses separate cover and text surfaces to preserve legibility. */
-.menu-cover-image{display:block;width:100%;height:clamp(160px,30vw,420px);object-fit:cover;object-position:center;border-radius:24px;margin-bottom:16px}
+.menu-cover-image{display:block;width:100%;height:clamp(160px,30vw,420px);object-fit:contain;object-position:center;border-radius:24px;margin-bottom:16px}
 .menu-cover-image[hidden]{display:none!important}
 .menu-hero{background:var(--menu-primary,#111827);color:var(--menu-on-primary,#fff)}
 .menu-hero h1,.menu-hero p,.menu-hero small,.menu-hero-trust span{color:inherit}
