@@ -88,7 +88,8 @@
       "standard_menu_contact_and_orders",
       "live_delivery_zone_updates",
       "guard_paid_menu_rejections",
-      "business_whatsapp_shares"
+      "business_whatsapp_shares",
+      "menu_optional_pix"
     ],
     "remoteVersionAliases": {},
     "observedMigrationNames": [
@@ -177,13 +178,14 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "business_whatsapp_shares",
+    "appliedThrough": "menu_optional_pix",
     "appliedOutOfOrder": [],
     "heldMigrations": [],
     "observationEvidence": "docs/evidencias/menu-standard-operations-2026-11-05.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
-      "business_whatsapp_shares": "20261107143521"
+      "business_whatsapp_shares": "20261107143521",
+      "menu_optional_pix": "20261107155101"
     }
   }
 }
