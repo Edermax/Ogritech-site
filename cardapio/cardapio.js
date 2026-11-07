@@ -247,10 +247,8 @@
     data.categories = (data.categories || []).filter(category => (category.items || []).length > 0);
     page = data; applyVisualIdentity(data.menu.visual_identity); document.title = `${menuTitle} | Ogritech`; $("menuTitle").textContent = menuTitle; $("menuDescription").textContent = data.menu.description; $("menuDescription").classList.toggle("hidden", !data.menu.description?.trim());
     const logoUrl = globalThis.OgritechMenuBranding?.assetUrl(data.menu.visual_identity?.logo_path, window.OGRITECH_SUPABASE_URL);
-    const coverUrl = globalThis.OgritechMenuBranding?.assetUrl(data.menu.visual_identity?.cover_path, window.OGRITECH_SUPABASE_URL);
     $("menuBrandLockup").classList.toggle("hidden", !logoUrl && !(isDinizMenu && data.menu.visual_identity?.customized !== true));
     if (logoUrl) { $("menuBrandLogo").src=logoUrl; $("menuBrandLogo").alt=menuTitle; }
-    $("menuCoverImage").hidden=!coverUrl; if(coverUrl) $("menuCoverImage").src=coverUrl;
     if (isDinizMenu && !logoUrl && data.menu.visual_identity?.customized !== true) { $("menuBrandLogo").src = "../assets/diniz-doces/logo.jpg"; $("menuBrandLogo").alt = "Diniz Doces"; $("menuBrandLockup").classList.remove("hidden"); }
     if (isDinizMenu) { $("calculateDeliveryButton").classList.remove("hidden"); $("deliveryProviderNotice").classList.remove("hidden"); }
     const paymentNames = {pix:"Pix",cash:"Dinheiro",credit_card:"Cartão de crédito",debit_card:"Cartão de débito"}, hours = data.menu.weekly_hours;

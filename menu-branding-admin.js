@@ -3,24 +3,22 @@
   if (!form || !api) return;
   let state = null, menu = null, busy = false;
   let pendingAction = null, dirty = false;
-  const files = {logo:null,cover:null}, previews = {logo:"",cover:""};
+  let logoFile = null, logoPreview = "";
   const message = (text, error = false) => { $("menuBrandingMessage").textContent = text; $("menuBrandingMessage").classList.toggle("error", error); };
   const rpc = async (action, payload = {}) => {
     const result = await supabaseClient.rpc("menu_branding", {target_barbershop_id:BARBERSHOP_ID,action,payload});
     if (result.error) throw new Error(["22023","42501","23514"].includes(result.error.code) ? result.error.message : "Não foi possível salvar a aparência. Suas alterações publicadas foram preservadas.");
     return result.data;
   };
-  function releasePreview(kind) { if (previews[kind]) URL.revokeObjectURL(previews[kind]); previews[kind] = ""; }
+  function releasePreview() { if (logoPreview) URL.revokeObjectURL(logoPreview); logoPreview = ""; }
   function renderPreview() {
     if (!state) return;
     api.applyColors($("menuBrandingPreview"), {primary_color:$("menuBrandingPrimary").value,accent_color:$("menuBrandingAccent").value});
     $("menuBrandingPreviewTitle").textContent = menu?.title || "Seu cardápio";
-    for (const kind of ["logo","cover"]) {
-      const image = $(kind === "logo" ? "menuBrandingPreviewLogo" : "menuBrandingPreviewCover");
-      const url = previews[kind] || api.assetUrl(state.identity[`${kind}_path`],window.OGRITECH_SUPABASE_URL);
-      image.hidden = !url;
-      if (url) image.src = url; else image.removeAttribute("src");
-    }
+    const image = $("menuBrandingPreviewLogo");
+    const url = logoPreview || api.assetUrl(state.identity.logo_path, window.OGRITECH_SUPABASE_URL);
+    image.hidden = !url;
+    if (url) image.src = url; else image.removeAttribute("src");
   }
   function renderActions() {
     const canReview = state.has_draft && !dirty;
@@ -39,7 +37,9 @@
     $("menuBrandingAccent").value = state.identity?.accent_color || "#08b9d3";
     renderActions();
     $("menuBrandingDraftNotice").textContent = state.has_draft ? "Aparência em rascunho. Seus clientes continuam vendo a versão publicada." : state.menu_published ? "Edite e salve um rascunho. A aparência pública só muda ao publicar." : "A aparência será exibida quando você publicar seu cardápio.";
-    for (const kind of ["logo","cover"]) { files[kind] = null; releasePreview(kind); $(kind === "logo" ? "menuBrandingLogo" : "menuBrandingCover").value = ""; }
+    logoFile = null;
+    releasePreview();
+    $("menuBrandingLogo").value = "";
     $("menuPrimaryColor").value = state.published_identity?.primary_color || "#111827";
     $("menuAccentColor").value = state.published_identity?.accent_color || "#08b9d3";
     renderPreview();
@@ -58,16 +58,16 @@
     try { state = await rpc("get"); render(); message(""); if (!busy) form.querySelectorAll("input,button").forEach(element => { element.disabled = false; }); }
     catch(error) { state = null; message(error.message, true); form.querySelectorAll("input,button").forEach(element => { element.disabled = true; }); }
   };
-  for (const kind of ["logo","cover"]) {
-    const input = $(kind === "logo" ? "menuBrandingLogo" : "menuBrandingCover");
+  {
+    const input = $("menuBrandingLogo");
     input.addEventListener("change", () => run(async () => {
       const file = input.files?.[0]; if (!file) return;
       try { await api.validateImage(file); } catch(error) { input.value = ""; throw error; }
-      files[kind] = file; dirty = true; pendingAction = null; renderActions(); releasePreview(kind); previews[kind] = URL.createObjectURL(file); renderPreview(); message("Prévia atualizada. Salve para guardar a alteração.");
+      logoFile = file; dirty = true; pendingAction = null; renderActions(); releasePreview(); logoPreview = URL.createObjectURL(file); renderPreview(); message("Prévia atualizada. Salve para guardar a alteração.");
     }));
-    $(kind === "logo" ? "menuBrandingRemoveLogo" : "menuBrandingRemoveCover").addEventListener("click", () => {
+    $("menuBrandingRemoveLogo").addEventListener("click", () => {
       if (!state || busy) return;
-      files[kind] = null; dirty = true; pendingAction = null; renderActions(); releasePreview(kind); state.identity[`${kind}_path`] = ""; input.value = ""; renderPreview(); message("Remoção preparada. Salve para confirmar.");
+      logoFile = null; dirty = true; pendingAction = null; renderActions(); releasePreview(); state.identity.logo_path = ""; input.value = ""; renderPreview(); message("Remoção preparada. Salve para confirmar.");
     });
   }
   for (const id of ["menuBrandingPrimary","menuBrandingAccent"]) $(id).addEventListener("input", () => { if (!state || busy) return; dirty = true; pendingAction = null; renderActions(); renderPreview(); message("Prévia atualizada. Salve para guardar a alteração."); });
@@ -78,13 +78,13 @@
       const payload = {primary_color:$("menuBrandingPrimary").value,accent_color:$("menuBrandingAccent").value,
         logo_path:state.identity.logo_path || "",cover_path:state.identity.cover_path || ""};
       try {
-        for (const kind of ["logo","cover"]) if (files[kind]) {
-          await api.validateImage(files[kind]);
-          const ext = {"image/jpeg":"jpg","image/png":"png","image/webp":"webp"}[files[kind].type];
+        if (logoFile) {
+          await api.validateImage(logoFile);
+          const ext = {"image/jpeg":"jpg","image/png":"png","image/webp":"webp"}[logoFile.type];
           const path = `${BARBERSHOP_ID}/${crypto.randomUUID()}.${ext}`;
-          const result = await supabaseClient.storage.from("menu-images").upload(path,files[kind],{contentType:files[kind].type,cacheControl:"31536000",upsert:false});
+          const result = await supabaseClient.storage.from("menu-images").upload(path,logoFile,{contentType:logoFile.type,cacheControl:"31536000",upsert:false});
           if (result.error) throw new Error("Não foi possível enviar a imagem. Tente novamente.");
-          uploaded.push(path); payload[`${kind}_path`] = path;
+          uploaded.push(path); payload.logo_path = path;
         }
         state = await rpc("save",payload);
         menu.visual_identity = state.published_identity;
@@ -111,5 +111,5 @@
     pendingAction = null; renderActions();
     run(async () => { state = await rpc(action); menu.visual_identity = state.published_identity; render(); message(action === "publish" ? "Aparência publicada. O cardápio já exibe a nova identidade." : "Rascunho descartado. Aparência publicada preservada."); });
   });
-  addEventListener("pagehide", () => { releasePreview("logo"); releasePreview("cover"); });
+  addEventListener("pagehide", () => { releasePreview(); });
 })();

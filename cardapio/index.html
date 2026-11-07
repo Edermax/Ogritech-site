@@ -7,15 +7,14 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' https://cdn.jsdelivr.net;style-src 'self';img-src 'self' data: https:;connect-src 'self' http://127.0.0.1:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co https://viacep.com.br;object-src 'none';base-uri 'self';form-action 'self'">
   <title>Cardápio | Ogritech</title>
   <link rel="stylesheet" href="/commercial-public.css">
-  <link rel="stylesheet" href="/cardapio/catalog.css?v=20261107.2">
+  <link rel="stylesheet" href="/cardapio/catalog.css?v=20261107.3">
   <link rel="icon" href="/ogritech-favicon.ico">
 </head>
 <body>
   <main class="public-shell" id="inicio-cardapio" tabindex="-1">
-    <nav class="public-nav"><a href="/"><img src="/ogritech-header-logo.png" alt="Ogritech"></a></nav>
     <section id="loading" class="public-hero"><p>Carregando cardápio...</p></section>
     <div id="content" class="hidden">
-      <img id="menuCoverImage" class="menu-cover-image" alt="" hidden><header class="public-hero menu-hero"><div id="menuBrandLockup" class="menu-brand-lockup hidden"><img id="menuBrandLogo" alt=""><span>Cardápio digital</span></div><small>CARDÁPIO ONLINE</small><h1 id="menuTitle"></h1><p id="menuDescription"></p><div class="menu-hero-trust"><span>Pedido direto</span><span>Confirmação humana</span><span>Sem taxa de aplicativo</span></div></header>
+      <header class="public-hero menu-hero"><div id="menuBrandLockup" class="menu-brand-lockup hidden"><img id="menuBrandLogo" alt=""><span>Cardápio digital</span></div><small>CARDÁPIO ONLINE</small><h1 id="menuTitle"></h1><p id="menuDescription"></p><div class="menu-hero-trust"><span>Pedido direto</span><span>Confirmação humana</span><span>Sem taxa de aplicativo</span></div></header>
       <aside class="public-card menu-store-info"><div><small>ATENDIMENTO</small><p id="menuHours"></p></div><div><small>PAGAMENTO</small><p id="menuPayments"></p></div></aside>
       <nav id="categoryNav" class="category-nav" aria-label="Categorias do cardápio"></nav>
       <div class="menu-search"><label for="menuSearch">Buscar no cardápio</label><input id="menuSearch" type="search" placeholder="Nome do produto ou categoria" autocomplete="off"><p id="menuSearchResult" role="status" aria-live="polite"></p></div>
@@ -55,6 +54,7 @@
       <article id="orderSuccess" class="public-card order-success hidden" aria-live="polite"></article>
       <div class="menu-back-to-top"><a class="public-button secondary" href="#inicio-cardapio">Voltar ao início <span aria-hidden="true">↑</span></a></div>
     </div>
+    <footer class="menu-platform-footer"><a href="/"><img src="/ogritech-header-logo.png" alt="Ogritech"></a></footer>
   </main>
   <dialog id="configurator" class="public-card configurator">
     <form id="configuratorForm" class="public-form">
@@ -75,6 +75,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="/supabase-config.js"></script>
   <script src="/menu-pricing.js?v=20261020.1"></script>
-  <script src="/menu-branding.js?v=20261020.1"></script><script src="/menu-whatsapp.js?v=20261105.2"></script><script src="/cardapio/cardapio.js?v=20261107.3"></script>
+  <script src="/menu-branding.js?v=20261020.1"></script><script src="/menu-whatsapp.js?v=20261105.2"></script><script src="/cardapio/cardapio.js?v=20261107.4"></script>
 </body>
 </html>
