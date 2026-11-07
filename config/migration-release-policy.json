@@ -87,7 +87,8 @@
       "preserve_menu_special_hours",
       "standard_menu_contact_and_orders",
       "live_delivery_zone_updates",
-      "guard_paid_menu_rejections"
+      "guard_paid_menu_rejections",
+      "business_whatsapp_shares"
     ],
     "remoteVersionAliases": {},
     "observedMigrationNames": [
@@ -178,7 +179,9 @@
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "guard_paid_menu_rejections",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      { "name": "business_whatsapp_shares", "reason": "Aguardando validação da publicação e restauração do backup atual." }
+    ],
     "observationEvidence": "docs/evidencias/menu-standard-operations-2026-11-05.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614"
