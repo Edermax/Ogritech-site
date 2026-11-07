@@ -60,7 +60,7 @@
         if (byId("menuReviewDescription")) byId("menuReviewDescription").textContent = published
             ? "Confira os dados e publique as alterações de produtos quando estiverem prontas."
             : "Confira seus dados, execute o pedido de teste e confirme a revisão para liberar o link público.";
-        if (byId("menuReviewSummaryLabel")) byId("menuReviewSummaryLabel").textContent = menuCatalogDraftDirty ? "Conferir rascunho antes de publicar" : "Conferir configuração salva";
+        if (byId("menuReviewSummaryLabel")) byId("menuReviewSummaryLabel").textContent = menuCatalogDraftDirty ? "2. Revisar alterações salvas" : "Conferir configuração salva";
         byId("menuTestOrderDescription")?.classList.toggle("hidden", managing);
         byId("menuWorkspaceRetry")?.classList.toggle("hidden", !menuLoadFailed);
         if (byId("menuWorkspaceRetry")) byId("menuWorkspaceRetry").disabled = menuBusy;
@@ -69,7 +69,7 @@
         }
         const content = [...journeyContent[selectedMenuWorkspace]];
         if (menuRecord?.published && selectedMenuWorkspace === "settings") content[1] = "A configuração geral está protegida enquanto o cardápio está no ar. Para mudar atendimento, pagamentos ou horários, abra Publicar e despublique primeiro. Publique novamente ao terminar.";
-        if (menuRecord?.published && selectedMenuWorkspace === "review") content[1] = menuCatalogDraftDirty ? "Seu cardápio está no ar. Confira o resumo das alterações e clique em Publicar alterações para atualizar o que seus clientes veem." : "Seu cardápio está no ar. Use Ver cardápio público para conferir e compartilhar. Configurações de atendimento podem ser atualizadas sem interromper os pedidos.";
+        if (menuRecord?.published && selectedMenuWorkspace === "review") content[1] = menuCatalogDraftDirty ? "Seu cardápio está no ar. Confira o resumo das alterações e clique em Publicar alterações para atualizar o que seus clientes veem." : "Seu cardápio está no ar. Use Ver cardápio público para conferir e compartilhar. Para editar as configurações gerais, use Retirar cardápio do ar.";
         if (menuRecord?.published && selectedMenuWorkspace === "catalog") content[1] = "Edite e salve seus produtos. As mudanças ficam em rascunho; seus clientes continuam vendo a versão atual. Quando terminar, abra Publicar e use Publicar alterações.";
         const checks = menuOnboarding?.checks || {};
         const complete = { start: Boolean(menuRecord?.template_code), settings: ["identity", "fulfillment", "payments", "hours"].every(key => checks[key]), catalog: Boolean(checks.catalog), review: Boolean(menuRecord?.published), operation: false };
@@ -195,7 +195,7 @@
         byId("menuOnboardingPanel")?.setAttribute("aria-busy", String(menuBusy));
         byId("menuTestOrderButton").disabled = !canManageMenu() || unavailable || menuSettingsDirty || !menuRecord || menuRecord.published || !["test_order", "review", "ready"].includes(menuOnboarding?.next_step);
         byId("menuReviewButton").disabled = !canManageMenu() || unavailable || menuSettingsDirty || !menuOnboarding?.checks?.test_order || Boolean(menuOnboarding?.checks?.review) || Boolean(menuRecord?.published);
-        byId("menuPublicationButton").textContent = menuRecord?.published ? "Publicar alterações" : "Publicar cardápio";
+        byId("menuPublicationButton").textContent = menuRecord?.published ? "3. Publicar alterações" : "3. Publicar cardápio";
         byId("menuPublicationButton").disabled = !canManageMenu() || unavailable || menuSettingsDirty || (menuRecord?.published ? !menuCatalogDraftDirty : menuOnboarding?.next_step !== "ready");
         if (byId("menuUnpublishButton")) byId("menuUnpublishButton").disabled = !canManageMenu() || unavailable;
         byId("menuUnpublishButton")?.classList.toggle("hidden", !canManageMenu() || !menuRecord?.published);
@@ -207,8 +207,9 @@
         byId("menuContactForm")?.querySelectorAll("input,button").forEach((input) => { input.disabled = !canManageMenu() || unavailable || !menuRecord; });
         byId("menuOrdersList")?.querySelectorAll("[data-order]").forEach((button) => { button.disabled = unavailable; });
         const published = Boolean(menuRecord?.published);
-        byId("menuTestOrderButton")?.classList.toggle("hidden", published);
-        byId("menuReviewButton")?.classList.toggle("hidden", published);
+        byId("menuTestOrderButton").classList.toggle("hidden", published || menuOnboarding?.next_step !== "test_order");
+        byId("menuReviewButton").classList.toggle("hidden", published || menuOnboarding?.next_step !== "review");
+        byId("menuPublicationButton").classList.toggle("hidden", published ? !menuCatalogDraftDirty : menuOnboarding?.next_step !== "ready");
         byId("menuPublishedSetupNotice")?.classList.toggle("hidden", !published);
         byId("menuSettingsLockNotice")?.classList.toggle("hidden", !published);
         byId("menuCatalogLockNotice")?.classList.toggle("hidden", !published);
@@ -654,7 +655,7 @@
             byId("menuOnboardingBar").max = onboarding?.total_count || 8;
             byId("menuOnboardingBar").setAttribute("aria-valuetext", progress);
             byId("menuOnboardingChecklist").innerHTML = Object.entries(menuStepLabels).map(([code, label]) => `<li${onboarding?.next_step === code ? ' aria-current="step"' : ""}><span aria-hidden="true">${checks[code] ? "✓" : "○"}</span> ${escapeHtml(label)} — ${checks[code] ? "concluído" : "pendente"}</li>`).join("");
-            byId("menuNextStep").textContent = menu?.published ? (menuCatalogDraftDirty ? "O cardápio público continua ativo. Há alterações de catálogo em rascunho aguardando publicação." : "Seu cardápio está publicado. Você pode atualizar o atendimento e preparar produtos sem interromper os pedidos.") : onboarding?.next_step === "ready" ? "Revisão concluída. Você decide quando publicar seu cardápio." : `Próxima etapa: ${menuStepLabels[onboarding?.next_step] || menuStepLabels.segment}. Salve a configuração para retomar de onde parou.`;
+            byId("menuNextStep").textContent = menu?.published ? (menuCatalogDraftDirty ? "O cardápio público continua ativo. Há alterações de catálogo em rascunho aguardando publicação." : "Seu cardápio está publicado. Para editar as configurações gerais, retire o cardápio do ar e publique novamente ao terminar.") : onboarding?.next_step === "ready" ? "Revisão concluída. Você decide quando publicar seu cardápio." : `Próxima etapa: ${menuStepLabels[onboarding?.next_step] || menuStepLabels.segment}. Salve a configuração para retomar de onde parou.`;
             const link = byId("menuPublicLink");
             const operationLink = byId("menuOperationPublicLink");
             const operationStatus = byId("menuOperationStatus");
@@ -902,7 +903,7 @@
             if(result.error){ if(uploadedPath) await supabaseClient.storage.from("menu-images").remove([uploadedPath]); return result; }
             if(previousPath && previousPath!==uploadedPath && (uploadedPath || menuImageRemoveRequested)) await supabaseClient.storage.from("menu-images").remove([previousPath]);
             resetMenuItemEditor(); return result;
-        }, menuRecord.published?"Produto salvo no rascunho. O catálogo público não mudou; publique quando terminar.":"Produto salvo. Confira o catálogo e as etapas pendentes.");
+        }, menuRecord.published?"1. Produto salvo como rascunho. Abra Publicar para revisar as alterações.":"Produto salvo. Confira o catálogo e as etapas pendentes.");
     });
 
     setupMenuDeliveryZoneEditor();

@@ -1760,7 +1760,9 @@ textarea:focus {
 #menuOnboardingMessage:not(:empty) { margin:12px 0 0; padding:10px 12px; border-radius:9px; color:#8de3b7; background:rgba(105,194,141,.07); }
 #menuOnboardingMessage.error:not(:empty) { color:#f3a5a5; background:rgba(224,111,111,.08); }
 #menuOnboardingPanel,#menuAssistantSettingsPanel,#menuSettingsPanel,#menuTemplatePanel,#menuCatalogWorkspace > .module-panel { border-color:rgba(57,212,232,.14); background:linear-gradient(145deg,#12191b,#0e1214); }
-#menuSettingsPanel .menu-lock-notice,#menuCatalogWorkspace .menu-lock-notice { margin-top:0; }
+#menuSettingsPanel .menu-publication-warning { border-inline-start:4px solid #e5bd67; background:rgba(229,189,103,.13); }
+.menu-publication-warning > strong:first-child { display:block; margin-bottom:4px; }
+.menu-lock-notice,#menuCatalogWorkspace .menu-lock-notice { margin-top:0; }
 #menuSettingsPanel .commercial-form { max-width:920px; }
 #menuAssistantSettingsPanel .commercial-form { max-width:760px; }
 #menuCatalogWorkspace { grid-template-columns:1fr; gap:0; }

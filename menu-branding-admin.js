@@ -22,6 +22,14 @@
       if (url) image.src = url; else image.removeAttribute("src");
     }
   }
+  function renderActions() {
+    const canReview = state.has_draft && !dirty;
+    $("menuBrandingSave").textContent = state.menu_published ? "1. Salvar alterações" : "Salvar aparência";
+    $("menuBrandingSave").hidden = Boolean(pendingAction) || canReview;
+    $("menuBrandingPublish").hidden = Boolean(pendingAction) || !canReview;
+    $("menuBrandingDiscard").hidden = Boolean(pendingAction) || !state.has_draft;
+    $("menuBrandingConfirm").hidden = !pendingAction;
+  }
   function render() {
     if (!state) return;
     dirty = false;
@@ -29,9 +37,7 @@
     $("menuBrandingConfirm").hidden = true;
     $("menuBrandingPrimary").value = state.identity?.primary_color || "#111827";
     $("menuBrandingAccent").value = state.identity?.accent_color || "#08b9d3";
-    $("menuBrandingSave").textContent = state.menu_published ? "Salvar rascunho da aparência" : "Salvar aparência";
-    $("menuBrandingPublish").hidden = !state.has_draft;
-    $("menuBrandingDiscard").hidden = !state.has_draft;
+    renderActions();
     $("menuBrandingDraftNotice").textContent = state.has_draft ? "Aparência em rascunho. Seus clientes continuam vendo a versão publicada." : state.menu_published ? "Edite e salve um rascunho. A aparência pública só muda ao publicar." : "A aparência será exibida quando você publicar seu cardápio.";
     for (const kind of ["logo","cover"]) { files[kind] = null; releasePreview(kind); $(kind === "logo" ? "menuBrandingLogo" : "menuBrandingCover").value = ""; }
     $("menuPrimaryColor").value = state.published_identity?.primary_color || "#111827";
@@ -57,14 +63,14 @@
     input.addEventListener("change", () => run(async () => {
       const file = input.files?.[0]; if (!file) return;
       try { await api.validateImage(file); } catch(error) { input.value = ""; throw error; }
-      files[kind] = file; dirty = true; releasePreview(kind); previews[kind] = URL.createObjectURL(file); renderPreview(); message("Prévia atualizada. Salve para guardar a alteração.");
+      files[kind] = file; dirty = true; pendingAction = null; renderActions(); releasePreview(kind); previews[kind] = URL.createObjectURL(file); renderPreview(); message("Prévia atualizada. Salve para guardar a alteração.");
     }));
     $(kind === "logo" ? "menuBrandingRemoveLogo" : "menuBrandingRemoveCover").addEventListener("click", () => {
       if (!state || busy) return;
-      files[kind] = null; dirty = true; releasePreview(kind); state.identity[`${kind}_path`] = ""; input.value = ""; renderPreview(); message("Remoção preparada. Salve para confirmar.");
+      files[kind] = null; dirty = true; pendingAction = null; renderActions(); releasePreview(kind); state.identity[`${kind}_path`] = ""; input.value = ""; renderPreview(); message("Remoção preparada. Salve para confirmar.");
     });
   }
-  for (const id of ["menuBrandingPrimary","menuBrandingAccent"]) $(id).addEventListener("input", () => { dirty = true; renderPreview(); message("Prévia atualizada. Salve para guardar a alteração."); });
+  for (const id of ["menuBrandingPrimary","menuBrandingAccent"]) $(id).addEventListener("input", () => { if (!state || busy) return; dirty = true; pendingAction = null; renderActions(); renderPreview(); message("Prévia atualizada. Salve para guardar a alteração."); });
   form.addEventListener("submit", event => {
     event.preventDefault(); if (!state) return;
     run(async () => {
@@ -84,7 +90,7 @@
         menu.visual_identity = state.published_identity;
         $("menuPrimaryColor").value = state.published_identity.primary_color;
         $("menuAccentColor").value = state.published_identity.accent_color;
-        render(); message(state.has_draft ? "Rascunho salvo. Publique a aparência quando estiver pronto." : "Aparência salva.");
+        render(); message(state.has_draft ? "Rascunho salvo. Confira a prévia e selecione Revisar aparência." : "Aparência salva.");
       } catch(error) { if(uploaded.length) await supabaseClient.storage.from("menu-images").remove(uploaded); throw error; }
     });
   });
@@ -93,15 +99,16 @@
     if (action === "publish" && dirty) { message("Salve as alterações da prévia antes de publicar.", true); return; }
     pendingAction = action;
     $("menuBrandingConfirmText").textContent = action === "publish" ? "Publicar esta aparência para todos os clientes?" : "Descartar o rascunho e manter a aparência publicada?";
-    $("menuBrandingConfirm").hidden = false;
+    $("menuBrandingConfirmYes").textContent = action === "publish" ? "3. Publicar aparência" : "Descartar rascunho";
+    renderActions();
     $("menuBrandingConfirmYes").focus();
   }
   $("menuBrandingPublish").addEventListener("click", () => requestAction("publish"));
   $("menuBrandingDiscard").addEventListener("click", () => requestAction("discard"));
-  $("menuBrandingConfirmNo").addEventListener("click", () => { pendingAction = null; $("menuBrandingConfirm").hidden = true; });
+  $("menuBrandingConfirmNo").addEventListener("click", () => { const trigger = pendingAction === "discard" ? "menuBrandingDiscard" : "menuBrandingPublish"; pendingAction = null; renderActions(); $(trigger).focus(); });
   $("menuBrandingConfirmYes").addEventListener("click", () => {
     const action = pendingAction; if (!action || busy) return;
-    pendingAction = null; $("menuBrandingConfirm").hidden = true;
+    pendingAction = null; renderActions();
     run(async () => { state = await rpc(action); menu.visual_identity = state.published_identity; render(); message(action === "publish" ? "Aparência publicada. O cardápio já exibe a nova identidade." : "Rascunho descartado. Aparência publicada preservada."); });
   });
   addEventListener("pagehide", () => { releasePreview("logo"); releasePreview("cover"); });
