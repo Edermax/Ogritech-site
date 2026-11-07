@@ -44,6 +44,15 @@
         if (!checks.catalog) return "catalog";
         return "review";
     }
+    function publicMenuUrl(slug) {
+        const encodedSlug = encodeURIComponent(slug);
+        const url = new URL(ogritechEnvironmentUrl(`/cardapio/?empresa=${encodedSlug}`));
+        if (["ogritech.com.br", "www.ogritech.com.br"].includes(url.hostname) && url.searchParams.get("env") === "production") {
+            return `https://ogritech.com.br/cardapio/${encodedSlug}`;
+        }
+        return url.href;
+    }
+
     function renderMenuJourney() {
         const published = Boolean(menuRecord?.published);
         const next = nextMenuWorkspace();
@@ -280,7 +289,7 @@
         const template = menuTemplates.find((entry) => entry.code === menu.template_code);
         const zones = (menu.menu_delivery_zones || []).filter((zone) => zone.active);
         const rows = [
-            ["Nome e endereço", `${menu.title} · /cardapio/?empresa=${menu.slug}`],
+            ["Nome e endereço", `${menu.title} · ${publicMenuUrl(menu.slug)}`],
             ["Modelo", template?.name || "Ainda não selecionado"],
             ["Catálogo disponível", `${availableItems.length} produto(s)${prices.length ? ` · preços de ${formatMoney.format(Math.min(...prices))} a ${formatMoney.format(Math.max(...prices))}` : " · adicione um item com preço"}`],
             ["Recebimento", [menu.accepts_pickup ? "Retirada" : "", menu.accepts_delivery ? "Entrega" : ""].filter(Boolean).join(" e ") || "A configurar"],
@@ -331,13 +340,13 @@
 
     function addMenuDeliveryZoneRow(value = {}) {
         const row=document.createElement("div"); row.className="menu-delivery-zone-row menu-option-group-editor";
-        row.innerHTML=`<div class="form-row"><input data-zone-code type="hidden" value="${escapeHtml(value.code||`regiao-${crypto.randomUUID().slice(0,8)}`)}"><label>Nome da região<input data-zone-name maxlength="120" value="${escapeHtml(value.name||"")}" placeholder="Centro" required></label></div><div class="form-row"><label>Taxa de entrega (R$)<input data-zone-fee type="number" min="0" step="0.01" value="${escapeHtml(value.fee??0)}" required></label><label>Pedido mínimo da região (R$)<input data-zone-minimum type="number" min="0" step="0.01" value="${escapeHtml(value.minimum_order??0)}" required></label></div><button class="table-button" data-remove-zone type="button">Remover região</button>`;
+        row.innerHTML=`<div class="form-row"><input data-zone-code type="hidden" value="${escapeHtml(value.code||`regiao-${crypto.randomUUID().slice(0,8)}`)}"><label>Região e cidade atendida<input data-zone-name maxlength="120" value="${escapeHtml(value.name||"")}" required></label></div><div class="form-row"><label>Taxa de entrega (R$)<input data-zone-fee type="number" min="0" step="0.01" value="${escapeHtml(value.fee??0)}" required></label><label>Pedido mínimo da região (R$)<input data-zone-minimum type="number" min="0" step="0.01" value="${escapeHtml(value.minimum_order??0)}" required></label></div><button class="table-button" data-remove-zone type="button">Remover região</button>`;
         byId("menuDeliveryZoneRows").append(row);
     }
 
     function setupMenuDeliveryZoneEditor() {
         const fieldset=byId("menuDeliveryZoneFields"); if(!fieldset || byId("menuDeliveryZoneRows") || typeof document.createElement!=="function") return;
-        fieldset.innerHTML='<legend>Regiões de entrega</legend><p class="section-description">Cadastre todas as regiões atendidas. O pedido usará a taxa escolhida e o maior valor entre o mínimo geral e o mínimo da região.</p><div id="menuDeliveryZoneRows" class="menu-editor-rows"></div><button id="menuAddDeliveryZone" class="table-button edit" type="button">+ Adicionar região</button>';
+        fieldset.innerHTML='<legend>Regiões de entrega</legend><p class="section-description">Adicione as regiões e suas respectivas cidades. Para oferecer entrega gratuita, use R$ 0,00. O pedido usa o maior valor entre o mínimo geral e o mínimo da região.</p><div id="menuDeliveryZoneRows" class="menu-editor-rows"></div><button id="menuAddDeliveryZone" class="table-button edit" type="button">+ Adicionar região</button>';
         byId("menuAddDeliveryZone").addEventListener("click",()=>addMenuDeliveryZoneRow());
         byId("menuDeliveryZoneRows").addEventListener("click",(event)=>{ if(event.target.closest("[data-remove-zone]")) event.target.closest(".menu-delivery-zone-row").remove(); });
     }
@@ -645,7 +654,7 @@
             byId("menuClosesAt").value = hours.closes_at || "22:00";
             document.querySelectorAll(".menu-weekday").forEach((input) => { input.checked = (hours.weekdays || []).map(Number).includes(Number(input.value)); });
             const zones = (menu?.menu_delivery_zones || []).filter((entry)=>entry.active);
-            if(typeof document.createElement==="function"&&byId("menuDeliveryZoneRows")){ byId("menuDeliveryZoneRows").innerHTML=""; (zones.length?zones:[{fee:menu?.delivery_fee??0,minimum_order:menu?.minimum_order??0}]).forEach(addMenuDeliveryZoneRow); }
+            if(typeof document.createElement==="function"&&byId("menuDeliveryZoneRows")){ byId("menuDeliveryZoneRows").innerHTML=""; zones.forEach(addMenuDeliveryZoneRow); }
             else { const zone=zones[0]||{}; if(byId("menuZoneCode")){ byId("menuZoneCode").value=zone.code||""; byId("menuZoneName").value=zone.name||""; byId("menuZoneFee").value=zone.fee??menu?.delivery_fee??0; byId("menuZoneMinimum").value=zone.minimum_order??menu?.minimum_order??0; } }
             updateMenuDeliveryZoneAvailability();
             const checks = onboarding?.checks || {};
@@ -660,7 +669,7 @@
             const operationLink = byId("menuOperationPublicLink");
             const operationStatus = byId("menuOperationStatus");
             if (menu?.published) {
-                link.href = ogritechEnvironmentUrl(`/cardapio/?empresa=${encodeURIComponent(menu.slug)}`);
+                link.href = publicMenuUrl(menu.slug);
                 link.classList.remove("hidden");
                 operationLink.href = link.href;
                 operationLink.classList.remove("hidden");
@@ -670,7 +679,7 @@
             const sharePreview = byId("menuSharePreview");
             if (sharePanel && sharePreview) {
                 sharePanel.hidden = !menu?.published;
-                window.renderMenuShare?.(sharePreview, menu?.published ? link.href : null);
+                window.renderMenuShare?.(sharePreview, menu?.published ? link.href : null, byId("menuShareLink"));
             }
             operationStatus.textContent = menu?.published ? "Cardápio publicado" : "Cardápio não publicado";
             operationStatus.setAttribute("data-state", menu?.published ? "published" : "draft");

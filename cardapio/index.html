@@ -6,14 +6,13 @@
   <meta name="robots" content="noindex,follow,noarchive">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' https://cdn.jsdelivr.net;style-src 'self';img-src 'self' data: https:;connect-src 'self' http://127.0.0.1:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co https://viacep.com.br;object-src 'none';base-uri 'self';form-action 'self'">
   <title>Cardápio | Ogritech</title>
-  <base href="/cardapio/">
-  <link rel="stylesheet" href="../commercial-public.css">
-  <link rel="stylesheet" href="catalog.css?v=20261107.1">
-  <link rel="icon" href="../ogritech-favicon.ico">
+  <link rel="stylesheet" href="/commercial-public.css">
+  <link rel="stylesheet" href="/cardapio/catalog.css?v=20261107.1">
+  <link rel="icon" href="/ogritech-favicon.ico">
 </head>
 <body>
   <main class="public-shell">
-    <nav class="public-nav"><a href="../"><img src="../ogritech-header-logo.png" alt="Ogritech"></a></nav>
+    <nav class="public-nav"><a href="/"><img src="/ogritech-header-logo.png" alt="Ogritech"></a></nav>
     <section id="loading" class="public-hero"><p>Carregando cardápio...</p></section>
     <div id="content" class="hidden">
       <img id="menuCoverImage" class="menu-cover-image" alt="" hidden><header class="public-hero menu-hero"><div id="menuBrandLockup" class="menu-brand-lockup hidden"><img id="menuBrandLogo" alt=""><span>Cardápio digital</span></div><small>CARDÁPIO ONLINE</small><h1 id="menuTitle"></h1><p id="menuDescription"></p><div class="menu-hero-trust"><span>Pedido direto</span><span>Confirmação humana</span><span>Sem taxa de aplicativo</span></div></header>
@@ -65,16 +64,16 @@
     </form>
   </dialog>
   <aside id="menuAssistant" class="menu-assistant hidden" aria-label="Assistente do cardápio">
-    <button id="menuAssistantToggle" class="menu-assistant-toggle" type="button" aria-label="Abrir assistente Ogritech" aria-expanded="false" aria-controls="menuAssistantPanel"><span>Ajuda para escolher</span><img src="../ogritech-assistant-avatar.png" alt=""></button>
+    <button id="menuAssistantToggle" class="menu-assistant-toggle" type="button" aria-label="Abrir assistente Ogritech" aria-expanded="false" aria-controls="menuAssistantPanel"><span>Ajuda para escolher</span><img src="/ogritech-assistant-avatar.png" alt=""></button>
     <section id="menuAssistantPanel" class="public-card menu-assistant-panel hidden" role="dialog" aria-modal="false" aria-labelledby="menuAssistantTitle">
-      <header class="menu-assistant-heading"><img src="../ogritech-assistant-avatar.png" alt=""><div><h2 id="menuAssistantTitle">Assistente Ogritech</h2><small>Ajuda com este cardápio</small></div><button id="menuAssistantClose" class="menu-assistant-close" type="button" aria-label="Fechar assistente"><span aria-hidden="true">×</span></button></header>
+      <header class="menu-assistant-heading"><img src="/ogritech-assistant-avatar.png" alt=""><div><h2 id="menuAssistantTitle">Assistente Ogritech</h2><small>Ajuda com este cardápio</small></div><button id="menuAssistantClose" class="menu-assistant-close" type="button" aria-label="Fechar assistente"><span aria-hidden="true">×</span></button></header>
       <div class="menu-assistant-body"><div id="menuAssistantMessages" class="menu-assistant-messages" aria-live="polite"><p class="assistant-message">Posso ajudar a encontrar produtos, opções e informações deste cardápio.</p></div>
       <form id="menuAssistantForm" class="public-form"><label for="menuAssistantInput">O que você gostaria de saber?</label><div class="menu-assistant-input"><input id="menuAssistantInput" required maxlength="500" autocomplete="off" placeholder="Ex.: Quais opções vocês têm?"><button class="public-button" type="submit">Enviar</button></div><p id="menuAssistantNotice" class="public-message">Respostas baseadas somente nos dados cadastrados. Não envia pedidos sozinho.</p></form></div>
     </section>
   </aside>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
-  <script src="../supabase-config.js"></script>
-  <script src="../menu-pricing.js?v=20261020.1"></script>
-  <script src="../menu-branding.js?v=20261020.1"></script><script src="../menu-whatsapp.js?v=20261105.2"></script><script src="cardapio.js?v=20261107.2"></script>
+  <script src="/supabase-config.js"></script>
+  <script src="/menu-pricing.js?v=20261020.1"></script>
+  <script src="/menu-branding.js?v=20261020.1"></script><script src="/menu-whatsapp.js?v=20261105.2"></script><script src="/cardapio/cardapio.js?v=20261107.2"></script>
 </body>
 </html>

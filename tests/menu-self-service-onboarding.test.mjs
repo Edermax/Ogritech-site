@@ -125,7 +125,7 @@ function browser(state = fixture(), options = {}) {
         return selector.includes(":checked") ? list.filter((input) => input.checked) : list;
       }
     },
-    Intl, Date, URLSearchParams, console, confirm: () => options.confirm !== false, BARBERSHOP_ID: "business-1", IS_DEMO: false, businessConfig: { name: "Meu negócio" }, supabaseClient,
+    Intl, Date, URL, URLSearchParams, console, confirm: () => options.confirm !== false, BARBERSHOP_ID: "business-1", IS_DEMO: false, businessConfig: { name: "Meu negócio" }, supabaseClient,
     escapeHtml: (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;"),
     ogritechEnvironmentUrl: (path) => `https://local.invalid${path}`
   });
@@ -188,10 +188,10 @@ test("cardápio publicado simplifica a configuração sem esconder a opção de 
   await page.load();
   assert.equal(page.element("menuSettingsForm").classList.contains("hidden"), false);
   assert.equal(page.element("menuReviewDetails").open, false);
-  assert.equal(page.element("menuPublicationButton").textContent, "Publicar alterações");
+  assert.equal(page.element("menuPublicationButton").textContent, "3. Publicar alterações");
   assert.equal(page.element("menuPublicationButton").disabled, true);
   assert.equal(page.element("menuUnpublishButton").classList.contains("hidden"), false);
-  assert.equal(page.element("menuPublicationButton").classList.contains("hidden"), false);
+  assert.equal(page.element("menuPublicationButton").classList.contains("hidden"), true);
   assert.match(html, /id="menuPublicationButton"[^]*id="menuReloadButton"[^]*<\/div>/);
 });
 
