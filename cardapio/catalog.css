@@ -359,3 +359,6 @@ body.menu-checkout-active #ogritechStagingBadge { display:none !important; }
 input[type=checkbox],input[type=radio]{accent-color:var(--accent)}
 .menu-brand-lockup img{object-fit:contain;flex-shrink:0}
 @media(max-width:600px){.menu-cover-image{border-radius:16px;height:180px}.menu-brand-lockup img{width:60px;height:60px}}
+
+.menu-back-to-top { display:flex; justify-content:center; margin-top:24px; }
+.menu-back-to-top a { text-decoration:none; }

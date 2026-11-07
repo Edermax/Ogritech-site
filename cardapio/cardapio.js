@@ -20,6 +20,12 @@
     if (quote) return usesWeight ? "Peso de referência" : "Tamanho de referência";
     return usesWeight ? "Escolha o formato e o peso" : "Escolha uma opção";
   };
+  const formatItemPrice = (price, item, quantity, showTotal) => {
+    const unit = item.unit_label?.trim() || "unidade";
+    if (showTotal) return `${quantity} × ${unit} · ${money.format(price.amount * quantity)}`;
+    const prefix = isQuoteItem(item) ? "A partir de " : "";
+    return `${prefix}${money.format(price.amount)} por ${unit}`;
+  };
   const formatHours = (hours) => {
     if (!hours) return "";
     const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -257,7 +263,7 @@
       const records = item.prices.map((record) => { const amount = Number(record.promotional_price ?? record.price); prices.set(record.id, { ...record, amount, item }); return { ...record, amount }; });
       const quote = isQuoteItem(item), first = records[0], minimumQuantity = Math.max(1, Math.ceil(Number(item.minimum_quantity) || 1)), maximumQuantity = item.maximum_quantity == null ? "" : Math.floor(Number(item.maximum_quantity)), customQuantity = minimumQuantity > 1;
       const quantityPicker = customQuantity ? `<label class="menu-quantity-picker"><span>Quantidade (mínimo ${minimumQuantity})</span><input type="number" inputmode="numeric" min="${minimumQuantity}"${maximumQuantity ? ` max="${maximumQuantity}"` : ""} step="1" value="${minimumQuantity}" data-quantity-select="${item.id}"></label>` : "";
-      const initialPrice = first ? (customQuantity ? `${minimumQuantity} unidades · ${money.format(first.amount * minimumQuantity)}` : (quote ? `A partir de ${money.format(first.amount)}` : money.format(first.amount))) : "Indisponível";
+      const initialPrice = first ? clean(formatItemPrice(first, item, minimumQuantity, customQuantity)) : "Indisponível";
       const pricePicker = records.length ? `<label class="menu-price-picker"><span>${weightPickerLabel(records, quote)}</span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(displayPriceLabel(record.label))}</option>`).join("")}</select></label>${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button class="public-button" data-add-selected="${item.id}">${quote ? "Solicitar análise" : ((item.option_groups || []).length ? "Personalizar" : "Adicionar")}</button></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
       const illustration = dinizIllustration(category, item), media = item.image_url
         ? `<div class="menu-item-media"><img class="menu-item-image" loading="lazy" decoding="async" src="${clean(item.image_url)}" alt=""></div>`
@@ -285,7 +291,7 @@
       $("menuSearchResult").textContent = query ? matches ? `${matches} ${matches === 1 ? "produto encontrado" : "produtos encontrados"}.` : "Nenhum produto encontrado. Tente outro nome." : "";
     };
     $("menuSearch").addEventListener("input", filterCatalog);
-    const refreshSelectedPrice = (itemId) => { const select = $("catalog").querySelector(`[data-price-select="${itemId}"]`), quantityInput = $("catalog").querySelector(`[data-quantity-select="${itemId}"]`), price = prices.get(select.value), output = $("catalog").querySelector(`[data-selected-price="${itemId}"]`), quantity = quantityInput ? Number(quantityInput.value) : 1; output.textContent = quantityInput ? `${quantity} unidades · ${money.format(price.amount * quantity)}` : `${isQuoteItem(price.item) ? "A partir de " : ""}${money.format(price.amount)}`; };
+    const refreshSelectedPrice = (itemId) => { const select = $("catalog").querySelector(`[data-price-select="${itemId}"]`), quantityInput = $("catalog").querySelector(`[data-quantity-select="${itemId}"]`), price = prices.get(select.value), output = $("catalog").querySelector(`[data-selected-price="${itemId}"]`), quantity = quantityInput ? Number(quantityInput.value) : 1; output.textContent = formatItemPrice(price, price.item, quantity, Boolean(quantityInput)); };
     $("catalog").querySelectorAll("[data-price-select]").forEach((select) => select.addEventListener("change", () => refreshSelectedPrice(select.dataset.priceSelect)));
     $("catalog").querySelectorAll("[data-quantity-select]").forEach((input) => input.addEventListener("input", () => { if (!input.validity.valid) return; refreshSelectedPrice(input.dataset.quantitySelect); }));
     $("catalog").querySelectorAll("[data-add-selected]").forEach((button) => button.addEventListener("click", () => { const itemId = button.dataset.addSelected, select = $("catalog").querySelector(`[data-price-select="${itemId}"]`), quantityInput = $("catalog").querySelector(`[data-quantity-select="${itemId}"]`); if (quantityInput && !quantityInput.reportValidity()) return; configure(prices.get(select.value), quantityInput ? Number(quantityInput.value) : 1); })); $("loading").classList.add("hidden"); $("content").classList.remove("hidden"); initAssistant();
