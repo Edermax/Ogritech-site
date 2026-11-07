@@ -1,6 +1,13 @@
 :root { --accent: #08b9d3; --menu-surface: #101719; --menu-surface-raised: #162226; --menu-line: #42d9ed1f; }
 
-body { background: radial-gradient(circle at 15% -5%, #083b46 0, #091b20 20rem, #080808 48rem); }
+body {
+  background-color: #080808;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' opacity='.09' filter='url(%23grain)' d='M0 0h160v160H0z'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 66rem 44rem at 50% 4rem,
+      color-mix(in srgb, var(--menu-primary, #111827) 28%, #080808),
+      transparent 85%);
+}
 .public-shell { width: min(1160px, calc(100% - 32px)); }
 .public-nav { justify-content: center; margin-bottom: 24px; }
 .public-nav a { display: inline-flex; justify-content: center; }
