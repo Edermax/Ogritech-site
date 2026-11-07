@@ -32,7 +32,13 @@ Pedidos já em processamento precisam de conciliação; a despublicação não r
 4. Confirmar quem pode declarar `NO-GO`, fechar entradas, republicar e autorizar restauração.
 5. Executar `npm run rehearse:menu-production-rollback` no commit da janela.
 
-Em 19/10/2026, após a integração operacional do PR #17, a API GitHub Pages confirmou `1771d9c5d737682329e775b22d8e4ba171f7075e` como commit servido. Esse hash é o retorno preparado para a próxima janela; o ensaio local confirmou os seis arquivos necessários. Após corrigir as permissões, o backup `39288297613` e sua restauração `39288776485` passaram, com 252 testes de banco e limpeza completa. O contrato identifica o artefato criptografado autorizado. A integração não alterou o código do produto; não houve ensaio de fechamento e retorno remoto nesta rodada.
+Em 19/10/2026, após a integração operacional do PR #17, a API GitHub Pages confirmou `1771d9c5d737682329e775b22d8e4ba171f7075e` como commit servido. O ensaio local confirmou os seis arquivos necessários. O backup `39288297613` e sua restauração `39288776485` passaram com 252 testes de banco. Esses registros documentam o ensaio de outubro. Para cada janela, confirme novamente o commit servido e a validade do backup.
+
+## Verificação de 07/11/2026
+
+O GitHub Pages confirmou `1d81a6acaacdc39ec0bf546294e2b86c783bcb57` como a versão publicada. A leitura por HTTPS confirmou oito arquivos do commit, incluindo o script do painel e o gerador de QR Code. O snapshot imediatamente anterior, `076ad839f2067abf2ccd5e3b4a203dc6ca5b03cb`, entregou os mesmos oito caminhos em HTTP isolado, todos com hashes correspondentes aos objetos Git.
+
+O [backup de 07/11](https://github.com/Edermax/Ogritech-site/actions/runs/42363912596) e o [ensaio de restauração isolada](https://github.com/Edermax/Ogritech-site/actions/runs/42381762546) passaram. Para aceitar o retorno entre versões, ainda é preciso verificar o acompanhamento de um pedido sintético e observar a recuperação do monitor em uma janela coordenada. A verificação de 07/11 foi somente leitura em produção.
 
 ## Sequência do rollback
 
