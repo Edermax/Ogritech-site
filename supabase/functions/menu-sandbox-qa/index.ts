@@ -1,4 +1,4 @@
-import {z} from "npm:zod@4.1.5";
+import {z} from "npm:zod@4.6.6";
 import {createClient} from "https://esm.sh/@supabase/supabase-js@2.112.3";
 const CYCLES={monthly:{months:1,discountBps:0},quarterly:{months:3,discountBps:300},semiannual:{months:6,discountBps:500},annual:{months:12,discountBps:1000}} as const;
 const PRODUCT_PRICES={agenda:9700,menu:4990} as const;

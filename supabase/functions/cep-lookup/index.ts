@@ -1,6 +1,6 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
-import { z } from "npm:zod@4.1.5";
+import { z } from "npm:zod@4.6.6";
 import { deliveryHouseNumber, validatedDinizGeocode, type DeliveryGeocodeAddress } from "./geocode-validation.ts";
 
 const Env = z.object({ ALLOWED_ORIGINS: z.string().min(1), GEOAPIFY_API_KEY: z.string().min(20) }).parse(Deno.env.toObject());

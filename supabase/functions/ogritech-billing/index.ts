@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
-import { z } from "npm:zod@4.1.5";
+import { z } from "npm:zod@4.6.6";
 
 const CYCLES = {
   monthly: { months: 1, discountBps: 0 },
