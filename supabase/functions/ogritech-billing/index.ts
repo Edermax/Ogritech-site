@@ -281,7 +281,7 @@ Deno.serve(async (request) => {
     let whatsappShareId: string | null = null;
     const rollback = async () => { await admin.rpc("backend_billing_signup_delete", { target_signup_id: signupId }); };
     try {
-      const { data: shop, error: shopError } = await admin.from("barbershops").insert({ name: clean(input.business_name), segment: clean(input.segment), active: true }).select("id").single();
+      const { data: shop, error: shopError } = await admin.from("barbershops").insert({ name: clean(input.business_name), slug: `unidade-${crypto.randomUUID()}`, segment: clean(input.segment), active: true }).select("id").single();
       if (shopError) throw shopError;
       const productName = input.product === "menu" ? "Cardápio" : "Agenda";
       const { data: client, error: clientError } = await admin.from("saas_clients").insert({ name: clean(input.business_name), segment: clean(input.segment), contact_name: clean(input.responsible_name), owner_email: input.email, phone, origin: `Contratação self-service — ${productName}`, plan: productName, monthly_fee: cycle.base_monthly_cents / 100, status: "Ativo", invite_status: "Pendente", barbershop_id: shop.id, notes: input.service_invoice_preference === "requested" ? "Nota de serviço: solicitada pelo cliente. Emissão sujeita às obrigações fiscais aplicáveis." : input.service_invoice_preference === "not_requested" ? "Nota de serviço: cliente não solicitou no cadastro. Não constitui dispensa de emissão obrigatória." : "Nota de serviço: preferência não informada." }).select("id").single();

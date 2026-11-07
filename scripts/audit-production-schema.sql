@@ -1,6 +1,6 @@
 -- Read-only production invariants. Update these expected values in the same
 -- commit that promotes a reviewed migration batch.
--- Release target: 85 migrations, latest guard_paid_menu_rejections;
+-- Release target: 86 migrations, latest business_whatsapp_shares;
 -- no unprotected public tables, overlapping policies, or exposed definers.
 do $audit$
 declare
@@ -8,14 +8,14 @@ declare
     latest_name text;
 begin
     select count(*) into actual from supabase_migrations.schema_migrations;
-    if actual <> 85 then
-        raise exception 'Unexpected production migration count: %, expected 85', actual;
+    if actual <> 86 then
+        raise exception 'Unexpected production migration count: %, expected 86', actual;
     end if;
 
     select name into latest_name
     from supabase_migrations.schema_migrations
     order by version::numeric desc limit 1;
-    if latest_name is distinct from 'guard_paid_menu_rejections' then
+    if latest_name is distinct from 'business_whatsapp_shares' then
         raise exception 'Unexpected production migration baseline: %', latest_name;
     end if;
 
