@@ -38,7 +38,13 @@ Em 19/10/2026, após a integração operacional do PR #17, a API GitHub Pages co
 
 O GitHub Pages confirmou `1d81a6acaacdc39ec0bf546294e2b86c783bcb57` como a versão publicada. A leitura por HTTPS confirmou oito arquivos do commit, incluindo o script do painel e o gerador de QR Code. O snapshot imediatamente anterior, `076ad839f2067abf2ccd5e3b4a203dc6ca5b03cb`, entregou os mesmos oito caminhos em HTTP isolado, todos com hashes correspondentes aos objetos Git.
 
-O [backup de 07/11](https://github.com/Edermax/Ogritech-site/actions/runs/42363912596) e o [ensaio de restauração isolada](https://github.com/Edermax/Ogritech-site/actions/runs/42381762546) passaram. Para aceitar o retorno entre versões, ainda é preciso verificar o acompanhamento de um pedido sintético e observar a recuperação do monitor em uma janela coordenada. A verificação de 07/11 foi somente leitura em produção.
+O [backup de 07/11](https://github.com/Edermax/Ogritech-site/actions/runs/42363912596) e o [ensaio de restauração isolada](https://github.com/Edermax/Ogritech-site/actions/runs/42381762546) passaram.
+
+Em staging, a suíte transacional de pedidos passou nas 29 verificações. O gestor fechou as entradas, os dois endpoints rejeitaram pedidos novos e o acompanhamento continuou disponível com o token válido. O teste também confirmou a rejeição de um token inválido. O pedido sintético e o fechamento foram revertidos ao final da transação.
+
+No navegador isolado, as duas revisões exibiram o mesmo pedido, com o item e o total de R$ 31,00, usando a resposta da RPC obtida na transação de staging. O navegador reproduziu essa resposta para testar a troca de frontend. Os testes do monitor passaram para detecção, deduplicação e recuperação com evidência completa. Uma [execução recente do monitor em produção](https://github.com/Edermax/Ogritech-site/actions/runs/42385103282) registrou catálogo e contratação disponíveis, sem falhas.
+
+A verificação de produção foi somente leitura. O retorno entre versões pela hospedagem e a recuperação funcional do monitor na mesma janela permanecem pendentes para um exercício coordenado.
 
 ## Sequência do rollback
 
