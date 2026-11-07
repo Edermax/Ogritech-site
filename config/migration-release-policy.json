@@ -178,15 +178,14 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "business_whatsapp_shares",
+    "appliedThrough": "menu_optional_pix",
     "appliedOutOfOrder": [],
-    "heldMigrations": [
-      { "name": "menu_optional_pix", "reason": "Validar o Pix opcional antes da publicação." }
-    ],
+    "heldMigrations": [],
     "observationEvidence": "docs/evidencias/menu-standard-operations-2026-11-05.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
-      "business_whatsapp_shares": "20261107143521"
+      "business_whatsapp_shares": "20261107143521",
+      "menu_optional_pix": "20261107155101"
     }
   }
 }
