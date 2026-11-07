@@ -1,5 +1,7 @@
 (() => {
-  const $ = (id) => document.getElementById(id), slug = new URLSearchParams(location.search).get("empresa") || "";
+  const $ = (id) => document.getElementById(id);
+  const pathSlug = location.pathname.match(/^\/cardapio\/([a-z0-9][a-z0-9-]{1,61}[a-z0-9])\/?$/)?.[1];
+  const slug = pathSlug || new URLSearchParams(location.search).get("empresa") || "";
   const isDinizMenu = slug === "diniz-doces" || slug === "diniz-doces-previa-7d1";
   const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }), cart = new Map(), prices = new Map();
   let page = null, pendingRequestId = null, assistantSessionToken = null, calculatedDeliveryFee = null;
