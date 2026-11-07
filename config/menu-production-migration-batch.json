@@ -1,19 +1,16 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-05",
-  "baseline": "guard_paid_menu_rejections",
+  "updatedAt": "2026-11-07",
+  "baseline": "business_whatsapp_shares",
   "strategy": "contiguous_tail",
   "authorized": false,
   "decision": "PENDING",
   "localReplay": {
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
-    "migrationCount": 82,
-    "testFiles": 22,
-    "assertions": 571,
-    "evidence": "docs/evidencias/jornada-cardapio-2026-11-04.md",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41842463893",
-    "sourceCommit": "cb558031f6c1dcef0802798d11c32396061eb60d"
+    "migrationCount": 86,
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/42382104016",
+    "sourceCommit": "5d7a4e0c12483b73706f224accaef1fa84549cd4"
   },
   "productionDryRun": {
     "status": "PENDING",
@@ -76,7 +73,8 @@
     "menu_pix_expiry_recovery",
     "fix_menu_catalog_draft_delete_order",
     "preserve_menu_catalog_metadata",
-    "preserve_menu_special_hours"
+    "preserve_menu_special_hours",
+    "business_whatsapp_shares"
   ],
   "authorizationSource": "Pedido do responsável nesta conversa para concluir, testar e publicar a jornada funcional do Cardápio.",
   "authorizationScope": "Correção preserve_menu_special_hours e jornada de criação e gestão do Cardápio.",

@@ -22,6 +22,7 @@ const StartBody = z.object({
   action: z.literal("start_trial"), business_name: z.string().trim().min(2).max(150),
   responsible_name: z.string().trim().min(2).max(150), tax_document: z.string().max(24),
   email: z.string().trim().toLowerCase().email().max(320), phone: z.string().max(24),
+  publish_whatsapp: z.boolean().default(false),
   segment: z.string().trim().min(2).max(80).default("Serviços"),
   service_invoice_preference: z.enum(["requested", "not_requested", "not_informed"]).default("not_informed"),
   cycle: z.enum(["monthly", "quarterly", "semiannual", "annual"]),
@@ -252,7 +253,7 @@ Deno.serve(async (request) => {
     if (!parsed.success) return reply({ error: { code: "invalid_input", fields: parsed.error.flatten().fieldErrors } }, 422, origin);
     if (parsed.data.product !== "menu") return reply({ error: { code: "product_retired", message: "A Ogritech oferece exclusivamente o Cardápio." } }, 410, origin);
     const input = parsed.data, taxDocument = validCnpj(input.tax_document) || validCpf(input.tax_document), phone = input.phone.replace(/\D/g, "");
-    if (!taxDocument || !/^\d{10,11}$/.test(phone)) return reply({ error: { code: "invalid_company_data", message: "Confira o CPF ou CNPJ e o telefone." } }, 422, origin);
+    if (!taxDocument || !/^\d{10,11}$/.test(phone) || (input.publish_whatsapp && phone.startsWith("0"))) return reply({ error: { code: "invalid_company_data", message: "Confira o CPF ou CNPJ e o telefone." } }, 422, origin);
     if (input.payment_method === "card" && !input.recurring_authorized) return reply({ error: { code: "recurring_authorization_required" } }, 422, origin);
     if (input.product === "menu" && (input.cycle !== "monthly" || input.payment_method !== "pix")) return reply({ error: { code: "invalid_menu_offer" } }, 422, origin);
     if (taxDocument.length === 11 && input.service_invoice_preference === "not_informed") input.service_invoice_preference = "not_requested";
@@ -277,9 +278,10 @@ Deno.serve(async (request) => {
       console.error("start_trial.billing_signup", { code: signupError?.code, message: signupError?.message });
       return reply({ error: { code: "signup_failed" } }, 500, origin);
     }
+    let whatsappShareId: string | null = null;
     const rollback = async () => { await admin.rpc("backend_billing_signup_delete", { target_signup_id: signupId }); };
     try {
-      const { data: shop, error: shopError } = await admin.from("barbershops").insert({ name: clean(input.business_name), segment: clean(input.segment), active: true }).select("id").single();
+      const { data: shop, error: shopError } = await admin.from("barbershops").insert({ name: clean(input.business_name), slug: `unidade-${crypto.randomUUID()}`, segment: clean(input.segment), active: true }).select("id").single();
       if (shopError) throw shopError;
       const productName = input.product === "menu" ? "Cardápio" : "Agenda";
       const { data: client, error: clientError } = await admin.from("saas_clients").insert({ name: clean(input.business_name), segment: clean(input.segment), contact_name: clean(input.responsible_name), owner_email: input.email, phone, origin: `Contratação self-service — ${productName}`, plan: productName, monthly_fee: cycle.base_monthly_cents / 100, status: "Ativo", invite_status: "Pendente", barbershop_id: shop.id, notes: input.service_invoice_preference === "requested" ? "Nota de serviço: solicitada pelo cliente. Emissão sujeita às obrigações fiscais aplicáveis." : input.service_invoice_preference === "not_requested" ? "Nota de serviço: cliente não solicitou no cadastro. Não constitui dispensa de emissão obrigatória." : "Nota de serviço: preferência não informada." }).select("id").single();
@@ -298,6 +300,12 @@ Deno.serve(async (request) => {
         const subscription = await admin.from("platform_subscriptions").insert({ billing_customer_id: customer.id, product_id: product.id, plan_id: plan.id, status: "trial", base_amount: cycle.base_monthly_cents / 100, starts_on: new Date().toISOString().slice(0,10), next_billing_on: trialEndsAt.slice(0,10), current_period_start: new Date().toISOString(), current_period_end: trialEndsAt });
         if (subscription.error) throw subscription.error;
       }
+      if (input.publish_whatsapp) {
+        const { data: share, error: shareError } = await admin.from("business_whatsapp_shares")
+          .insert({ barbershop_id: shop.id, phone: "55" + phone }).select("share_id").single();
+        if (shareError) throw shareError;
+        whatsappShareId = share.share_id;
+      }
       await admin.from("saas_clients").update({ invite_status: "Enviado" }).eq("id", client.id);
       await admin.rpc("backend_billing_enqueue", { target_signup_id: signupId, target_event_type: "trial_started", target_payload: { email: input.email, management_token: token, product: input.product } });
     } catch (error) { await rollback(); console.error(error); return reply({ error: { code: "provisioning_failed" } }, 500, origin); }
@@ -314,7 +322,7 @@ Deno.serve(async (request) => {
       }
     }
     if (input.payment_method === "card") await admin.rpc("backend_billing_signup_provider_update", { target_signup_id: signupId, target_plan_id: providerPlanId, target_subscription_id: providerId });
-    return reply({ data: { signup_id: signupId, product: input.product, management_token: token, trial_ends_at: trialEndsAt, login_url: firstAccessUrl(`/login/?produto=${input.product}`, "1"), checkout_url: checkoutUrl || null, pix, billing_configured: input.payment_method === "pix" || Boolean(providerId), quote: cycle } }, 201, origin);
+    return reply({ data: { signup_id: signupId, whatsapp_share_id: whatsappShareId, product: input.product, management_token: token, trial_ends_at: trialEndsAt, login_url: firstAccessUrl(`/login/?produto=${input.product}`, "1"), checkout_url: checkoutUrl || null, pix, billing_configured: input.payment_method === "pix" || Boolean(providerId), quote: cycle } }, 201, origin);
   }
 
   const parsed = ManageBody.safeParse(json);
