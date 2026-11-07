@@ -1,7 +1,7 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
 import { createClient } from "@supabase/supabase-js";
-import { z } from "npm:zod@4.1.5";
+import { z } from "npm:zod@4.6.6";
 import { MENU_AI_INSTRUCTIONS, MENU_AI_MAX_OUTPUT_TOKENS, MENU_AI_MODEL, MENU_AI_REASONING_EFFORT, MENU_AI_RESPONSE_SCHEMA, MENU_AI_VERBOSITY } from "../_shared/menu-ai-contract.mjs";
 
 const Env = z.object({ ALLOWED_ORIGINS:z.string().min(1), OGRITECH_MENU_AI_ENV:z.literal("staging"), OGRITECH_MENU_AI_SERVICE_TIER:z.enum(["default","priority"]).default("default"), OPENAI_API_KEY:z.string().startsWith("sk-").min(20), SUPABASE_URL:z.string().url(), SUPABASE_SERVICE_ROLE_KEY:z.string().min(20) }).parse(Deno.env.toObject());
