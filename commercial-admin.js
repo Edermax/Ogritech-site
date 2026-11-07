@@ -663,6 +663,12 @@
                 operationLink.classList.remove("hidden");
             } else link.classList.add("hidden");
             if (!menu?.published) operationLink.classList.add("hidden");
+            const sharePanel = byId("menuSharePanel");
+            const sharePreview = byId("menuSharePreview");
+            if (sharePanel && sharePreview) {
+                sharePanel.hidden = !menu?.published;
+                window.renderMenuShare?.(sharePreview, menu?.published ? link.href : null);
+            }
             operationStatus.textContent = menu?.published ? "Cardápio publicado" : "Cardápio não publicado";
             operationStatus.setAttribute("data-state", menu?.published ? "published" : "draft");
             const categories = [...(draftStatus?.payload?.categories || menu?.menu_categories || [])].sort((a, b) => a.sort_order - b.sort_order);

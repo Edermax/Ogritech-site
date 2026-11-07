@@ -348,16 +348,11 @@
                         <button class="menu-workspace-tab" id="menuTabReview" type="button" role="tab" aria-selected="false" data-menu-workspace="review"><span>4</span>Publicar</button>
                         <button class="menu-workspace-tab" id="menuTabOperation" type="button" role="tab" aria-selected="false" data-menu-workspace="operation"><span>5</span>Pedidos</button>
                     </nav>
-                    <article class="panel module-panel" id="whatsappSharePanel" hidden>
-                        <h2>Divulgação pelo WhatsApp</h2>
-                        <form class="commercial-form">
-                            <label>WhatsApp público da unidade com DDD<input name="whatsapp" type="tel" maxlength="16" autocomplete="tel-national"></label>
-                            <p>O número ficará disponível a quem abrir o link. Para desativar, apague o número e salve.</p>
-                            <button type="submit" class="gold-button" disabled>Salvar WhatsApp</button>
-                        </form>
-                        <p role="status"></p>
-                        <div data-share-preview></div>
-                    </article>
+                    <details class="panel module-panel" id="menuSharePanel" hidden>
+                        <summary>QR Code do cardápio</summary>
+                        <p>Mostre o código no celular ou baixe o PNG para imprimir.</p>
+                        <div id="menuSharePreview"></div>
+                    </details>
                     <section id="menuJourneyGuide" class="menu-journey-guide" aria-labelledby="menuJourneyTitle">
                         <div><p class="eyebrow">SEU PASSO A PASSO</p><h3 id="menuJourneyTitle">1. Comece pelo seu negócio</h3><p id="menuJourneyDescription">Escolha o modelo e crie o endereço do seu cardápio.</p><p id="menuJourneyStatus" role="status" aria-live="polite">Carregando suas etapas salvas...</p><small>Use o botão Salvar de cada formulário. As etapas salvas ficam guardadas para você retomar depois.</small></div>
                         <button id="menuJourneyAction" type="button" class="gold-button" disabled>Carregando...</button>
@@ -613,8 +608,8 @@
 
     <!-- JavaScript principal do dashboard -->
     <script src="script.js?v=20261022.6"></script>
-    <script src="menu-branding.js?v=20261020.1"></script><script src="menu-branding-admin.js?v=20261020.1"></script><script src="commercial-admin.js?v=20261105.3"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script><script src="/whatsapp/share.js"></script><script src="/whatsapp/panel.js"></script><script src="subscription-admin.js"></script>
+    <script src="menu-branding.js?v=20261020.1"></script><script src="menu-branding-admin.js?v=20261020.1"></script><script src="commercial-admin.js?v=qr-menu-20261105.3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script><script src="/cardapio/share.js"></script><script src="subscription-admin.js"></script>
     <script src="pwa.js?v=20260831.2"></script>
 </body>
 </html>
