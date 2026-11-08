@@ -42,6 +42,11 @@ function respondToApi({ table, name, args = {}, update, filters, role }) {
   }
   if (name === "menu_onboarding_status") return { data: onboarding() };
   if (name === "is_platform_admin") return { data: false };
+  if (name === "update_menu_order_operation") {
+    const order = state.orders.find((entry) => entry.id === args.target_order_id);
+    order.status = { confirm: "confirmed", complete: "completed" }[args.target_action];
+    return { data: order };
+  }
   if (role === "employee") return { error: { code: "42501", message: "Manager access required" } };
   if (name === "apply_menu_catalog_template") {
     state.menu = { id: "menu-test", title: "Confeitaria de teste", slug: args.target_slug, template_code: args.target_template_code, published: false, accepts_pickup: true, accepts_delivery: false, menu_categories: [], menu_delivery_zones: [], accepted_payment_methods: ["pix"], weekly_hours: { weekdays: [1, 2, 3, 4, 5, 6], opens_at: "10:00", closes_at: "18:00", special_hours: [{ weekdays: [0], opens_at: "09:00", closes_at: "13:00" }] } };
@@ -177,6 +182,7 @@ try {
     assert.equal(await page.evaluate(() => window.journeyReady), true);
     await selected(page, "start");
     assert.equal(await page.locator("#menuCatalogWorkspace").isVisible(), false);
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Horizontal overflow before publication");
     await page.screenshot({ path: join(output, `${viewport.name}-start.png`), fullPage: true });
     await page.locator("#menuTemplateCode").selectOption("confectionery");
     await page.locator("#menuTemplateSlug").fill("confeitaria-teste");
@@ -185,6 +191,7 @@ try {
     await settled(page);
     assert.equal(await page.locator("#menuTemplatePanel").isVisible(), false);
     assert.match(await page.locator("#menuWorkspaceMessage").innerText(), /Modelo salvo/);
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Horizontal overflow before publication");
     await page.screenshot({ path: join(output, `${viewport.name}-settings.png`), fullPage: true });
     await page.locator('#menuSettingsForm button[type="submit"]').click();
     await selected(page, "catalog");
@@ -192,15 +199,23 @@ try {
     await page.locator("#menuCategoryName").fill("Doces");
     await page.locator("#menuItemName").fill("Brigadeiro");
     await page.locator("[data-price-value]").fill("20");
+    await page.locator("#menuItemImage").setInputFiles({
+      name: "preview.png", mimeType: "image/png",
+      buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jv1sAAAAASUVORK5CYII=", "base64")
+    });
+    await page.waitForFunction(() => document.querySelector("#menuItemImagePreview img").naturalWidth > 0);
+    await page.locator("#menuItemImageRemove").click();
     await page.locator("#menuItemSubmit").click();
     await page.waitForFunction(() => document.getElementById("menuCatalogList").textContent.includes("Brigadeiro"));
     await settled(page);
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Horizontal overflow before publication");
     await page.screenshot({ path: join(output, `${viewport.name}-catalog.png`), fullPage: true });
     await tab(page, "review");
     await page.locator("#menuTestOrderButton").click();
     await page.waitForFunction(() => !document.getElementById("menuReviewButton").disabled);
     await page.locator("#menuReviewButton").click();
     await page.waitForFunction(() => !document.getElementById("menuPublicationButton").disabled);
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Horizontal overflow before publication");
     await page.screenshot({ path: join(output, `${viewport.name}-review.png`), fullPage: true });
     await page.locator("#menuPublicationButton").click();
     await selected(page, "operation");
@@ -237,7 +252,7 @@ try {
     assert.equal(state.menu.menu_categories[0].menu_items[0].name, "Brigadeiro");
     assert.equal(state.draft.categories[0].menu_items[0].name, "Brigadeiro especial");
     await tab(page, "review");
-    assert.equal(await page.locator("#menuPublicationButton").innerText(), "Publicar alterações");
+    assert.equal(await page.locator("#menuPublicationButton").innerText(), "3. Publicar alterações");
     await page.locator("#menuPublicationButton").click();
     await page.waitForFunction(() => document.getElementById("menuPublicationButton").disabled);
     await settled(page);
@@ -267,9 +282,9 @@ try {
     assert.equal(await page.locator("#menuItemForm").isVisible(), false);
     assert.equal(await page.locator("#menuTabCatalog").isVisible(), false);
     assert.equal(state.calls.slice(beforeEmployee).some((call) => call.name === "menu_catalog_draft_status"), false);
-    await page.locator('[data-order-status="confirmed"]').click();
-    await page.locator('[data-order-status="completed"]').waitFor();
-    await page.locator('[data-order-status="completed"]').click();
+    await page.locator('[data-order-action="confirm"]').click();
+    await page.locator('[data-order-action="complete"]').waitFor();
+    await page.locator('[data-order-action="complete"]').click();
     await settled(page);
     assert.equal(state.orders[0].status, "completed");
     assert.deepEqual(errors, []);

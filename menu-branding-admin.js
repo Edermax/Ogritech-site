@@ -50,6 +50,10 @@
     try { await action(); } catch(error) { message(error.message, true); }
     finally { busy = false; form.querySelectorAll("input,button").forEach(element => { element.disabled = false; }); }
   }
+  $("menuBrandingPreviewLogo").addEventListener("error", () => {
+    $("menuBrandingPreviewLogo").hidden = true;
+    message("Não foi possível exibir o logo. Escolha outro arquivo ou tente carregar a prévia novamente.", true);
+  });
   globalThis.loadMenuBranding = async currentMenu => {
     menu = currentMenu;
     const allowed = sessionStorage.getItem("japaRole") !== "employee";

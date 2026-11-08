@@ -25,6 +25,7 @@
     let menuCatalogCategories = [];
     let menuCatalogDraftDirty = false;
     let menuImageRemoveRequested = false;
+    let menuImagePreviewUrl = "";
     let menuWorkspaceNavigationBound = false;
     const canManageMenu = () => typeof currentRole === "undefined" || ["owner", "admin"].includes(currentRole);
     let selectedMenuWorkspace = "start";
@@ -360,7 +361,14 @@
         fieldset.disabled = !acceptsDelivery;
     }
 
+    function releaseMenuImagePreview() {
+        if (menuImagePreviewUrl) URL.revokeObjectURL(menuImagePreviewUrl);
+        menuImagePreviewUrl = "";
+    }
+
     function resetMenuItemEditor() {
+        releaseMenuImagePreview();
+        if (byId("menuItemImageStatus")) byId("menuItemImageStatus").textContent = "";
         byId("menuItemForm").reset();
         byId("menuItemId").value = ""; byId("menuCategoryId").value = ""; byId("menuItemImageUrl").value = ""; byId("menuItemImagePath").value = "";
         byId("menuItemUnit").value = "unidade"; byId("menuItemMinimum").value = "1"; byId("menuItemLeadTime").value = "0";
@@ -899,9 +907,25 @@
     byId("menuItemImage")?.addEventListener("change",()=>{
         const file=byId("menuItemImage").files?.[0]; if(!file) return;
         if(!["image/jpeg","image/png","image/webp"].includes(file.type) || file.size>5*1024*1024){ byId("menuItemImage").value=""; return notify(byId("menuItemMessage"),"Use uma imagem JPEG, PNG ou WebP de até 5 MB.",true); }
-        const preview=byId("menuItemImagePreview"); preview.querySelector("img").src=URL.createObjectURL(file); preview.classList.remove("hidden"); menuImageRemoveRequested=false;
+        releaseMenuImagePreview();
+        menuImagePreviewUrl = URL.createObjectURL(file);
+        const preview = byId("menuItemImagePreview");
+        const image = preview.querySelector("img");
+        image.hidden = false;
+        image.src = menuImagePreviewUrl;
+        preview.classList.remove("hidden");
+        byId("menuItemImageStatus").textContent = "Prévia da foto. Salve o produto para guardar a alteração.";
+        menuImageRemoveRequested = false;
     });
+    const itemPreviewImage = byId("menuItemImagePreview")?.querySelector?.("img");
+    itemPreviewImage?.addEventListener?.("load", () => { itemPreviewImage.hidden = false; });
+    itemPreviewImage?.addEventListener?.("error", () => {
+        itemPreviewImage.hidden = true;
+        byId("menuItemImageStatus").textContent = "Não foi possível exibir esta foto. Escolha outro arquivo.";
+    });
+    window.addEventListener?.("pagehide", releaseMenuImagePreview);
     byId("menuItemImageRemove")?.addEventListener("click",()=>{
+        releaseMenuImagePreview();
         byId("menuItemImage").value=""; byId("menuItemImageUrl").value=""; byId("menuItemImagePreview").classList.add("hidden"); menuImageRemoveRequested=true;
     });
 
@@ -913,6 +937,8 @@
         await runMenuAction("menuItemMessage", byId("menuItemId").value ? "Atualizando produto..." : "Adicionando produto...", async () => {
             const previousPath=byId("menuItemImagePath").value, file=byId("menuItemImage").files?.[0]; let uploadedPath="", imageUrl=menuImageRemoveRequested?"":byId("menuItemImageUrl").value;
             if(file){
+                try { await globalThis.OgritechMenuBranding?.validateImage(file); }
+                catch (error) { return { error: { code: "22023", message: error.message } }; }
                 const extension={"image/jpeg":"jpg","image/png":"png","image/webp":"webp"}[file.type]; uploadedPath=`${BARBERSHOP_ID}/${crypto.randomUUID()}.${extension}`;
                 const uploaded=await supabaseClient.storage.from("menu-images").upload(uploadedPath,file,{contentType:file.type,cacheControl:"31536000",upsert:false});
                 if(uploaded.error) return uploaded;

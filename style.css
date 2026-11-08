@@ -1899,3 +1899,14 @@ textarea:focus {
     .menu-settings-summary dl { grid-template-columns: minmax(0, 1fr); }
     .menu-settings-summary dd { margin-bottom: 10px; }
 }
+
+/* Keep controls inside the menu panel at narrow widths. */
+#menuView :is(.commercial-form, .form-row, fieldset, .menu-editor-row, .menu-catalog-editor-item > *) { min-width: 0; }
+#menuView :is(input, select, textarea, button, img) { max-width: 100%; }
+#menuView :is(.commercial-actions, .menu-image-preview, .menu-workspace-header-actions) { flex-wrap: wrap; }
+#menuView :is(.table-button, .gold-button, .menu-workspace-tab, .menu-catalog-editor-item) { overflow-wrap: anywhere; white-space: normal; }
+#menuView img[hidden] { display: none; }
+@media (max-width: 700px) {
+    #menuView .menu-catalog-editor-item { grid-template-columns: 56px minmax(0, 1fr); }
+    #menuView .menu-catalog-editor-item > .commercial-actions { grid-column: 1 / -1; }
+}
