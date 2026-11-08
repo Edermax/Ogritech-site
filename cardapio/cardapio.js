@@ -7,6 +7,25 @@
   let page = null, pendingRequestId = null, assistantSessionToken = null, calculatedDeliveryFee = null;
   const createUuid = () => globalThis.crypto?.randomUUID?.() || "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => { const value = Math.floor(Math.random() * 16); return (char === "x" ? value : (value & 3) | 8).toString(16); });
   const clean = (value) => String(value || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+  function buildOrderPix(key, city, merchant, amount, orderCode) {
+    if (!/^[!-~]{1,77}$/.test(key || "") || !/^[A-Z0-9 ]{1,15}$/.test(city || "")) return "";
+    if (!Number.isFinite(amount) || amount <= 0 || amount >= 1e10) return "";
+    const field = (id, value) => id + String(value.length).padStart(2, "0") + value;
+    const name = merchant.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toUpperCase().replace(/[^A-Z0-9 ]/g, " ").replace(/ +/g, " ").trim().slice(0, 25);
+    if (!name) return "";
+    const reference = String(orderCode || "").replace(/[^a-z0-9]/gi, "").slice(0, 25) || "***";
+    const account = field("00", "BR.GOV.BCB.PIX") + field("01", key);
+    const payload = field("00", "01") + field("26", account) + field("52", "0000")
+      + field("53", "986") + field("54", amount.toFixed(2)) + field("58", "BR")
+      + field("59", name) + field("60", city) + field("62", field("05", reference)) + "6304";
+    let crc = 0xffff;
+    for (const character of payload) {
+      crc ^= character.charCodeAt(0) << 8;
+      for (let bit = 0; bit < 8; bit++) crc = ((crc << 1) ^ ((crc & 0x8000) ? 0x1021 : 0)) & 0xffff;
+    }
+    return payload + crc.toString(16).toUpperCase().padStart(4, "0");
+  }
   const isQuoteItem = (item) => item.metadata?.order_mode === "quote";
   const categoryId = (index) => `categoria-${index + 1}`;
   const normalizeSearch = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR").trim();
@@ -354,16 +373,18 @@
     }) : "";
     const whatsappUrl = whatsappPhone ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappText)}` : "";
     const pixKey = hasQuote ? "" : page.menu.pix_key;
-    const pixPayment = pixKey ? `<aside class="order-payment-alert"><strong>Pagar por Pix</strong><p>Valor do pedido: ${clean(money.format(Number(data.total_amount)))}</p><p>Chave Pix: <code>${clean(pixKey)}</code></p><button type="button" class="public-button secondary" id="copyOrderPixKey">Copiar chave Pix</button><p role="status" id="copyOrderPixStatus"></p><p>Confira o destinatário no seu banco. A loja confirma o pagamento após receber o Pix.</p></aside>` : "";
+    const pixCode = pixKey ? buildOrderPix(pixKey, page.menu.pix_amount_city, page.menu.title, Number(data.total_amount), formattedCode) : "";
+    const pixLabel = pixCode ? "Pix Copia e Cola" : "Chave Pix";
+    const pixPayment = pixKey ? `<aside class="order-payment-alert"><strong>Pagar por Pix</strong><p>Valor do pedido: ${clean(money.format(Number(data.total_amount)))}</p><label>${pixLabel}<textarea readonly rows="3">${clean(pixCode || pixKey)}</textarea></label><button type="button" class="public-button secondary" id="copyOrderPixKey">Copiar ${pixCode ? "Pix com valor" : "chave Pix"}</button><p role="status" id="copyOrderPixStatus"></p><p>Confira o destinatário no seu banco. A loja confirma o pagamento após receber o Pix.</p></aside>` : "";
     cart.clear(); updateCart();
     $("orderSuccess").innerHTML = `<div class="order-success-heading"><span class="order-success-mark" aria-hidden="true">✓</span><div><small>PEDIDO REGISTRADO</small><h2>Recebemos sua solicitação</h2></div></div><div class="order-code-box"><span>Código do pedido</span><strong>${clean(formattedCode)}</strong></div><aside class="order-payment-alert"><strong>Pagamento ainda pendente</strong><p>${whatsappUrl ? `Envie o resumo do pedido <b>${clean(formattedCode)}</b> ao estabelecimento para confirmar os detalhes e combinar o pagamento.` : "Acompanhe a confirmação pelo link abaixo. O estabelecimento poderá entrar em contato pelo telefone informado para conferir os dados e combinar o pagamento."} O envio do pedido não realiza cobrança automática.</p></aside><div class="order-success-actions">${whatsappUrl ? `<a class="public-button order-whatsapp-action" href="${clean(whatsappUrl)}" target="_blank" rel="noopener noreferrer">Enviar resumo pelo WhatsApp</a>` : ""}<a class="public-button secondary" href="${clean(trackingUrl)}">Acompanhar pedido no site</a></div>${whatsappUrl ? '<p class="order-success-note">O WhatsApp será aberto somente se você escolher essa opção, em uma nova aba.</p>' : ""}`;
     $("orderSuccess").insertAdjacentHTML("beforeend", pixPayment);
     $("copyOrderPixKey")?.addEventListener("click", async () => {
       try {
-        await navigator.clipboard.writeText(pixKey);
-        $("copyOrderPixStatus").textContent = "Chave Pix copiada.";
+        await navigator.clipboard.writeText(pixCode || pixKey);
+        $("copyOrderPixStatus").textContent = pixCode ? "Código Pix copiado." : "Chave Pix copiada.";
       } catch {
-        $("copyOrderPixStatus").textContent = "Selecione e copie a chave Pix exibida acima.";
+        $("copyOrderPixStatus").textContent = "Selecione e copie o conteúdo exibido acima.";
       }
     });
     $("orderSuccess").classList.remove("hidden"); $("orderSuccess").scrollIntoView({ behavior: "smooth", block: "center" }); event.target.reset();

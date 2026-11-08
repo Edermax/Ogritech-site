@@ -624,6 +624,11 @@
             menuOnboarding = onboarding;
             menuRecord = menu;
             if (byId("menuPixKey")) byId("menuPixKey").value = menu?.pix_key || "";
+            if (byId("menuPixWithAmount")) {
+                byId("menuPixWithAmount").checked = Boolean(menu?.pix_key && menu?.pix_amount_city);
+                byId("menuPixCity").value = menu?.pix_amount_city || "";
+                byId("menuPixCityField").hidden = !byId("menuPixWithAmount").checked;
+            }
             byId("menuWhatsappPhone").value = menu?.whatsapp_phone || "";
             if (business?.name && businessConfig.name === "Seu negócio") {
                 businessConfig.name = business.name;
@@ -795,13 +800,21 @@
             notify(byId("menuWorkspaceMessage"), "Dados atualizados com a configuração salva.");
         }
     });
+    byId("menuPixWithAmount")?.addEventListener("change", (event) => {
+        byId("menuPixCityField").hidden = !event.target.checked;
+    });
     byId("menuPixForm")?.addEventListener("submit", async (event) => {
         event.preventDefault();
         if (!canManageMenu() || !menuRecord) return;
         const key = byId("menuPixKey").value.trim();
-        await runMenuAction("menuPixMessage", "Salvando chave Pix...", () => supabaseClient.rpc("save_menu_pix", {
-            target_barbershop_id: BARBERSHOP_ID, target_pix_key: key
-        }), key ? "Chave Pix salva." : "Divulgação da chave Pix desativada.");
+        const withAmount = byId("menuPixWithAmount")?.checked;
+        const city = withAmount ? byId("menuPixCity").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase() : "";
+        if (withAmount && (!key || !/^[A-Z0-9 ]{1,15}$/.test(city))) {
+            return notify(byId("menuPixMessage"), "Informe a chave Pix e a cidade do recebedor para ativar o Pix com valor.", true);
+        }
+        await runMenuAction("menuPixMessage", "Salvando opções de Pix...", () => supabaseClient.rpc("save_menu_pix_amount", {
+            target_barbershop_id: BARBERSHOP_ID, target_pix_key: key, target_pix_amount_city: city
+        }), key ? "Opções de Pix salvas." : "Divulgação da chave Pix desativada.");
     });
     byId("menuContactForm")?.addEventListener("submit", async (event) => {
         event.preventDefault();
