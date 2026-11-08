@@ -11,6 +11,8 @@ const updateButton = updatePasswordForm.querySelector('button[type="submit"]');
 const backToLoginLink = document.getElementById("backToLoginLink");
 const passwordToggleButtons = updatePasswordForm.querySelectorAll("[data-password-target]");
 const loginUrl = window.ogritechEnvironmentUrl("login/");
+const passwordRequirements = "Use pelo menos 8 caracteres, com uma letra maiúscula, uma minúscula, um número e um símbolo como !, @ ou #.";
+const passwordSymbols = "!@#$%^&*()_+-=[]{};'\":\\|<>?,./`~";
 
 backToLoginLink.href = loginUrl;
 
@@ -57,7 +59,7 @@ function showRecoveryForm(session) {
     confirmAccessButton.classList.add("hidden");
     accessLinkMessage.textContent = "Link validado. Escolha sua senha abaixo.";
     updatePasswordForm.classList.remove("hidden");
-    updatePasswordMessage.textContent = "Use pelo menos 8 caracteres, com maiúscula, minúscula, número e símbolo.";
+    updatePasswordMessage.textContent = passwordRequirements;
     clearCallbackUrl();
 }
 
@@ -105,10 +107,11 @@ updatePasswordForm.addEventListener("submit", async (event) => {
     const newPassword = newPasswordInput.value;
     const confirmation = confirmPasswordInput.value;
 
-    if (newPassword.length < 8) {
-        updatePasswordMessage.textContent =
-            "A senha precisa ter pelo menos 8 caracteres.";
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) ||
+        !/[0-9]/.test(newPassword) || !Array.from(newPassword).some((character) => passwordSymbols.includes(character))) {
+        updatePasswordMessage.textContent = passwordRequirements;
         updatePasswordMessage.className = "login-message error";
+        newPasswordInput.focus();
         return;
     }
 
@@ -125,28 +128,40 @@ updatePasswordForm.addEventListener("submit", async (event) => {
 
     let updateError = null;
 
-    if (recoveryAccessToken) {
-        const response = await fetch(`${window.OGRITECH_SUPABASE_URL}/auth/v1/user`, {
-            method: "PUT",
-            headers: {
-                apikey: window.OGRITECH_SUPABASE_PUBLISHABLE_KEY,
-                Authorization: `Bearer ${recoveryAccessToken}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ password: newPassword })
-        });
+    try {
+        if (recoveryAccessToken) {
+            const response = await fetch(`${window.OGRITECH_SUPABASE_URL}/auth/v1/user`, {
+                method: "PUT",
+                headers: {
+                    apikey: window.OGRITECH_SUPABASE_PUBLISHABLE_KEY,
+                    Authorization: `Bearer ${recoveryAccessToken}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ password: newPassword })
+            });
 
-        if (!response.ok) updateError = new Error("Falha ao atualizar a senha.");
-    } else {
-        const { error } = await supabaseClient.auth.updateUser({
-            password: newPassword
-        });
+            if (!response.ok) {
+                const body = await response.json().catch(() => ({}));
+                updateError = { code: body.error_code, status: response.status };
+            }
+        } else {
+            const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+            updateError = error;
+        }
+    } catch (error) {
         updateError = error;
     }
 
     if (updateError) {
-        updatePasswordMessage.textContent =
-            "Não foi possível atualizar a senha. Solicite um novo link.";
+        if (updateError.code === "weak_password") {
+            updatePasswordMessage.textContent = `Escolha uma senha mais forte. ${passwordRequirements}`;
+        } else if (updateError.code === "same_password") {
+            updatePasswordMessage.textContent = "Escolha uma senha diferente da atual.";
+        } else if (updateError.status === 401 || ["session_not_found", "session_expired"].includes(updateError.code)) {
+            return invalidLink();
+        } else {
+            updatePasswordMessage.textContent = "Não foi possível salvar a senha agora. Confira a senha e tente novamente nesta página.";
+        }
         updatePasswordMessage.className = "login-message error";
         updateButton.disabled = false;
         return;

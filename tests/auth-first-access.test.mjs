@@ -31,6 +31,31 @@ test('opening password page without a callback cannot change an unrelated existi
  assert.match(state.elements.get('accessLinkMessage').textContent,/inválido/);
  assert.equal(state.elements.get('updatePasswordForm').classList.contains('hidden'),true);
 });
+test('a rejected password can be corrected without consuming another recovery link', async () => {
+ let updates = 0;
+ const state = await page('https://ogritech.com.br/update-password.html?type=recovery#token_hash=fixture', {
+  updateUser: async () => ({ error: ++updates === 1 ? { code: 'same_password' } : null }),
+  signOut: async () => ({ error: null })
+ });
+ await state.elements.get('confirmAccessButton').listeners.click();
+ const submit = state.elements.get('updatePasswordForm').listeners.submit;
+ async function enterPassword(password) {
+  state.elements.get('newPassword').value = password;
+  state.elements.get('confirmPassword').value = password;
+  await submit({ preventDefault() {} });
+ }
+ for (const password of ['abc12345!', 'ABC12345!', 'Abcdefg!', 'Abcdefg1', 'Abcdefg1😊']) {
+  await enterPassword(password);
+  assert.equal(updates, 0);
+ }
+ await enterPassword('Abcdefg1!');
+ assert.match(state.elements.get('updatePasswordMessage').textContent, /diferente da atual/);
+ assert.equal(state.elements.get('submit').disabled, false);
+ await enterPassword('Abcdefg2!');
+ assert.match(state.elements.get('updatePasswordMessage').textContent, /Senha atualizada/);
+ assert.equal(updates, 2);
+ assert.equal(state.calls.length, 1);
+});
 test('legacy invitation restores its session before showing the password fields',async()=>{
  let restored=false;
  const state=await page('https://ogritech.com.br/update-password.html?env=staging#type=invite&access_token=fixture&refresh_token=refresh',{setSession:async()=>{restored=true;return {data:{session:{user:{id:'fixture'}}},error:null}}});
