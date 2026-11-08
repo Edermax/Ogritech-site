@@ -126,12 +126,37 @@
     const delivery = $("fulfillment").value === "delivery", hasZones = (page?.delivery_zones || []).length > 0;
     $("deliveryAddressFields").classList.toggle("hidden", !delivery); $("deliveryZoneLabel").classList.toggle("hidden", !delivery || !hasZones || isDinizMenu);
     $("deliveryCep").required = delivery; $("deliveryAddress").required = delivery; $("deliveryZone").required = delivery && hasZones && !isDinizMenu;
+    const pickupLocation = page?.menu.pickup_location;
+    const pickup = Boolean(pickupLocation) && $("fulfillment").value === "pickup";
+    if ($("pickupConfirmation")) {
+      $("pickupConfirmation").classList.toggle("hidden", !pickup);
+      $("pickupLocation").textContent = pickup ? pickupLocation : "";
+      $("pickupConfirmed").required = pickup;
+      if (!pickup) $("pickupConfirmed").checked = false;
+    }
     if (!delivery) resetAutomaticDelivery();
     updateCheckoutEstimate();
+  }
+  function deliveryHelp(message, cep) {
+    $("cepMessage").textContent = message;
+    const link = $("deliveryHelpLink"), phone = String(page?.menu.whatsapp_phone || "");
+    if (!link || !/^\d{10,15}$/.test(phone)) return;
+    const question = `Olá! Vocês entregam no CEP ${cep || "que preciso consultar"}?`;
+    link.href = `https://wa.me/${phone}?text=${encodeURIComponent(question)}`;
+    link.classList.remove("hidden");
+  }
+  function postcodeAllowed(cep) {
+    const ranges = page?.menu.delivery_postcodes || [];
+    return !ranges.length || ranges.some(range => cep >= range.slice(0, 8) && cep <= range.slice(9));
   }
   async function lookupCep() {
     const input = $("deliveryCep"), button = $("lookupCepButton"), message = $("cepMessage"), cep = input.value.replace(/\D/g, "");
     if (cep.length !== 8) { message.textContent = "Informe um CEP com 8 dígitos."; input.setAttribute("aria-invalid", "true"); input.focus(); return; }
+    if (!postcodeAllowed(cep)) {
+      deliveryHelp("Ainda não entregamos neste CEP. Escolha retirada, se disponível.", cep);
+      return;
+    }
+    $("deliveryHelpLink")?.classList.add("hidden");
     input.value = cep.replace(/^(\d{5})(\d{3})$/, "$1-$2"); input.removeAttribute("aria-invalid"); button.disabled = true; message.textContent = "Buscando endereço...";
     try {
       const { data: result, error } = await supabaseClient.functions.invoke("cep-lookup", { body: { cep, target_slug: slug } });
@@ -356,8 +381,29 @@
     pendingRequestId ||= createUuid(); $("orderMessage").textContent = "Enviando pedido..."; $("orderSubmitButton").disabled = true;
     let data, error;
     try {
-    ({ data, error } = await supabaseClient.rpc("public_create_menu_order_v2", { ...commonOrder, client_request_id: pendingRequestId, requested_for: form.get("scheduled_for") ? new Date(form.get("scheduled_for")).toISOString() : null }));
-    if (error?.code === "PGRST202" && !commonOrder.supplied_items.some((item) => item.selections.length)) ({ data, error } = await supabaseClient.rpc("public_create_menu_order", { ...commonOrder, supplied_items: commonOrder.supplied_items.map(({ menu_item_price_id, quantity }) => ({ menu_item_price_id, quantity })) }));
+      if (fulfillment === "delivery" && page.menu.delivery_postcodes?.length) {
+        const cep = commonOrder.supplied_address.cep;
+        const failDelivery = (message) => {
+          $("orderSubmitButton").disabled = false;
+          $("orderMessage").textContent = message;
+          deliveryHelp(message, cep);
+          $("deliveryCep").focus();
+        };
+        if (!/^\d{8}$/.test(cep) || !postcodeAllowed(cep)) {
+          failDelivery("Ainda não entregamos neste CEP. Escolha retirada, se disponível.");
+          return;
+        }
+        const lookup = await supabaseClient.functions.invoke("cep-lookup", { body: { cep, target_slug: slug } }).catch(() => null);
+        const verified = lookup?.data?.data;
+        if (lookup?.error || !verified?.localidade || !verified?.uf) {
+          failDelivery("Não foi possível confirmar este CEP. Confira o endereço ou consulte a loja.");
+          return;
+        }
+        const location = [verified.bairro, verified.localidade, verified.uf].filter(Boolean).join(" - ");
+        commonOrder.supplied_address.text = commonOrder.supplied_address.text.trim().slice(0, 750) + ` | Localidade do CEP: ${location}`;
+      }
+      ({ data, error } = await supabaseClient.rpc("public_create_menu_order_v2", { ...commonOrder, client_request_id: pendingRequestId, requested_for: form.get("scheduled_for") ? new Date(form.get("scheduled_for")).toISOString() : null }));
+      if (error?.code === "PGRST202" && !commonOrder.supplied_items.some((item) => item.selections.length)) ({ data, error } = await supabaseClient.rpc("public_create_menu_order", { ...commonOrder, supplied_items: commonOrder.supplied_items.map(({ menu_item_price_id, quantity }) => ({ menu_item_price_id, quantity })) }));
     } catch { error = {message:"Confira sua conexão e tente novamente. Seus itens foram preservados."}; }
     if (error) { $("orderSubmitButton").disabled = false; $("orderMessage").textContent = error.message === "Item indisponível ou fora dos limites" ? `Confira a data do pedido. Os itens escolhidos exigem pelo menos ${leadTime || 48} horas de antecedência.` : `Não foi possível enviar o pedido: ${error.message}`; $("orderMessage").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     pendingRequestId = null;

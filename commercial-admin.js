@@ -213,6 +213,7 @@
         byId("menuPilotMetricsReload").disabled = menuMetricsBusy;
         byId("menuAssistantSettingsForm")?.querySelectorAll("input,button").forEach((input) => { input.disabled = !canManageMenu() || menuAssistantBusy; });
         byId("menuPixForm")?.querySelectorAll("input,button").forEach((input) => { input.disabled = !canManageMenu() || unavailable || !menuRecord; });
+        byId("menuServiceAreaForm")?.querySelectorAll("input,textarea,button").forEach((input) => { input.disabled = !canManageMenu() || unavailable || !menuRecord; });
         byId("menuContactForm")?.querySelectorAll("input,button").forEach((input) => { input.disabled = !canManageMenu() || unavailable || !menuRecord; });
         byId("menuOrdersList")?.querySelectorAll("[data-order]").forEach((button) => { button.disabled = unavailable; });
         const published = Boolean(menuRecord?.published);
@@ -623,6 +624,10 @@
             menuTemplates = templates || [];
             menuOnboarding = onboarding;
             menuRecord = menu;
+            if (byId("menuServiceAreaForm")) {
+                byId("menuPickupLocation").value = menu?.pickup_location || "";
+                byId("menuDeliveryPostcodes").value = (menu?.delivery_postcodes || []).join("\n");
+            }
             if (byId("menuPixKey")) byId("menuPixKey").value = menu?.pix_key || "";
             if (byId("menuPixWithAmount")) {
                 byId("menuPixWithAmount").checked = Boolean(menu?.pix_key && menu?.pix_amount_city);
@@ -815,6 +820,18 @@
         await runMenuAction("menuPixMessage", "Salvando opções de Pix...", () => supabaseClient.rpc("save_menu_pix_amount", {
             target_barbershop_id: BARBERSHOP_ID, target_pix_key: key, target_pix_amount_city: city
         }), key ? "Opções de Pix salvas." : "Divulgação da chave Pix desativada.");
+    });
+    byId("menuServiceAreaForm")?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!canManageMenu() || !menuRecord) return;
+        const pickupLocation = byId("menuPickupLocation").value.trim();
+        const postcodes = byId("menuDeliveryPostcodes").value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+        if (postcodes.length > 50 || postcodes.some(range => !/^\d{8}-\d{8}$/.test(range) || range.slice(0, 8) > range.slice(9))) {
+            return notify(byId("menuServiceAreaMessage"), "Informe até 50 faixas válidas, uma por linha, com o CEP menor primeiro.", true);
+        }
+        await runMenuAction("menuServiceAreaMessage", "Salvando área de atendimento...", () => supabaseClient.rpc("save_menu_service_area", {
+            target_barbershop_id: BARBERSHOP_ID, target_pickup_location: pickupLocation, target_delivery_postcodes: postcodes
+        }), "Área de atendimento salva.");
     });
     byId("menuContactForm")?.addEventListener("submit", async (event) => {
         event.preventDefault();
