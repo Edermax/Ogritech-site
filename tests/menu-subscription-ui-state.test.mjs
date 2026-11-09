@@ -33,13 +33,21 @@ test('panel uses only Cardápio and keeps subscription navigation accessible for
  const functionSource=source.slice(source.indexOf('async function applyProductAccess()'),source.indexOf('const dashboardView'));
  const items=['cardapio','configuracoes','agenda','landing','orcamentos'].map(section=>({dataset:{section},classList:{toggle(){}},setAttribute(){}}));
  const shown=[];
+ const businessConfig={};
  const apply=runInNewContext('let activeProductCodes=new Set();'+functionSource+';applyProductAccess',{
   IS_DEMO:false,BARBERSHOP_ID:'fixture',menuItems:items,
   PRODUCT_SECTION_CODES:{agenda:'agenda',landing:'pages',orcamentos:'quotes',cardapio:'menu'},
   AGENDA_SECTIONS:new Set(['agenda','configuracoes']),
-  supabaseClient:{rpc:async()=>({data:['menu','agenda','pages','quotes'].map(code=>({code,subscribed:true,status:'active'}))})},
+  supabaseClient:{
+   rpc:async()=>({data:['menu','agenda','pages','quotes'].map(code=>({code,subscribed:true,status:'active'}))}),
+   from(table){
+    assert.equal(table,'barbershops');
+    return {select(){return this;},eq(column,id){assert.equal(column,'id');assert.equal(id,'fixture');return this;},
+     async maybeSingle(){return {data:{name:'Loja cadastrada',segment:'Confeitaria'}};}};
+   }
+  },
   document:{body:{classList:{toggle(){}}},querySelector(){return null;}},openAppointmentButton:null,
-  businessConfig:{},applyBusinessCustomization(){},showSection(section){shown.push(section);}
+  businessConfig,applyBusinessCustomization(){},showSection(section){assert.equal(businessConfig.name,'Loja cadastrada');shown.push(section);}
  });
  assert.equal(await apply(),'cardapio');assert.deepEqual(shown,['cardapio']);
  assert.equal(items[1].dataset.productAllowed,'true');

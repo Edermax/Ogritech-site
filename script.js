@@ -75,7 +75,12 @@ let activeProductCodes = new Set();
 
 async function applyProductAccess() {
     if (IS_DEMO || !BARBERSHOP_ID) return "cardapio";
-    const { data, error } = await supabaseClient.rpc("business_product_catalog", { target_barbershop_id: BARBERSHOP_ID });
+    const [{ data, error }, { data: business, error: businessError }] = await Promise.all([
+        supabaseClient.rpc("business_product_catalog", { target_barbershop_id: BARBERSHOP_ID }),
+        supabaseClient.from("barbershops").select("name,segment").eq("id", BARBERSHOP_ID).maybeSingle()
+    ]);
+    if (businessError) console.warn("Não foi possível carregar a identificação do estabelecimento.", businessError);
+    if (business?.name) businessConfig.name = business.name;
     if (error) throw error;
     const access = new Map((Array.isArray(data) ? data : []).filter((item) => item.code === "menu").map((item) => [item.code, Boolean(item.subscribed) && ["trial", "active", "grace_period"].includes(item.status)]));
     activeProductCodes = new Set([...access].filter(([, allowed]) => allowed).map(([code]) => code));
@@ -94,7 +99,7 @@ async function applyProductAccess() {
     openAppointmentButton?.classList.toggle("solution-hidden", !agendaAllowed);
     if (!agendaAllowed) {
         businessConfig.key = "cardapio";
-        businessConfig.segment = "Comércio e alimentação";
+        businessConfig.segment = business?.segment || "Comércio e alimentação";
         businessConfig.icon = "☷";
         businessConfig.color = "#11bfe3";
         businessConfig.services = [];

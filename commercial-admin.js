@@ -613,15 +613,14 @@
         menuDataReady = false;
         updateMenuControls();
         try {
-            const [{ data: menu, error }, { data: orders, error: ordersError }, { data: templates, error: templateError }, { data: onboarding, error: onboardingError }, { data: business, error: businessError }] = await Promise.all([
+            const [{ data: menu, error }, { data: orders, error: ordersError }, { data: templates, error: templateError }, { data: onboarding, error: onboardingError }] = await Promise.all([
                 supabaseClient.from("online_menus").select("*,menu_delivery_zones(code,name,fee,minimum_order,active),menu_categories(id,name,description,active,sort_order,menu_items(id,name,description,image_url,metadata,item_type,unit_label,minimum_quantity,maximum_quantity,lead_time_hours,active,available,sort_order,menu_item_prices(id,label,price,promotional_price,active,sort_order),menu_item_option_groups(sort_order,menu_option_groups(id,name,selection_type,minimum_selections,maximum_selections,free_selections,active,menu_options(id,name,price_delta,maximum_quantity,available,sort_order)))))").eq("barbershop_id", BARBERSHOP_ID).maybeSingle(),
                 supabaseClient.from("menu_orders").select("id,public_reference,customer_name,customer_email,customer_phone,fulfillment_type,delivery_address,delivery_zone_code,scheduled_for,notes,status,payment_status,subtotal,delivery_fee,discount_amount,total_amount,created_at,is_test,items:menu_order_items(item_name,price_label,quantity,unit_price,line_total,notes,options:menu_order_item_options(group_name,option_name,quantity))").eq("barbershop_id", BARBERSHOP_ID).order("created_at", { ascending: false }).limit(100),
                 supabaseClient.from("menu_catalog_templates").select("code,name,description,segment,definition").eq("active", true).order("name"),
-                supabaseClient.rpc("menu_onboarding_status", { target_barbershop_id: BARBERSHOP_ID }),
-                supabaseClient.from("barbershops").select("name,segment").eq("id", BARBERSHOP_ID).maybeSingle()
+                supabaseClient.rpc("menu_onboarding_status", { target_barbershop_id: BARBERSHOP_ID })
             ]);
             if (loadVersion !== menuLoadVersion) return false;
-            if (error || templateError || onboardingError || businessError) throw error || templateError || onboardingError || businessError;
+            if (error || templateError || onboardingError) throw error || templateError || onboardingError;
             let draftStatus = null;
             if (menu?.published && canManageMenu()) {
                 const draftResult = await supabaseClient.rpc("menu_catalog_draft_status", { target_barbershop_id: BARBERSHOP_ID });
@@ -643,10 +642,6 @@
                 byId("menuPixCityField").hidden = !byId("menuPixWithAmount").checked;
             }
             byId("menuWhatsappPhone").value = menu?.whatsapp_phone || "";
-            if (business?.name && businessConfig.name === "Seu negócio") {
-                businessConfig.name = business.name;
-                applyBusinessCustomization();
-            }
             if (menu?.title && businessConfig.name === "Seu negócio") {
                 businessConfig.name = menu.title;
                 applyBusinessCustomization();
