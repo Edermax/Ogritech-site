@@ -24,6 +24,32 @@
     <link rel="stylesheet" href="style.css?v=20261108.2">
     <link rel="stylesheet" href="action-arrows.css">
     <style>
+        .sidebar .user-area {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 12px;
+        }
+        .sidebar .user-session-info strong {
+            display: block;
+            color: #f4f8fb;
+            font-size: 14px;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+        }
+        .sidebar .user-session-info small { display: block; margin-top: 4px; color: #cbd9e3; }
+        .user-session-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+        .user-session-actions .logout-button {
+            min-height: 40px;
+            padding: 8px 12px;
+            border: 1px solid #3d535d;
+            border-radius: 8px;
+            background: #142229;
+            color: #e7eff5;
+            font-size: 13px;
+        }
+        .user-session-actions .logout-button:hover,
+        .user-session-actions .logout-button:focus-visible { color: #fff; background: #23404b; }
+        .user-session-actions [hidden] { display: none; }
         #changePasswordDialog {
             margin: auto;
             width: min(440px, 92vw);
@@ -86,9 +112,10 @@
                     <small id="loggedUserRole">Proprietário</small>
                 </div>
 
-                <!-- Encerra a sessão atual -->
-                <button type="button" class="logout-button" id="changePasswordButton" hidden>Alterar senha</button>
-                <button type="button" class="logout-button" id="logoutButton" title="Sair do sistema">Sair</button>
+                <div class="user-session-actions">
+                    <button type="button" class="logout-button" id="changePasswordButton" hidden>Alterar senha</button>
+                    <button type="button" class="logout-button" id="logoutButton" title="Sair do sistema">Sair</button>
+                </div>
             </div>
         </aside>
 
