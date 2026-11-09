@@ -93,7 +93,7 @@
         <!-- Menu lateral -->
         <aside class="sidebar">
             <!-- Identidade da plataforma -->
-            <a class="brand header-logo-link" href="./" aria-label="Ir para a página principal da Ogritech">
+            <div class="brand">
                 <img src="ogritech-brand-symbol.png" alt="Símbolo Ogritech" class="logo-image platform-symbol">
                 <div class="brand-name">OGRITECH</div>
                 <div class="brand-subtitle">GESTÃO INTELIGENTE</div>
@@ -107,12 +107,12 @@
                         <strong id="tenantName">Seu negócio</strong>
                     </div>
                 </div>
-            </a>
+            </div>
 
             <!-- Menu de módulos -->
             <nav class="menu">
-                <a href="#" class="menu-item" data-section="cardapio"><span>☷</span>Ogritech Cardápio</a>
-                <a href="#" class="menu-item" data-section="configuracoes"><span>⚙</span>Assinatura e dados</a>
+                <a href="painel/?secao=cardapio" class="menu-item" data-section="cardapio"><span>☷</span>Ogritech Cardápio</a>
+                <a href="painel/?secao=configuracoes" class="menu-item" data-section="configuracoes"><span>⚙</span>Assinatura e dados</a>
             </nav>
 
             <!-- Usuário logado -->
@@ -482,7 +482,7 @@
                 </div>
 
                 <div id="settingsView" class="view-section hidden" data-owner-only>
-                    <article class="panel settings-panel" hidden><p class="eyebrow">PREFERÊNCIAS</p><h2>Configurações do negócio</h2><p class="section-description">Personalize a identificação, o expediente e o endereço público da agenda.</p><form id="settingsForm"><div class="form-row"><label>Nome do negócio<input id="settingsBusinessName" required maxlength="80"></label><label>Segmento<input id="settingsSegment" required maxlength="60"></label></div><div class="form-row"><label>Início do expediente<input type="time" id="settingsOpenTime" required></label><label>Fim do expediente<input type="time" id="settingsCloseTime" required></label></div><label>Duração padrão dos horários<select id="settingsSlotDuration"><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">60 minutos</option></select></label><fieldset class="public-booking-settings"><legend>Agendamento público</legend><label>Endereço da agenda<div class="slug-field"><span>ogritech.com.br/agendar/?empresa=</span><input id="settingsPublicSlug" pattern="[a-z0-9](?:[a-z0-9]|-){2,47}" maxlength="48" placeholder="nome-do-negocio"></div></label><label class="settings-toggle"><input type="checkbox" id="settingsPublicBookingEnabled"><span>Permitir novos agendamentos sem login</span></label><a class="table-button edit hidden" id="publicBookingLink" href="#" target="_blank" rel="noopener">Abrir agenda pública</a></fieldset><p class="form-message" id="settingsMessage" role="status"></p><button class="gold-button" type="submit">Salvar configurações</button></form></article>
+                    <article class="panel settings-panel" hidden><p class="eyebrow">PREFERÊNCIAS</p><h2>Configurações do negócio</h2><p class="section-description">Personalize a identificação, o expediente e o endereço público da agenda.</p><form id="settingsForm"><div class="form-row"><label>Nome do negócio<input id="settingsBusinessName" required maxlength="80"></label><label>Segmento<input id="settingsSegment" required maxlength="60"></label></div><div class="form-row"><label>Início do expediente<input type="time" id="settingsOpenTime" required></label><label>Fim do expediente<input type="time" id="settingsCloseTime" required></label></div><label>Duração padrão dos horários<select id="settingsSlotDuration"><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">60 minutos</option></select></label><fieldset class="public-booking-settings"><legend>Agendamento público</legend><label>Endereço da agenda<div class="slug-field"><span>ogritech.com.br/agendar/?empresa=</span><input id="settingsPublicSlug" pattern="[a-z0-9](?:[a-z0-9]|-){2,47}" maxlength="48" placeholder="nome-do-negocio"></div></label><label class="settings-toggle"><input type="checkbox" id="settingsPublicBookingEnabled"><span>Permitir novos agendamentos sem login</span></label><a class="table-button edit hidden" id="publicBookingLink" target="_blank" rel="noopener">Abrir agenda pública</a></fieldset><p class="form-message" id="settingsMessage" role="status"></p><button class="gold-button" type="submit">Salvar configurações</button></form></article>
                     <article class="panel settings-panel" id="subscriptionCenter"><div class="panel-header"><div><p class="eyebrow">ASSINATURA E DADOS</p><h2>Sua assinatura do Cardápio</h2><p class="section-description">Gerencie o plano e o pagamento do seu cardápio. Se preferir, <a href="mailto:suporte@ogritech.com.br">a Ogritech está disponível para ajudar</a>.</p></div><button class="table-button edit" id="exportBusinessData" type="button">Exportar meus dados</button></div><p class="form-message" id="subscriptionMessage" role="status"></p><div class="commercial-list" id="subscriptionList"><p class="section-description">Carregando assinatura...</p></div></article>
                 </div>
 
