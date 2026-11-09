@@ -14,3 +14,49 @@
 .pwa-install-button:focus-visible{outline:2px solid #42d9ed;outline-offset:3px}
 @media(max-width:600px){.pwa-install-button{right:max(14px,env(safe-area-inset-right))!important;bottom:max(14px,env(safe-area-inset-bottom))!important;width:52px;height:52px}.pwa-install-symbol{width:52px;height:52px}}
 @media(prefers-reduced-motion:reduce){.pwa-install-button,.pwa-install-arrow{transition:none}}
+
+.panel-install-button[hidden]{display:none!important}
+.table-button.panel-install-button {
+  min-height: 44px;
+  padding: 0.625rem 1rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.panel-install-button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.panel-install-help {
+  width: min(30rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  margin: auto;
+  padding: clamp(1rem, 4vw, 1.5rem);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--card);
+  color: var(--white);
+}
+
+.panel-install-help::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.panel-install-help h2 {
+  font-size: 1.25rem;
+  color: var(--gold-light);
+}
+
+.panel-install-help p {
+  margin: 0.875rem 0;
+  line-height: 1.5;
+}
+
+.panel-install-help form {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}

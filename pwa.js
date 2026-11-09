@@ -3,7 +3,50 @@
     window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch((error) => console.warn("PWA indisponível:", error)));
   }
 
-  // O convite de instalação pertence somente à tela de login.
+  const panelButton = document.getElementById("panelInstallApp");
+  if (panelButton) {
+    const help = document.getElementById("panelInstallHelp");
+    const standalone = window.matchMedia("(display-mode: standalone)");
+    let installEvent;
+    let installed = false;
+    const updateButton = () => {
+      panelButton.hidden = installed || standalone.matches || navigator.standalone === true;
+    };
+    updateButton();
+    standalone.addEventListener("change", updateButton);
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      installEvent = event;
+    });
+    window.addEventListener("appinstalled", () => {
+      installed = true;
+      installEvent = null;
+      help.close();
+      updateButton();
+    });
+    panelButton.addEventListener("click", async () => {
+      if (!installEvent) {
+        help.showModal();
+        return;
+      }
+      const prompt = installEvent;
+      installEvent = null;
+      panelButton.disabled = true;
+      try {
+        const { outcome } = await prompt.prompt();
+        if (outcome === "accepted") {
+          installed = true;
+          updateButton();
+        }
+      } catch {
+        if (!installed) help.showModal();
+      } finally {
+        panelButton.disabled = false;
+      }
+    });
+    return;
+  }
+
   if (!document.body.classList.contains("login-page")) return;
 
   const installStyles = document.createElement("link");

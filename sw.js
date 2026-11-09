@@ -1,9 +1,9 @@
-const CACHE_NAME = "ogritech-shell-v16";
+const CACHE_NAME = "ogritech-shell-v17";
 const APP_SHELL = [
   "./", "./login/", "./painel/", "./style.css",
   "./auth.js", "./script.js", "./commercial-admin.js", "./cliente.js", "./login.js", "./business-config.js",
   "./supabase-config.js", "./pwa.js", "./pwa.css", "./manifest.webmanifest",
-  "./ogritech-brand-symbol.png", "./ogritech-favicon.ico",
+  "./ogritech-brand-symbol.png", "./ogritech-app-192.png", "./ogritech-favicon.ico",
   "./home.css", "./home.js", "./commercial-public.css",
 
   "./cardapio/", "./cardapio/cardapio.js",
