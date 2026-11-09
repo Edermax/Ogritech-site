@@ -90,8 +90,11 @@ function enablePasswordChange() {
     if (!openButton) return;
 
     const dialog = document.getElementById("changePasswordDialog");
+    const title = document.getElementById("changePasswordTitle");
     const form = document.getElementById("changePasswordForm");
     const fields = document.getElementById("changePasswordFields");
+    const visibilityButton = document.getElementById("showChangePasswords");
+    const passwordInputs = fields.querySelectorAll('input[type="password"]');
     const status = document.getElementById("changePasswordStatus");
     const closeButton = document.getElementById("closeChangePassword");
     const saveButton = form.querySelector('button[type="submit"]');
@@ -104,8 +107,18 @@ function enablePasswordChange() {
         reauthentication_needed: "Entre novamente e tente alterar a senha logo após o login."
     };
 
+    function setPasswordsVisible(visible) {
+        for (const input of passwordInputs) input.type = visible ? "text" : "password";
+        visibilityButton.setAttribute("aria-pressed", String(visible));
+        visibilityButton.textContent = visible ? "Ocultar senhas" : "Mostrar senhas";
+    }
+
+    visibilityButton.addEventListener("click", () => {
+        setPasswordsVisible(visibilityButton.getAttribute("aria-pressed") === "false");
+    });
     openButton.hidden = false;
     openButton.addEventListener("click", () => {
+        title.textContent = "Alterar senha";
         status.textContent = "";
         delete status.dataset.state;
         fields.hidden = false;
@@ -115,7 +128,10 @@ function enablePasswordChange() {
         dialog.showModal();
     });
     closeButton.addEventListener("click", () => dialog.close());
-    dialog.addEventListener("close", () => form.reset());
+    dialog.addEventListener("close", () => {
+        form.reset();
+        setPasswordsVisible(false);
+    });
     dialog.addEventListener("cancel", (event) => {
         if (closeButton.disabled) event.preventDefault();
     });
@@ -158,11 +174,13 @@ function enablePasswordChange() {
             });
             if (error) throw error;
             form.reset();
+            setPasswordsVisible(false);
             fields.hidden = true;
             saveButton.hidden = true;
             closeButton.textContent = "Concluir";
             status.dataset.state = "success";
-            status.textContent = "Senha alterada. Use a nova senha no próximo login.";
+            title.textContent = "Senha alterada";
+            status.textContent = "Sua nova senha foi salva. Use-a no próximo login.";
         } catch (error) {
             status.dataset.state = "error";
             status.textContent = errorMessages[error?.code] || "Não foi possível alterar a senha. Confira os campos e tente novamente.";
