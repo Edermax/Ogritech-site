@@ -120,6 +120,20 @@ function enablePasswordChange() {
         if (saveButton.disabled) return;
 
         const { currentPassword, newPassword, confirmation } = form.elements;
+        const password = newPassword.value;
+        const allowedSymbols = "!@#$%^&*()_+-=[]{};'\":\\|<>?,./`~";
+        const missingRequirements = [
+            [password.length >= 8, "pelo menos 8 caracteres"],
+            [/[A-Z]/.test(password), "uma letra maiúscula"],
+            [/[a-z]/.test(password), "uma letra minúscula"],
+            [/[0-9]/.test(password), "um número"],
+            [Array.from(password).some((character) => allowedSymbols.includes(character)), "um símbolo, como !, ?, @ ou #"]
+        ].filter(([met]) => !met).map(([, requirement]) => requirement);
+        if (missingRequirements.length) {
+            status.textContent = `A nova senha precisa de ${new Intl.ListFormat("pt-BR").format(missingRequirements)}.`;
+            newPassword.focus();
+            return;
+        }
         if (newPassword.value !== confirmation.value) {
             status.textContent = "As senhas novas não coincidem.";
             confirmation.focus();
