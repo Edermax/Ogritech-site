@@ -1834,4 +1834,7 @@ async function initializeOperationalDashboard() {
     await applyProductAccess();
 }
 
-initializeOperationalDashboard().catch((error) => reportDataError("carregar os dados", error));
+// Wait for the Cardapio scripts to register their loaders before opening the panel.
+document.addEventListener("DOMContentLoaded", () => {
+    initializeOperationalDashboard().catch((error) => reportDataError("carregar os dados", error));
+}, { once: true });
