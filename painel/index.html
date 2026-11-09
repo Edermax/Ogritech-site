@@ -51,6 +51,18 @@
         .user-session-actions .logout-button:hover,
         .user-session-actions .logout-button:focus-visible { color: #fff; background: #23404b; }
         .user-session-actions [hidden] { display: none; }
+        .sidebar .tenant-badge > div { min-width: 0; }
+        .sidebar .tenant-badge img { flex: 0 0 auto; }
+        .sidebar .tenant-badge small,
+        .sidebar .tenant-badge strong {
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+        @media (max-width: 720px) {
+            .app > .sidebar { flex-wrap: wrap; }
+            .sidebar > .brand { flex-basis: 100%; }
+            .sidebar > .user-area { margin-left: auto; }
+        }
         #changePasswordDialog {
             margin: auto;
             width: min(440px, 92vw);
