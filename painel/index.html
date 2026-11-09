@@ -23,6 +23,30 @@
     <!-- IMPORTANTE: este é o arquivo CSS separado -->
     <link rel="stylesheet" href="style.css?v=20261108.2">
     <link rel="stylesheet" href="action-arrows.css">
+    <style>
+        #changePasswordDialog {
+            margin: auto;
+            width: min(440px, 92vw);
+            max-height: 90dvh;
+            overflow: auto;
+            padding: clamp(20px, 5vw, 32px);
+            color: #f4f8fb;
+        }
+        #changePasswordDialog::backdrop { background: rgb(0 0 0 / 65%); }
+        #changePasswordTitle { margin: 0 0 20px; color: #f4f8fb; }
+        #changePasswordForm, #changePasswordFields:not([hidden]) { display: grid; gap: 16px; }
+        #changePasswordForm label { display: grid; gap: 7px; margin: 0; color: #e7eff5; font-size: 14px; }
+        #changePasswordForm input { width: 100%; margin: 0; color: #f4f8fb; }
+        #changePasswordHint { margin: -8px 0 0; color: #cbd9e3; font-size: 13px; line-height: 1.55; }
+        #changePasswordStatus { margin: 0; min-height: 0; font-size: 14px; line-height: 1.5; }
+        #changePasswordStatus:empty { display: none; }
+        #changePasswordStatus[data-state] { padding: 12px; border-radius: 8px; }
+        #changePasswordStatus[data-state="success"] { color: #c7f9dc; background: #133d2b; }
+        #changePasswordStatus[data-state="error"] { color: #ffd8d8; background: #4a2326; }
+        #changePasswordForm button { min-height: 42px; margin: 0; }
+        #changePasswordForm [hidden] { display: none; }
+        #changePasswordForm button:disabled { opacity: .6; cursor: wait; }
+    </style>
 </head>
 <body>
     <!-- Aplicação principal -->
@@ -612,19 +636,21 @@
     <footer class="app-legal-links"><a href="mailto:suporte@ogritech.com.br">Suporte</a><a href="privacidade.html">Privacidade</a><a href="termos.html">Termos de Uso</a><a href="mailto:privacidade@ogritech.com.br">Canal do titular</a></footer>
 
     <!-- Cliente oficial do Supabase e configuração pública do projeto -->
-    <dialog id="changePasswordDialog" class="login-card" aria-labelledby="changePasswordTitle" style="margin:auto;width:min(440px, 92vw)">
+    <dialog id="changePasswordDialog" class="login-card" aria-labelledby="changePasswordTitle">
         <h2 id="changePasswordTitle">Alterar senha</h2>
         <form id="changePasswordForm" class="login-form">
-            <label>Senha atual
-                <input name="currentPassword" type="password" autocomplete="current-password" required autofocus>
-            </label>
-            <label>Nova senha
-                <input name="newPassword" type="password" autocomplete="new-password" required aria-describedby="changePasswordHint changePasswordStatus">
-            </label>
-            <p id="changePasswordHint">Obrigatório: pelo menos 8 caracteres, uma letra maiúscula (A–Z), uma minúscula (a–z), um número (0–9) e um símbolo, como !, ?, @ ou #.</p>
-            <label>Confirme a nova senha
-                <input name="confirmation" type="password" autocomplete="new-password" required>
-            </label>
+            <div id="changePasswordFields">
+                <label>Senha atual
+                    <input name="currentPassword" type="password" autocomplete="current-password" required autofocus>
+                </label>
+                <label>Nova senha
+                    <input name="newPassword" type="password" autocomplete="new-password" required aria-describedby="changePasswordHint changePasswordStatus">
+                </label>
+                <p id="changePasswordHint">Obrigatório: pelo menos 8 caracteres, uma letra maiúscula (A–Z), uma minúscula (a–z), um número (0–9) e um símbolo, como !, ?, @ ou #.</p>
+                <label>Confirme a nova senha
+                    <input name="confirmation" type="password" autocomplete="new-password" required>
+                </label>
+            </div>
             <p id="changePasswordStatus" class="login-message" role="status"></p>
             <button type="submit" class="gold-button full">Salvar nova senha</button>
             <button type="button" id="closeChangePassword" class="text-button full">Fechar</button>
@@ -636,7 +662,7 @@
     <script src="business-config.js"></script>
 
     <!-- auth.js verifica se existe uma sessão válida -->
-    <script src="auth.js?v=20261108.5"></script>
+    <script src="auth.js?v=20261108.6"></script>
 
     <!-- JavaScript principal do dashboard -->
     <script src="script.js?v=20261022.6"></script>

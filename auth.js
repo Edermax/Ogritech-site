@@ -91,6 +91,7 @@ function enablePasswordChange() {
 
     const dialog = document.getElementById("changePasswordDialog");
     const form = document.getElementById("changePasswordForm");
+    const fields = document.getElementById("changePasswordFields");
     const status = document.getElementById("changePasswordStatus");
     const closeButton = document.getElementById("closeChangePassword");
     const saveButton = form.querySelector('button[type="submit"]');
@@ -106,6 +107,10 @@ function enablePasswordChange() {
     openButton.hidden = false;
     openButton.addEventListener("click", () => {
         status.textContent = "";
+        delete status.dataset.state;
+        fields.hidden = false;
+        saveButton.hidden = false;
+        closeButton.textContent = "Fechar";
         saveButton.disabled = false;
         dialog.showModal();
     });
@@ -130,11 +135,13 @@ function enablePasswordChange() {
             [Array.from(password).some((character) => allowedSymbols.includes(character)), "um símbolo, como !, ?, @ ou #"]
         ].filter(([met]) => !met).map(([, requirement]) => requirement);
         if (missingRequirements.length) {
+            status.dataset.state = "error";
             status.textContent = `A nova senha precisa de ${new Intl.ListFormat("pt-BR").format(missingRequirements)}.`;
             newPassword.focus();
             return;
         }
         if (newPassword.value !== confirmation.value) {
+            status.dataset.state = "error";
             status.textContent = "As senhas novas não coincidem.";
             confirmation.focus();
             return;
@@ -142,6 +149,7 @@ function enablePasswordChange() {
 
         saveButton.disabled = true;
         closeButton.disabled = true;
+        delete status.dataset.state;
         status.textContent = "Salvando nova senha...";
         try {
             const { error } = await supabaseClient.auth.updateUser({
@@ -150,12 +158,18 @@ function enablePasswordChange() {
             });
             if (error) throw error;
             form.reset();
+            fields.hidden = true;
+            saveButton.hidden = true;
+            closeButton.textContent = "Concluir";
+            status.dataset.state = "success";
             status.textContent = "Senha alterada. Use a nova senha no próximo login.";
         } catch (error) {
+            status.dataset.state = "error";
             status.textContent = errorMessages[error?.code] || "Não foi possível alterar a senha. Confira os campos e tente novamente.";
             saveButton.disabled = false;
         } finally {
             closeButton.disabled = false;
+            if (fields.hidden) closeButton.focus();
         }
     });
 }
