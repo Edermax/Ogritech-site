@@ -56,7 +56,7 @@ test("release package pins production inputs and preserves all launch blockers",
 
 test("a promoted migration leaves an empty tail without losing immutable function hashes or release blockers", () => {
   const source = fixture();
-  setMigrationTail(source, "menu_optional_pix", []);
+  setMigrationTail(source, "menu_service_area", []);
   const report = buildReleasePackage(source);
   assert.equal(report.database.pendingCount, 0);
   assert.deepEqual(report.database.migrations, []);
@@ -82,9 +82,9 @@ test("release package rejects a staging project or an incomplete migration inven
   source.overrides.set("config/menu-release-package.json", Buffer.from(JSON.stringify(source.config)));
   assert.throws(() => buildReleasePackage(source), /produção/);
   const missing = fixture();
-  setMigrationTail(missing, "business_whatsapp_shares", ["menu_optional_pix"]);
+  setMigrationTail(missing, "menu_pix_order_amount", ["menu_service_area"]);
   assert.doesNotThrow(() => buildReleasePackage(missing), "The controlled inventory must be complete before removing its pending file");
-  const metadataPath = "supabase/migrations/20261107160000_menu_optional_pix.sql";
+  const metadataPath = "supabase/migrations/20261108100000_menu_service_area.sql";
   assert.ok(missing.paths.includes(metadataPath));
   missing.paths = missing.paths.filter((path) => path !== metadataPath);
   assert.throws(() => buildReleasePackage(missing), /divergem/);

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-07",
-  "baseline": "menu_optional_pix",
+  "baseline": "menu_service_area",
   "strategy": "contiguous_tail",
   "authorized": false,
   "decision": "PENDING",
@@ -75,7 +75,9 @@
     "preserve_menu_catalog_metadata",
     "preserve_menu_special_hours",
     "business_whatsapp_shares",
-    "menu_optional_pix"
+    "menu_optional_pix",
+    "menu_pix_order_amount",
+    "menu_service_area"
   ],
   "authorizationSource": "Pedido do responsável nesta conversa para concluir, testar e publicar a jornada funcional do Cardápio.",
   "authorizationScope": "Correção preserve_menu_special_hours e jornada de criação e gestão do Cardápio.",
