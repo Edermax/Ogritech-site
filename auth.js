@@ -85,6 +85,81 @@ function renderUser(profile) {
     }
 }
 
+function enablePasswordChange() {
+    const openButton = document.getElementById("changePasswordButton");
+    if (!openButton) return;
+
+    const dialog = document.getElementById("changePasswordDialog");
+    const form = document.getElementById("changePasswordForm");
+    const status = document.getElementById("changePasswordStatus");
+    const closeButton = document.getElementById("closeChangePassword");
+    const saveButton = form.querySelector('button[type="submit"]');
+    const errorMessages = {
+        invalid_credentials: "Confira a senha atual e tente novamente.",
+        invalid_current_password: "Confira a senha atual e tente novamente.",
+        same_password: "Escolha uma senha diferente da atual.",
+        weak_password: "A nova senha não atende aos requisitos. Escolha outra senha.",
+        session_not_found: "Sua sessão expirou. Entre novamente para alterar a senha.",
+        reauthentication_needed: "Entre novamente e tente alterar a senha logo após o login."
+    };
+
+    openButton.hidden = false;
+    openButton.addEventListener("click", () => {
+        status.textContent = "";
+        saveButton.disabled = false;
+        dialog.showModal();
+    });
+    closeButton.addEventListener("click", () => dialog.close());
+    dialog.addEventListener("close", () => form.reset());
+    dialog.addEventListener("cancel", (event) => {
+        if (closeButton.disabled) event.preventDefault();
+    });
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (saveButton.disabled) return;
+
+        const { currentPassword, newPassword, confirmation } = form.elements;
+        const password = newPassword.value;
+        const allowedSymbols = "!@#$%^&*()_+-=[]{};'\":\\|<>?,./`~";
+        const missingRequirements = [
+            [password.length >= 8, "pelo menos 8 caracteres"],
+            [/[A-Z]/.test(password), "uma letra maiúscula"],
+            [/[a-z]/.test(password), "uma letra minúscula"],
+            [/[0-9]/.test(password), "um número"],
+            [Array.from(password).some((character) => allowedSymbols.includes(character)), "um símbolo, como !, ?, @ ou #"]
+        ].filter(([met]) => !met).map(([, requirement]) => requirement);
+        if (missingRequirements.length) {
+            status.textContent = `A nova senha precisa de ${new Intl.ListFormat("pt-BR").format(missingRequirements)}.`;
+            newPassword.focus();
+            return;
+        }
+        if (newPassword.value !== confirmation.value) {
+            status.textContent = "As senhas novas não coincidem.";
+            confirmation.focus();
+            return;
+        }
+
+        saveButton.disabled = true;
+        closeButton.disabled = true;
+        status.textContent = "Salvando nova senha...";
+        try {
+            const { error } = await supabaseClient.auth.updateUser({
+                password: newPassword.value,
+                current_password: currentPassword.value
+            });
+            if (error) throw error;
+            form.reset();
+            status.textContent = "Senha alterada. Use a nova senha no próximo login.";
+        } catch (error) {
+            status.textContent = errorMessages[error?.code] || "Não foi possível alterar a senha. Confira os campos e tente novamente.";
+            saveButton.disabled = false;
+        } finally {
+            closeButton.disabled = false;
+        }
+    });
+}
+
 async function initializeAuthenticatedPage() {
     const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
 
@@ -182,6 +257,7 @@ async function initializeAuthenticatedPage() {
 
     await waitForDocument();
     renderUser(profile);
+    enablePasswordChange();
     document.documentElement.style.visibility = "visible";
 
     const logoutButton = document.getElementById("logoutButton");

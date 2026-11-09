@@ -63,6 +63,7 @@
                 </div>
 
                 <!-- Encerra a sessão atual -->
+                <button type="button" class="logout-button" id="changePasswordButton" hidden>Alterar senha</button>
                 <button type="button" class="logout-button" id="logoutButton" title="Sair do sistema">Sair</button>
             </div>
         </aside>
@@ -611,12 +612,31 @@
     <footer class="app-legal-links"><a href="mailto:suporte@ogritech.com.br">Suporte</a><a href="privacidade.html">Privacidade</a><a href="termos.html">Termos de Uso</a><a href="mailto:privacidade@ogritech.com.br">Canal do titular</a></footer>
 
     <!-- Cliente oficial do Supabase e configuração pública do projeto -->
+    <dialog id="changePasswordDialog" class="login-card" aria-labelledby="changePasswordTitle" style="margin:auto;width:min(440px, 92vw)">
+        <h2 id="changePasswordTitle">Alterar senha</h2>
+        <form id="changePasswordForm" class="login-form">
+            <label>Senha atual
+                <input name="currentPassword" type="password" autocomplete="current-password" required autofocus>
+            </label>
+            <label>Nova senha
+                <input name="newPassword" type="password" autocomplete="new-password" required aria-describedby="changePasswordHint changePasswordStatus">
+            </label>
+            <p id="changePasswordHint">Obrigatório: pelo menos 8 caracteres, uma letra maiúscula (A–Z), uma minúscula (a–z), um número (0–9) e um símbolo, como !, ?, @ ou #.</p>
+            <label>Confirme a nova senha
+                <input name="confirmation" type="password" autocomplete="new-password" required>
+            </label>
+            <p id="changePasswordStatus" class="login-message" role="status"></p>
+            <button type="submit" class="gold-button full">Salvar nova senha</button>
+            <button type="button" id="closeChangePassword" class="text-button full">Fechar</button>
+        </form>
+    </dialog>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
     <script src="supabase-config.js"></script>
     <script src="business-config.js"></script>
 
     <!-- auth.js verifica se existe uma sessão válida -->
-    <script src="auth.js?v=20260930.1"></script>
+    <script src="auth.js?v=20261108.4"></script>
 
     <!-- JavaScript principal do dashboard -->
     <script src="script.js?v=20261022.6"></script>
