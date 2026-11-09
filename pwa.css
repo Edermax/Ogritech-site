@@ -1,19 +1,22 @@
-.pwa-install-button.hidden{display:none!important}
-.pwa-install-button{position:fixed!important;z-index:1200;left:auto!important;right:max(18px,env(safe-area-inset-right))!important;bottom:max(18px,env(safe-area-inset-bottom))!important;width:56px;height:56px;min-height:0;padding:0;display:grid;place-items:center;border:1px solid rgba(66,217,237,.58);border-radius:50%;background:linear-gradient(145deg,#42d9ed,#08b9d3);color:#031012;box-shadow:0 12px 32px rgba(0,0,0,.48),0 5px 18px rgba(8,185,211,.22);font:inherit;transform:none;cursor:pointer;transition:box-shadow .22s ease,transform .22s ease}
-.pwa-install-symbol{width:56px;height:56px;display:grid;place-items:center;border-radius:50%;color:#031012}
-.pwa-install-symbol::before{content:"";width:9px;height:11px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg)}
-.pwa-install-copy{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
-.pwa-install-copy small{color:#6f858b;font-size:8px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase}
-.pwa-install-copy strong{overflow:hidden;color:#edf7f8;font-size:12px;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}
-.pwa-install-arrow{display:none}
-.pwa-install-arrow::before{content:"";width:6px;height:6px;border-top:1.5px solid currentColor;border-right:1.5px solid currentColor;transform:translateX(-1px) rotate(45deg)}
-.pwa-install-button:hover{border-color:#7ce8f5;background:linear-gradient(145deg,#69e4f3,#10c5df);box-shadow:0 16px 38px rgba(0,0,0,.52),0 0 0 4px rgba(8,185,211,.1);transform:translateY(-3px)}
-.pwa-install-button:hover .pwa-install-arrow{background:#42d9ed;color:#031012;transform:translateX(3px)}
-.pwa-install-button.showing-help{border-color:#edf7f8;box-shadow:0 16px 38px rgba(0,0,0,.52),0 0 0 4px rgba(8,185,211,.12)}
-.pwa-install-button.showing-help .pwa-install-symbol{background:#edf7f8;color:#041012}
-.pwa-install-button:focus-visible{outline:2px solid #42d9ed;outline-offset:3px}
-@media(max-width:600px){.pwa-install-button{right:max(14px,env(safe-area-inset-right))!important;bottom:max(14px,env(safe-area-inset-bottom))!important;width:52px;height:52px}.pwa-install-symbol{width:52px;height:52px}}
-@media(prefers-reduced-motion:reduce){.pwa-install-button,.pwa-install-arrow{transition:none}}
+.pwa-install-button[hidden]{display:none!important}
+.pwa-install-button {
+  position: fixed;
+  z-index: 1200;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  width: 52px;
+  height: 52px;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+.pwa-install-button img{display:block;width:100%;height:100%}
+.pwa-install-button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 
 .panel-install-button[hidden]{display:none!important}
 .table-button.panel-install-button {
