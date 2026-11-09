@@ -6,10 +6,10 @@
   "start_url": "./painel/",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#080808",
   "theme_color": "#080808",
   "icons": [
-    { "src": "ogritech-brand-symbol.png", "sizes": "any", "type": "image/png", "purpose": "any maskable" }
+    { "src": "ogritech-app-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "ogritech-brand-symbol.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
