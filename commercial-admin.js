@@ -733,6 +733,7 @@
             }));
             if (menu?.published) selectMenuWorkspace(previousWorkspace && previousWorkspace !== "start" ? previousWorkspace : "operation");
             else selectMenuWorkspace(nextMenuWorkspace());
+            window.OgritechOrderNotifications?.initialize(BARBERSHOP_ID);
             loadMenuAssistantAdmin().catch(() => notify(byId("menuAssistantSettingsMessage"), "O assistente está temporariamente indisponível; o restante do Cardápio continua funcionando.", true));
             loadMenuPilotMetrics().catch((metricsError) => renderMenuPilotMetrics(null, metricsError));
             return true;
@@ -971,5 +972,10 @@
 
     window.loadLandingAdmin = loadLandingAdmin;
     window.loadQuotesAdmin = loadQuotesAdmin;
+    window.addEventListener("ogritech:menu-order-notification-opened", () => {
+        if (!menuDataReady) return;
+        selectMenuWorkspace("operation");
+        notify(byId("menuOperationMessage"), "Há um novo pedido. Use Atualizar pedidos para carregar os dados mais recentes.");
+    });
     window.loadMenuAdmin = loadMenuAdmin;
 })();

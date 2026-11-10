@@ -28,6 +28,11 @@ function onboarding() {
 
 function respondToApi({ table, name, args = {}, update, filters, role }) {
   state.calls.push({ table, name, args, role });
+  if (name === "fixture_order_push") {
+    if (args.action === "config") return { data: { available: true, public_key: "B" + "A".repeat(86) } };
+    if (args.action !== "status") state.pushEnabled = args.action === "enable";
+    return { data: { enabled: state.pushEnabled === true } };
+  }
   if (name === "public_menu") {
     if (!state.menu?.published || state.menu.slug !== args.target_slug) return { data: null };
     const { slug, title, description, visual_identity, accepts_pickup, accepts_delivery, weekly_hours, accepted_payment_methods } = state.menu;
@@ -109,13 +114,23 @@ const escapeHtml = (value) => String(value ?? "").replaceAll("&", "&amp;").repla
 const ogritechEnvironmentUrl = (path) => new URL(path + (path.includes("?") ? "&" : "?") + "env=production", location.origin).href;
 window.ogritechEnvironmentUrl = ogritechEnvironmentUrl;
 const api = (request) => fetch("/test-api", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({...request, role:currentRole})}).then(r=>r.json());
+// Only the operating-system push boundary is simulated; real UI/controller runs.
+let pushSubscription = null;
+const notificationFixture = { permission: "default", requestPermission: async () => { notificationFixture.permission = "granted"; return "granted"; } };
+Object.defineProperty(window, "Notification", { configurable: true, value: notificationFixture });
+window.PushManager ||= function() {};
+const pushWorker = { update: async () => {}, active: { postMessage(data, ports) { ports[0].postMessage({ ok: true }); } }, pushManager: {
+  getSubscription: async () => pushSubscription,
+  subscribe: async options => pushSubscription = { endpoint: "https://fcm.googleapis.com/fcm/send/fixture", options, unsubscribe: async () => { pushSubscription = null; return true; } }
+} };
+Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: { register: async () => pushWorker, getRegistration: async () => pushWorker, addEventListener() {} } });
 const supabaseClient = {
   auth: {
     async getSession() { return {data:{session:sessionStorage.getItem("fixtureSignedIn") ? {user:{id:"user-test",email:"owner@example.invalid"}} : null}}; },
     async signInWithPassword() { sessionStorage.setItem("fixtureSignedIn", "yes"); return {data:{user:{id:"user-test",email:"owner@example.invalid"}}}; },
     async signOut() { sessionStorage.removeItem("fixtureSignedIn"); return {}; }
   },
-  functions: { async invoke() { return {data:{data:{status:"trial",boundary:"2099-01-01T00:00:00Z"}}}; } },
+  functions: { async invoke(name, options) { if(name === "menu-order-notifications") return {data:await api({name:"fixture_order_push",args:options.body})}; return {data:{data:{status:"trial",boundary:"2099-01-01T00:00:00Z"}}}; } },
   from(table) {
     const request={table, filters:{}};
     const query={select(){return query},eq(key,value){request.filters[key]=value;return query},order(){return query},limit(){return query},maybeSingle(){return query},single(){return query},update(value){request.update=value;return query},then(resolve,reject){return api(request).then(resolve,reject)}};
@@ -160,7 +175,7 @@ const server = createServer(async (request, response) => {
     if (!target.startsWith(root.endsWith(sep) ? root : root + sep)) throw new Error("Invalid path");
     let body = await readFile(target);
     if (pathname === "/painel/index.html") {
-      body = Buffer.from(body.toString().replace(/<script\b[^>]*src="[^"]*"[^>]*><\/script>/g, "").replace("</body>", '<script src="/journey-fixture.js"></script><script src="/auth.js"></script><script src="/commercial-admin.js"></script><script src="/journey-start.js"></script></body>'));
+      body = Buffer.from(body.toString().replace(/<script\b[^>]*src="[^"]*"[^>]*><\/script>/g, "").replace("</body>", '<script src="/journey-fixture.js"></script><script src="/auth.js"></script><script src="/menu-order-notifications.js"></script><script src="/commercial-admin.js"></script><script src="/journey-start.js"></script></body>'));
     }
     if (pathname === "/login/index.html") {
       body = Buffer.from(body.toString().replace(/<script\b[^>]*src="[^"]*"[^>]*><\/script>/g, "").replace("</body>", '<script src="/journey-fixture.js"></script><script src="/login.js"></script></body>'));
@@ -210,6 +225,13 @@ try {
     await page.waitForFunction(() => Boolean(window.journeyReady));
     assert.equal(await page.evaluate(() => window.journeyReady), true);
     await selected(page, "start");
+    const creationNotifications = page.locator("#menuTemplatePanel [data-push-enable]");
+    await creationNotifications.waitFor();
+    await page.waitForFunction(() => !document.querySelector("#menuTemplatePanel [data-push-enable]").disabled);
+    assert.equal(state.pushEnabled, undefined, "Opening creation must never subscribe automatically");
+    await creationNotifications.click();
+    await page.waitForFunction(() => document.querySelector("#menuTemplatePanel [data-push-enable]").getAttribute("aria-pressed") === "true");
+    assert.equal(state.pushEnabled, true);
     assert.equal(await page.locator("#menuCatalogWorkspace").isVisible(), false);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Horizontal overflow before publication");
     await page.screenshot({ path: join(output, `${viewport.name}-start.png`), fullPage: true });
@@ -251,6 +273,11 @@ try {
     await selected(page, "operation");
     await settled(page);
     assert.equal(state.menu.published, true);
+    const operationNotifications = page.locator("#menuOrdersPanel [data-push-enable]");
+    assert.equal(await operationNotifications.getAttribute("aria-pressed"), "true");
+    await operationNotifications.click();
+    await page.waitForFunction(() => document.querySelector("#menuOrdersPanel [data-push-enable]").getAttribute("aria-pressed") === "false");
+    assert.equal(state.pushEnabled, false);
     for (const selector of ["#menuJourneyGuide", "#menuJourneyNavigation", "#menuTabStart", "#menuOnboardingChecklist", "#menuTemplatePanel"]) assert.equal(await page.locator(selector).isVisible(), false, selector);
     assert.match(await page.locator("#menuWorkspaceMessage").innerText(), /Cardápio publicado/);
     assert.match(await page.locator("#menuOperationPublicLink").getAttribute("href"), /empresa=confeitaria-teste&env=production/);
@@ -344,7 +371,7 @@ try {
     await settled(page);
     assert.equal(state.orders[0].status, "completed");
     assert.deepEqual(errors, []);
-    results.push({ viewport: viewport.name, ownerAndEmployeeLoginRouting: true, newOwnerPublished: true, sharedStorefrontApplied: true, emptyCartRestoresAssistant: true, publishedDraftReviewed: true, failedDraftRestoresCatalog: true, specialHoursVisible: true, accidentalUnpublishPrevented: true, employeeOrdersCompleted: true, javascriptErrors: 0 });
+    results.push({ viewport: viewport.name, ownerAndEmployeeLoginRouting: true, notificationOptInAtCreation: true, notificationOptOutInPanel: true, newOwnerPublished: true, sharedStorefrontApplied: true, emptyCartRestoresAssistant: true, publishedDraftReviewed: true, failedDraftRestoresCatalog: true, specialHoursVisible: true, accidentalUnpublishPrevented: true, employeeOrdersCompleted: true, javascriptErrors: 0 });
     await context.close();
   }
 } finally {

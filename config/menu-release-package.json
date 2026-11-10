@@ -8,7 +8,9 @@
     "ogritech-billing",
     "mercado-pago-webhook",
     "billing-lifecycle",
-    "billing-email-dispatch"
+    "billing-email-dispatch",
+    "menu-order-notifications",
+    "menu-order-push-dispatch"
   ],
   "excludedFunctions": [
     "menu-sandbox-qa",
@@ -23,7 +25,12 @@
     "pedido/pedido.js",
     "painel/index.html",
     "supabase-config.js",
-    "sw.js"
+    "sw.js",
+    "menu-order-notifications.js",
+    "menu-order-push-worker.js",
+    "order-notifications.css",
+    "criar-cardapio/index.html",
+    "criar-cardapio/criar-cardapio.js"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",

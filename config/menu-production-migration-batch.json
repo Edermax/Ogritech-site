@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-07",
+  "updatedAt": "2026-11-10",
   "baseline": "menu_service_area",
   "strategy": "contiguous_tail",
   "authorized": false,
@@ -22,12 +22,18 @@
     "aliasCompatibility": "Existing billing_rejected_email_event filename alias in isolated deployment directory; history unchanged."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [],
+  "requiredMenuMigrations": [
+    "menu_order_push_notifications",
+    "menu_order_push_transport"
+  ],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
     "commercial_callbacks_and_billing": [],
-    "menu_release_required": [],
+    "menu_release_required": [
+      "menu_order_push_notifications",
+      "menu_order_push_transport"
+    ],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],
