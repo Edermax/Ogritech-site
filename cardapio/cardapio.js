@@ -35,7 +35,7 @@
     .replace(/\s{2,}/g, " ")
     .trim();
   const weightPickerLabel = (records, quote) => {
-    const usesWeight = records.some((record) => /\bkg\b/i.test(record.label || ""));
+    const usesWeight = records.some((record) => /\d\s*(?:kg|g)\b/i.test(record.label || ""));
     if (quote) return usesWeight ? "Peso de referência" : "Tamanho de referência";
     return usesWeight ? "Escolha o formato e o peso" : "Escolha uma opção";
   };
@@ -195,7 +195,14 @@
     }).join("");
     $("cartReviewTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total);
   }
-  function updateCart() { let count = 0, total = 0, hasQuote = false; cart.forEach((entry) => { count += entry.quantity; total += entry.quantity * estimatedUnitPrice(entry); hasQuote ||= entry.isQuote; }); $("cartCount").textContent = count; $("cartTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total); $("checkoutButton").textContent = hasQuote ? "Continuar solicitação" : "Finalizar pedido"; $("checkoutTitle").textContent = hasQuote ? "Enviar solicitação para análise" : "Finalizar pedido"; $("orderSubmitButton").textContent = hasQuote ? "Enviar solicitação" : "Enviar pedido"; $("cartBar").classList.toggle("hidden", !count); renderCartReview(total, hasQuote); if (!count) { $("cartReview").classList.add("hidden"); $("checkout").classList.add("hidden"); } updateSchedulingRequirement(); updateCheckoutEstimate(); }
+  function updateCart() { let count = 0, total = 0, hasQuote = false; cart.forEach((entry) => { count += entry.quantity; total += entry.quantity * estimatedUnitPrice(entry); hasQuote ||= entry.isQuote; }); $("cartCount").textContent = count; $("cartTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total); $("checkoutButton").textContent = hasQuote ? "Continuar solicitação" : "Finalizar pedido"; $("checkoutTitle").textContent = hasQuote ? "Enviar solicitação para análise" : "Finalizar pedido"; $("orderSubmitButton").textContent = hasQuote ? "Enviar solicitação" : "Enviar pedido"; $("cartBar").classList.toggle("hidden", !count); renderCartReview(total, hasQuote); if (!count) { $("cartReview").classList.add("hidden"); $("checkout").classList.add("hidden"); } updateBag(); updateSchedulingRequirement(); updateCheckoutEstimate(); }
+  function updateBag() {
+    const count = $("cartCount").textContent;
+    $("menuBagCount").textContent = count;
+    $("menuBagCount").classList.toggle("hidden", !cart.size);
+    $("menuBagButton").setAttribute("aria-expanded", String(!$("cartReview").classList.contains("hidden")));
+    $("menuBagStatus").textContent = "";
+  }
   function addConfigured(price, selections = [], quantity = 1) { const signature = `${price.id}:${selections.map((item) => `${item.menu_option_id}x${item.quantity}`).sort().join(",")}`; const entry = cart.get(signature) || { menu_item_price_id: price.id, name: price.item.name, label: price.label, price: price.amount, quantity: 0, minimumQuantity: Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1)), maximumQuantity: price.item.maximum_quantity == null ? 100 : Math.floor(Number(price.item.maximum_quantity)), selections, optionGroups: price.item.option_groups || [], isQuote: isQuoteItem(price.item), leadTimeHours: price.item.lead_time_hours }; entry.quantity = Math.min(entry.maximumQuantity, entry.quantity + quantity); cart.set(signature, entry); pendingRequestId = null; updateCart(); }
   function configure(price, quantity = Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1))) {
     const groups = price.item.option_groups || []; if (!groups.length) return addConfigured(price, [], quantity);
@@ -301,18 +308,22 @@
     $("fulfillment").innerHTML = (data.menu.accepts_pickup ? '<option value="pickup">Retirada</option>' : "") + (data.menu.accepts_delivery ? '<option value="delivery">Entrega</option>' : "");
     const zones = data.delivery_zones || []; $("deliveryZone").innerHTML = '<option value="">Selecione sua região</option>' + zones.map((zone) => `<option value="${zone.code}">${deliveryZoneLabel(zone)}</option>`).join(""); updateFulfillmentFields();
     $("categoryNav").innerHTML = data.categories.map((category, index) => `<a href="#${categoryId(index)}">${clean(category.name)}</a>`).join("");
-    $("catalog").innerHTML = data.categories.map((category, categoryIndex) => `<section id="${categoryId(categoryIndex)}" class="catalog-section"><header class="catalog-section-heading"><small>EXPLORE</small><h2>${clean(category.name)}</h2><p>${clean(category.description)}</p></header><div class="catalog-items">${category.items.map((item, itemIndex) => {
+    $("catalog").innerHTML = data.categories.map((category, categoryIndex) => `<section id="${categoryId(categoryIndex)}" class="catalog-section"><header class="catalog-section-heading"><h2>${clean(category.name)}</h2>${category.description ? `<p>${clean(category.description)}</p>` : ""}</header><div class="catalog-items">${category.items.map((item) => {
       const records = item.prices.map((record) => { const amount = Number(record.promotional_price ?? record.price); prices.set(record.id, { ...record, amount, item }); return { ...record, amount }; });
       const quote = isQuoteItem(item), first = records[0], minimumQuantity = Math.max(1, Math.ceil(Number(item.minimum_quantity) || 1)), maximumQuantity = item.maximum_quantity == null ? "" : Math.floor(Number(item.maximum_quantity)), customQuantity = minimumQuantity > 1;
       const quantityPicker = customQuantity ? `<label class="menu-quantity-picker"><span>Quantidade (mínimo ${minimumQuantity})</span><input type="number" inputmode="numeric" min="${minimumQuantity}"${maximumQuantity ? ` max="${maximumQuantity}"` : ""} step="1" value="${minimumQuantity}" data-quantity-select="${item.id}"></label>` : "";
       const initialPrice = first ? clean(formatItemPrice(first, item, minimumQuantity, customQuantity)) : "Indisponível";
-      const pricePicker = records.length ? `<label class="menu-price-picker"><span>${weightPickerLabel(records, quote)}</span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(displayPriceLabel(record.label))}</option>`).join("")}</select></label>${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button class="public-button" data-add-selected="${item.id}">${quote ? "Solicitar análise" : ((item.option_groups || []).length ? "Personalizar" : "Adicionar")}</button></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
+      const singleLabel = records.length === 1 ? displayPriceLabel(first.label) : "";
+      const priceOptions = records.length === 1
+        ? `<input type="hidden" data-price-select="${item.id}" value="${first.id}">${singleLabel && normalizeSearch(singleLabel) !== "padrao" ? `<p class="menu-single-option">${clean(singleLabel)}</p>` : ""}`
+        : `<label class="menu-price-picker"><span>${weightPickerLabel(records, quote)}</span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(displayPriceLabel(record.label))}</option>`).join("")}</select></label>`;
+      const pricePicker = records.length ? `<div class="menu-item-purchase">${priceOptions}${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button type="button" class="public-button" data-add-selected="${item.id}">${quote ? "Solicitar análise" : ((item.option_groups || []).length ? "Personalizar" : "Adicionar")}</button></div></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
       const illustration = dinizIllustration(category, item), media = item.image_url
         ? `<div class="menu-item-media"><img class="menu-item-image" loading="lazy" decoding="async" src="${clean(item.image_url)}" alt=""></div>`
         : illustration
           ? `<div class="menu-item-media"><img class="menu-item-image" loading="lazy" decoding="async" src="${illustration.src}" alt="${illustration.alt}"><span class="menu-image-note">Imagem ilustrativa</span></div>`
           : `<div class="menu-item-placeholder" aria-hidden="true"><small>${item.item_type === "preorder" || Number(item.lead_time_hours) > 0 ? "Feito por encomenda" : "Confira as opções"}</small></div>`;
-      return `<article class="menu-item-card" data-item="${item.id}">${media}<div class="menu-item-content"><div class="menu-item-heading"><h3>${clean(item.name)}</h3>${quote ? '<span class="menu-item-badge">Sob consulta</span>' : ((item.option_groups || []).length ? '<span class="menu-item-badge">Personalizável</span>' : "")}</div><p>${clean(item.description)}</p>${pricePicker}</div></article>`;
+      return `<article class="menu-item-card${records.length > 1 || customQuantity ? " menu-item-card-with-pickers" : ""}" data-item="${item.id}">${media}<div class="menu-item-content"><div class="menu-item-heading"><h3>${clean(item.name)}</h3>${quote ? '<span class="menu-item-badge">Sob consulta</span>' : ((item.option_groups || []).length ? '<span class="menu-item-badge">Personalizável</span>' : "")}</div>${item.description ? `<p>${clean(item.description)}</p>` : ""}${pricePicker}</div></article>`;
     }).join("")}</div></section>`).join("");
     const filterCatalog = () => {
       const query = normalizeSearch($("menuSearch").value);
@@ -340,13 +351,18 @@
   }
   const enterCheckoutMode = () => { document.body.classList.add("menu-checkout-active"); $("menuAssistantPanel").classList.add("hidden"); document.body.classList.remove("menu-assistant-open"); };
   const leaveCheckoutMode = () => { if ($("checkout").classList.contains("hidden")) document.body.classList.remove("menu-checkout-active"); };
-  const openCartReview = () => { if (!cart.size) return; enterCheckoutMode(); $("cartReview").classList.remove("hidden"); $("cartReview").scrollIntoView({ behavior: "smooth", block: "start" }); };
-  const openCheckout = () => { if (!cart.size) return; enterCheckoutMode(); $("cartReview").classList.remove("hidden"); $("checkout").classList.remove("hidden"); $("checkout").scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const openCartReview = () => { if (!cart.size) return; enterCheckoutMode(); $("cartReview").classList.remove("hidden"); updateBag(); $("cartReview").scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const openCheckout = () => { if (!cart.size) return; enterCheckoutMode(); $("cartReview").classList.remove("hidden"); $("checkout").classList.remove("hidden"); updateBag(); $("checkout").scrollIntoView({ behavior: "smooth", block: "start" }); };
+  $("menuBagButton").addEventListener("click", () => {
+    if (!cart.size) { $("menuBagStatus").textContent = "Sua sacola está vazia."; return; }
+    openCartReview();
+    $("closeCartReview").focus({ preventScroll: true });
+  });
   $("cartReviewButton").addEventListener("click", openCartReview);
   $("checkoutButton").addEventListener("click", openCheckout);
   $("proceedCheckoutButton").addEventListener("click", openCheckout);
-  $("continueShoppingButton").addEventListener("click", () => { $("cartReview").classList.add("hidden"); $("checkout").classList.add("hidden"); leaveCheckoutMode(); $("categoryNav").scrollIntoView({ behavior: "smooth", block: "start" }); });
-  $("closeCartReview").addEventListener("click", () => { $("cartReview").classList.add("hidden"); leaveCheckoutMode(); $("cartReviewButton").focus(); });
+  $("continueShoppingButton").addEventListener("click", () => { $("cartReview").classList.add("hidden"); $("checkout").classList.add("hidden"); updateBag(); leaveCheckoutMode(); $("catalog").scrollIntoView({ behavior: "smooth", block: "start" }); });
+  $("closeCartReview").addEventListener("click", () => { $("cartReview").classList.add("hidden"); updateBag(); leaveCheckoutMode(); $("cartReviewButton").focus(); });
   $("cartItems").addEventListener("click", (event) => {
     const action = event.target.closest("[data-cart-increase],[data-cart-decrease],[data-cart-remove]"); if (!action) return;
     const signature = action.dataset.cartIncrease || action.dataset.cartDecrease || action.dataset.cartRemove, entry = cart.get(signature); if (!entry) return;
