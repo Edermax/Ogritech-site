@@ -68,3 +68,14 @@ test("home apresenta diretamente o Cardápio sem catálogo multiproduto", () => 
  assert.doesNotMatch(home, /Ogritech Agenda|Ogritech Páginas|Ogritech Orçamentos|availability-badge/);
  assert.doesNotMatch(sitemap, /agenda-online/);
 });
+
+test("exemplos da home usam fotos distintas e agrupam tamanho e preço por produto", async () => {
+  const cards = [...home.matchAll(/<article class="menu-item">([\s\S]*?)<\/article>/g)].map((match) => match[1]);
+  assert.equal(cards.length, 6);
+  const sources = cards.map((card) => card.match(/<img src="([^"]+)"/)?.[1]);
+  assert.equal(new Set(sources).size, 6);
+  for (const card of cards) {
+    assert.match(card, /class="sample-purchase"><span>[^<]+<\/span><div><b>A partir de R\$/);
+  }
+  await Promise.all(sources.map((source) => readFile(new URL(`..${source}`, import.meta.url))));
+});
