@@ -28,6 +28,22 @@ function onboarding() {
 
 function respondToApi({ table, name, args = {}, update, filters, role }) {
   state.calls.push({ table, name, args, role });
+  if (name === "public_menu") {
+    if (!state.menu?.published || state.menu.slug !== args.target_slug) return { data: null };
+    const { slug, title, description, visual_identity, accepts_pickup, accepts_delivery, weekly_hours, accepted_payment_methods } = state.menu;
+    return { data: {
+      menu: { slug, title, description, visual_identity, accepts_pickup, accepts_delivery, weekly_hours, payment_methods: accepted_payment_methods },
+      categories: state.menu.menu_categories.map(({ name, description, menu_items }) => ({
+        name, description,
+        items: menu_items.map((item) => ({
+          ...item,
+          prices: item.menu_item_prices.map((price, index) => ({ ...price, id: price.id || `${item.id}-${index}` })),
+          option_groups: []
+        }))
+      }))
+    } };
+  }
+  if (name === "public_menu_assistant_status") return { data: { available: true } };
   if (table === "online_menus") return { data: state.menu };
   if (table === "profiles") return { data: { id: "user-test", full_name: "Usuário de teste", role, active: true, barbershop_id: "business-test" } };
   if (table === "barbershops") return { data: { name: "Confeitaria de teste", segment: "confectionery" } };
@@ -131,6 +147,14 @@ const server = createServer(async (request, response) => {
       response.writeHead(200, { "Content-Type": "application/javascript" });
       return response.end("window.journeyReady = window.loadMenuAdmin();");
     }
+    if (url.pathname === "/journey-public-fixture.js") {
+      response.writeHead(200, { "Content-Type": "application/javascript" });
+      return response.end(`window.OGRITECH_SUPABASE_URL = location.origin;
+        window.ogritechEnvironmentUrl = (path) => new URL(path, location.origin).href;
+        window.supabaseClient = { rpc: (name, args) => fetch("/test-api", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, args })
+        }).then((response) => response.json()) };`);
+    }
     const pathname = url.pathname.endsWith("/") ? url.pathname + "index.html" : url.pathname;
     const target = resolve(root, `.${pathname}`);
     if (!target.startsWith(root.endsWith(sep) ? root : root + sep)) throw new Error("Invalid path");
@@ -140,6 +164,11 @@ const server = createServer(async (request, response) => {
     }
     if (pathname === "/login/index.html") {
       body = Buffer.from(body.toString().replace(/<script\b[^>]*src="[^"]*"[^>]*><\/script>/g, "").replace("</body>", '<script src="/journey-fixture.js"></script><script src="/login.js"></script></body>'));
+    }
+    if (pathname === "/cardapio/index.html") {
+      body = Buffer.from(body.toString()
+        .replace(/<script src="https:\/\/cdn\.jsdelivr\.net\/[^\"]+"><\/script>/, "")
+        .replace('<script src="/supabase-config.js"></script>', '<script src="/journey-public-fixture.js"></script>'));
     }
     response.writeHead(200, { "Content-Type": `${mime[extname(target)] || "application/octet-stream"}; charset=utf-8`, "Cache-Control": "no-store" });
     response.end(body);
@@ -198,6 +227,7 @@ try {
     await settled(page);
     await page.locator("#menuCategoryName").fill("Doces");
     await page.locator("#menuItemName").fill("Brigadeiro");
+    await page.locator("[data-price-label]").fill("220 g");
     await page.locator("[data-price-value]").fill("20");
     await page.locator("#menuItemImage").setInputFiles({
       name: "preview.png", mimeType: "image/png",
@@ -224,6 +254,32 @@ try {
     for (const selector of ["#menuJourneyGuide", "#menuJourneyNavigation", "#menuTabStart", "#menuOnboardingChecklist", "#menuTemplatePanel"]) assert.equal(await page.locator(selector).isVisible(), false, selector);
     assert.match(await page.locator("#menuWorkspaceMessage").innerText(), /Cardápio publicado/);
     assert.match(await page.locator("#menuOperationPublicLink").getAttribute("href"), /empresa=confeitaria-teste&env=production/);
+    const storefront = await context.newPage();
+    storefront.setDefaultTimeout(10000);
+    storefront.on("pageerror", (error) => errors.push(error.message));
+    await storefront.route("**/*", (route) => route.request().url().startsWith(origin) ? route.continue() : route.abort());
+    await storefront.goto(await page.locator("#menuOperationPublicLink").evaluate((link) => link.href));
+    const purchase = storefront.locator(".menu-item-purchase");
+    await purchase.waitFor();
+    assert.equal(await storefront.locator("#menuTitle").innerText(), state.menu.title);
+    assert.equal(await storefront.locator("#catalog h3").innerText(), "Brigadeiro");
+    assert.equal(await purchase.locator(".menu-single-option").innerText(), "220 g");
+    assert.match(await purchase.locator("[data-selected-price]").innerText(), /R\$\s*20,00/);
+    assert.equal(await purchase.evaluate((node) => getComputedStyle(node).display), "grid");
+    const assistant = storefront.locator("#menuAssistantToggle");
+    await assistant.waitFor();
+    for (const openCheckout of [false, true]) {
+      await purchase.getByRole("button", { name: "Adicionar" }).click();
+      await storefront.locator("#menuBagButton").click();
+      if (openCheckout) await storefront.locator("#proceedCheckoutButton").click();
+      assert.equal(await assistant.isVisible(), false);
+      await storefront.locator("[data-cart-remove]").click();
+      assert.equal(await storefront.locator("#cartReview").isVisible(), false);
+      assert.equal(await storefront.locator("#checkout").isVisible(), false);
+      assert.equal(await assistant.isVisible(), true);
+      assert.equal(await storefront.locator("#menuBagButton").evaluate((button) => document.activeElement === button), true);
+    }
+    await storefront.close();
     await tab(page, "settings");
     assert.equal(await page.locator("#menuSavedSettingsSummary").isVisible(), true);
     assert.match(await page.locator("#menuSavedSettingsSummary").innerText(), /09:00.*13:00/);
@@ -288,7 +344,7 @@ try {
     await settled(page);
     assert.equal(state.orders[0].status, "completed");
     assert.deepEqual(errors, []);
-    results.push({ viewport: viewport.name, ownerAndEmployeeLoginRouting: true, newOwnerPublished: true, publishedDraftReviewed: true, failedDraftRestoresCatalog: true, specialHoursVisible: true, accidentalUnpublishPrevented: true, employeeOrdersCompleted: true, javascriptErrors: 0 });
+    results.push({ viewport: viewport.name, ownerAndEmployeeLoginRouting: true, newOwnerPublished: true, sharedStorefrontApplied: true, emptyCartRestoresAssistant: true, publishedDraftReviewed: true, failedDraftRestoresCatalog: true, specialHoursVisible: true, accidentalUnpublishPrevented: true, employeeOrdersCompleted: true, javascriptErrors: 0 });
     await context.close();
   }
 } finally {
