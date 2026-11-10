@@ -10,7 +10,7 @@
   <title>Cardápio digital com pedidos online | Ogritech</title>
   <link rel="canonical" href="https://ogritech.com.br/">
   <link rel="icon" href="/ogritech-favicon.ico" sizes="any">
-  <link rel="stylesheet" href="/home.css?v=20261105.1">
+  <link rel="stylesheet" href="/home.css?v=20261110.1">
   <link rel="stylesheet" href="/responsive-headings.css?v=20260930.1">
 <link rel="manifest" href="/manifest.webmanifest"><meta name="description" content="Crie seu cardápio digital com fotos, preços e pedidos online. Para restaurantes, lanchonetes, pizzarias e confeitarias. Teste 14 dias grátis.">
 <meta property="og:type" content="website"><meta property="og:locale" content="pt_BR"><meta property="og:site_name" content="Ogritech Cardápio"><meta property="og:title" content="Cardápio digital com pedidos online | Ogritech"><meta property="og:description" content="Crie seu cardápio digital com fotos, preços e pedidos online. Para restaurantes, lanchonetes, pizzarias e confeitarias. Teste 14 dias grátis."><meta property="og:url" content="https://ogritech.com.br/"><meta property="og:image" content="https://ogritech.com.br/ogritech-logo.png"><meta property="og:image:alt" content="Ogritech Cardápio digital"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Cardápio digital com pedidos online | Ogritech"><meta name="twitter:description" content="Crie seu cardápio digital com fotos, preços e pedidos online. Para restaurantes, lanchonetes, pizzarias e confeitarias. Teste 14 dias grátis."><meta name="twitter:image" content="https://ogritech.com.br/ogritech-logo.png">
@@ -18,7 +18,7 @@
 </head>
 <body>
   <header class="site-header" data-header>
-    <a class="brand" href="/" aria-label="Ogritech — página inicial"><img src="/ogritech-header-logo.png" alt="Ogritech"></a>
+    <a class="brand" href="/" aria-label="Ogritech — página inicial"><img src="/ogritech-brand-symbol.png" alt="">Ogritech</a>
     <nav aria-label="Navegação da página">
       <a href="#recursos">Recursos</a><a href="#como-funciona">Como funciona</a><a href="#preco">Preço</a><a href="#duvidas">Dúvidas</a>
     </nav>
@@ -31,38 +31,43 @@
       <div class="hero-copy">
         <p class="eyebrow"><span></span> OGRITECH CARDÁPIO</p>
         <h1>Seu cardápio.<br><em>Pedidos organizados.</em></h1>
-        <p class="hero-lead">Mostre seus produtos, receba pedidos completos e organize entregas, retiradas e encomendas em um só painel. Seu próprio link, com a sua marca e sem comissão por venda.</p>
+        <p class="hero-lead">Mostre seus produtos em um link com a sua marca. Organize pedidos, entregas e retiradas em um só painel, sem comissão por venda.</p>
         <div class="hero-actions">
           <a class="button primary" href="/criar-cardapio/">Criar meu cardápio grátis</a>
           <a class="button secondary" href="/diniz-doces/" target="_blank" rel="noopener">Explorar um cardápio real</a>
         </div>
-        <p class="hero-price">14 dias para experimentar. Depois, <strong>R$ 49,90/mês</strong>.</p><ul class="trust-list" aria-label="Condições do teste">
-          <li>14 dias grátis</li><li>Sem cartão agora</li><li>Cancele quando quiser</li>
+        <p class="hero-price">14 dias grátis. Depois, <strong>R$ 49,90/mês</strong>.</p><ul class="trust-list" aria-label="Condições do teste">
+          <li>Sem cartão no cadastro</li><li>Cancele quando quiser</li>
         </ul>
       </div>
 
-      <div class="product-stage" id="demonstracao" aria-label="Exemplos de cardápios digitais no celular">
-        <div class="floating-note note-orders"><strong>Pedidos organizados</strong><span>do cardápio ao acompanhamento</span></div>
+      <div class="product-stage" id="demonstracao" aria-labelledby="demo-title">
+        <h2 id="demo-title">Veja como fica no celular</h2>
         <div class="showcase" data-showcase aria-roledescription="carrossel" aria-label="Exemplos por tipo de negócio" tabindex="0">
+          <div class="showcase-dots" role="tablist" aria-label="Escolher exemplo">
+            <button class="active" type="button" data-showcase-dot="0" id="demo-tab-doce" role="tab" aria-controls="demo-doce" aria-selected="true">Confeitaria</button>
+            <button type="button" data-showcase-dot="1" id="demo-tab-pizza" role="tab" aria-controls="demo-pizza" aria-selected="false" tabindex="-1">Pizzaria</button>
+            <button type="button" data-showcase-dot="2" id="demo-tab-marmita" role="tab" aria-controls="demo-marmita" aria-selected="false" tabindex="-1">Marmitaria</button>
+          </div>
           <div class="showcase-viewport"><div class="showcase-track">
-            <div class="showcase-slide" data-slide aria-label="1 de 3: confeitaria"><div class="phone">
-              <div class="phone-bar"><span>9:41</span><i></i></div>
+            <div class="showcase-slide" data-slide id="demo-doce" role="tabpanel" aria-labelledby="demo-tab-doce"><div class="phone">
+              <div class="phone-bar"><span>Exemplo de cardápio</span><span class="phone-bag">Sacola</span></div>
               <div class="menu-cover"><small>DOCE ATELIÊ</small><strong>Feito para celebrar</strong><span>Escolha seus favoritos</span></div>
               <div class="menu-categories"><b>Mais pedidos</b><span>Bolos</span><span>Doces</span></div>
               <article class="menu-item"><img src="/assets/diniz-doces/bolo-chocolate-morango.jpg" alt="Bolo de chocolate com morangos"><div><strong>Bolo de chocolate</strong><small>Massa macia e cobertura especial</small><b>A partir de R$ 65,00</b></div><i>+</i></article>
               <article class="menu-item"><img src="/assets/diniz-doces/brigadeiros.png" alt="Brigadeiros variados"><div><strong>Brigadeiros especiais</strong><small>Caixa com sabores variados</small><b>A partir de R$ 45,00</b></div><i>+</i></article>
               <div class="cart-preview"><span>2 itens</span><strong>Revisar pedido</strong></div>
             </div></div>
-            <div class="showcase-slide" data-slide aria-label="2 de 3: pizzaria" aria-hidden="true"><div class="phone phone-pizza">
-              <div class="phone-bar"><span>9:41</span><i></i></div>
+            <div class="showcase-slide" data-slide id="demo-pizza" role="tabpanel" aria-labelledby="demo-tab-pizza" aria-hidden="true"><div class="phone phone-pizza">
+              <div class="phone-bar"><span>Exemplo de cardápio</span><span class="phone-bag">Sacola</span></div>
               <div class="menu-cover"><small>FORNO DA VILA</small><strong>Pizza quente, agora</strong><span>Escolha seu sabor favorito</span></div>
               <div class="menu-categories"><b>Mais pedidas</b><span>Tradicionais</span><span>Especiais</span></div>
               <article class="menu-item"><img src="/assets/cardapio-pizzaria.png" alt="Pizza de calabresa"><div><strong>Calabresa especial</strong><small>Mussarela, calabresa e cebola</small><b>A partir de R$ 49,90</b></div><i>+</i></article>
               <article class="menu-item"><img src="/assets/cardapio-pizzaria.png" alt="Pizza artesanal"><div><strong>Margherita da casa</strong><small>Tomate, manjericão e mussarela</small><b>A partir de R$ 46,90</b></div><i>+</i></article>
               <div class="cart-preview"><span>1 pizza</span><strong>Revisar pedido</strong></div>
             </div></div>
-            <div class="showcase-slide" data-slide aria-label="3 de 3: marmitaria" aria-hidden="true"><div class="phone phone-marmita">
-              <div class="phone-bar"><span>9:41</span><i></i></div>
+            <div class="showcase-slide" data-slide id="demo-marmita" role="tabpanel" aria-labelledby="demo-tab-marmita" aria-hidden="true"><div class="phone phone-marmita">
+              <div class="phone-bar"><span>Exemplo de cardápio</span><span class="phone-bag">Sacola</span></div>
               <div class="menu-cover"><small>SABOR DE CASA</small><strong>Seu almoço completo</strong><span>Feito hoje, entregue quentinho</span></div>
               <div class="menu-categories"><b>Pratos do dia</b><span>Executivos</span><span>Fit</span></div>
               <article class="menu-item"><img src="/assets/cardapio-marmita.png" alt="Marmita de frango grelhado"><div><strong>Frango grelhado</strong><small>Arroz, feijão, salada e fritas</small><b>A partir de R$ 24,90</b></div><i>+</i></article>
@@ -72,13 +77,7 @@
           </div></div>
           <button class="showcase-arrow previous" type="button" data-showcase-previous aria-label="Ver exemplo anterior">‹</button>
           <button class="showcase-arrow next" type="button" data-showcase-next aria-label="Ver próximo exemplo">›</button>
-          <div class="showcase-dots" role="tablist" aria-label="Escolher exemplo">
-            <button class="active" type="button" data-showcase-dot="0" role="tab" aria-selected="true" aria-label="Confeitaria"></button>
-            <button type="button" data-showcase-dot="1" role="tab" aria-selected="false" aria-label="Pizzaria"></button>
-            <button type="button" data-showcase-dot="2" role="tab" aria-selected="false" aria-label="Marmitaria"></button>
-          </div>
         </div>
-        <div class="floating-note note-update"><strong>Atualize em minutos</strong><span>itens, fotos, preços e disponibilidade</span></div>
       </div>
     </section>
 
@@ -152,6 +151,6 @@
   </main>
 
   <footer><a href="/"><img src="/ogritech-header-logo.png" alt="Ogritech"></a><p>Um cardápio para apresentar. Um painel para cuidar dos pedidos.</p><nav><a href="/contato/">Contato</a><a href="/termos.html">Termos</a><a href="/privacidade.html">Privacidade</a><a href="mailto:suporte@ogritech.com.br">Suporte</a></nav></footer>
-  <script src="/home.js?v=20261020.1"></script>
+  <script src="/home.js?v=20261110.1"></script>
 <script src="/assistant-widget.js?v=20261020.1"></script><script src="pwa.js?v=20260831.2"></script></body>
 </html>

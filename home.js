@@ -35,6 +35,7 @@ if (showcase) {
       const selected = dotIndex === activeSlide;
       dot.classList.toggle("active", selected);
       dot.setAttribute("aria-selected", String(selected));
+      dot.tabIndex = selected ? 0 : -1;
     });
   }
 
@@ -42,8 +43,10 @@ if (showcase) {
   showcase.querySelector("[data-showcase-next]")?.addEventListener("click", () => showSlide(activeSlide + 1));
   dots.forEach((dot, index) => dot.addEventListener("click", () => showSlide(index)));
   showcase.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowLeft") showSlide(activeSlide - 1);
-    if (event.key === "ArrowRight") showSlide(activeSlide + 1);
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    showSlide(activeSlide + (event.key === "ArrowLeft" ? -1 : 1));
+    if (dots.includes(event.target)) dots[activeSlide].focus();
   });
   showcase.addEventListener("pointerdown", (event) => { pointerStart = event.clientX; });
   showcase.addEventListener("pointerup", (event) => {
