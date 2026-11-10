@@ -369,7 +369,12 @@
     if (action.dataset.cartRemove) cart.delete(signature);
     else if (action.dataset.cartIncrease && entry.quantity < entry.maximumQuantity) entry.quantity = Math.min(entry.maximumQuantity, entry.quantity + 1);
     else if (action.dataset.cartDecrease && entry.quantity > entry.minimumQuantity) entry.quantity -= 1;
-    pendingRequestId = null; updateCart();
+    pendingRequestId = null;
+    updateCart();
+    if (!cart.size) {
+      leaveCheckoutMode();
+      $("menuBagButton").focus();
+    }
   });
   $("fulfillment").addEventListener("change", updateFulfillmentFields);
   $("deliveryZone").addEventListener("change", updateCheckoutEstimate);
