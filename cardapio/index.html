@@ -7,18 +7,26 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' https://cdn.jsdelivr.net;style-src 'self';img-src 'self' data: https:;connect-src 'self' http://127.0.0.1:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co https://viacep.com.br;object-src 'none';base-uri 'self';form-action 'self'">
   <title>Cardápio | Ogritech</title>
   <link rel="stylesheet" href="/commercial-public.css">
-  <link rel="stylesheet" href="/cardapio/catalog.css?v=20261107.5">
+  <link rel="stylesheet" href="/cardapio/catalog.css?v=20261110.1">
   <link rel="icon" href="/ogritech-favicon.ico">
 </head>
 <body>
   <main class="public-shell" id="inicio-cardapio" tabindex="-1">
     <section id="loading" class="public-hero"><p>Carregando cardápio...</p></section>
     <div id="content" class="hidden">
-      <header class="public-hero menu-hero"><div id="menuBrandLockup" class="menu-brand-lockup hidden"><img id="menuBrandLogo" alt=""><span>Cardápio digital</span></div><small>CARDÁPIO ONLINE</small><h1 id="menuTitle"></h1><p id="menuDescription"></p><div class="menu-hero-trust"><span>Pedido direto</span><span>Confirmação humana</span><span>Sem taxa de aplicativo</span></div></header>
-      <aside class="public-card menu-store-info"><div><small>ATENDIMENTO</small><p id="menuHours"></p></div><div><small>PAGAMENTO</small><p id="menuPayments"></p></div></aside>
-      <nav id="categoryNav" class="category-nav" aria-label="Categorias do cardápio"></nav>
+      <div class="menu-topbar">
+        <div id="menuBrandLockup" class="menu-brand-lockup hidden"><img id="menuBrandLogo" alt=""></div>
+        <button id="menuBagButton" class="menu-bag-button" type="button" aria-controls="cartReview" aria-expanded="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg>
+          Sacola<span id="menuBagCount" class="hidden"></span>
+        </button>
+      </div>
+      <p id="menuBagStatus" class="menu-bag-status" role="status"></p>
+      <header class="public-hero menu-hero"><small>CARDÁPIO DIGITAL</small><h1 id="menuTitle"></h1><p id="menuDescription"></p></header>
       <div class="menu-search"><label for="menuSearch">Buscar no cardápio</label><input id="menuSearch" type="search" placeholder="Nome do produto ou categoria" autocomplete="off"><p id="menuSearchResult" role="status" aria-live="polite"></p></div>
+      <nav id="categoryNav" class="category-nav" aria-label="Categorias do cardápio"></nav>
       <div id="catalog"></div>
+      <aside class="menu-store-info" aria-label="Informações do estabelecimento"><div><h2>Atendimento</h2><p id="menuHours"></p></div><div><h2>Pagamento</h2><p id="menuPayments"></p></div><p class="menu-store-trust">Pedido direto · Confirmação humana · Sem taxa de aplicativo</p></aside>
       <div id="cartBar" class="cart-bar hidden"><span><strong id="cartCount">0</strong> itens · <strong id="cartTotal">R$ 0</strong></span><div class="cart-bar-actions"><button id="cartReviewButton" class="public-button secondary" type="button">Revisar itens</button><button id="checkoutButton" class="public-button" type="button">Finalizar pedido</button></div></div>
       <section id="cartReview" class="public-card cart-review hidden" aria-labelledby="cartReviewTitle">
         <div class="cart-review-heading"><div><small>SEU PEDIDO</small><h2 id="cartReviewTitle">Revise os itens</h2></div><button id="closeCartReview" class="cart-review-close" type="button" aria-label="Fechar revisão do carrinho">×</button></div>
@@ -77,6 +85,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="/supabase-config.js"></script>
   <script src="/menu-pricing.js?v=20261020.1"></script>
-  <script src="/menu-branding.js?v=20261020.1"></script><script src="/menu-whatsapp.js?v=20261105.2"></script><script src="/cardapio/cardapio.js?v=20261108.1"></script>
+  <script src="/menu-branding.js?v=20261020.1"></script><script src="/menu-whatsapp.js?v=20261105.2"></script><script src="/cardapio/cardapio.js?v=20261110.1"></script>
 </body>
 </html>
