@@ -35,8 +35,8 @@ for (const page of ["index.html", "login.html"]) {
   }
 }
 const pwaScript = await readFile(new URL("../pwa.js", import.meta.url), "utf8");
-if (!pwaScript.includes('document.body.classList.contains("login-page")')) {
-  throw new Error("O botão de instalação deve ficar restrito à página de login");
+if (!/document\.body\.classList\.contains\(["']login-page["']\)/.test(pwaScript)) {
+  throw new Error("O botão flutuante de instalação deve ficar restrito à página de login");
 }
 const serviceWorker = await readFile(new URL("../sw.js", import.meta.url), "utf8");
 if (!serviceWorker.includes('addEventListener("fetch"') || !serviceWorker.includes('addEventListener("install"')) {

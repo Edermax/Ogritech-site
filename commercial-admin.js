@@ -95,8 +95,9 @@
             button.classList.toggle("hidden", hidden);
             button.disabled = hidden || menuBusy || !menuDataReady || (menuSettingsDirty && key !== "settings") || (!published && journeyOrder.indexOf(key) > journeyOrder.indexOf(next));
             const labels = { start: "Começar", settings: "Configurar", catalog: "Produtos", review: "Publicação", operation: "Pedidos" };
-            button.innerHTML = managing ? labels[key] : `<span>${journeyOrder.indexOf(key) + 1}</span>${labels[key]}`;
-            button.setAttribute("aria-label", published ? button.textContent.trim().replace(/^\d+\s*/, "") : `${journeyContent[key][0]}${complete[key] ? ", concluído" : ""}`);
+            const descriptions = { start: "Escolher modelo", settings: "Dados e horários", catalog: "Fotos e preços", review: "Revisar e publicar", operation: "Receber e atender" };
+            button.innerHTML = `${managing ? "" : `<span>${journeyOrder.indexOf(key) + 1}</span>`}<span class="menu-tab-copy"><strong class="menu-tab-label">${labels[key]}</strong><small class="menu-tab-description">${descriptions[key]}</small></span>`;
+            button.setAttribute("aria-label", published ? labels[key] : `${journeyContent[key][0]}${complete[key] ? ", concluído" : ""}`);
             button.setAttribute("data-complete", String(complete[key]));
         });
         if (byId("menuJourneyBack")) byId("menuJourneyBack").disabled = journeyOrder.indexOf(selectedMenuWorkspace) === 0 || menuBusy;
