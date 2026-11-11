@@ -185,6 +185,14 @@
     const settingsFirstRow = byId("menuSettingsForm")?.querySelector?.(".form-row");
     if (fulfillment && typeof settingsFirstRow?.after === "function") settingsFirstRow.after(fulfillment);
     const appearance = byId("menuAppearanceOptional");
+    byId("tenantIdentityButton")?.addEventListener("click", () => {
+        if (!canManageMenu() || !menuDataReady || menuBusy || !menuRecord) return;
+        navigateTo("cardapio", { reload: false });
+        selectMenuWorkspace("settings");
+        appearance.open = true;
+        appearance.scrollIntoView({ behavior: "instant", block: "center" });
+        byId("menuBrandingLogo")?.focus({ preventScroll: true });
+    });
     const settingsForm = byId("menuSettingsForm");
     if (appearance && typeof settingsForm?.after === "function") settingsForm.after(appearance);
     const prices = byId("menuProductPrices");
@@ -194,6 +202,7 @@
     setupMenuWorkspace();
 
     function updateMenuControls() {
+        if (byId("tenantIdentityButton")) byId("tenantIdentityButton").disabled = !canManageMenu() || !menuDataReady || menuBusy || !menuRecord;
         renderMenuJourney();
         const unavailable = menuBusy || !menuDataReady;
         const settingsEditable = canManageMenu() && !unavailable;
@@ -632,6 +641,7 @@
             menuTemplates = templates || [];
             menuOnboarding = onboarding;
             menuRecord = menu;
+            window.setPanelBusinessImage?.(menu?.visual_identity);
             if (byId("menuServiceAreaForm")) {
                 byId("menuPickupLocation").value = menu?.pickup_location || "";
                 byId("menuDeliveryPostcodes").value = (menu?.delivery_postcodes || []).join("\n");

@@ -30,6 +30,7 @@
   }
   function render() {
     if (!state) return;
+    window.setPanelBusinessImage?.(state.identity);
     dirty = false;
     pendingAction = null;
     $("menuBrandingConfirm").hidden = true;

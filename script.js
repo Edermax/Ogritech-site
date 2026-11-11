@@ -187,11 +187,32 @@ function todayISO() {
     return `${year}-${month}-${day}`;
 }
 
+function renderPanelBusinessImage() {
+    const logo = document.getElementById("tenantLogo");
+    const icon = document.getElementById("tenantIcon");
+    const customUrl = globalThis.OgritechMenuBranding?.assetUrl(businessConfig.logoPath, window.OGRITECH_SUPABASE_URL);
+    const legacyUrl = businessConfig.name?.trim().toLocaleLowerCase("pt-BR") === "diniz doces"
+        ? "../assets/diniz-doces/logo.jpg" : businessConfig.key === "barbearia" ? "Logo-japa.jpeg" : "";
+    icon.textContent = businessConfig.icon;
+    icon.style.color = businessConfig.color;
+    const url = customUrl || legacyUrl;
+    logo.onerror = () => { logo.classList.add("hidden"); icon.classList.remove("hidden"); logo.removeAttribute("src"); };
+    logo.alt = `Logo ou foto de ${businessConfig.name}`;
+    logo.classList.toggle("hidden", !url);
+    icon.classList.toggle("hidden", Boolean(url));
+    if (url) {
+        if (logo.getAttribute("src") !== url) logo.src = url;
+    } else logo.removeAttribute("src");
+}
+
+window.setPanelBusinessImage = identity => {
+    businessConfig.logoPath = identity?.logo_path || "";
+    renderPanelBusinessImage();
+};
+
 function applyBusinessCustomization() {
     window.applyOgritechBusinessTheme(businessConfig);
     const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
-    const tenantLogo = document.getElementById("tenantLogo");
-    const tenantIcon = document.getElementById("tenantIcon");
     document.title = `Ogritech | ${businessConfig.name}`;
     document.getElementById("tenantName").textContent = businessConfig.name;
     document.getElementById("businessPanelEyebrow").textContent = `${businessConfig.name.toUpperCase()} • PAINEL DO SEU CARDÁPIO`;
@@ -208,23 +229,7 @@ function applyBusinessCustomization() {
         backToShowcase.classList.remove("hidden");
     }
 
-    const isDinizBusiness = businessConfig.name?.trim().toLocaleLowerCase("pt-BR") === "diniz doces";
-    if (isDinizBusiness) {
-        tenantLogo.src = "../assets/diniz-doces/logo.jpg";
-        tenantLogo.alt = "Logo da Diniz Doces";
-        tenantLogo.classList.remove("hidden");
-        tenantIcon.classList.add("hidden");
-    } else if (businessConfig.key === "barbearia") {
-        tenantLogo.src = "Logo-japa.jpeg";
-        tenantLogo.alt = "Logo da empresa";
-        tenantLogo.classList.remove("hidden");
-        tenantIcon.classList.add("hidden");
-    } else {
-        tenantLogo.classList.add("hidden");
-        tenantIcon.textContent = businessConfig.icon;
-        tenantIcon.style.color = businessConfig.color;
-        tenantIcon.classList.remove("hidden");
-    }
+    renderPanelBusinessImage();
 
     const clientsMenu = document.querySelector('[data-section="clientes"]');
     if (clientsMenu) clientsMenu.innerHTML = `<span>♙</span>${escapeHtml(businessConfig.clientPlural)}`;
@@ -593,7 +598,7 @@ function hideAllViews() {
     menuView.classList.add("hidden");
 }
 
-function showSection(section) {
+function showSection(section, { reload = true } = {}) {
     if (!["cardapio", "configuracoes"].includes(section)) section = "cardapio";
     hideAllViews();
 
@@ -629,7 +634,7 @@ function showSection(section) {
         window.loadQuotesAdmin?.();
     } else if (section === "cardapio") {
         menuView.classList.remove("hidden"); openAppointmentButton.classList.add("hidden");
-        window.loadMenuAdmin?.();
+        if (reload) window.loadMenuAdmin?.();
     } else {
         dashboardView.classList.remove("hidden");
         openAppointmentButton.classList.remove("hidden");
@@ -826,9 +831,9 @@ document.getElementById("privacyRequestList")?.addEventListener("click", async (
     renderPrivacyRequests();
 });
 
-function navigateTo(section) {
+function navigateTo(section, options) {
     menuItems.forEach((menu) => menu.classList.toggle("active", menu.dataset.section === section));
-    showSection(section);
+    showSection(section, options);
 }
 
 // =========================================================
