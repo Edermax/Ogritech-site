@@ -348,6 +348,15 @@ try {
     await tab(page, "operation");
     const size = await page.evaluate(() => ({ viewport: innerWidth, width: document.documentElement.scrollWidth }));
     assert.ok(size.width <= size.viewport + 1, `Horizontal overflow ${JSON.stringify(size)}`);
+    await page.locator('#menuWorkspaceTabs [aria-selected="true"]').hover();
+    const tabReadability = await page.locator('#menuWorkspaceTabs [aria-selected="true"]').evaluate(node => {
+      const style = getComputedStyle(node);
+      const luminance = color => color.match(/[\d.]+/g).slice(0,3).map(Number).map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4).reduce((total,value,index) => total + value * [.2126,.7152,.0722][index],0);
+      const a=luminance(style.color),b=luminance(style.backgroundColor);
+      return { contrast: (Math.max(a,b)+.05)/(Math.min(a,b)+.05), font: parseFloat(style.fontSize), height: node.getBoundingClientRect().height, descriptionVisible: getComputedStyle(node.querySelector('.menu-tab-copy')).display !== 'none' };
+    });
+    assert.ok(tabReadability.contrast >= 4.5, `Selected tab contrast ${JSON.stringify(tabReadability)}`);
+    assert.ok(tabReadability.font >= 16 && tabReadability.height >= 44 && tabReadability.descriptionVisible);
     await page.screenshot({ path: join(output, `${viewport.name}-published.png`), fullPage: true });
 
     state.orders = [{ id: "order-test", public_reference: "TEST-EMPLOYEE", customer_name: "Cliente de teste", status: "received", total_amount: 20, is_test: false }];

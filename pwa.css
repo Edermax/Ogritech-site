@@ -63,3 +63,8 @@
   justify-content: flex-end;
   margin-top: 1.25rem;
 }
+.pwa-install-status { color: #c1d1d9; font-size: 13px; line-height: 1.5; max-width: 32ch; }
+.pwa-install-status:empty { display: none; }
+.panel-install-help form { gap: 10px; flex-wrap: wrap; }
+.panel-install-help [data-install-now] { background: #f3d46b; border: 2px solid #f3d46b; color: #211b05; }
+.panel-install-button[aria-disabled="true"],.pwa-install-button[aria-disabled="true"] { cursor: wait; }

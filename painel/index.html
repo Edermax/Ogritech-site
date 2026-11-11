@@ -19,8 +19,9 @@
     <link rel="icon" href="ogritech-favicon.ico" sizes="any">
     <link rel="icon" type="image/png" href="ogritech-brand-symbol.png">
     <link rel="apple-touch-icon" href="ogritech-app-192.png">
-    <link rel="stylesheet" href="pwa.css?v=20261109.1">
+    <link rel="stylesheet" href="pwa.css?v=20261111.1">
     <link rel="manifest" href="manifest.webmanifest">
+    <script src="pwa.js?v=20261111.1"></script>
     <!-- IMPORTANTE: este é o arquivo CSS separado -->
     <link rel="stylesheet" href="style.css?v=20261108.2">
     <link rel="stylesheet" href="action-arrows.css">
@@ -87,8 +88,9 @@
         #changePasswordForm button:disabled { opacity: .6; cursor: wait; }
     </style>
 <link rel="stylesheet" href="/order-notifications.css?v=20261110.1">
+<link rel="stylesheet" href="/panel-controls.css?v=20261111.1">
 </head>
-<body>
+<body class="panel-readable-controls">
     <!-- Aplicação principal -->
     <div class="app">
         <!-- Menu lateral -->
@@ -142,7 +144,7 @@
                 </div>
                 <!-- Abre o modal de agendamento -->
                 <div class="topbar-actions">
-                    <button class="table-button edit panel-install-button" id="panelInstallApp" type="button" aria-haspopup="dialog" hidden>Criar app</button>
+                    <button class="table-button edit panel-install-button" id="panelInstallApp" type="button" aria-haspopup="dialog" hidden>Instalar app</button>
                     <a class="text-button hidden" id="backToShowcase" href="admin.html"><span class="action-arrow action-arrow--back" aria-hidden="true"></span> Voltar ao painel master</a>
                     <div class="notification-center">
                         <button class="notification-button" id="notificationButton" type="button" aria-label="Abrir notificações" aria-expanded="false">
@@ -709,15 +711,14 @@
 
     <!-- JavaScript principal do dashboard -->
     <script src="script.js?v=20261109.4"></script>
-    <script src="menu-branding.js?v=20261020.1"></script><script src="menu-branding-admin.js?v=20261108.2"></script><script src="/menu-order-notifications.js?v=20261110.1"></script><script src="commercial-admin.js?v=20261110.1"></script>
+    <script src="menu-branding.js?v=20261020.1"></script><script src="menu-branding-admin.js?v=20261108.2"></script><script src="/menu-order-notifications.js?v=20261110.1"></script><script src="commercial-admin.js?v=20261111.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script><script src="/cardapio/share.js?v=20261107.1"></script><script src="subscription-admin.js"></script>
     <dialog class="panel-install-help" id="panelInstallHelp" aria-labelledby="panelInstallTitle">
-        <h2 id="panelInstallTitle">Criar app Ogritech</h2>
+        <h2 id="panelInstallTitle">Instalar Ogritech</h2>
         <p><strong>Android:</strong> no menu do Chrome, toque em “Adicionar à tela inicial” e escolha “Instalar”.</p>
         <p><strong>iPhone ou iPad:</strong> no Safari, toque em Compartilhar → Adicionar à Tela de Início. Se aparecer, ative “Abrir como app” e toque em Adicionar.</p>
         <p><strong>Computador:</strong> procure “Instalar” no menu do Chrome ou Edge. No Safari do Mac, use Arquivo → Adicionar ao Dock.</p>
         <form method="dialog"><button class="table-button edit panel-install-button" type="submit">Fechar</button></form>
     </dialog>
-    <script src="pwa.js?v=20261109.2"></script>
 </body>
 </html>

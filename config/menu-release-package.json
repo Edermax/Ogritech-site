@@ -30,7 +30,13 @@
     "menu-order-push-worker.js",
     "order-notifications.css",
     "criar-cardapio/index.html",
-    "criar-cardapio/criar-cardapio.js"
+    "criar-cardapio/criar-cardapio.js",
+    "panel-controls.css",
+    "pwa.js",
+    "pwa.css",
+    "manifest.webmanifest",
+    "login/index.html",
+    "commercial-admin.js"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",
