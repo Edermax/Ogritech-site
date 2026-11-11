@@ -12,6 +12,11 @@
     const node = (tag, text, className) => { const element = document.createElement(tag); if (text) element.textContent = text; if (className) element.className = className; return element; };
     const dateLabel = value => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
     const items = () => [...orders, ...notices];
+    function requestDeadline() {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12000);
+        return { signal: controller.signal, clear: () => clearTimeout(timeout) };
+    }
     function saveRead() {
         if (!storageKey) return;
         try { localStorage.setItem(storageKey, JSON.stringify([...receipts].slice(-500))); } catch { /* Memory-only reading still works when storage is unavailable. */ }
@@ -52,8 +57,9 @@
     async function loadNotices(version) {
         if (version !== generation) return;
         noticesAt = Date.now();
+        const deadline = requestDeadline();
         try {
-            const response = await fetch("/platform-notices.json", { cache: "no-cache", signal: AbortSignal.timeout(12000) });
+            const response = await fetch("/platform-notices.json", { cache: "no-cache", signal: deadline.signal });
             if (!response.ok) throw new Error("notices_unavailable");
             const data = await response.json();
             if (!Array.isArray(data.notices)) throw new Error("invalid_notices");
@@ -67,19 +73,21 @@
                 .sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
             noticesError = false;
         } catch { if (version === generation) noticesError = true; }
+        finally { deadline.clear(); }
         if (version === generation) render();
     }
     async function refresh({ force = true } = {}) {
         if (!context || busy || document.visibilityState === "hidden" || !force && Date.now() - updatedAt < 25000) return;
         const version = generation, businessId = context.businessId;
         busy = true; refreshButton.disabled = true;
+        const deadline = requestDeadline();
         try {
             const query = () => supabaseClient.from("menu_orders").select("id,public_reference,status,fulfillment_type,created_at,is_test")
-                .eq("barbershop_id", businessId).eq("is_test", false).order("created_at", { ascending: false }).limit(30).abortSignal(AbortSignal.timeout(12000));
+                .eq("barbershop_id", businessId).eq("is_test", false).order("created_at", { ascending: false }).limit(30).abortSignal(deadline.signal);
             const { data, error } = await (typeof readPanelData === "function" ? readPanelData(query) : query());
             if (version === generation) setOrders(data, { businessId, error });
         } catch { if (version === generation) { orderError = true; render(); } }
-        finally { if (version === generation) { busy = false; refreshButton.disabled = false; } }
+        finally { deadline.clear(); if (version === generation) { busy = false; refreshButton.disabled = false; } }
     }
     function close() { if (dialog.open) dialog.close(); button.setAttribute("aria-expanded", "false"); }
     async function openOrders() {

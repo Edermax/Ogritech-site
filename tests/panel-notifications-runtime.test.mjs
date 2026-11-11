@@ -24,7 +24,7 @@ function fixture() {
         window: { addEventListener() {}, dispatchEvent: event => events.push(event.type), scrollTo() {}, loadMenuAdmin: async () => {} },
         localStorage: { getItem: key => stored.get(key) || null, setItem: (key, value) => stored.set(key, value) },
         fetch: async () => ({ ok: true, json: async () => ({ notices: state.notices }) }),
-        AbortSignal: { timeout: () => ({}) }, CustomEvent: class { constructor(type) { this.type = type; } },
+        AbortController, CustomEvent: class { constructor(type) { this.type = type; } },
         setTimeout: () => 1, clearTimeout() {},
         supabaseClient: { from(table) {
             assert.equal(table, "menu_orders");
