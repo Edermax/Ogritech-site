@@ -31,12 +31,10 @@ body.panel-readable-controls :is(.table-button,.action-button,.text-button,.logo
 }
 body.panel-readable-controls .gold-button,
 body.panel-readable-controls [data-order="confirm"],
-body.panel-readable-controls [data-order="complete"],
-body.panel-readable-controls .order-notifications-action[aria-pressed="false"] {
+body.panel-readable-controls [data-order="complete"] {
   background: var(--control-gold); border-color: var(--control-gold); color: #211b05;
 }
-body.panel-readable-controls .gold-button:not(:disabled):hover,
-body.panel-readable-controls .order-notifications-action[aria-pressed="false"]:not(:disabled):hover {
+body.panel-readable-controls .gold-button:not(:disabled):hover {
   background: #ffe696; border-color: #ffe696; color: #211b05;
 }
 body.panel-readable-controls :is(#menuUnpublishButton,[data-delete-menu-item],[data-order="reject"],[data-order-action="reject"],.table-button.delete,#menuBrandingDiscard):not(:disabled) {
@@ -83,6 +81,32 @@ body.panel-readable-controls #menuWorkspaceTabs .menu-workspace-tab:disabled { b
 body.panel-readable-controls #menuWorkspaceTabs .menu-workspace-tab:disabled .menu-tab-description { color: #acbec8; }
 body.panel-readable-controls .menu-lock-notice { background: #17242d; border-color: #697b86; color: var(--control-text); }
 body.panel-readable-controls .menu-lock-notice summary { min-height: 48px; padding-block: 8px; font-size: 16px; }
+body.panel-readable-controls .order-notifications {
+  gap: 16px; min-width: 0; margin: 20px 0; padding: 20px;
+  border: 1px solid #496674; border-radius: 12px;
+  background: var(--control-bg); color: var(--control-text);
+}
+body.panel-readable-controls .order-notifications h3 {
+  display: flex; align-items: center; gap: 12px; color: var(--control-text);
+  font-family: inherit; font-size: 18px; font-weight: 700; line-height: 1.35;
+}
+body.panel-readable-controls .order-notifications h3::before {
+  content: ""; flex: 0 0 36px; width: 36px; height: 36px;
+  border-radius: 10px; background: var(--control-raised) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2349d6e7' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4M12 2V1'/%3E%3C/svg%3E") center/22px no-repeat;
+}
+body.panel-readable-controls .order-notifications > p { color: var(--control-muted); font-size: 15px; line-height: 1.55; }
+body.panel-readable-controls .order-notifications .order-notifications-action:not(:disabled) {
+  background: var(--control-cyan); border-color: var(--control-cyan); color: #042027;
+}
+body.panel-readable-controls .order-notifications .order-notifications-action:not(:disabled):hover {
+  background: #8ce8f1; border-color: #8ce8f1; color: #042027;
+}
+body.panel-readable-controls .order-notifications .order-notifications-action[aria-pressed="true"]:not(:disabled) {
+  background: var(--control-raised); color: var(--control-text); border-color: var(--control-cyan);
+}
+body.panel-readable-controls .order-notifications [data-push-status] {
+  max-width: none; padding-top: 14px; border-top: 1px solid #496674; font-size: 14px; line-height: 1.5;
+}
 body.panel-readable-controls :is(.commercial-actions,.table-actions) { gap: 10px; flex-wrap: wrap; }
 body.panel-readable-controls .pwa-install-status { flex-basis: 100%; }
 body.panel-readable-controls #menuShareLink { display: flex; align-items: stretch; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
@@ -113,6 +137,8 @@ body.panel-readable-controls .ogri-assistant--panel { z-index: 1100; }
   body.panel-readable-controls #menuWorkspaceTabs.menu-workspace-staff { grid-template-columns: minmax(0,1fr); }
 }
 @media (max-width:560px) {
+  body.panel-readable-controls .order-notifications { padding: 18px; }
+  body.panel-readable-controls .order-notifications .order-notifications-action { width: 100%; justify-self: stretch; }
   body.panel-readable-controls #menuShareLink > .table-button { width: 100%; }
   body.panel-readable-controls .menu-workspace-header { padding: 20px; }
   body.panel-readable-controls .menu-workspace-header-actions { align-items: flex-start; }
