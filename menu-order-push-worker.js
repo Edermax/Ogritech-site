@@ -19,7 +19,7 @@ self.addEventListener("push", event => {
     await self.registration.showNotification("Novo pedido no seu cardápio", {
       body: "Abra o painel Ogritech para conferir e atender o pedido.",
       icon: "/ogritech-app-192.png", badge: "/ogritech-brand-symbol.png",
-      tag: "ogritech-new-menu-order", data: { environment: context.environment }
+      tag: "ogritech-new-menu-order", renotify: true, data: { environment: context.environment }
     });
   })());
 });
