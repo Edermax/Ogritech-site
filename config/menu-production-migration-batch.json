@@ -1,39 +1,33 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-10",
-  "baseline": "menu_service_area",
+  "baseline": "menu_order_push_transport",
   "strategy": "contiguous_tail",
   "authorized": false,
   "decision": "PENDING",
   "localReplay": {
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
-    "migrationCount": 87,
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/42388176853",
-    "sourceCommit": "34b09b32f0c92184c0cedd11cbeda93b591af6a4"
+    "migrationCount": 91,
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/42927189459",
+    "sourceCommit": "99f1e5e12c54426ec144553fc5736db865e39d77"
   },
   "productionDryRun": {
-    "status": "PENDING",
-    "executedAt": "2026-11-05",
+    "status": "PASSED",
+    "executedAt": "2026-11-10",
     "migrationCount": 0,
     "remoteChangesPerformed": false,
     "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/menu-standard-operations-2026-11-05.md",
+    "evidence": "docs/evidencias/cardapio-notificacoes-pedidos-2026-11-10.md",
     "aliasCompatibility": "Existing billing_rejected_email_event filename alias in isolated deployment directory; history unchanged."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "menu_order_push_notifications",
-    "menu_order_push_transport"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
     "commercial_callbacks_and_billing": [],
-    "menu_release_required": [
-      "menu_order_push_notifications",
-      "menu_order_push_transport"
-    ],
+    "menu_release_required": [],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],

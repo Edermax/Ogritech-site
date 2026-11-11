@@ -185,25 +185,18 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "menu_service_area",
+    "appliedThrough": "menu_order_push_transport",
     "appliedOutOfOrder": [],
-    "heldMigrations": [
-      {
-        "name": "menu_order_push_notifications",
-        "reason": "Notificações de pedidos aguardam validação e configuração de chaves, dispatcher e agendamento antes da ativação."
-      },
-      {
-        "name": "menu_order_push_transport",
-        "reason": "Extensões para disparo assíncrono e recuperação dos avisos de pedidos."
-      }
-    ],
-    "observationEvidence": "docs/evidencias/menu-standard-operations-2026-11-05.md",
+    "heldMigrations": [],
+    "observationEvidence": "docs/evidencias/cardapio-notificacoes-pedidos-2026-11-10.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
       "business_whatsapp_shares": "20261107143521",
       "menu_optional_pix": "20261107155101",
       "menu_pix_order_amount": "20261108002611",
-      "menu_service_area": "20261108004137"
+      "menu_service_area": "20261108004137",
+      "menu_order_push_notifications": "20261110235748",
+      "menu_order_push_transport": "20261110235754"
     }
   }
 }
