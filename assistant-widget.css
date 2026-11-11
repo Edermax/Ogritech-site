@@ -18,7 +18,8 @@
 :is(body.home-modern,body.panel-readable-controls) :is(.ogri-assistant__back,.ogri-assistant__consent a) { color:#006b7e; }
 :is(body.home-modern,body.panel-readable-controls) :is(.ogri-assistant__notice,.ogri-assistant__consent) { color:var(--ui-muted); font-size:12px; line-height:1.5; }
 :is(body.home-modern,body.panel-readable-controls) :is(.ogri-assistant__form>label>span,.ogri-assistant__form legend) { color:var(--ui-ink); font-size:13px; }
-:is(body.home-modern,body.panel-readable-controls) .ogri-assistant__form input[type=tel] { background:#fff; color:var(--ui-ink); border-color:#b4c7d3; font-family:inherit; font-size:16px; }
+:is(body.home-modern,body.panel-readable-controls) .ogri-assistant__form :is(input[type=tel],input[type=email]) { background:#fff; color:var(--ui-ink); border-color:#7b919e; font-family:inherit; font-size:16px; }
+:is(body.home-modern,body.panel-readable-controls) .ogri-assistant__form :is(input[type=tel],input[type=email]):focus-visible { outline:2px solid #006b7e; outline-offset:2px; }
 :is(body.home-modern,body.panel-readable-controls) .ogri-assistant__choice span { background:#fff; color:var(--ui-ink); border-color:var(--ui-line); font-size:12px; }
 :is(body.home-modern,body.panel-readable-controls) .ogri-assistant__choice input:checked+span { background:var(--ui-tint); color:#006b7e; border-color:#08b9d3; }
 :is(body.home-modern,body.panel-readable-controls) .ogri-assistant__submit { background:#08b9d3; color:#062b35; font-family:inherit; font-size:14px; }
@@ -26,3 +27,5 @@
 @media(max-width:720px) { body.panel-readable-controls .ogri-assistant { bottom:94px; } }
 @media(max-width:720px) { :is(body.home-modern,body.panel-readable-controls) .ogri-assistant__hint { display:none; } }
 @media(max-width:720px) { :is(body.home-modern,body.panel-readable-controls) .ogri-assistant__body { max-height:min(460px,calc(100dvh - 250px)); } }
+body.panel-readable-controls .ogri-assistant--panel { z-index:1100; }
+@media(max-width:520px) { body.panel-readable-controls .ogri-assistant__panel:not([hidden]) { bottom:calc(92px + env(safe-area-inset-bottom)); } }
