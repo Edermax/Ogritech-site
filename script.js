@@ -73,11 +73,27 @@ const PRODUCT_SECTION_CODES = { agenda: "agenda", landing: "pages", orcamentos: 
 const AGENDA_SECTIONS = new Set(["dashboard", "clientes", "agenda", "servicos", "profissionais", "financeiro", "configuracoes"]);
 let activeProductCodes = new Set();
 
+// Repeat only these reads, never an order, payment or other mutation.
+// PostgREST can transiently reject valid JWT claims with PGRST303.
+async function readPanelData(read) {
+    let refreshed = false;
+    for (let attempt = 0; ; attempt++) {
+        const result = await read();
+        if (result.error?.code !== "PGRST303" || attempt === 2) return result;
+        if (!refreshed && /expired|expirad/i.test(result.error.message || "")) {
+            refreshed = true;
+            const { error } = await supabaseClient.auth.refreshSession();
+            if (error) return { data: null, error };
+        }
+        await new Promise((resolve) => setTimeout(resolve, attempt === 0 ? 600 : 1400));
+    }
+}
+
 async function applyProductAccess() {
     if (IS_DEMO || !BARBERSHOP_ID) return "cardapio";
     const [{ data, error }, { data: business, error: businessError }] = await Promise.all([
-        supabaseClient.rpc("business_product_catalog", { target_barbershop_id: BARBERSHOP_ID }),
-        supabaseClient.from("barbershops").select("name,segment").eq("id", BARBERSHOP_ID).maybeSingle()
+        readPanelData(() => supabaseClient.rpc("business_product_catalog", { target_barbershop_id: BARBERSHOP_ID })),
+        readPanelData(() => supabaseClient.from("barbershops").select("name,segment").eq("id", BARBERSHOP_ID).maybeSingle())
     ]);
     if (businessError) console.warn("Não foi possível carregar a identificação do estabelecimento.", businessError);
     if (business?.name) businessConfig.name = business.name;
@@ -1839,7 +1855,38 @@ async function initializeOperationalDashboard() {
     await applyProductAccess();
 }
 
+let panelLoading = false;
+async function startOperationalDashboard() {
+    if (panelLoading) return;
+    panelLoading = true;
+    const state = document.getElementById("panelLoadState");
+    const message = document.getElementById("panelLoadMessage");
+    const retry = document.getElementById("panelLoadRetry");
+    const content = document.getElementById("content");
+    state.hidden = false;
+    message.textContent = "Carregando seu cardápio...";
+    retry.hidden = true;
+    retry.disabled = true;
+    content.hidden = true;
+    try {
+        if (!BARBERSHOP_ID) throw new Error("Contexto do estabelecimento indisponível.");
+        await initializeOperationalDashboard();
+        content.hidden = false;
+        state.hidden = true;
+    } catch (error) {
+        console.error("Falha ao abrir o painel:", JSON.stringify({ code: error?.code || "", message: error?.message || "Falha de carregamento" }));
+        message.textContent = error?.code === "PGRST303"
+            ? "Não foi possível validar sua sessão para abrir o cardápio. Tente novamente. Se continuar, saia e entre de novo."
+            : "Não foi possível abrir seu cardápio agora. Tente novamente. Seus dados não foram alterados.";
+        retry.hidden = false;
+    } finally {
+        retry.disabled = false;
+        panelLoading = false;
+    }
+}
+
 // Wait for the Cardapio scripts to register their loaders before opening the panel.
 document.addEventListener("DOMContentLoaded", () => {
-    initializeOperationalDashboard().catch((error) => reportDataError("carregar os dados", error));
+    document.getElementById("panelLoadRetry").addEventListener("click", startOperationalDashboard);
+    void startOperationalDashboard();
 }, { once: true });

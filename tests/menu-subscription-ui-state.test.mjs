@@ -30,7 +30,7 @@ test('missing and cancelled subscriptions clear stale Pix and access controls',(
 
 test('panel uses only Cardápio and keeps subscription navigation accessible for old multi-product accounts',async()=>{
  const source=await readFile(new URL('../script.js',import.meta.url),'utf8');
- const functionSource=source.slice(source.indexOf('async function applyProductAccess()'),source.indexOf('const dashboardView'));
+ const functionSource=source.slice(source.indexOf('async function readPanelData('),source.indexOf('const dashboardView'));
  const items=['cardapio','configuracoes','agenda','landing','orcamentos'].map(section=>({dataset:{section},classList:{toggle(){}},setAttribute(){}}));
  const shown=[];
  const businessConfig={};
