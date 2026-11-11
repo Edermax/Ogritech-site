@@ -11,6 +11,9 @@ body.panel-readable-controls {
   background: var(--control-bg);
 }
 body.panel-readable-controls [hidden],body.panel-readable-controls .hidden { display: none !important; }
+body.panel-readable-controls .tenant-image-button { display:grid; place-items:center; flex:0 0 auto; min-width:44px; min-height:44px; padding:3px; border:0; border-radius:50%; background:transparent; cursor:pointer; }
+body.panel-readable-controls .tenant-image-button:disabled { cursor:default; }
+body.panel-readable-controls .tenant-image-button:focus-visible { outline:2px solid var(--control-cyan); outline-offset:2px; }
 body.panel-readable-controls :is(.panel,.menu-workspace-header) { background: var(--control-surface); border-color: #496674; }
 body.panel-readable-controls .section-description { color: var(--control-muted); font-size: 15px; line-height: 1.55; }
 body.panel-readable-controls .eyebrow { color: var(--control-cyan); font-size: 12px; letter-spacing: 1.1px; }
