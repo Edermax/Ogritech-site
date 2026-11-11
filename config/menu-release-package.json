@@ -36,7 +36,8 @@
     "pwa.css",
     "manifest.webmanifest",
     "login/index.html",
-    "commercial-admin.js"
+    "commercial-admin.js",
+    "cardapio/share.js"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",
