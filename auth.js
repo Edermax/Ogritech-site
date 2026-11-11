@@ -220,6 +220,7 @@ async function initializeAuthenticatedPage() {
             document.documentElement.style.visibility = "visible";
             document.getElementById("logoutButton")?.addEventListener("click", async () => {
                 const loginUrl = environmentUrl("login/");
+                await window.OgritechOrderNotifications?.disconnect();
                 await supabaseClient.auth.signOut();
                 sessionStorage.clear();
                 window.location.replace(loginUrl);
@@ -236,6 +237,7 @@ async function initializeAuthenticatedPage() {
         .single();
 
     if (error || !profile?.active) {
+        await window.OgritechOrderNotifications?.disconnect();
         await supabaseClient.auth.signOut();
         clearLocalSession();
         window.location.replace(environmentUrl("login/"));
@@ -243,6 +245,7 @@ async function initializeAuthenticatedPage() {
     }
 
     if (!profile.barbershop_id || !["owner", "admin", "employee", "client"].includes(profile.role)) {
+        await window.OgritechOrderNotifications?.disconnect();
         await supabaseClient.auth.signOut();
         clearLocalSession();
         window.location.replace(environmentUrl("login/"));
@@ -295,6 +298,7 @@ async function initializeAuthenticatedPage() {
     const logoutButton = document.getElementById("logoutButton");
     if (logoutButton) {
         logoutButton.addEventListener("click", async () => {
+            await window.OgritechOrderNotifications?.disconnect();
             await supabaseClient.auth.signOut();
             clearLocalSession();
             window.location.replace(environmentUrl("login/"));

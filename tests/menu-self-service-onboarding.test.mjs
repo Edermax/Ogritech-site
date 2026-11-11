@@ -118,7 +118,7 @@ function browser(state = fixture(), options = {}) {
     }
   };
   const context = vm.createContext({
-    window: {}, document: {
+    window: { addEventListener() {} }, document: {
       getElementById: element,
       querySelectorAll(selector) {
         const list = selector.startsWith(".menu-payment") ? payments : selector.startsWith(".menu-weekday") ? weekdays : [];

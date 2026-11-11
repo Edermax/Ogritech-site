@@ -19,6 +19,8 @@ function fixture() {
 }
 
 function setMigrationTail(source, appliedThrough, pendingNames) {
+  const baseline = source.paths.find(path => path.endsWith(`_${appliedThrough}.sql`));
+  source.paths = source.paths.filter(path => !path.startsWith("supabase/migrations/") || path <= baseline || pendingNames.some(name => path.endsWith(`_${name}.sql`)));
   const policy = JSON.parse(source.read("config/migration-release-policy.json"));
   const batch = JSON.parse(source.read("config/menu-production-migration-batch.json"));
   policy.production.appliedThrough = appliedThrough;
@@ -38,7 +40,7 @@ test("release package pins production inputs and preserves all launch blockers",
   const report = buildReleasePackage(source);
   assert.equal(report.database.pendingCount, policy.production.heldMigrations.length);
   assert.deepEqual(report.database.migrations.map((item) => item.name), policy.production.heldMigrations.map((item) => item.name));
-  assert.equal(report.functions.length, 7);
+  assert.equal(report.functions.length, source.config.productionFunctions.length);
   assert.equal(report.functions.find((item) => item.name === "cep-lookup").verifyJwt, false);
   assert.equal(report.functions.find((item) => item.name === "platform-users").verifyJwt, true);
   assert.equal(report.sourceCommit, source.commit);

@@ -1,8 +1,9 @@
-const CACHE_NAME = "ogritech-shell-v17";
+importScripts("/menu-order-push-worker.js?v=20261110.1");
+const CACHE_NAME = "ogritech-shell-v18";
 const APP_SHELL = [
   "./", "./login/", "./painel/", "./style.css",
   "./auth.js", "./script.js", "./commercial-admin.js", "./cliente.js", "./login.js", "./business-config.js",
-  "./supabase-config.js", "./pwa.js", "./pwa.css", "./manifest.webmanifest",
+  "./supabase-config.js", "./pwa.js", "./pwa.css", "./manifest.webmanifest", "./menu-order-notifications.js",
   "./ogritech-brand-symbol.png", "./ogritech-app-192.png", "./ogritech-favicon.ico",
   "./home.css", "./home.js", "./commercial-public.css",
 
@@ -18,7 +19,7 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+    caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME && key !== "ogritech-order-push-context-v1").map((key) => caches.delete(key))))
   );
   self.clients.claim();
 });

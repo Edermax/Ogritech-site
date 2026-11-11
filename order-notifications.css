@@ -1,0 +1,11 @@
+.order-notifications { display: grid; gap: 9px; margin: 16px 0; padding: 16px; border: 1px solid #2c535b; border-radius: 13px; background: #0c2026; color: #edf7f8; }
+.order-notifications h3, .order-notifications p { margin: 0; }
+.order-notifications h3 { font-size: 16px; }
+.order-notifications > p { max-width: 65ch; color: #b6cbd0; font-size: 13px; line-height: 1.5; }
+.order-notifications .order-notifications-action { justify-self: start; min-height: 44px; padding: 9px 14px; border: 1px solid #249cac; border-radius: 9px; background: #113d47; color: #f1fcfd; font: 700 13px/1.3 Arial,sans-serif; cursor: pointer; }
+.order-notifications-action:disabled { opacity: .65; cursor: default; }
+.order-notifications-action:focus-visible { outline: 3px solid #70d9e6; outline-offset: 3px; }
+.order-notifications [data-push-status] { color: #d5e6e9; }
+.order-notifications-consent { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: start; gap: 10px; margin: 18px 0; padding: 14px; border: 1px solid #315258; border-radius: 10px; font-size: 14px; }
+.order-notifications-consent input { width: 18px; height: 18px; margin: 3px 0 0; }
+.order-notifications-consent small { display: block; margin-top: 5px; color: #bac8cb; line-height: 1.45; }
