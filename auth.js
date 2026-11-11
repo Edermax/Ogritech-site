@@ -71,9 +71,13 @@ function renderUser(profile) {
             .toUpperCase();
     }
 
+    document.querySelectorAll("[data-owner-only]").forEach((element) => element.classList.toggle("hidden", profile.role !== "owner"));
+    const accountLink = document.querySelector('[data-section="configuracoes"]');
+    if (accountLink && profile.role !== "owner") accountLink.innerHTML = '<span aria-hidden="true">⚙</span>Minha conta';
+
     if (profile.role === "employee") {
         document
-            .querySelectorAll('[data-section="financeiro"], [data-section="configuracoes"]')
+            .querySelectorAll('[data-section="financeiro"]')
             .forEach((item) => item.classList.add("hidden"));
 
         const eyebrow = document.querySelector(".topbar .eyebrow");
@@ -220,6 +224,7 @@ async function initializeAuthenticatedPage() {
             document.documentElement.style.visibility = "visible";
             document.getElementById("logoutButton")?.addEventListener("click", async () => {
                 const loginUrl = environmentUrl("login/");
+                window.OgritechPanelNotifications?.stop();
                 await window.OgritechOrderNotifications?.disconnect();
                 await supabaseClient.auth.signOut();
                 sessionStorage.clear();
@@ -237,6 +242,7 @@ async function initializeAuthenticatedPage() {
         .single();
 
     if (error || !profile?.active) {
+        window.OgritechPanelNotifications?.stop();
         await window.OgritechOrderNotifications?.disconnect();
         await supabaseClient.auth.signOut();
         clearLocalSession();
@@ -245,6 +251,7 @@ async function initializeAuthenticatedPage() {
     }
 
     if (!profile.barbershop_id || !["owner", "admin", "employee", "client"].includes(profile.role)) {
+        window.OgritechPanelNotifications?.stop();
         await window.OgritechOrderNotifications?.disconnect();
         await supabaseClient.auth.signOut();
         clearLocalSession();
@@ -298,6 +305,7 @@ async function initializeAuthenticatedPage() {
     const logoutButton = document.getElementById("logoutButton");
     if (logoutButton) {
         logoutButton.addEventListener("click", async () => {
+            window.OgritechPanelNotifications?.stop();
             await window.OgritechOrderNotifications?.disconnect();
             await supabaseClient.auth.signOut();
             clearLocalSession();
