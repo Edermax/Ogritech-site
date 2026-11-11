@@ -43,7 +43,7 @@
     configuracoes: "Em Configurar ficam os dados, formas de atendimento e horários. Enquanto o cardápio está publicado, a configuração geral fica protegida. Para mudar esses dados, use Publicação para retirar do ar, faça os ajustes e publique novamente.",
     publicacao: "Salve as alterações de produtos, abra Publicação, confira o resumo e use Publicar alterações. Seus clientes continuam vendo a versão anterior até a publicação. Se o botão estiver desativado, confira as etapas pendentes indicadas pelo painel.",
     notificacoes: "Em Pedidos recentes, toque em Ativar neste dispositivo e confirme a permissão do navegador. Faça isso em cada aparelho. No iPhone ou iPad, adicione a Ogritech à Tela de Início pelo Safari e abra pelo ícone antes de ativar.",
-    aplicativo: "Use Instalar app no topo do painel quando o navegador disponibilizar o instalador. Se aparecer Como instalar o app, esse navegador exige etapas manuais. No iPhone ou iPad, use Compartilhar → Adicionar à Tela de Início no Safari."
+    aplicativo: "Toque em Instalar o app no topo do painel e confirme a instalação quando o navegador abrir o instalador. Se aparecer Preparando instalação, aguarde a liberação do navegador. No iPhone ou iPad, use Compartilhar → Adicionar à Tela de Início no Safari."
   };
   const panelTargets = { pedidos: "operation", produtos: "catalog", configuracoes: "settings", publicacao: "review", notificacoes: "operation" };
   const panelTargetLabels = { operation: "Pedidos", catalog: "Produtos", settings: "Configurar", review: "Publicação" };
