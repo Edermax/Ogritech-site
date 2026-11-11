@@ -71,7 +71,7 @@ test('an installed app does not offer another installation',async()=>{
 });
 test('a click waits for the native installer and opens it while user activation remains valid',async()=>{
   const page=fixture();page.initialize();assert.equal(page.button.textContent,'Instalar o app');
-  await page.button.listeners.click();assert.equal(page.button.textContent,'Preparando instalação...');
+  await page.button.listeners.click();assert.equal(page.button.textContent,'Instalar o app');assert.match(page.button.after.textContent,/não está disponível/);
   assert.equal(page.help.children['[data-install-now]'].hidden,true);
   page.navigator.userActivation.isActive=true;
   const prompt=page.prompt();assert.equal(prompt.calls,1);
@@ -89,4 +89,37 @@ test('closing installation preparation cancels the request instead of opening a 
   page.help.close();page.help.listeners.close();page.navigator.userActivation.isActive=true;
   const prompt=page.prompt();assert.equal(prompt.calls,0);assert.equal(page.help.open,false);
   assert.equal(page.button.textContent,'Instalar o app');
+});
+test('unavailable installation ends preparation and replaces its stale status',async()=>{
+  const page=fixture();page.initialize();await page.button.listeners.click();
+  for(const callback of [...page.timers.values()]) callback();
+  assert.equal(page.button.getAttribute('aria-disabled'),'false');
+  assert.equal(page.button.textContent,'Instalar o app');
+  assert.doesNotMatch(page.button.after.textContent,/Preparando|Aguarde/);
+  assert.match(page.button.after.textContent,/não está disponível/);
+});
+test('closing preparation clears its pending message',async()=>{
+  const page=fixture();page.initialize();await page.button.listeners.click();
+  page.help.close();page.help.listeners.close();
+  assert.doesNotMatch(page.button.after.textContent,/Preparando|Aguarde/);
+});
+test('readiness updates both the confirmation dialog and the external status',async()=>{
+  const page=fixture();page.initialize();await page.button.listeners.click();page.prompt();
+  assert.match(page.button.after.textContent,/disponível/);
+  assert.doesNotMatch(page.button.after.textContent,/Preparando/);
+});
+test('a native installer that never responds releases the controls and ignores a late acceptance',async()=>{
+  let resolve;const page=fixture({native:()=>new Promise(done=>{resolve=done;})});page.initialize();
+  const pending=page.button.listeners.click();assert.equal(page.button.getAttribute('aria-disabled'),'true');
+  for(const callback of [...page.timers.values()])callback();
+  assert.equal(page.button.getAttribute('aria-disabled'),'false');
+  assert.match(page.button.after.textContent,/confirmação do navegador não chegou/);
+  resolve({outcome:'accepted'});await pending;
+  assert.equal(page.button.hidden,false);assert.equal(page.button.textContent,'Instalar o app');
+});
+test('an actual installation signal remains authoritative after a request timed out',async()=>{
+  const page=fixture({native:()=>new Promise(()=>{})});page.initialize();void page.button.listeners.click();
+  for(const callback of [...page.timers.values()])callback();
+  page.events.appinstalled();page.help.listeners.close();
+  assert.equal(page.button.hidden,true);assert.match(page.button.after.textContent,/Ogritech instalado/);
 });
