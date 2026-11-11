@@ -495,17 +495,19 @@ const adminViews = {
     users: ["Acessos", "Gerencie proprietários e equipe dos seus clientes.", ["users"]],
     plans: ["Plano do Cardápio", "Confira os valores e as regras cadastrados para o produto.", ["plans"]],
     products: ["Assinaturas", "Consulte e gerencie o acesso ao Cardápio por negócio.", ["products"]],
+    trialReviews: ["Revisão de testes", "Analise cadastros com dados já utilizados antes de liberar outro teste.", ["trialReviews"]],
     billing: ["Cobranças", "Acompanhe faturas, recebimentos e registros financeiros.", ["billing"]]
 };
 function selectAdminView(focus = false) {
     const requested = location.hash.slice(1); const key = Object.hasOwn(adminViews, requested) ? requested : "overview";
     const [title, description, visible] = adminViews[key];
     $("adminViewTitle").textContent = title; $("adminViewDescription").textContent = description;
-    ["adminSummary", "adminShortcuts", "segments", "businesses", "users", "plans", "products", "billing"].forEach((id) => { $(id).hidden = !visible.includes(id); });
+    ["adminSummary", "adminShortcuts", "segments", "businesses", "users", "plans", "products", "billing", "trialReviews"].forEach((id) => { $(id).hidden = !visible.includes(id); });
     document.querySelectorAll(".platform-menu a").forEach((link) => {
         const active = link.getAttribute("href") === `#${key}`; link.classList.toggle("active", active);
         if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
     });
+    if (key === "trialReviews") window.loadOgritechTrialReviews?.();
     if (focus) { $("adminViewTitle").focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: "instant" }); }
 }
 function initializeAdminNavigation() {

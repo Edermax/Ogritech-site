@@ -13,7 +13,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css?v=20261022.1">
     <link rel="stylesheet" href="admin.css?v=20261022.3">
-    <link rel="stylesheet" href="admin-theme.css?v=20261111.1">
+    <link rel="stylesheet" href="admin-theme.css?v=20261111.2">
 </head>
 <body class="platform-admin-page">
     <div class="platform-shell">
@@ -31,6 +31,7 @@
 
                 <a href="#plans"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#book"></use></svg>Plano do Cardápio</a>
                 <a href="#products"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#card"></use></svg>Assinaturas</a>
+                <a href="#trialReviews"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#users"></use></svg>Revisão de testes</a>
                 <a href="#billing"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#receipt"></use></svg>Cobranças</a>
             </nav>
 
@@ -103,6 +104,10 @@
                 <div class="business-table-wrap"><table class="business-table"><thead><tr><th>Produto</th><th>Plano</th><th>Valor</th><th>Status</th><th>Ação</th></tr></thead><tbody id="productAccessTableBody"></tbody></table></div>
             </section>
 
+            <section class="platform-panel" id="trialReviews" hidden aria-labelledby="trialReviewsTitle">
+                <div class="panel-header"><div><h2 id="trialReviewsTitle">Revisão de testes gratuitos</h2><p>Até 100 solicitações por vez, com as pendentes mais antigas primeiro. Dados repetidos precisam de análise. Liberar uma exceção permite um único cadastro com os mesmos dados por 48 horas.</p></div><button type="button" id="refreshTrialReviews">Atualizar lista</button></div>
+                <p id="trialReviewsMessage" role="status"></p><div id="trialReviewsList" class="trial-reviews-grid"></div>
+            </section>
             <section class="platform-panel" id="billing">
                 <div class="platform-section-title business-heading">
                     <div><p class="platform-kicker">FINANCEIRO OGRITECH</p><h2>Cobranças e recebimentos</h2></div>
@@ -281,9 +286,11 @@
     <div class="admin-loading" id="adminLoading">Validando acesso seguro...</div>
     <footer class="app-legal-links"><a href="mailto:suporte@ogritech.com.br">Suporte</a><a href="mailto:financeiro@ogritech.com.br">Financeiro</a><a href="mailto:privacidade@ogritech.com.br">Privacidade</a></footer>
 
+    <dialog id="trialReviewDialog" class="trial-review-dialog" aria-labelledby="trialReviewDialogTitle"><form id="trialReviewForm"><h2 id="trialReviewDialogTitle">Revisar solicitação</h2><p id="trialReviewBusiness"></p><input type="hidden" id="trialReviewId"><label>Decisão<select id="trialReviewDecision" required><option value="">Selecione</option><option value="approved">Liberar uma exceção por 48 horas</option><option value="rejected">Não liberar outro teste</option></select></label><label>Motivo da decisão<textarea id="trialReviewReason" required minlength="5" maxlength="500" rows="3"></textarea></label><p>A decisão fica registrada. O teste começa somente quando a pessoa concluir o cadastro com os mesmos dados.</p><p id="trialDecisionMessage" role="status"></p><div class="admin-row-actions"><button type="button" id="closeTrialReview">Cancelar</button><button type="submit" id="saveTrialReview">Salvar decisão</button></div></form></dialog>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
     <script src="supabase-config.js"></script>
-    <script src="admin.js?v=20261102.1"></script>
+    <script src="admin-trial-reviews.js?v=20261111.1"></script>
+    <script src="admin.js?v=20261111.2"></script>
     <script src="pwa.js?v=20260831.2"></script>
 </body>
 </html>

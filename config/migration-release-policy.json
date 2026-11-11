@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-11-10",
+  "auditedAt": "2026-11-11",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -93,11 +93,15 @@
       "menu_pix_order_amount",
       "menu_service_area",
       "menu_order_push_notifications",
-      "menu_order_push_transport"
+      "menu_order_push_transport",
+      "menu_trial_abuse_protection",
+      "menu_trial_review_api_hardening"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
-      "menu_order_push_transport": "20261110235244"
+      "menu_order_push_transport": "20261110235244",
+      "menu_trial_abuse_protection": "20261111225657",
+      "menu_trial_review_api_hardening": "20261111230807"
     },
     "observedMigrationNames": [
       "create_core_schema",
@@ -187,7 +191,16 @@
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "menu_order_push_transport",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      {
+        "name": "menu_trial_abuse_protection",
+        "reason": "Homologated; production publication pending authorization for the isolated restoration test of the existing encrypted backup."
+      },
+      {
+        "name": "menu_trial_review_api_hardening",
+        "reason": "Homologated; production publication pending authorization for the isolated restoration test of the existing encrypted backup."
+      }
+    ],
     "observationEvidence": "docs/evidencias/cardapio-notificacoes-pedidos-2026-11-10.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",

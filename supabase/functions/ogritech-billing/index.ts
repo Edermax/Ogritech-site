@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
 import { z } from "npm:zod@4.6.6";
+import { phoneVerificationConfiguration, sendPhoneCode, checkPhoneCode } from "./phone-verification.ts";
 
 const CYCLES = {
   monthly: { months: 1, discountBps: 0 },
@@ -21,6 +22,8 @@ const reply = (body: unknown, status: number, origin: string | null) => new Resp
 const StartBody = z.object({
   action: z.literal("start_trial"), business_name: z.string().trim().min(2).max(150),
   responsible_name: z.string().trim().min(2).max(150), tax_document: z.string().max(24),
+  responsible_tax_document: z.string().max(24).optional().default(""),
+  phone_verification_token: z.string().max(256).optional().default(""),
   email: z.string().trim().toLowerCase().email().max(320), phone: z.string().max(24),
   publish_whatsapp: z.boolean().default(false),
   segment: z.string().trim().min(2).max(80).default("Serviços"),
@@ -39,6 +42,14 @@ const ChoosePaymentBody = z.object({
 });
 const BillingStatusBody = z.object({
   action: z.literal("billing_status"), product: z.literal("menu"), barbershop_id: z.string().uuid(),
+});
+const PhoneBody = z.object({
+  action: z.enum(["request_phone_code", "verify_phone_code"]),
+  tax_document: z.string().max(24), responsible_tax_document: z.string().max(24).optional().default(""),
+  business_name: z.string().trim().min(2).max(150), email: z.string().trim().toLowerCase().email().max(320),
+  phone: z.string().max(24), turnstile_token: z.string().max(2048).optional().default(""),
+  challenge_id: z.string().uuid().optional(), code: z.string().regex(/^[0-9]{6}$/).optional(),
+  sms_consent: z.literal(true),
 });
 
 function serviceKey() {
@@ -77,6 +88,22 @@ async function sha256(value: string) {
   const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return [...new Uint8Array(bytes)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
+function normalizePhone(value: string) {
+  const digits = value.replace(/\D/g, "");
+  return digits.length > 11 && digits.startsWith("55") ? digits.slice(2) : digits;
+}
+async function trialRateLimit(admin: ReturnType<typeof createClient>, action: string, request: Request, identity: { phone: string; tax_document: string; email: string }) {
+  const address = (request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "unknown").split(",")[0].trim().slice(0, 100);
+  const entries = await Promise.all(Object.entries({ ip: address, phone: identity.phone, document: identity.tax_document, email: identity.email })
+    .map(async ([key, value]) => [key, await sha256(`${key}:${value}`)]));
+  const { data, error } = await admin.rpc("backend_menu_trial_rate_limit", { action_name: action, signals: Object.fromEntries(entries) });
+  return error ? { available: false, allowed: false, retry: 60 } : { available: true, allowed: data?.allowed === true, retry: Number(data?.retry_after_seconds || 60) };
+}
+function trialReviewResponse(result: { review_id?: string; review_status?: string }, origin: string | null) {
+  return reply({ data: { status: "review_required", review_id: result.review_id, review_status: result.review_status,
+    message: result.review_status === "rejected" ? "Não foi possível liberar outro teste gratuito para este cadastro. Fale com o suporte."
+      : "Encontramos dados que precisam de revisão antes de liberar o teste. Sua solicitação foi registrada. Você pode verificar novamente com os mesmos dados. Nenhuma conta ou cobrança foi criada." } }, 202, origin);
+}
 function quote(cycle: keyof typeof CYCLES, product: keyof typeof PRODUCT_PRICES = "agenda") {
   const rule = CYCLES[cycle], base = PRODUCT_PRICES[product], subtotal = base * rule.months;
   if (product === "menu" && cycle === "annual") return { base_monthly_cents: base, months: 12, discount_bps: 1667,
@@ -88,8 +115,12 @@ async function verifyTurnstile(token: string, ip: string) {
   const secret = Deno.env.get("TURNSTILE_SECRET_KEY");
   if (!secret) return true;
   const form = new FormData(); form.set("secret", secret); form.set("response", token); if (ip) form.set("remoteip", ip);
-  const result = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body: form });
-  return result.ok && Boolean((await result.json())?.success);
+  try {
+    const result = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body: form, signal: AbortSignal.timeout(8000) });
+    const data = result.ok ? await result.json() : null;
+    return data?.success === true && data.action === "menu_trial"
+      && ["ogritech.com.br", "localhost", "127.0.0.1"].includes(data.hostname);
+  } catch { return false; }
 }
 
 function safeCheckoutUrl(value: unknown) {
@@ -120,16 +151,60 @@ Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: reply({}, 200, origin).headers });
   if (request.method !== "POST") return reply({ error: { code: "method_not_allowed" } }, 405, origin);
   if (Number(request.headers.get("content-length") || 0) > 16_384) return reply({ error: { code: "payload_too_large" } }, 413, origin);
-  let json: unknown; try { json = await request.json(); } catch { return reply({ error: { code: "invalid_json" } }, 400, origin); }
+  let json: unknown;
+  try {
+    const reader = request.body?.getReader(), chunks: Uint8Array[] = []; let size = 0;
+    if (!reader) return reply({ error: { code: "invalid_json" } }, 400, origin);
+    while (true) { const { done, value } = await reader.read(); if (done) break; size += value.byteLength;
+      if (size > 16_384) { await reader.cancel(); return reply({ error: { code: "payload_too_large" } }, 413, origin); } chunks.push(value); }
+    const bytes = new Uint8Array(size); let offset = 0;
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+    json = JSON.parse(new TextDecoder().decode(bytes));
+  } catch { return reply({ error: { code: "invalid_json" } }, 400, origin); }
   if (typeof json !== "object" || !json) return reply({ error: { code: "invalid_input" } }, 422, origin);
   if ((json as { action?: string }).action === "quote") {
     const cycle = z.enum(["monthly", "quarterly", "semiannual", "annual"]).safeParse((json as { cycle?: unknown }).cycle);
     const product = z.enum(["agenda", "menu"]).safeParse((json as { product?: unknown }).product || "agenda");
     return cycle.success && product.success ? reply({ data: quote(cycle.data, product.data) }, 200, origin) : reply({ error: { code: "invalid_quote" } }, 422, origin);
   }
+  if ((json as { action?: string }).action === "trial_configuration") {
+    const config = phoneVerificationConfiguration();
+    return reply({ data: { phone_verification: config.enabled, available: !config.enabled || config.ready,
+      turnstile_site_key: Deno.env.get("TURNSTILE_SECRET_KEY") ? Deno.env.get("TURNSTILE_SITE_KEY") || "" : "" } }, 200, origin);
+  }
   const url = Deno.env.get("SUPABASE_URL") || "", key = serviceKey();
   if (!url || !key) return reply({ error: { code: "service_unavailable" } }, 503, origin);
   const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+
+  if (["request_phone_code", "verify_phone_code"].includes((json as { action?: string }).action || "")) {
+    const parsed = PhoneBody.safeParse(json), config = phoneVerificationConfiguration();
+    if (!parsed.success) return reply({ error: { code: "invalid_input" } }, 422, origin);
+    if (!config.enabled || !config.ready) return reply({ error: { code: "phone_verification_unavailable", message: "A confirmação por SMS ainda não está disponível." } }, 503, origin);
+    const input = parsed.data, taxDocument = validCnpj(input.tax_document) || validCpf(input.tax_document);
+    const responsible = taxDocument.length === 11 ? taxDocument : validCpf(input.responsible_tax_document);
+    const phone = normalizePhone(input.phone);
+    if (!taxDocument || !responsible || !/^[1-9][0-9]9[0-9]{8}$/.test(phone)) return reply({ error: { code: "invalid_company_data" } }, 422, origin);
+    const identity = { tax_document: taxDocument, responsible_tax_document: responsible, phone, email: input.email, business_name: clean(input.business_name) };
+    const limit = await trialRateLimit(admin, input.action === "request_phone_code" ? "phone_send" : "phone_check", request, identity);
+    if (!limit.available) return reply({ error: { code: "trial_protection_unavailable" } }, 503, origin);
+    if (!limit.allowed) { const response = reply({ error: { code: "rate_limited", message: "Muitas tentativas. Aguarde antes de tentar novamente." } }, 429, origin); response.headers.set("Retry-After", String(limit.retry)); return response; }
+    try {
+      if (input.action === "request_phone_code") {
+        if (!await verifyTurnstile(input.turnstile_token, "")) return reply({ error: { code: "challenge_failed" } }, 403, origin);
+        const providerId = await sendPhoneCode(phone);
+        const result = await admin.rpc("backend_menu_trial_phone", { action_name: "create", payload: { ...identity, provider_id: providerId } });
+        if (result.error || !result.data?.challenge_id) throw new Error("phone_challenge_unavailable");
+        return reply({ data: { challenge_id: result.data.challenge_id, expires_in_seconds: 600 } }, 200, origin);
+      }
+      if (!input.challenge_id || !input.code) return reply({ error: { code: "invalid_input" } }, 422, origin);
+      const attempt = await admin.rpc("backend_menu_trial_phone", { action_name: "attempt", payload: { ...identity, challenge_id: input.challenge_id } });
+      if (attempt.error || !attempt.data?.provider_id || !await checkPhoneCode(attempt.data.provider_id, input.code)) return reply({ error: { code: "invalid_phone_code", message: "Código inválido ou expirado. Confira o SMS ou solicite um novo código." } }, 422, origin);
+      const token = crypto.randomUUID() + crypto.randomUUID();
+      const approval = await admin.rpc("backend_menu_trial_phone", { action_name: "approve", payload: { ...identity, challenge_id: input.challenge_id, proof_hash: await sha256(token) } });
+      if (approval.error || approval.data?.verified !== true) throw new Error("phone_challenge_unavailable");
+      return reply({ data: { phone_verification_token: token } }, 200, origin);
+    } catch { return reply({ error: { code: "phone_verification_unavailable", message: "Não foi possível confirmar o telefone agora. Tente novamente em instantes." } }, 503, origin); }
+  }
 
   if ((json as { action?: string }).action === "billing_status") {
     const parsed = BillingStatusBody.safeParse(json);
@@ -252,8 +327,17 @@ Deno.serve(async (request) => {
     const parsed = StartBody.safeParse(json);
     if (!parsed.success) return reply({ error: { code: "invalid_input", fields: parsed.error.flatten().fieldErrors } }, 422, origin);
     if (parsed.data.product !== "menu") return reply({ error: { code: "product_retired", message: "A Ogritech oferece exclusivamente o Cardápio." } }, 410, origin);
-    const input = parsed.data, taxDocument = validCnpj(input.tax_document) || validCpf(input.tax_document), phone = input.phone.replace(/\D/g, "");
+    const input = parsed.data, taxDocument = validCnpj(input.tax_document) || validCpf(input.tax_document), phone = normalizePhone(input.phone);
     if (!taxDocument || !/^\d{10,11}$/.test(phone) || (input.publish_whatsapp && phone.startsWith("0"))) return reply({ error: { code: "invalid_company_data", message: "Confira o CPF ou CNPJ e o telefone." } }, 422, origin);
+    const responsibleDocument = taxDocument.length === 11 ? taxDocument : validCpf(input.responsible_tax_document);
+    if (!responsibleDocument) return reply({ error: { code: "invalid_responsible_document", message: "Informe um CPF válido do responsável pelo estabelecimento." } }, 422, origin);
+    const identity = { tax_document: taxDocument, responsible_tax_document: responsibleDocument, phone, email: input.email, business_name: clean(input.business_name) };
+    const limit = await trialRateLimit(admin, "signup", request, identity);
+    if (!limit.available) return reply({ error: { code: "trial_protection_unavailable", message: "Não foi possível validar o cadastro agora. Tente novamente em instantes." } }, 503, origin);
+    if (!limit.allowed) {
+      const response = reply({ error: { code: "rate_limited", message: "Muitas tentativas de cadastro. Aguarde antes de tentar novamente.", retry_after_seconds: limit.retry } }, 429, origin);
+      response.headers.set("Retry-After", String(limit.retry)); return response;
+    }
     if (input.payment_method === "card" && !input.recurring_authorized) return reply({ error: { code: "recurring_authorization_required" } }, 422, origin);
     if (input.product === "menu" && (input.cycle !== "monthly" || input.payment_method !== "pix")) return reply({ error: { code: "invalid_menu_offer" } }, 422, origin);
     if (taxDocument.length === 11 && input.service_invoice_preference === "not_informed") input.service_invoice_preference = "not_requested";
@@ -265,15 +349,29 @@ Deno.serve(async (request) => {
     if (input.terms_version !== termsVersion || !/^[0-9a-f]{64}$/.test(termsHash)) return reply({ error: { code: "terms_not_configured" } }, 503, origin);
     const ip = (request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "").split(",")[0].trim();
     if (!(await verifyTurnstile(input.turnstile_token, ip))) return reply({ error: { code: "challenge_failed" } }, 403, origin);
+    const { data: eligibility, error: eligibilityError } = await admin.rpc("backend_menu_trial_evaluate", { payload: identity });
+    if (eligibilityError || !eligibility) return reply({ error: { code: "trial_protection_unavailable", message: "Não foi possível conferir seu cadastro. Tente novamente." } }, 503, origin);
+    if (eligibility.decision === "used") return reply({ error: { code: "trial_already_used", message: "Este documento já utilizou o teste gratuito." } }, 409, origin);
+    if (eligibility.decision === "review") return trialReviewResponse(eligibility, origin);
+    if (eligibility.decision !== "allow") return reply({ error: { code: "trial_protection_unavailable" } }, 503, origin);
+    const phoneConfig = phoneVerificationConfiguration();
+    if (phoneConfig.enabled && !phoneConfig.ready) return reply({ error: { code: "phone_verification_unavailable" } }, 503, origin);
+    if (phoneConfig.enabled && !/^[a-f0-9-]{72}$/.test(input.phone_verification_token)) return reply({ error: { code: "phone_verification_required", message: "Confirme seu telefone pelo código enviado por SMS." } }, 422, origin);
     const cycle = quote(input.cycle, input.product), token = crypto.randomUUID() + crypto.randomUUID(), tokenHash = await sha256(token);
     const trialEndsAt = new Date(Date.now() + 14 * 86_400_000).toISOString();
     const { data: signupId, error: signupError } = await admin.rpc("backend_billing_signup_create", { payload: {
-      product_code: input.product, tax_document: taxDocument, business_name: clean(input.business_name), responsible_name: clean(input.responsible_name),
+      product_code: input.product, tax_document: taxDocument, responsible_tax_document: responsibleDocument, business_name: clean(input.business_name), responsible_name: clean(input.responsible_name),
+      phone_verification_required: phoneConfig.enabled, phone_proof_hash: phoneConfig.enabled ? await sha256(input.phone_verification_token) : null,
       email: input.email, phone, segment: clean(input.segment), cycle: input.cycle, payment_method: input.payment_method,
       base_monthly_cents: cycle.base_monthly_cents, cycle_months: cycle.months, discount_bps: cycle.discount_bps, total_cents: cycle.total_cents,
       terms_version: termsVersion, management_token_hash: tokenHash, trial_ends_at: trialEndsAt,
     } });
     if (signupError?.code === "23505") return reply({ error: { code: "trial_already_used", message: "Este documento já utilizou o teste gratuito." } }, 409, origin);
+    if (signupError?.message?.includes("phone_verification_required")) return reply({ error: { code: "phone_verification_required", message: "A confirmação do telefone expirou ou já foi usada. Solicite um novo código." } }, 422, origin);
+    if (signupError?.message?.includes("trial_review_required")) {
+      const { data: review, error } = await admin.rpc("backend_menu_trial_evaluate", { payload: identity });
+      return error || !review ? reply({ error: { code: "trial_protection_unavailable" } }, 503, origin) : trialReviewResponse(review, origin);
+    }
     if (signupError || !signupId) {
       console.error("start_trial.billing_signup", { code: signupError?.code, message: signupError?.message });
       return reply({ error: { code: "signup_failed" } }, 500, origin);
