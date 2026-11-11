@@ -82,12 +82,15 @@ body.panel-readable-controls .menu-lock-notice { background: #17242d; border-col
 body.panel-readable-controls .menu-lock-notice summary { min-height: 48px; padding-block: 8px; font-size: 16px; }
 body.panel-readable-controls :is(.commercial-actions,.table-actions) { gap: 10px; flex-wrap: wrap; }
 body.panel-readable-controls .pwa-install-status { flex-basis: 100%; }
+body.panel-readable-controls #menuShareLink { display: flex; align-items: stretch; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+body.panel-readable-controls #menuSharePreview > .table-button { margin-top: 16px; }
 @media (max-width:900px) {
   body.panel-readable-controls #menuWorkspaceTabs,
   body.panel-readable-controls #menuWorkspaceTabs.menu-workspace-published { grid-template-columns: repeat(2,minmax(0,1fr)); }
   body.panel-readable-controls #menuWorkspaceTabs.menu-workspace-staff { grid-template-columns: minmax(0,1fr); }
 }
 @media (max-width:560px) {
+  body.panel-readable-controls #menuShareLink > .table-button { width: 100%; }
   body.panel-readable-controls .menu-workspace-header { padding: 20px; }
   body.panel-readable-controls .menu-workspace-header-actions { align-items: flex-start; }
   body.panel-readable-controls .menu-workspace-header-actions .table-button { width: 100%; }

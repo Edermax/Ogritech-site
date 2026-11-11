@@ -9,6 +9,7 @@ window.renderMenuShare = (container, menuUrl, linkContainer = container) => {
         url.searchParams.delete("env");
     }
     const link = document.createElement("a");
+    link.className = "table-button edit";
     link.href = url.href;
     link.textContent = "Abrir link do cardápio";
     const copy = document.createElement("button");
@@ -50,6 +51,7 @@ window.renderMenuShare = (container, menuUrl, linkContainer = container) => {
         }
     }
     const download = document.createElement("a");
+    download.className = "table-button edit";
     download.href = canvas.toDataURL("image/png");
     download.download = "ogritech-cardapio.png";
     download.textContent = "Baixar QR Code em PNG";
