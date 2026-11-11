@@ -655,6 +655,7 @@ menuItems.forEach((item) => {
 
         item.classList.add("active");
         showSection(item.dataset.section);
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     });
 });
 
