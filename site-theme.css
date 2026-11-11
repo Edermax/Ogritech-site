@@ -1,0 +1,156 @@
+/* Shared Ogritech pages. Customer storefronts keep their own visual identity. */
+html:has(> body.ogri-light) { color-scheme:light; background:#f5f8fb; }
+body.ogri-light {
+ color-scheme:light;
+ --bg:#f5f8fb; --black:#f5f8fb; --black2:#edf3f7; --card:#fff; --card2:#f3f7fa;
+ --surface:#fff; --surface-2:#edf3f7; --panel:#fff; --line:#dce6ed; --border:#dce6ed;
+ --text:#172d3a; --white:#172d3a; --ink:#172d3a; --muted:#526875; --gray:#526875;
+ --cyan:#08b9d3; --cyan-light:#006b7e; --cyan-deep:#006b7e; --accent:#08b9d3;
+ --gold:#006b7e; --gold-light:#006b7e; --green:#006b7e; --yellow:#006b7e; --danger:#172d3a; --accent-rgb:8,185,211;
+ --ui-surface:#fff; --ui-ink:#172d3a; --ui-muted:#526875; --ui-line:#dce6ed; --ui-tint:#e9fafd;
+ background:#f5f8fb; color:#172d3a;
+ font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+body.ogri-light *,body.ogri-light *::before,body.ogri-light *::after { box-sizing:border-box; }
+body.ogri-light [hidden],body.ogri-light .hidden { display:none!important; }
+body.ogri-light :is(h1,h2,h3,legend) { color:var(--text); font-family:inherit; }
+body.ogri-light :is(h1,h2) { letter-spacing:-.035em; line-height:1.12; text-wrap:balance; }
+body.ogri-light :is(h1,h2) em { color:var(--cyan-light)!important; font-family:inherit!important; font-weight:inherit!important; font-style:normal!important; font-size:1em!important; line-height:inherit!important; letter-spacing:inherit!important; -webkit-text-stroke:0!important; }
+body.ogri-light a { color:var(--cyan-light); }
+body.ogri-light :is(a,button,input,select,textarea,summary):focus-visible { outline:3px solid #006b7e; outline-offset:3px; }
+body.ogri-light :is(input,textarea,select) { color:var(--text); background:#fff; border-color:#7b919e; font-family:inherit; font-size:16px; }
+body.ogri-light :is(input,textarea)::placeholder { color:var(--muted); opacity:1; }
+body.ogri-light select option { background:#fff; color:var(--text); }
+body.ogri-light :is(input[type=checkbox],input[type=radio]) { accent-color:#006b7e; }
+body.ogri-light :is(button,.button,.button-link,.public-button,.primary-button,.secondary-button,.gold-button,.outline-button,.header-cta) { min-height:44px; font-family:inherit; font-size:14px; line-height:1.4; border-radius:10px; box-shadow:none; }
+body.ogri-light :is(.primary,.primary-button,.gold-button,.button-link,.public-button) { color:#062b35; background:#08b9d3; border-color:#08b9d3; font-weight:750; }
+body.ogri-light :is(.primary,.primary-button,.gold-button,.button-link,.public-button):hover { background:#34c9df; }
+body.ogri-light :is(.secondary,.secondary-button,.text-button,.header-cta,.outline-button,.public-button.secondary) { color:var(--cyan-light); border:1px solid #7b919e; background:#fff; }
+body.ogri-light :is(.secondary,.secondary-button,.text-button,.header-cta,.outline-button):hover { background:#e9fafd; border-color:#006b7e; }
+body.ogri-light :is(.eyebrow,.platform-eyebrow,.status,.legal-kicker,.section-label) { color:var(--cyan-light); }
+body.ogri-light :is(.muted,.microcopy,.note,.description,.login-subtitle,.legal-version,.modal-description) { color:var(--muted); opacity:1; }
+body.ogri-light :is(.message,.alert,.login-message,.billing-message,.public-message) { color:var(--cyan-light); font-size:14px; }
+body.ogri-light :is(.message.error,.alert,.login-message.error,.billing-message.error) { color:var(--text); font-weight:650; }
+body.ogri-light :is(.pwa-install-button) { color:#062b35; background:#08b9d3; border-color:#08b9d3; }
+body.ogri-light :is(.site-brand,.ogritech-lockup.site-brand) { display:inline-flex; align-items:center; justify-content:center; gap:10px; color:var(--text); text-decoration:none; }
+body.ogri-light .site-brand img { display:block; flex:0 0 auto; width:36px; height:36px; object-fit:contain; margin:0; padding:0; filter:none; }
+body.ogri-light .site-brand>span { color:var(--text); font-size:21px; font-weight:750; letter-spacing:-.7px; line-height:1.2; }
+
+/* Sign in and password recovery. */
+body.ogri-light.login-page { background:var(--bg); }
+body.ogri-light .login-wrapper { padding:32px 16px; }
+body.ogri-light .login-card { color:var(--text); background:#fff; border:1px solid var(--line); border-radius:20px; box-shadow:0 8px 32px rgba(23,45,58,.04); }
+body.ogri-light .login-card .ogritech-lockup { margin:0 auto 28px; width:auto; max-width:100%; flex-direction:row; background:transparent; border:0; padding:0; }
+body.ogri-light .login-card .site-brand img { width:44px; height:44px; }
+body.ogri-light .login-card .site-brand>span { font-size:28px; }
+body.ogri-light .login-title { font-size:clamp(28px,6vw,36px); }
+body.ogri-light .login-form label { color:var(--text); font-size:14px; }
+body.ogri-light .login-form input { min-height:50px; padding-right:54px; }
+body.ogri-light .password-toggle { color:var(--cyan-light); background:transparent; width:44px; height:44px; right:4px; min-height:44px; border:0; padding:0; }
+body.ogri-light .login-page .text-button,body.ogri-light .login-card .text-button { color:var(--cyan-light); }
+body.ogri-light .login-subtitle a { color:var(--cyan-light); }
+
+/* Signup and public contact. */
+body.ogri-light :is(.top,header:not(.configurator-heading):not(.ogri-assistant__header):not(.billing-header):not(.legal-header)) { background:#fff; border-color:var(--line); }
+body.ogri-light .top a { color:var(--cyan-light); }
+body.ogri-light .top { max-width:none; padding-inline:max(24px,calc((100vw - 1120px)/2)); border-bottom:1px solid var(--line); }
+body.ogri-light .intro>p { color:var(--muted); }
+body.ogri-light :is(.card,.form-shell) { background:#fff; border-color:var(--line); box-shadow:0 2px 8px rgba(23,45,58,.025); }
+body.ogri-light :is(.journey li,.payment-methods li,.retention-note,.order-notifications-consent) { border-color:var(--line); }
+body.ogri-light :is(.journey span,.payment-methods span,.payment-plans span,.payment-plans small,.retention-note) { color:var(--muted); opacity:1; }
+body.ogri-light :is(.summary,.payment-plans article,.adaptive article) { color:var(--text); background:var(--ui-tint); border-color:#8adce8; }
+body.ogri-light .order-notifications-consent small { color:var(--muted); }
+body.ogri-light :is(.consent,.group>p,.grid label>span,.consent a,.solutions small,.group>p small) { color:var(--muted); font-size:14px; }
+body.ogri-light .consent a { color:var(--cyan-light); }
+body.ogri-light.page-signup #submitButton { background:#08b9d3; color:#062b35; }
+body.ogri-light.page-signup .intro h1 { font-size:clamp(36px,4.5vw,58px); }
+body.ogri-light.page-signup label { color:var(--text); font-size:14px; }
+body.ogri-light.page-contact main { grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); gap:40px; }
+body.ogri-light.page-contact main>* { min-width:0; }
+body.ogri-light.page-contact h1 { font-size:clamp(38px,4.8vw,64px); line-height:1.1; }
+body.ogri-light.page-contact legend { font-size:clamp(25px,3vw,34px); line-height:1.2; }
+body.ogri-light.page-contact form { padding:32px; }
+body.ogri-light.page-contact .intro { top:110px; }
+body.ogri-light .progress { border-color:var(--line); }
+body.ogri-light .progress span { color:var(--muted); font-size:11px; text-transform:none; }
+body.ogri-light .progress .active { color:var(--cyan-light); background:var(--ui-tint); }
+body.ogri-light :is(.pills span,.solutions label>span) { min-height:44px; color:var(--muted); background:#fff; border-color:#7b919e; font-size:13px; }
+body.ogri-light :is(.pills,.solutions) input:checked+span { color:var(--cyan-light); background:var(--ui-tint); border-color:#08b9d3; }
+body.ogri-light :is(.pills,.solutions) label { position:relative; }
+body.ogri-light :is(.pills,.solutions) input { position:absolute; top:0; left:0; width:1px; height:1px; padding:0; border:0; clip-path:inset(50%); }
+body.ogri-light :is(.pills,.solutions) input:focus-visible+span { outline:3px solid #006b7e; outline-offset:3px; }
+body.ogri-light .solutions b { color:var(--text); }
+body.ogri-light .back { color:var(--muted); }
+body.ogri-light .login { color:var(--cyan-light); border-color:#7b919e; min-height:44px; display:inline-flex; align-items:center; }
+
+/* Subscription. */
+body.ogri-light .billing-header { background:transparent; }
+body.ogri-light .billing-brand { color:var(--text); }
+body.ogri-light .billing-intro h1 { font-family:inherit; font-weight:750; font-size:clamp(36px,5vw,60px); line-height:1.1; }
+body.ogri-light :is(.billing-card,.status-card) { background:#fff; border-color:var(--line); box-shadow:0 2px 8px rgba(23,45,58,.025); }
+body.ogri-light .billing-card label { color:var(--text); }
+body.ogri-light :is(.status-pill,.status-pill.success,.status-pill.danger) { color:var(--cyan-light); background:var(--ui-tint); border:1px solid #8adce8; }
+body.ogri-light .status-pill.danger { color:var(--text); background:#edf3f7; border-color:#7b919e; border-style:dashed; }
+body.ogri-light .pix-panel { background:var(--bg); border-color:var(--line); }
+body.ogri-light .billing-header .text-button { padding:10px 16px; }
+
+/* Legal documents, 404 and redirect fallbacks. */
+body.ogri-light .legal-card { background:#fff; border-color:var(--line); border-radius:18px; }
+body.ogri-light .legal-card :is(p,li) { color:var(--muted); font-size:15px; }
+body.ogri-light .legal-callout { background:var(--ui-tint); border-color:#08b9d3; border-radius:0 10px 10px 0; }
+body.ogri-light .legal-card .legal-kicker { color:var(--cyan-light); font-size:12px; }
+body.ogri-light.page-error h1 { font-size:clamp(42px,6vw,72px); line-height:1.1; }
+body.ogri-light.page-error .signal { background:var(--ui-tint); border-color:#8adce8; box-shadow:0 8px 32px rgba(23,45,58,.06); }
+body.ogri-light.page-error :is(.orbit-small,footer) { border-color:var(--line); }
+body.ogri-light.page-error .visual p { color:var(--muted); }
+body.ogri-light.page-error footer,body.ogri-light.page-error footer a { color:var(--muted); font-size:13px; }
+body.ogri-light.page-redirect { padding:32px 20px; }
+body.ogri-light.page-redirect main { width:min(640px,100%); margin:8vh auto; padding:32px; background:#fff; border:1px solid var(--line); border-radius:18px; }
+
+/* Order tracking is an Ogritech utility, separate from merchant storefront branding. */
+body.ogri-light :is(.order-hero,.public-card,.order-contact) { color:var(--text); background:#fff; border-color:var(--line); box-shadow:none; }
+body.ogri-light :is(.order-hero small,.order-summary small,.order-hero h1) { color:var(--cyan-light); }
+body.ogri-light :is(.order-hero p,.order-total span,.order-contact p,.order-items .menu-price-row small) { color:var(--muted); }
+body.ogri-light .order-status { color:var(--cyan-light); background:var(--ui-tint); border-color:#8adce8; }
+body.ogri-light :is(.payment-status-card,.payment-status-card.is-paid) { background:var(--ui-tint); border-color:#8adce8; border-left-color:#08b9d3; }
+body.ogri-light :is(.payment-status-card,.payment-status-card.is-paid)>span { color:#062b35; background:#08b9d3; }
+body.ogri-light .payment-status-card strong { color:var(--cyan-light); }
+body.ogri-light .payment-status-card :is(p,b) { color:var(--text); }
+body.ogri-light :is(.order-items .menu-price-row,.order-total) { border-color:var(--line); }
+body.ogri-light .proposal-total { color:var(--cyan-light); }
+
+/* Product landing page uses the same palette and hierarchy as the main homepage. */
+body.ogri-light.page-product :is(.site-header,.site-header.scrolled,footer) { background:#fff; border-color:var(--line); }
+body.ogri-light.page-product .site-header nav { color:var(--muted); }
+body.ogri-light.page-product :is(.price span,.price-card>small,.floating-note span) { color:var(--muted); }
+body.ogri-light.page-product .price-note { color:var(--muted)!important; }
+body.ogri-light.page-product :is(.features,.steps,.steps li,.faq,.faq-list details) { border-color:var(--line); }
+body.ogri-light.page-product .phone-pizza .menu-cover { background:linear-gradient(135deg,rgba(3,20,22,.88),rgba(5,56,62,.72)),url('/assets/landing-menu/mini-coxinhas-frango.jpg') center/cover; }
+body.ogri-light.page-product .hero h1 { font-size:clamp(42px,5.2vw,72px); line-height:1.06; }
+body.ogri-light.page-product :is(.hero-lead,.section-heading p,.price-copy>p:last-child,.final-cta>p:not(.eyebrow)) { color:var(--muted); }
+body.ogri-light.page-product :is(.trust-list,.proof-strip>span,.proof-strip b,.contrast-grid li,.feature-grid>article p,.steps p,.steps li p,.price-card li,.faq-list p,.final-cta small,footer p,footer nav) { color:var(--muted); }
+body.ogri-light.page-product :is(.proof-strip,.final-cta) { background:var(--bg); border-color:var(--line); }
+body.ogri-light.page-product :is(.floating-note,.contrast-grid article,.contrast-grid article.highlight,.price-card) { background:#fff; color:var(--text); border-color:var(--line); }
+body.ogri-light.page-product .feature-grid>article,body.ogri-light.page-product .feature-grid>article:hover { background:#fff; border-color:var(--line)!important; box-shadow:0 2px 8px rgba(23,45,58,.025); }
+body.ogri-light.page-product .feature-grid>article h3 { color:var(--text); }
+body.ogri-light.page-product :is(.feature-icon,.steps li>span) { color:var(--cyan-light); background:var(--ui-tint); border-color:#8adce8; }
+body.ogri-light.page-product :is(.section-heading h2,.steps h2,.price-copy h2,.faq h2,.final-cta h2) { font-size:clamp(32px,4vw,54px); line-height:1.12; }
+body.ogri-light.page-product .button.secondary { color:var(--cyan-light); padding:12px 18px; }
+body.ogri-light.page-product .showcase-arrow { color:var(--cyan-light); background:#fff; border-color:#7b919e; }
+body.ogri-light.page-product .showcase-dots button { min-height:8px; background:#7b919e; }
+body.ogri-light.page-product .showcase-dots button.active { background:#006b7e; }
+@media(max-width:999px) { body.ogri-light.page-contact main { grid-template-columns:minmax(0,1fr); } body.ogri-light.page-contact .intro { position:static; } }
+@media(max-width:600px) {
+ body.ogri-light .login-wrapper { padding:20px 12px; }
+ body.ogri-light .login-card { padding:28px 22px; }
+ body.ogri-light.page-contact form { padding:26px 20px; }
+ body.ogri-light.page-contact .progress { padding:12px; }
+ body.ogri-light.page-contact .progress span { font-size:11px; }
+ body.ogri-light.page-contact main { padding-top:40px; }
+ body.ogri-light.page-signup .top { padding-inline:20px; }
+ body.ogri-light :is(.site-brand,.ogritech-lockup.site-brand) img { width:30px; height:30px; }
+ body.ogri-light .site-brand>span { font-size:19px; }
+ body.ogri-light.page-product .hero { padding-top:115px; }
+ body.ogri-light.page-product :is(.section-heading h2,.steps h2,.price-copy h2,.faq h2,.final-cta h2) { font-size:36px; }
+}
