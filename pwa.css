@@ -68,3 +68,5 @@
 .panel-install-help form { gap: 10px; flex-wrap: wrap; }
 .panel-install-help [data-install-now] { background: #f3d46b; border: 2px solid #f3d46b; color: #211b05; }
 .panel-install-button[aria-disabled="true"],.pwa-install-button[aria-disabled="true"] { cursor: wait; }
+.pwa-install-alternatives { margin-top: 16px; }
+.pwa-install-alternatives summary { min-height: 44px; padding: 10px 0; font-size: 14px; cursor: pointer; }
