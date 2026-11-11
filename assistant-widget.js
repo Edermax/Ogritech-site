@@ -4,7 +4,7 @@
 
   const css = document.createElement("link");
   css.rel = "stylesheet";
-  css.href = "/assistant-widget.css?v=20260904.3";
+  css.href = "/assistant-widget.css?v=20261111.1";
   document.head.append(css);
 
   const mobileCss = document.createElement("link");
