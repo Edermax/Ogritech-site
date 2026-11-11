@@ -50,13 +50,15 @@ test("landing segue as regras anteriores de títulos, numerais e moeda", () => {
   assert.match(page, /R\$ 49,90<\/strong><span>por mês<\/span>/);
 });
 
-test("demonstração oferece confeitaria, pizzaria e marmitaria em carrossel acessível", () => {
+test("demonstração oferece confeitaria, salgaderia e marmitaria em carrossel acessível", () => {
   assert.match(page, /data-showcase/);
-  assert.match(page, /2 de 3: pizzaria/);
+  assert.match(page, /2 de 3: salgaderia/);
   assert.match(page, /3 de 3: marmitaria/);
   assert.match(page, /data-showcase-next/);
-  assert.match(page, /cardapio-pizzaria\.png/);
-  assert.match(page, /cardapio-marmita\.png/);
+  assert.match(page, /mini-coxinhas-frango\.jpg/);
+  assert.match(page, /bolinhas-queijo\.jpg/);
+  assert.match(page, /marmita-frango\.jpg/);
+  assert.match(page, /marmita-executiva\.jpg/);
   assert.match(styles, /touch-action:pan-y/);
   assert.match(styles, /\.hero-copy,\.product-stage\{min-width:0;width:100%\}/);
   assert.match(styles, /@media\(max-width:900px\)\{\.hero\{grid-template-columns:minmax\(0,1fr\)\}\}/);

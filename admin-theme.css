@@ -1,0 +1,119 @@
+/* Same light surfaces and cyan accent as the customer panel; administrator only. */
+body.platform-admin-page {
+ color-scheme:light;
+ --admin-bg:#f5f8fb; --admin-surface:#fff; --admin-raised:#edf3f7;
+ --admin-line:#dce6ed; --admin-control:#7b919e; --admin-text:#172d3a; --admin-muted:#526875;
+ --admin-accent:#006b7e; --admin-tint:#e9fafd;
+ --black:var(--admin-bg); --black2:var(--admin-raised); --card:#fff; --card2:#f3f7fa;
+ --white:var(--admin-text); --gray:var(--admin-muted); --border:var(--admin-line);
+ --cyan:#08b9d3; --cyan-light:#006b7e; --gold:#006b7e; --gold-light:#006b7e; --accent-rgb:8,185,211;
+ background:var(--admin-bg); color:var(--admin-text);
+ font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+body.platform-admin-page :is(h1,h2,h3) { color:var(--admin-text); font-family:inherit; }
+body.platform-admin-page a { color:var(--admin-accent); }
+body.platform-admin-page :is(a,button,input,select,textarea):focus-visible { outline:3px solid var(--admin-accent); outline-offset:3px; }
+body.platform-admin-page .platform-sidebar { background:#fff; border-color:var(--admin-line); align-self:start; }
+body.platform-admin-page .platform-admin-logo { filter:none; }
+body.platform-admin-page .brand-name { display:block; color:var(--admin-text); }
+body.platform-admin-page .brand-subtitle { display:block; color:var(--admin-muted); font-size:10px; letter-spacing:.6px; }
+body.platform-admin-page .platform-menu a { color:var(--admin-muted); }
+body.platform-admin-page .platform-menu a>.admin-icon { color:var(--admin-accent); }
+body.platform-admin-page .platform-menu a:hover { background:var(--admin-bg); border-color:var(--admin-line); color:var(--admin-text); }
+body.platform-admin-page .platform-menu a.active { background:var(--admin-tint); color:var(--admin-accent); border-color:#8adce8; font-weight:750; }
+body.platform-admin-page .platform-menu a.active::after { background:var(--admin-accent); }
+body.platform-admin-page .platform-owner-card { border-color:var(--admin-line); }
+body.platform-admin-page .owner-avatar { border-radius:50%; background:var(--admin-tint); color:var(--admin-accent); }
+body.platform-admin-page .platform-owner-card strong { color:var(--admin-text); font-size:13px; }
+body.platform-admin-page .platform-owner-card small { color:var(--admin-muted); }
+body.platform-admin-page .platform-topbar>div>p:last-child { color:var(--admin-muted); }
+body.platform-admin-page .platform-kicker { color:var(--admin-accent); font-size:11px; }
+body.platform-admin-page .security-pill { color:var(--admin-accent); background:var(--admin-tint); border-color:#8adce8; font-size:12px; }
+body.platform-admin-page :is(.platform-stats article,.platform-panel) { background:#fff; border-color:var(--admin-line); box-shadow:0 1px 2px rgba(23,45,58,.025); }
+body.platform-admin-page .platform-stats span { color:var(--admin-muted); font-size:13px; }
+body.platform-admin-page .platform-stats strong { color:var(--admin-text); letter-spacing:-.8px; }
+body.platform-admin-page .platform-stats small { color:var(--admin-muted); font-size:12px; }
+body.platform-admin-page .cyan-positive { color:var(--admin-accent)!important; }
+body.platform-admin-page .stat-icon { color:var(--admin-accent); background:var(--admin-tint); border-color:var(--admin-line); }
+body.platform-admin-page .platform-section-title>span { color:var(--admin-muted); font-size:13px; }
+body.platform-admin-page .admin-shortcuts a { color:var(--admin-text); background:#fff; border-color:var(--admin-line); min-height:110px; }
+body.platform-admin-page .admin-shortcuts a:hover { background:var(--admin-tint); border-color:#08b9d3; }
+body.platform-admin-page .admin-shortcuts span { color:var(--admin-muted); font-size:13px; }
+body.platform-admin-page .shortcut-icon { color:var(--admin-accent); background:var(--admin-tint); border-color:var(--admin-line); }
+body.platform-admin-page .segment-card { background:var(--admin-bg); border-color:var(--admin-line); }
+body.platform-admin-page .segment-card i { color:var(--admin-accent); background:var(--admin-tint); }
+body.platform-admin-page .segment-card b { color:var(--admin-accent); }
+body.platform-admin-page .segment-card strong { font-size:14px; overflow-wrap:anywhere; }
+body.platform-admin-page .segment-card span { color:var(--admin-muted); }
+body.platform-admin-page input:not([type=checkbox]),body.platform-admin-page select,body.platform-admin-page textarea { background:#fff; color:var(--admin-text); border-color:var(--admin-control); font-size:15px; box-shadow:none; }
+body.platform-admin-page input::placeholder,body.platform-admin-page textarea::placeholder { color:var(--admin-muted); opacity:1; }
+body.platform-admin-page select option { color:var(--admin-text); background:#fff; }
+body.platform-admin-page label,body.platform-admin-page .platform-form-grid label { color:var(--admin-text); font-size:14px; }
+body.platform-admin-page input[type=checkbox] { accent-color:var(--admin-accent); }
+body.platform-admin-page :is(.demo-notice,.modal-description,.admin-muted) { color:var(--admin-muted); font-size:14px; }
+body.platform-admin-page .demo-notice { border-color:#08b9d3; background:var(--admin-tint); border-radius:0 8px 8px 0; }
+body.platform-admin-page button,body.platform-admin-page .outline-cyan-button { color:var(--admin-text); background:#fff; border:1px solid var(--admin-control); border-radius:10px; min-height:44px; font-size:14px; }
+body.platform-admin-page button:hover { background:var(--admin-raised); border-color:var(--admin-accent); }
+body.platform-admin-page .platform-owner-card button { color:var(--admin-text); background:#fff; border-color:var(--admin-control); min-height:44px; font-size:14px; }
+body.platform-admin-page .cyan-button { color:#062b35; background:#08b9d3; border-color:#08b9d3; font-weight:750; box-shadow:none; }
+body.platform-admin-page .cyan-button:hover { background:#34c9df; border-color:var(--admin-accent); }
+body.platform-admin-page .outline-cyan-button { color:var(--admin-accent); border-color:#08b9d3; }
+body.platform-admin-page .admin-row-actions button { color:var(--admin-text); background:#fff; border-color:var(--admin-control); min-height:44px; font-size:13px; }
+body.platform-admin-page .admin-row-actions [data-action=operate] { color:var(--admin-accent); background:var(--admin-tint); border-color:#08b9d3; }
+body.platform-admin-page button.danger { color:var(--admin-text); background:var(--admin-bg); border:1px dashed var(--admin-control); }
+body.platform-admin-page button.danger:hover { background:var(--admin-raised); border-color:var(--admin-text); }
+body.platform-admin-page button:disabled { cursor:not-allowed; }
+body.platform-admin-page .business-table-wrap { border-color:var(--admin-line); }
+body.platform-admin-page .business-table th { color:var(--admin-muted); background:var(--admin-bg); border-color:var(--admin-line); font-size:11px; }
+body.platform-admin-page .business-table td { color:var(--admin-muted); border-color:var(--admin-line); font-size:14px; }
+body.platform-admin-page .business-table tbody tr:hover { background:var(--admin-tint); }
+body.platform-admin-page .business-table td strong { color:var(--admin-text); }
+body.platform-admin-page .business-link { background:transparent; border:0; }
+body.platform-admin-page .business-link:hover { background:transparent; text-decoration:underline; text-decoration-color:var(--admin-accent); }
+body.platform-admin-page .business-link strong { font-size:14px; }
+body.platform-admin-page .business-link .business-symbol { color:var(--admin-accent); background:var(--admin-tint); flex:0 0 32px; }
+body.platform-admin-page .business-table small,body.platform-admin-page .origin-badge { color:var(--admin-muted); font-size:12px; }
+body.platform-admin-page :is(.plan-badge,.active-badge,.suspended-badge,.billing-status,.origin-badge.real) { display:inline-block; padding:5px 9px; border-radius:8px; border:1px solid var(--admin-line); color:var(--admin-accent); background:var(--admin-tint); font-size:12px; line-height:1.5; }
+body.platform-admin-page :is(.suspended-badge,.billing-status.void,.billing-status.refunded,.billing-status.partially_refunded) { color:var(--admin-muted); background:var(--admin-raised); }
+body.platform-admin-page .billing-status.overdue { color:var(--admin-text); background:var(--admin-raised); border-style:dashed; border-color:var(--admin-control); font-weight:750; }
+body.platform-admin-page .empty-state span { color:var(--admin-muted); font-size:14px; }
+body.platform-admin-page .plan-card { background:#fff; border-color:var(--admin-line); border-radius:14px; }
+body.platform-admin-page .plan-card.featured { border-color:#08b9d3; box-shadow:none; }
+body.platform-admin-page .plan-card>p:not(.platform-kicker),body.platform-admin-page .plan-card li { color:var(--admin-muted); }
+body.platform-admin-page .plan-card>strong { color:var(--admin-text); letter-spacing:-1px; }
+body.platform-admin-page .plan-card>strong small { color:var(--admin-muted); letter-spacing:0; }
+body.platform-admin-page .recommended-plan { color:var(--admin-accent); background:var(--admin-tint); border-color:#8adce8; font-size:11px; }
+body.platform-admin-page .plan-limits { color:var(--admin-muted); background:var(--admin-bg); }
+body.platform-admin-page .plan-limits span { font-size:13px; }
+body.platform-admin-page :is(.billing-summary article,.detail-stats article) { min-width:0; background:var(--admin-bg); border-color:var(--admin-line); border-radius:12px; }
+body.platform-admin-page :is(.billing-summary span,.detail-stats span,.detail-information span) { color:var(--admin-muted); font-size:12px; }
+body.platform-admin-page :is(.billing-summary strong,.detail-stats strong) { color:var(--admin-text); }
+body.platform-admin-page .platform-modal { z-index:1400; background:rgba(23,45,58,.4); backdrop-filter:blur(4px); }
+body.platform-admin-page .platform-modal-card { background:#fff; border-color:var(--admin-line); box-shadow:0 24px 70px rgba(23,45,58,.18); }
+body.platform-admin-page .modal-close { color:var(--admin-text); background:var(--admin-bg); padding:0; font-size:28px; }
+body.platform-admin-page .form-message { color:var(--admin-accent); font-size:14px; }
+body.platform-admin-page .form-message.error { color:var(--admin-text); font-weight:750; }
+body.platform-admin-page .detail-information,body.platform-admin-page .detail-information p { border-color:var(--admin-line); }
+body.platform-admin-page .detail-information strong { color:var(--admin-text); }
+body.platform-admin-page .detail-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+body.platform-admin-page .detail-actions { flex-wrap:wrap; }
+body.platform-admin-page .invoice-preview { background:var(--admin-tint); border-color:#8adce8; gap:12px; }
+body.platform-admin-page .invoice-preview span { color:var(--admin-muted); font-size:14px; }
+body.platform-admin-page .invoice-preview strong { color:var(--admin-accent); font-size:24px; }
+body.platform-admin-page .admin-loading { background:var(--admin-bg); color:var(--admin-accent); font-size:15px; padding:24px; text-align:center; }
+body.platform-admin-page .app-legal-links { background:#fff; border-color:var(--admin-line); }
+body.platform-admin-page .app-legal-links a { color:var(--admin-muted); }
+body.platform-admin-page .app-legal-links a:hover { color:var(--admin-accent); text-decoration:underline; }
+body.platform-admin-page .pwa-install-button { background:#08b9d3; border-color:#08b9d3; color:#062b35; box-shadow:0 4px 16px rgba(23,45,58,.1); }
+@media(max-width:1000px) {
+ body.platform-admin-page .business-table tr { background:#fff; border-color:var(--admin-line); }
+ body.platform-admin-page .business-table td::before { color:var(--admin-muted); font-size:11px; font-weight:650; letter-spacing:.2px; }
+ body.platform-admin-page .business-link strong { font-size:16px; }
+ body.platform-admin-page .segment-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:600px) {
+ body.platform-admin-page .platform-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ body.platform-admin-page .segment-grid { grid-template-columns:1fr; }
+ body.platform-admin-page input:not([type=checkbox]),body.platform-admin-page select,body.platform-admin-page textarea { font-size:16px; }
+}
