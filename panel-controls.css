@@ -222,3 +222,6 @@ body.panel-readable-controls .commercial-list article { grid-template-columns:mi
   body.panel-readable-controls #menuWorkspaceTabs:not(.menu-workspace-published):not(.menu-workspace-staff) .menu-tab-description { display:block; }
   body.panel-readable-controls #menuWorkspaceTabs:not(.menu-workspace-published):not(.menu-workspace-staff) #menuTabOperation { grid-column:1/-1; }
 }
+@media(min-width:721px) and (max-width:1100px) {
+  body.panel-readable-controls #menuWorkspaceTabs:not(.menu-workspace-published):not(.menu-workspace-staff) { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}

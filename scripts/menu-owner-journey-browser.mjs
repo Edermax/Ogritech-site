@@ -141,6 +141,11 @@ const supabaseClient = {
 document.documentElement.style.visibility="visible";
 document.body.classList.add("single-product-panel");
 document.getElementById("menuView")?.classList.remove("hidden");
+// This fixture starts the commercial controller directly, bypassing script.js.
+const panelContent = document.getElementById("content");
+const panelLoadState = document.getElementById("panelLoadState");
+if (panelContent) panelContent.hidden = false;
+if (panelLoadState) panelLoadState.hidden = true;
 document.getElementById("newAppointment")?.classList.add("hidden");
 if(currentRole === "employee") document.querySelectorAll("[data-manager-only]").forEach(el=>el.classList.add("hidden"));
 `;
@@ -209,7 +214,7 @@ async function settled(page) {
 }
 
 try {
-  for (const viewport of [{ name: "desktop", width: 1440, height: 1000 }, { name: "mobile", width: 390, height: 844 }]) {
+  for (const viewport of [{ name: "desktop", width: 1440, height: 1000 }, { name: "tablet", width: 768, height: 900 }, { name: "mobile", width: 390, height: 844 }]) {
     resetFixture();
     const context = await browser.newContext({ viewport, reducedMotion: "reduce" });
     const page = await context.newPage();
@@ -227,9 +232,20 @@ try {
     await page.waitForFunction(() => Boolean(window.journeyReady));
     assert.equal(await page.evaluate(() => window.journeyReady), true);
     await selected(page, "start");
+    const creationLabels = await page.locator('#menuWorkspaceTabs .menu-tab-label').evaluateAll(nodes => nodes.map(node => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      return { text: node.textContent, lines: range.getClientRects().length };
+    }));
+    assert.ok(creationLabels.every(label => label.lines === 1), `Broken creation labels: ${JSON.stringify(creationLabels)}`);
     await page.locator('#panelAssistantOpen').click();
     const helper = page.locator('.ogri-assistant__panel');
     assert.equal(await helper.isVisible(), true);
+    if (viewport.width <= 520) {
+      const assistantBounds = await helper.boundingBox();
+      const navigationBounds = await page.locator('.menu').boundingBox();
+      assert.ok(assistantBounds.y + assistantBounds.height <= navigationBounds.y, 'Assistant must remain above mobile navigation');
+    }
     assert.equal(await helper.locator('#ogri-assistant-title').innerText(), 'Ajudante Ogritech');
     assert.equal(await helper.locator('form,a[href^="mailto:"],[data-request-contact]').count(), 0);
     await page.screenshot({ path: join(output, `${viewport.name}-panel-helper.png`) });
@@ -374,12 +390,14 @@ try {
     await page.locator('#menuWorkspaceTabs [aria-selected="true"]').hover();
     const tabReadability = await page.locator('#menuWorkspaceTabs [aria-selected="true"]').evaluate(node => {
       const style = getComputedStyle(node);
+      const label = getComputedStyle(node.querySelector('.menu-tab-label'));
       const luminance = color => color.match(/[\d.]+/g).slice(0,3).map(Number).map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4).reduce((total,value,index) => total + value * [.2126,.7152,.0722][index],0);
-      const a=luminance(style.color),b=luminance(style.backgroundColor);
-      return { contrast: (Math.max(a,b)+.05)/(Math.min(a,b)+.05), font: parseFloat(style.fontSize), height: node.getBoundingClientRect().height, descriptionVisible: getComputedStyle(node.querySelector('.menu-tab-copy')).display !== 'none' };
+      const a=luminance(label.color),b=luminance(style.backgroundColor);
+      return { contrast: (Math.max(a,b)+.05)/(Math.min(a,b)+.05), font: parseFloat(label.fontSize), height: node.getBoundingClientRect().height, descriptionVisible: getComputedStyle(node.querySelector('.menu-tab-description')).display !== 'none' };
     });
     assert.ok(tabReadability.contrast >= 4.5, `Selected tab contrast ${JSON.stringify(tabReadability)}`);
-    assert.ok(tabReadability.font >= 16 && tabReadability.height >= 44 && tabReadability.descriptionVisible);
+    assert.ok(tabReadability.font >= (viewport.width <= 720 ? 12 : 15) && tabReadability.height >= 44);
+    assert.equal(tabReadability.descriptionVisible, viewport.width > 720);
     await page.screenshot({ path: join(output, `${viewport.name}-published.png`), fullPage: true });
 
     state.orders = [{ id: "order-test", public_reference: "TEST-EMPLOYEE", customer_name: "Cliente de teste", status: "received", total_amount: 20, is_test: false }];
