@@ -34,7 +34,6 @@ let professionalsCache = [];
 let employeeServicesCache = [];
 let workingHoursCache = [];
 let timeOffCache = [];
-let appointmentNotificationsCache = [];
 let availabilityDraftTimeOff = [];
 let financialCache = [];
 let businessSettingsCache = {};
@@ -111,7 +110,6 @@ async function applyProductAccess() {
         if (!allowed) item.title = "";
     });
     document.body.classList.toggle("single-product-panel", !agendaAllowed);
-    document.querySelector(".notification-center")?.classList.toggle("solution-hidden", !agendaAllowed);
     openAppointmentButton?.classList.toggle("solution-hidden", !agendaAllowed);
     if (!agendaAllowed) {
         businessConfig.key = "cardapio";
@@ -289,53 +287,9 @@ function formatDateTime(value) {
     return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
 }
 
-function renderNotifications() {
-    const list = document.getElementById("notificationList");
-    const empty = document.getElementById("notificationEmpty");
-    const badge = document.getElementById("notificationBadge");
-    if (!list || !empty || !badge) return;
-    const unread = appointmentNotificationsCache.filter((item) => item.status === "unread").length;
-    badge.textContent = unread > 99 ? "99+" : String(unread);
-    badge.classList.toggle("hidden", unread === 0);
-    list.innerHTML = appointmentNotificationsCache.map((item) => `
-        <button class="notification-item ${item.status === "unread" ? "is-unread" : ""}" type="button" data-notification-id="${item.id}">
-            <strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.body)}</span><small>${formatDateTime(item.created_at)}</small>
-        </button>`).join("");
-    empty.classList.toggle("hidden", appointmentNotificationsCache.length > 0);
-}
-
 async function refreshNotifications() {
-    if (IS_DEMO) { appointmentNotificationsCache = []; renderNotifications(); return; }
-    const { data, error } = await supabaseClient.from("appointment_notifications")
-        .select("id,title,body,status,created_at,appointment_id")
-        .eq("barbershop_id", BARBERSHOP_ID).eq("audience", "business").eq("channel", "in_app")
-        .order("created_at", { ascending: false }).limit(30);
-    if (error) return reportDataError("carregar as notificações", error);
-    appointmentNotificationsCache = data || [];
-    renderNotifications();
+    await window.OgritechPanelNotifications?.refresh();
 }
-
-const notificationButton = document.getElementById("notificationButton");
-const notificationPopover = document.getElementById("notificationPopover");
-notificationButton?.addEventListener("click", () => {
-    const opening = notificationPopover.classList.contains("hidden");
-    notificationPopover.classList.toggle("hidden", !opening);
-    notificationButton.setAttribute("aria-expanded", String(opening));
-});
-document.getElementById("closeNotifications")?.addEventListener("click", () => {
-    notificationPopover.classList.add("hidden");
-    notificationButton.setAttribute("aria-expanded", "false");
-});
-document.getElementById("notificationList")?.addEventListener("click", async (event) => {
-    const item = event.target.closest("[data-notification-id]");
-    if (!item || IS_DEMO) return;
-    const notification = appointmentNotificationsCache.find((entry) => entry.id === item.dataset.notificationId);
-    if (!notification || notification.status !== "unread") return;
-    const { error } = await supabaseClient.rpc("mark_appointment_notification_read", { target_notification_id: notification.id });
-    if (error) return reportDataError("marcar a notificação como lida", error);
-    notification.status = "read";
-    renderNotifications();
-});
 
 // =========================================================
 // 5. DADOS DA AGENDA (SUPABASE; LOCALSTORAGE SOMENTE NO DEMO)
@@ -651,6 +605,16 @@ menuItems.forEach((item) => {
 
         if (item.dataset.productAllowed === "false") {
             alert("Esta solução não está ativa para o negócio. Consulte os produtos contratados ou fale com a Ogritech.");
+            return;
+        }
+
+        // Account access must remain available even if menu loading failed.
+        if (item.dataset.section === "configuracoes") {
+            document.getElementById("content").hidden = false;
+            document.getElementById("panelLoadState").hidden = true;
+        } else if (panelLoading || !document.getElementById("panelLoadRetry").hidden) {
+            document.getElementById("content").hidden = true;
+            document.getElementById("panelLoadState").hidden = false;
             return;
         }
 
@@ -1859,6 +1823,7 @@ async function initializeOperationalDashboard() {
     if (savedSettings.segment) businessConfig.segment = savedSettings.segment;
     if (!BARBERSHOP_ID) return;
     await applyProductAccess();
+    window.OgritechPanelNotifications?.start({ businessId: BARBERSHOP_ID, userId: sessionStorage.getItem("japaUserId"), environment: window.OGRITECH_ENV || "production" });
 }
 
 let panelLoading = false;

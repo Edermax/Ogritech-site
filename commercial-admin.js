@@ -630,6 +630,7 @@
                 supabaseClient.rpc("menu_onboarding_status", { target_barbershop_id: BARBERSHOP_ID })
             ]);
             if (loadVersion !== menuLoadVersion) return false;
+            window.OgritechPanelNotifications?.setOrders(orders, { businessId: BARBERSHOP_ID, error: ordersError });
             if (error || templateError || onboardingError) throw error || templateError || onboardingError;
             let draftStatus = null;
             if (menu?.published && canManageMenu()) {
