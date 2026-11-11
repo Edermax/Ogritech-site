@@ -144,7 +144,8 @@ function browser(state = fixture(), options = {}) {
 
 test("onboarding explica a autonomia, o suporte opcional e os limites operacionais", () => {
   assert.match(html, /Você pode concluir tudo por conta própria/);
-  assert.match(html, /mailto:suporte@ogritech\.com\.br\?subject=Ajuda/);
+  assert.match(html, /id="panelAssistantOpen"[^>]+data-open-ogritech-assistant/);
+  assert.doesNotMatch(html, /mailto:suporte@ogritech\.com\.br\?subject=Ajuda/);
   assert.match(html, /não há cobrança automática/);
   assert.match(html, /não bloqueiam automaticamente os pedidos fora do expediente/);
   assert.match(html, /id="menuOnboardingBar" aria-label=/);

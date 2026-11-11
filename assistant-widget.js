@@ -1,5 +1,6 @@
 (() => {
   if (document.querySelector(".ogri-assistant")) return;
+  const panelMode = document.currentScript?.dataset.context === "panel";
 
   const css = document.createElement("link");
   css.rel = "stylesheet";
@@ -12,15 +13,15 @@
   document.head.append(mobileCss);
 
   const root = document.createElement("aside");
-  root.className = "ogri-assistant";
-  root.setAttribute("aria-label", "Assistente comercial Ogritech");
+  root.className = panelMode ? "ogri-assistant ogri-assistant--panel" : "ogri-assistant";
+  root.setAttribute("aria-label", panelMode ? "Ajudante Ogritech" : "Assistente comercial Ogritech");
   root.innerHTML = `
     <p class="ogri-assistant__hint">Olá! Estou aqui para ajudar.</p>
-    <section class="ogri-assistant__panel" role="dialog" aria-modal="false" aria-labelledby="ogri-assistant-title" hidden>
+    <section class="ogri-assistant__panel" id="ogri-assistant-panel" role="dialog" aria-modal="false" aria-labelledby="ogri-assistant-title" hidden>
       <header class="ogri-assistant__head">
         <img src="/ogritech-assistant-avatar.png" alt="">
-        <div class="ogri-assistant__title"><strong id="ogri-assistant-title">Assistente Ogritech</strong><small>Aquisição e dúvidas comerciais</small></div>
-        <button class="ogri-assistant__close" type="button" aria-label="Fechar assistente">×</button>
+        <div class="ogri-assistant__title"><strong id="ogri-assistant-title">${panelMode ? "Ajudante Ogritech" : "Assistente Ogritech"}</strong><small>${panelMode ? "Ajuda para usar o painel" : "Aquisição e dúvidas comerciais"}</small></div>
+        <button class="ogri-assistant__close" type="button" aria-label="${panelMode ? "Fechar ajudante" : "Fechar assistente"}">×</button>
       </header>
       <div class="ogri-assistant__body" aria-live="polite"></div>
     </section>
@@ -35,6 +36,17 @@
   const close = root.querySelector(".ogri-assistant__close");
   const hint = root.querySelector(".ogri-assistant__hint");
   let hasInteracted = false;
+  let opener = toggle;
+  const panelTopics = {
+    pedidos: "Abra Pedidos para conferir o que chegou. Use Atualizar pedidos para carregar os dados recentes, confirme o atendimento e marque como concluído ao finalizar.",
+    produtos: "Abra Produtos para cadastrar ou editar fotos, preços e variações. Com o cardápio publicado, salve o rascunho e depois abra Publicação para revisar e publicar as alterações. A edição exige permissão de responsável pelo estabelecimento.",
+    configuracoes: "Em Configurar ficam os dados, formas de atendimento e horários. Enquanto o cardápio está publicado, a configuração geral fica protegida. Para mudar esses dados, use Publicação para retirar do ar, faça os ajustes e publique novamente.",
+    publicacao: "Salve as alterações de produtos, abra Publicação, confira o resumo e use Publicar alterações. Seus clientes continuam vendo a versão anterior até a publicação. Se o botão estiver desativado, confira as etapas pendentes indicadas pelo painel.",
+    notificacoes: "Em Pedidos recentes, toque em Ativar neste dispositivo e confirme a permissão do navegador. Faça isso em cada aparelho. No iPhone ou iPad, adicione a Ogritech à Tela de Início pelo Safari e abra pelo ícone antes de ativar.",
+    aplicativo: "Use Instalar app no topo do painel quando o navegador disponibilizar o instalador. Se aparecer Como instalar o app, esse navegador exige etapas manuais. No iPhone ou iPad, use Compartilhar → Adicionar à Tela de Início no Safari."
+  };
+  const panelTargets = { pedidos: "operation", produtos: "catalog", configuracoes: "settings", publicacao: "review", notificacoes: "operation" };
+  const panelTargetLabels = { operation: "Pedidos", catalog: "Produtos", settings: "Configurar", review: "Publicação" };
 
   const topics = {
     planos: "A Ogritech Cardápio custa R$ 49,90 por mês ou R$ 499 no plano anual. Não há comissão por pedido. <a href='/criar-cardapio/'>Começar agora</a>.",
@@ -45,6 +57,17 @@
   };
 
   function menu() {
+    if (panelMode) {
+      body.innerHTML = `<p class="ogri-assistant__message">Olá! Sou o Ajudante Ogritech. Em que parte do painel você precisa de ajuda?</p><div class="ogri-assistant__options">
+        <button type="button" class="ogri-assistant__option" data-topic="pedidos">Pedidos e atendimento</button>
+        <button type="button" class="ogri-assistant__option" data-topic="produtos">Produtos, fotos e preços</button>
+        <button type="button" class="ogri-assistant__option" data-topic="configuracoes">Configurações e horários</button>
+        <button type="button" class="ogri-assistant__option" data-topic="publicacao">Publicar alterações</button>
+        <button type="button" class="ogri-assistant__option" data-topic="notificacoes">Notificações de pedidos</button>
+        <button type="button" class="ogri-assistant__option" data-topic="aplicativo">Instalar aplicativo</button>
+      </div>`;
+      return;
+    }
     body.innerHTML = `<p class="ogri-assistant__message">Como posso ajudar com a Ogritech Cardápio?</p><div class="ogri-assistant__options">
       <button class="ogri-assistant__option" data-topic="planos">Planos e valores</button>
       <button class="ogri-assistant__option" data-topic="teste">Período gratuito</button>
@@ -55,11 +78,21 @@
   }
 
   function answer(topic) {
+    if (panelMode) {
+      if (!Object.hasOwn(panelTopics, topic)) return;
+      const target = panelTargets[topic];
+      const tab = target && document.querySelector(`[data-menu-workspace="${target}"]`);
+      const available = tab && !tab.disabled && !tab.classList.contains("hidden");
+      body.innerHTML = `<p class="ogri-assistant__message">${panelTopics[topic]}</p>${available ? `<div class="ogri-assistant__actions"><button class="ogri-assistant__action" type="button" data-panel-target="${target}">Abrir ${panelTargetLabels[target]}</button></div>` : ""}<button class="ogri-assistant__back" type="button">← Ver outras dúvidas</button>`;
+      body.querySelector(".ogri-assistant__back").addEventListener("click", menu);
+      return;
+    }
     body.innerHTML = `<p class="ogri-assistant__message">${topics[topic]}</p><div class="ogri-assistant__actions"><button class="ogri-assistant__action" type="button" data-request-contact="${topic}">Solicitar contato</button></div><button class="ogri-assistant__back" type="button">← Ver outras dúvidas</button>`;
     body.querySelector(".ogri-assistant__back").addEventListener("click", menu);
   }
 
   function callbackForm(returnTopic = "contato") {
+    if (panelMode) return;
     body.innerHTML = `<p class="ogri-assistant__message">Informe como prefere receber o contato da Ogritech.</p>
       <form class="ogri-assistant__form" novalidate>
         <fieldset><legend>Como prefere receber o contato? *</legend><label class="ogri-assistant__choice"><input type="radio" name="channel" value="Ligação" checked><span>Ligação telefônica</span></label><label class="ogri-assistant__choice"><input type="radio" name="channel" value="WhatsApp"><span>WhatsApp</span></label><label class="ogri-assistant__choice"><input type="radio" name="channel" value="E-mail"><span>E-mail</span></label></fieldset>
@@ -110,6 +143,7 @@
 
   async function submitCallback(event) {
     event.preventDefault();
+    if (panelMode) return;
     const form = event.currentTarget;
     const message = form.querySelector(".ogri-assistant__form-message");
     const submit = form.querySelector(".ogri-assistant__submit");
@@ -146,14 +180,32 @@
     if (open) hasInteracted = true;
     panel.hidden = !open;
     toggle.setAttribute("aria-expanded", String(open));
-    toggle.setAttribute("aria-label", open ? "Fechar assistente Ogritech" : "Abrir assistente Ogritech");
+    toggle.setAttribute("aria-label", `${open ? "Fechar" : "Abrir"} ${panelMode ? "ajudante" : "assistente"} Ogritech`);
+    document.querySelectorAll("[data-open-ogritech-assistant]").forEach(button => button.setAttribute("aria-expanded", String(open)));
     hint.hidden = hasInteracted;
     if (open) { menu(); close.focus(); }
+    else opener.focus();
   }
 
-  toggle.addEventListener("click", () => setOpen(panel.hidden));
-  close.addEventListener("click", () => { setOpen(false); toggle.focus(); });
+  toggle.addEventListener("click", () => { opener = toggle; setOpen(panel.hidden); });
+  close.addEventListener("click", () => setOpen(false));
+  document.querySelectorAll("[data-open-ogritech-assistant]").forEach(button => {
+    button.disabled = false;
+    button.addEventListener("click", () => { opener = button; setOpen(true); });
+  });
+  toggle.setAttribute("aria-controls", panel.id);
+  if (panelMode) toggle.setAttribute("aria-label", "Abrir ajudante Ogritech");
   body.addEventListener("click", event => {
+    if (panelMode) {
+      const topic = event.target.closest("[data-topic]");
+      if (topic) answer(topic.dataset.topic);
+      const navigation = event.target.closest("[data-panel-target]");
+      if (navigation) {
+        const tab = document.querySelector(`[data-menu-workspace="${navigation.dataset.panelTarget}"]`);
+        if (tab && !tab.disabled && !tab.classList.contains("hidden")) { setOpen(false); tab.click(); tab.focus(); }
+      }
+      return;
+    }
     const topicButton = event.target.closest("[data-topic]");
     if (topicButton) {
       if (topicButton.dataset.topic === "contato") callbackForm("contato");

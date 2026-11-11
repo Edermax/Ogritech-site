@@ -175,7 +175,7 @@ const server = createServer(async (request, response) => {
     if (!target.startsWith(root.endsWith(sep) ? root : root + sep)) throw new Error("Invalid path");
     let body = await readFile(target);
     if (pathname === "/painel/index.html") {
-      body = Buffer.from(body.toString().replace(/<script\b[^>]*src="[^"]*"[^>]*><\/script>/g, "").replace("</body>", '<script src="/journey-fixture.js"></script><script src="/auth.js"></script><script src="/menu-order-notifications.js"></script><script src="/commercial-admin.js"></script><script src="/journey-start.js"></script></body>'));
+      body = Buffer.from(body.toString().replace(/<script\b[^>]*src="[^"]*"[^>]*><\/script>/g, "").replace("</body>", '<script src="/journey-fixture.js"></script><script src="/auth.js"></script><script src="/menu-order-notifications.js"></script><script src="/commercial-admin.js"></script><script src="/assistant-widget.js" data-context="panel"></script><script src="/journey-start.js"></script></body>'));
     }
     if (pathname === "/login/index.html") {
       body = Buffer.from(body.toString().replace(/<script\b[^>]*src="[^"]*"[^>]*><\/script>/g, "").replace("</body>", '<script src="/journey-fixture.js"></script><script src="/login.js"></script></body>'));
@@ -215,6 +215,8 @@ try {
     const page = await context.newPage();
     page.setDefaultTimeout(10000);
     const errors = [];
+    const helperSubmissions = [];
+    page.on("request", request => { if (request.url().includes("public_submit_assistant_callback")) helperSubmissions.push(request.url()); });
     page.on("pageerror", (error) => errors.push(error.message));
     await page.route("**/*", (route) => route.request().url().startsWith(origin) ? route.continue() : route.abort());
     await page.goto(`${origin}/login/?env=production`);
@@ -225,6 +227,22 @@ try {
     await page.waitForFunction(() => Boolean(window.journeyReady));
     assert.equal(await page.evaluate(() => window.journeyReady), true);
     await selected(page, "start");
+    await page.locator('#panelAssistantOpen').click();
+    const helper = page.locator('.ogri-assistant__panel');
+    assert.equal(await helper.isVisible(), true);
+    assert.equal(await helper.locator('#ogri-assistant-title').innerText(), 'Ajudante Ogritech');
+    assert.equal(await helper.locator('form,a[href^="mailto:"],[data-request-contact]').count(), 0);
+    await page.screenshot({ path: join(output, `${viewport.name}-panel-helper.png`) });
+    await helper.getByRole('button',{name:'Pedidos e atendimento',exact:true}).click();
+    assert.match(await helper.innerText(), /Atualizar pedidos/);
+    await page.keyboard.press('Escape');
+    assert.equal(await helper.isVisible(), false);
+    assert.equal(await page.locator('#panelAssistantOpen').getAttribute('aria-expanded'),'false');
+    assert.equal(await page.locator('#panelAssistantOpen').evaluate(node => node === document.activeElement),true);
+    await page.locator('.ogri-assistant__toggle').click();
+    assert.equal(await helper.isVisible(),true);
+    assert.equal(await page.locator('.ogri-assistant').count(),1);
+    await helper.getByRole('button',{name:'Fechar ajudante',exact:true}).click();
     const creationNotifications = page.locator("#menuTemplatePanel [data-push-enable]");
     await creationNotifications.waitFor();
     await page.waitForFunction(() => !document.querySelector("#menuTemplatePanel [data-push-enable]").disabled);
@@ -273,6 +291,11 @@ try {
     await selected(page, "operation");
     await settled(page);
     assert.equal(state.menu.published, true);
+    await page.locator('#panelAssistantOpen').click();
+    await helper.getByRole('button',{name:'Produtos, fotos e preços',exact:true}).click();
+    await helper.getByRole('button',{name:'Abrir Produtos',exact:true}).click();
+    await selected(page, "catalog");
+    await tab(page, "operation");
     const operationNotifications = page.locator("#menuOrdersPanel [data-push-enable]");
     assert.equal(await operationNotifications.getAttribute("aria-pressed"), "true");
     await operationNotifications.click();
@@ -379,6 +402,7 @@ try {
     await page.locator('[data-order-action="complete"]').click();
     await settled(page);
     assert.equal(state.orders[0].status, "completed");
+    assert.deepEqual(helperSubmissions, [], 'Operational help must never submit a contact request');
     assert.deepEqual(errors, []);
     results.push({ viewport: viewport.name, ownerAndEmployeeLoginRouting: true, notificationOptInAtCreation: true, notificationOptOutInPanel: true, newOwnerPublished: true, sharedStorefrontApplied: true, emptyCartRestoresAssistant: true, publishedDraftReviewed: true, failedDraftRestoresCatalog: true, specialHoursVisible: true, accidentalUnpublishPrevented: true, employeeOrdersCompleted: true, javascriptErrors: 0 });
     await context.close();

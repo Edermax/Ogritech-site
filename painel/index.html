@@ -88,7 +88,7 @@
         #changePasswordForm button:disabled { opacity: .6; cursor: wait; }
     </style>
 <link rel="stylesheet" href="/order-notifications.css?v=20261110.1">
-<link rel="stylesheet" href="/panel-controls.css?v=20261111.2">
+<link rel="stylesheet" href="/panel-controls.css?v=20261111.3">
 </head>
 <body class="panel-readable-controls">
     <!-- Aplicação principal -->
@@ -417,11 +417,9 @@
                         <button class="menu-workspace-tab" id="menuTabReview" type="button" role="tab" aria-selected="false" data-menu-workspace="review"><span>4</span>Publicar</button>
                         <button class="menu-workspace-tab" id="menuTabOperation" type="button" role="tab" aria-selected="false" data-menu-workspace="operation"><span>5</span>Pedidos</button>
                     </nav>
-                    <details class="menu-lock-notice">
-                        <summary>Ajudante Ogritech</summary>
-                        <p>Comece escolhendo um modelo e o endereço do cardápio. Depois, configure o atendimento, cadastre os produtos e revise antes de publicar.</p>
-                        <a href="mailto:suporte@ogritech.com.br?subject=Ajuda%20com%20Ogritech%20Card%C3%A1pio">Pedir ajuda à Ogritech</a>
-                    </details>
+                    <button class="panel-assistant-launcher" id="panelAssistantOpen" type="button" data-open-ogritech-assistant aria-controls="ogri-assistant-panel" aria-expanded="false" aria-haspopup="dialog" disabled>
+                        <img src="/ogritech-assistant-avatar.png" alt="" width="40" height="40"><span><strong>Ajudante Ogritech</strong><small>Tire suas dúvidas aqui no painel</small></span>
+                    </button>
                     <div id="menuShareLink" class="commercial-actions" hidden></div>
                     <details class="panel module-panel" id="menuSharePanel" hidden>
                         <summary>QR Code do cardápio</summary>
@@ -435,7 +433,7 @@
                     <article id="menuStartComplete" class="panel hidden"><h3>Seu modelo já está salvo</h3><p>Você não precisa começar de novo. Continue para configurar o atendimento ou volte a Produtos para editar o catálogo.</p></article>
                     <article class="panel module-panel" id="menuTemplatePanel"><div class="panel-header"><div><p class="eyebrow">COMECE PELO SEU SEGMENTO</p><h2>Modelo inicial do catálogo</h2><p class="section-description">O nome da loja pode ter espaços e acentos. O endereço do cardápio usa letras minúsculas, números e hífens no lugar dos espaços. Exemplo: Bolo no Pote da Mah → bolo-no-pote-da-mah. O modelo organiza categorias e cores, mas mantém o nome cadastrado da sua empresa.</p></div></div><form id="menuTemplateForm" class="commercial-form" data-manager-only><div class="form-row"><label>Tipo de negócio<select id="menuTemplateCode" required><option value="">Selecione</option></select></label><label>Link do seu cardápio<input id="menuTemplateSlug" required pattern="[a-z0-9](?:[a-z0-9]|-){2,62}" maxlength="63" placeholder="nome-do-negocio"><small>Digite o endereço sem espaços. Use hífen entre as palavras, como em doces-da-ana. Esse trecho fará parte do link que você compartilhará.</small></label></div><p class="form-message" id="menuTemplateMessage" role="status"></p><button class="gold-button" type="submit">Criar meu cardápio</button></form><div class="order-notifications" data-order-notifications><h3>Notificações de pedidos</h3><p>Receba avisos neste dispositivo, mesmo com o painel fechado, nos navegadores compatíveis. Você pode desativar quando quiser.</p><button class="order-notifications-action" type="button" data-push-enable aria-pressed="false" disabled>Ativar neste dispositivo</button><p data-push-status role="status" aria-live="polite">Aguardando o carregamento do cardápio.</p></div></article>
                     <article class="panel module-panel" id="menuOnboardingPanel">
-                        <div class="clients-toolbar"><div><p class="eyebrow" id="menuReviewEyebrow">ÚLTIMA ETAPA</p><h2 id="menuReviewHeading">Revise e publique</h2><p class="section-description" id="menuReviewDescription">Você pode concluir tudo por conta própria e retomar as etapas salvas quando quiser. Se preferir, <a href="mailto:suporte@ogritech.com.br?subject=Ajuda%20com%20Ogritech%20Card%C3%A1pio">conte com a ajuda da Ogritech</a>.</p></div><strong id="menuOnboardingProgress" role="status">0 de 8 etapas concluídas</strong></div>
+                        <div class="clients-toolbar"><div><p class="eyebrow" id="menuReviewEyebrow">ÚLTIMA ETAPA</p><h2 id="menuReviewHeading">Revise e publique</h2><p class="section-description" id="menuReviewDescription">Você pode concluir tudo por conta própria e retomar as etapas salvas quando quiser. Se preferir, <button class="panel-help-link" type="button" data-open-ogritech-assistant aria-controls="ogri-assistant-panel" aria-expanded="false" aria-haspopup="dialog">abra o Ajudante Ogritech</button>.</p></div><strong id="menuOnboardingProgress" role="status">0 de 8 etapas concluídas</strong></div>
                         <progress id="menuOnboardingBar" aria-label="Progresso da configuração do cardápio" max="8" value="0"></progress>
                         <p id="menuNextStep" class="section-description" role="status">Carregando suas etapas salvas...</p>
                         <ol id="menuOnboardingChecklist"></ol>
@@ -486,7 +484,7 @@
 
                 <div id="settingsView" class="view-section hidden" data-owner-only>
                     <article class="panel settings-panel" hidden><p class="eyebrow">PREFERÊNCIAS</p><h2>Configurações do negócio</h2><p class="section-description">Personalize a identificação, o expediente e o endereço público da agenda.</p><form id="settingsForm"><div class="form-row"><label>Nome do negócio<input id="settingsBusinessName" required maxlength="80"></label><label>Segmento<input id="settingsSegment" required maxlength="60"></label></div><div class="form-row"><label>Início do expediente<input type="time" id="settingsOpenTime" required></label><label>Fim do expediente<input type="time" id="settingsCloseTime" required></label></div><label>Duração padrão dos horários<select id="settingsSlotDuration"><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">60 minutos</option></select></label><fieldset class="public-booking-settings"><legend>Agendamento público</legend><label>Endereço da agenda<div class="slug-field"><span>ogritech.com.br/agendar/?empresa=</span><input id="settingsPublicSlug" pattern="[a-z0-9](?:[a-z0-9]|-){2,47}" maxlength="48" placeholder="nome-do-negocio"></div></label><label class="settings-toggle"><input type="checkbox" id="settingsPublicBookingEnabled"><span>Permitir novos agendamentos sem login</span></label><a class="table-button edit hidden" id="publicBookingLink" target="_blank" rel="noopener">Abrir agenda pública</a></fieldset><p class="form-message" id="settingsMessage" role="status"></p><button class="gold-button" type="submit">Salvar configurações</button></form></article>
-                    <article class="panel settings-panel" id="subscriptionCenter"><div class="panel-header"><div><p class="eyebrow">ASSINATURA E DADOS</p><h2>Sua assinatura do Cardápio</h2><p class="section-description">Gerencie o plano e o pagamento do seu cardápio. Se preferir, <a href="mailto:suporte@ogritech.com.br">a Ogritech está disponível para ajudar</a>.</p></div><button class="table-button edit" id="exportBusinessData" type="button">Exportar meus dados</button></div><p class="form-message" id="subscriptionMessage" role="status"></p><div class="commercial-list" id="subscriptionList"><p class="section-description">Carregando assinatura...</p></div></article>
+                    <article class="panel settings-panel" id="subscriptionCenter"><div class="panel-header"><div><p class="eyebrow">ASSINATURA E DADOS</p><h2>Sua assinatura do Cardápio</h2><p class="section-description">Gerencie o plano e o pagamento do seu cardápio. Se preferir, <button class="panel-help-link" type="button" data-open-ogritech-assistant aria-controls="ogri-assistant-panel" aria-expanded="false" aria-haspopup="dialog">abra o Ajudante Ogritech</button>.</p></div><button class="table-button edit" id="exportBusinessData" type="button">Exportar meus dados</button></div><p class="form-message" id="subscriptionMessage" role="status"></p><div class="commercial-list" id="subscriptionList"><p class="section-description">Carregando assinatura...</p></div></article>
                 </div>
 
             </section>
@@ -713,6 +711,7 @@
     <script src="script.js?v=20261109.4"></script>
     <script src="menu-branding.js?v=20261020.1"></script><script src="menu-branding-admin.js?v=20261108.2"></script><script src="/menu-order-notifications.js?v=20261110.1"></script><script src="commercial-admin.js?v=20261111.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script><script src="/cardapio/share.js?v=20261111.1"></script><script src="subscription-admin.js"></script>
+    <script src="/assistant-widget.js?v=20261111.1" data-context="panel"></script>
     <dialog class="panel-install-help" id="panelInstallHelp" aria-labelledby="panelInstallTitle">
         <h2 id="panelInstallTitle">Instalar Ogritech</h2>
         <p><strong>Android:</strong> no menu do Chrome, toque em “Adicionar à tela inicial” e escolha “Instalar”.</p>

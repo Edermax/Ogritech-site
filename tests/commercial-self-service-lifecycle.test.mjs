@@ -9,7 +9,7 @@ test("centro de assinatura oferece jornada autônoma e suporte opcional", async 
   const page = await read("painel/index.html");
   const script = await read("subscription-admin.js");
   for (const text of ["Sua assinatura do Cardápio", "Exportar meus dados", "Cancelar renovação", "Manter assinatura"]) assert.match(`${page}\n${script}`, new RegExp(text));
-  assert.match(page, /a Ogritech está disponível para ajudar/);
+  assert.match(page, /data-open-ogritech-assistant[^>]*>abra o Ajudante Ogritech/);
   assert.match(script, /O acesso ao Cardápio será mantido/);
   assert.match(script, /current_period_end/);
 });
