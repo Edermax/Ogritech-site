@@ -37,7 +37,11 @@
     "manifest.webmanifest",
     "login/index.html",
     "commercial-admin.js",
-    "cardapio/share.js"
+    "cardapio/share.js",
+    "assistant-widget.js",
+    "assistant-widget.css",
+    "assistant-widget-mobile.css",
+    "ogritech-assistant-avatar.png"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",
