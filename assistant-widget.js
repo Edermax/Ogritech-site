@@ -39,14 +39,14 @@
   let opener = toggle;
   const panelTopics = {
     pedidos: "Abra Pedidos para conferir o que chegou. Use Atualizar pedidos para carregar os dados recentes, confirme o atendimento e marque como concluído ao finalizar.",
-    produtos: "Abra Produtos para cadastrar ou editar fotos, preços e variações. Com o cardápio publicado, salve o rascunho e depois abra Publicação para revisar e publicar as alterações. A edição exige permissão de responsável pelo estabelecimento.",
-    configuracoes: "Em Configurar ficam os dados, formas de atendimento e horários. Enquanto o cardápio está publicado, a configuração geral fica protegida. Para mudar esses dados, use Publicação para retirar do ar, faça os ajustes e publique novamente.",
+    produtos: "Abra Produtos para ver seu catálogo. Use Adicionar produto para cadastrar um item ou Editar no produto que deseja mudar. Salve o rascunho e depois abra Cardápio → Publicação para publicar as alterações.",
+    configuracoes: "Em Cardápio → Atendimento ficam os dados, formas de atendimento e horários. Para alterar as opções protegidas enquanto o cardápio está publicado, abra Publicação, retire do ar e publique novamente após salvar.",
     publicacao: "Salve as alterações de produtos, abra Publicação, confira o resumo e use Publicar alterações. Seus clientes continuam vendo a versão anterior até a publicação. Se o botão estiver desativado, confira as etapas pendentes indicadas pelo painel.",
     notificacoes: "Em Pedidos recentes, toque em Ativar neste dispositivo e confirme a permissão do navegador. Faça isso em cada aparelho. No iPhone ou iPad, adicione a Ogritech à Tela de Início pelo Safari e abra pelo ícone antes de ativar.",
-    aplicativo: "Toque em Instalar o app no topo do painel e confirme a instalação quando o navegador abrir o instalador. Se a instalação direta não estiver disponível, o próprio botão mostra as opções possíveis nessa janela. No iPhone ou iPad, use Compartilhar → Adicionar à Tela de Início no Safari."
+    aplicativo: "Abra Conta → Aplicativo e toque em Instalar o app. Confirme a instalação na janela do navegador. Se a instalação direta não estiver disponível, o botão mostra as opções para o dispositivo."
   };
   const panelTargets = { pedidos: "operation", produtos: "catalog", configuracoes: "settings", publicacao: "review", notificacoes: "operation" };
-  const panelTargetLabels = { operation: "Pedidos", catalog: "Produtos", settings: "Configurar", review: "Publicação" };
+  const panelTargetLabels = { operation: "Pedidos", catalog: "Produtos", settings: "Atendimento", review: "Publicação" };
 
   const topics = {
     planos: "A Ogritech Cardápio custa R$ 49,90 por mês ou R$ 499 no plano anual. Não há comissão por pedido. <a href='/criar-cardapio/'>Começar agora</a>.",
@@ -202,7 +202,13 @@
       const navigation = event.target.closest("[data-panel-target]");
       if (navigation) {
         const tab = document.querySelector(`[data-menu-workspace="${navigation.dataset.panelTarget}"]`);
-        if (tab && !tab.disabled && !tab.classList.contains("hidden")) { setOpen(false); tab.click(); tab.focus(); }
+        if (tab && !tab.disabled && !tab.classList.contains("hidden")) {
+          setOpen(false);
+          const section = { operation: "cardapio", catalog: "produtos", settings: "loja", review: "loja" }[navigation.dataset.panelTarget];
+          if (window.OgritechPanelNavigation && typeof navigateTo === "function") navigateTo(section, { reload: false });
+          tab.click();
+          (document.querySelector(`[data-section="${section}"]`) || tab).focus();
+        }
       }
       return;
     }

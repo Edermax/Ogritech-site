@@ -8,10 +8,6 @@ window.renderMenuShare = (container, menuUrl, linkContainer = container) => {
     if (url.hostname === "ogritech.com.br" && url.searchParams.get("env") === "production") {
         url.searchParams.delete("env");
     }
-    const link = document.createElement("a");
-    link.className = "table-button edit";
-    link.href = url.href;
-    link.textContent = "Abrir link do cardápio";
     const copy = document.createElement("button");
     copy.type = "button";
     copy.className = "table-button edit";
@@ -24,7 +20,7 @@ window.renderMenuShare = (container, menuUrl, linkContainer = container) => {
             copy.textContent = "Copie pelo link do cardápio";
         }
     });
-    linkContainer.append(copy, link);
+    linkContainer.append(copy);
     if (typeof window.qrcode !== "function") {
         container.append(" O QR Code está indisponível. Atualize a página para tentar novamente.");
         return;

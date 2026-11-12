@@ -43,6 +43,7 @@
         const reportSection = byId("panelNotificationReportsSection");
         if (reportSection) reportSection.hidden = !context?.canViewReports;
         if (byId("panelNotificationReports")) renderList("panelNotificationReports", reports, reportsError ? "Não foi possível consultar os relatórios. Use Atualizar para tentar novamente." : "Os resumos semanais e mensais aparecerão aqui após o encerramento de cada período.");
+        if (byId("panelSalesReportList")) renderList("panelSalesReportList", context?.canViewReports ? reports : [], context?.canViewReports ? (reportsError ? "Não foi possível consultar os relatórios. Use Atualizar relatórios para tentar novamente." : "Os relatórios aparecerão aqui após o encerramento de cada semana ou mês.") : "Os relatórios estão disponíveis somente para a gestão do negócio.");
         status.textContent = orderError ? "Não foi possível atualizar os pedidos. As últimas informações foram preservadas. Tente atualizar."
             : updatedAt ? "Pedidos e comunicados recentes. Toque em um pedido para abrir o atendimento." : "Carregando atualizações...";
     }
@@ -145,5 +146,5 @@
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") void refresh({ force: false }); });
     window.addEventListener("focus", () => { void refresh({ force: false }); });
     window.addEventListener("storage", event => { if (storageKey && event.key === storageKey) { try { const value = JSON.parse(event.newValue || "[]"); if (Array.isArray(value)) receipts = new Set(value.filter(id => typeof id === "string").slice(-500)); } catch { return; } render(); } });
-    window.OgritechPanelNotifications = { start, stop, refresh, setOrders };
+    window.OgritechPanelNotifications = { start, stop, refresh, setOrders, refreshReports: () => loadReports(generation) };
 })();

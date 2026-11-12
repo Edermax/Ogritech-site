@@ -3,6 +3,12 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
 const {chromium}=require('playwright');
 const {server,setup,extra}=require('./menu-merchant-browser.cjs');
 const out='outputs/panel-theme-review';fs.mkdirSync(out,{recursive:true});
+async function goWorkspace(page,key){
+ const sections={operation:'cardapio',catalog:'produtos',settings:'loja',review:'loja',sales:'vendas'};
+ await page.locator('.menu-item[data-section="'+sections[key]+'"]').click();
+ await page.waitForFunction(()=>window.OgritechMenuWorkspace.state().ready);
+ if(key==='settings')await page.locator('[data-menu-workspace="settings"]').click();
+}
 async function settle(page){await page.evaluate(async()=>{
  await new Promise(resolve=>requestAnimationFrame(resolve));
  await Promise.all(document.getAnimations().filter(animation=>animation instanceof CSSTransition).map(animation=>animation.finished.catch(()=>{})));
@@ -64,12 +70,14 @@ async function darkIssues(page){return page.evaluate(()=>{
    await page.locator('.menu-item[data-section="configuracoes"]').click();await page.locator('[data-panel-theme-select]').selectOption('light');await check(page,'account-'+width);
    await page.locator('#changePasswordButton').click();await check(page,'password-'+width);await page.locator('#changePasswordDialog').evaluate(el=>el.close());
    await page.locator('.menu-item[data-section="cardapio"]').click();
-   for(const section of['operation','settings','catalog','review']){
-    await page.locator('[data-menu-workspace="'+section+'"]').click();
+   for(const section of['operation','settings','catalog','review','sales']){
+    await goWorkspace(page,section);
     await page.locator('#menuView details').evaluateAll(elements=>elements.forEach(el=>{if(el.getClientRects().length)el.open=true;}));
     await check(page,section+'-'+width);
    }
-   await page.locator('[data-menu-workspace="operation"]').click();
+   await goWorkspace(page,'catalog');await page.locator('#panelAddProduct').click();await check(page,'product-editor-'+width);await page.locator('#menuItemCancel').click();
+   await page.locator('.panel-product-more>summary').first().click();await check(page,'product-actions-'+width);
+   await goWorkspace(page,'operation');
    const orderControls=page.locator('#menuOrdersList button');
    await orderControls.evaluateAll(elements=>elements.forEach(el=>{el.disabled=true;}));
    await check(page,'disabled-operation-'+width);
@@ -87,7 +95,7 @@ async function darkIssues(page){return page.evaluate(()=>{
    // Simulate the unpublished catalog and pending-control states without saving.
    await page.evaluate(async()=>{const {data}=await supabaseClient.from('online_menus').select().maybeSingle();data.published=false;await loadMenuAdmin();});
    for(const section of['settings','catalog','review']){
-    await page.locator('[data-menu-workspace="'+section+'"]').click();
+    await goWorkspace(page,section);
     await page.locator('#menuView details').evaluateAll(elements=>elements.forEach(el=>{if(el.getClientRects().length)el.open=true;}));
     await check(page,'draft-'+section+'-'+width);
    }

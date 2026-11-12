@@ -1,5 +1,5 @@
 importScripts("/menu-order-push-worker.js?v=20261110.1");
-const CACHE_NAME = "ogritech-shell-v19";
+const CACHE_NAME = "ogritech-shell-v20";
 const APP_SHELL = [
   "./", "./login/", "./painel/", "./style.css",
   "./auth.js", "./script.js", "./commercial-admin.js", "./cliente.js", "./login.js", "./business-config.js",
@@ -8,6 +8,7 @@ const APP_SHELL = [
   "./ogritech-app-v2-192.png", "./ogritech-app-v2-512.png",
   "./ogritech-app-v2-maskable-192.png", "./ogritech-app-v2-maskable-512.png", "./ogritech-apple-touch-v2.png",
   "./home.css", "./home.js", "./commercial-public.css",
+  "./panel-navigation.js", "./panel-navigation.css", "./assets/owner-icons.svg", "./report-export.js", "./sales-reports.js", "./sales-reports.css",
 
   "./cardapio/", "./cardapio/cardapio.js",
   "./pedido/", "./pedido/pedido.js",
