@@ -6,15 +6,24 @@ const source = (await readFile(new URL('../admin.js', import.meta.url), 'utf8'))
 function harness() {
  const elements = new Map();
  const node = id => { if (!elements.has(id)) elements.set(id,{textContent:'',hidden:false,innerHTML:'',value:'',disabled:false,focus(){},classList:{toggle(){}}});return elements.get(id); };
- const links = ['overview','businesses','users','plans','products','billing'].map(key=>({href:`#${key}`,classList:{toggle(){}},attributes:{},getAttribute(){return this.href},setAttribute(k,v){this.attributes[k]=v},removeAttribute(k){delete this.attributes[k]}}));
+ const links = ['overview','businesses','users','billing','account'].map(key=>({href:`#${key}`,classList:{toggle(){}},attributes:{},getAttribute(){return this.href},setAttribute(k,v){this.attributes[k]=v},removeAttribute(k){delete this.attributes[k]}}));
  const context = vm.createContext({Intl,Date,console,URL,location:{hash:''},window:{scrollTo(){}},document:{getElementById:node,querySelectorAll(selector){return selector === '.platform-menu a' ? links : []}},supabaseClient:{rpc(){throw new Error('Unexpected mutation')}}});
  vm.runInContext(source,context);
  return {context,node,links,run:code=>vm.runInContext(code,context)};
 }
 test('owner navigation changes only the selected area and falls back safely',()=>{
  const h=harness(); h.context.location.hash='#billing';h.run('selectAdminView()');
- assert.equal(h.node('billing').hidden,false);assert.equal(h.node('businesses').hidden,true);assert.equal(h.node('adminSummary').hidden,true);assert.equal(h.node('adminViewTitle').textContent,'Cobranças');assert.equal(h.links[5].attributes['aria-current'],'page');
+ assert.equal(h.node('billing').hidden,false);assert.equal(h.node('businesses').hidden,true);assert.equal(h.node('adminSummary').hidden,true);assert.equal(h.node('adminViewTitle').textContent,'Financeiro');assert.equal(h.links[3].attributes['aria-current'],'page');
  h.context.location.hash='#unknown';h.run('selectAdminView()');assert.equal(h.node('adminSummary').hidden,false);assert.equal(h.node('billing').hidden,true);
+});
+
+test('administrative subareas keep a stable parent destination and account is isolated',()=>{
+ const h=harness();
+ for(const [key,title,section,primary] of [['plans','Financeiro','plans',3],['products','Financeiro','products',3],['trialReviews','Negócios','trialReviews',1],['account','Conta','adminAccount',4]]){
+  h.context.location.hash='#'+key;h.run('selectAdminView()');
+  assert.equal(h.node('adminViewTitle').textContent,title);assert.equal(h.node(section).hidden,false);
+  assert.equal(h.links[primary].attributes['aria-current'],'page');assert.equal(h.node('businesses').hidden,true);
+ }
 });
 test('owner prices keep cents and legacy accounts cannot be operated',()=>{
  const h=harness();assert.match(h.run('money.format(49.9)'),/49,90/);

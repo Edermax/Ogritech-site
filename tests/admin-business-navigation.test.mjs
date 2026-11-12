@@ -9,7 +9,7 @@ const [html, script] = await Promise.all([
 ]);
 
 test("administração orienta o caminho para operar e exibe contatos do negócio", () => {
-  assert.match(html, /vá a <a href="#businesses">Negócios<\/a> e escolha “Operar”/);
+  assert.match(html, /vá a <a href="#businesses">Negócios<\/a> e escolha “Abrir painel”/);
   assert.match(html, /<th>Contato<\/th>/);
   assert.match(script, /business\.phone \|\| "Telefone pendente"/);
   assert.match(script, /business\.owner_email \|\| "E-mail pendente"/);
