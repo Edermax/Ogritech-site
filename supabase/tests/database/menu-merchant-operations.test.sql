@@ -23,11 +23,12 @@ insert into public.profiles(id,barbershop_id,full_name,role) values
  ('e1300000-0000-4000-8000-000000000002','e1100000-0000-4000-8000-000000000002','Owner B','owner'),
  ('e1300000-0000-4000-8000-000000000003','e1100000-0000-4000-8000-000000000001','Staff A','employee');
 insert into public.online_menus(id,barbershop_id,slug,title,published,published_at,created_at) values
- ('e1400000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','merchant-ops-a','Merchant A',true,'2025-01-01','2025-01-01'),
- ('e1400000-0000-4000-8000-000000000002','e1100000-0000-4000-8000-000000000002','merchant-ops-b','Merchant B',true,'2025-01-01','2025-01-01');
+ ('e1400000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','merchant-ops-a','Merchant A',false,null,'2025-01-01'),
+ ('e1400000-0000-4000-8000-000000000002','e1100000-0000-4000-8000-000000000002','merchant-ops-b','Merchant B',false,null,'2025-01-01');
 insert into public.menu_categories(id,barbershop_id,menu_id,name) values('e1500000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','e1400000-0000-4000-8000-000000000001','Fixture');
 insert into public.menu_items(id,barbershop_id,category_id,name,item_type) values('e1600000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','e1500000-0000-4000-8000-000000000001','Most sold fixture','unit');
 insert into public.menu_item_prices(id,barbershop_id,menu_item_id,label,price) values('e1700000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','e1600000-0000-4000-8000-000000000001','Unidade',50);
+update public.online_menus set published=true,published_at=now() where id in ('e1400000-0000-4000-8000-000000000001','e1400000-0000-4000-8000-000000000002');
 create temporary table order_response as select public.public_create_menu_order_v2('merchant-ops-a','Client A','','11999999999','pickup',null,'',
  '[{"menu_item_price_id":"e1700000-0000-4000-8000-000000000001","quantity":2,"selections":[]}]',true,'e1800000-0000-4000-8000-000000000001') payload;
 select extensions.is((select payload->>'order_code' from order_response),'#1','first real order displays #1');
