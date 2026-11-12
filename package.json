@@ -43,7 +43,8 @@
     "test:trial-protection-browser": "node scripts/menu-trial-protection-browser.cjs",
     "test:menu-merchant-browser": "node scripts/menu-merchant-browser.cjs",
     "test:panel-theme-browser": "node scripts/panel-theme-browser.cjs",
-    "test:account-theme-browser": "node scripts/account-theme-browser.cjs"
+    "test:account-theme-browser": "node scripts/account-theme-browser.cjs",
+    "test:panel-navigation-browser": "node scripts/panel-navigation-browser.cjs"
   },
   "engines": {
     "node": ">=22"

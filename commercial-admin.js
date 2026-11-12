@@ -35,7 +35,8 @@
         settings: ["2. Configure o atendimento", "Confira o nome, escolha entrega ou retirada, marque os pagamentos aceitos e informe dias e horários. Salve no fim do formulário. Logo e capa são opcionais.", "Preencher configurações", "menuTitle"],
         catalog: ["3. Cadastre seus produtos", "Comece com um produto: informe categoria, nome e preço e clique em Salvar produto. Depois, adicione os demais. Foto, adicionais e variações são opcionais.", "Cadastrar produto", "menuCategoryName"],
         review: ["4. Revise e publique", "Confira o resumo, faça o pedido de teste e confirme a revisão. Por último, clique em Publicar cardápio. Só então o link estará disponível para seus clientes.", "Conferir minha revisão", "menuOnboardingPanel"],
-        operation: ["5. Acompanhe os pedidos", "Compartilhe o link do cardápio. Quando chegar um pedido, confira os dados, confirme e marque como concluído ao finalizar. Volte às etapas anteriores quando quiser editar.", "Ver meus pedidos", "menuOrdersPanel"]
+        operation: ["5. Acompanhe os pedidos", "Quando chegar um pedido, confira os dados, confirme e marque como concluído ao finalizar.", "Ver meus pedidos", "menuOrdersPanel"],
+        sales: ["Vendas", "Consulte os valores recebidos e seus relatórios.", "Ver relatórios", "panelSalesReports"]
     };
     function nextMenuWorkspace() {
         if (menuRecord?.published || !canManageMenu()) return "operation";
@@ -94,11 +95,12 @@
             const hidden = (!canManageMenu() && managerTab) || (published && key === "start");
             button.classList.toggle("hidden", hidden);
             button.disabled = hidden || menuBusy || !menuDataReady || (menuSettingsDirty && key !== "settings") || (!published && journeyOrder.indexOf(key) > journeyOrder.indexOf(next));
-            const labels = { start: "Começar", settings: "Configurar", catalog: "Produtos", review: "Publicação", operation: "Pedidos" };
+            const labels = { start: "Começar", settings: "Atendimento", catalog: "Produtos", review: "Publicação", operation: "Pedidos" };
             const descriptions = { start: "Escolher modelo", settings: "Dados e horários", catalog: "Fotos e preços", review: "Revisar e publicar", operation: "Receber e atender" };
             button.innerHTML = `${managing ? "" : `<span>${journeyOrder.indexOf(key) + 1}</span>`}<span class="menu-tab-copy"><strong class="menu-tab-label">${labels[key]}</strong><small class="menu-tab-description">${descriptions[key]}</small></span>`;
             button.setAttribute("aria-label", published ? labels[key] : `${journeyContent[key][0]}${complete[key] ? ", concluído" : ""}`);
             button.setAttribute("data-complete", String(complete[key]));
+            button.tabIndex = key === selectedMenuWorkspace && !hidden ? 0 : -1;
         });
         if (byId("menuJourneyBack")) byId("menuJourneyBack").disabled = journeyOrder.indexOf(selectedMenuWorkspace) === 0 || menuBusy;
         if (byId("menuJourneyNext")) {
@@ -108,9 +110,11 @@
             byId("menuJourneyNext").disabled = !allowed || index === 4 || menuSettingsDirty || menuBusy || !menuDataReady;
         }
         byId("menuStartComplete")?.classList.toggle("hidden", !menuRecord?.template_code);
+        window.OgritechPanelNavigation?.sync({ published, ready: menuDataReady, busy: menuBusy, canManage: canManageMenu(), workspace: selectedMenuWorkspace, next: nextMenuWorkspace(), dirtySettings: menuSettingsDirty });
     }
     const menuWorkspaceGroups = {
-        operation: ["menuPilotMetricsPanel", "menuOrdersPanel"],
+        operation: ["menuOrdersPanel"],
+        sales: ["menuPilotMetricsPanel", "panelSalesReports"],
         start: ["menuTemplatePanel", "menuStartComplete"],
         settings: ["menuAssistantSettingsPanel", "menuSettingsPanel"],
         catalog: ["menuCatalogWorkspace"],
@@ -118,9 +122,10 @@
     };
 
     function selectMenuWorkspace(workspace) {
+        if (window.OgritechPanelNavigation?.canLeaveWorkspace(workspace) === false) return false;
         if (menuSettingsDirty && workspace !== "settings") {
             notify(byId("menuWorkspaceMessage"), "Salve suas configurações antes de mudar de seção.", true);
-            return;
+            return false;
         }
         const selected = !canManageMenu() ? "operation" : menuWorkspaceGroups[workspace] ? workspace : "start";
         selectedMenuWorkspace = selected;
@@ -131,6 +136,7 @@
         });
         Object.entries(menuWorkspaceGroups).forEach(([group, ids]) => ids.forEach((id) => byId(id)?.classList.toggle("menu-workspace-hidden", group !== selected)));
         renderMenuJourney();
+        return true;
     }
     function setupMenuWorkspace() {
         const tabs = byId("menuWorkspaceTabs");
@@ -139,12 +145,12 @@
                 const button = event.target.closest?.("[data-menu-workspace]");
                 if (!button || button.disabled) return;
                 selectMenuWorkspace(button.dataset.menuWorkspace);
-                tabs.scrollIntoView({ behavior: "smooth", block: "start" });
+                tabs.scrollIntoView({ behavior: window.OgritechPanelNavigation ? "instant" : "smooth", block: "start" });
             };
             tabs.addEventListener("click", activateWorkspace);
             tabs.addEventListener("keydown", event => {
                 if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key)) return;
-                const buttons = [...tabs.querySelectorAll("[data-menu-workspace]")].filter(button => !button.disabled && !button.classList.contains("hidden"));
+                const buttons = [...tabs.querySelectorAll("[data-menu-workspace]")].filter(button => !button.disabled && !button.classList.contains("hidden") && (!button.checkVisibility || button.checkVisibility()));
                 if (!buttons.length) return;
                 event.preventDefault();
                 const current = buttons.indexOf(event.target);
@@ -234,7 +240,7 @@
         byId("menuPublishedSetupNotice")?.classList.toggle("hidden", !published);
         byId("menuSettingsLockNotice")?.classList.toggle("hidden", !published);
         byId("menuCatalogLockNotice")?.classList.toggle("hidden", !published);
-        if (published && byId("menuCatalogLockNotice")) byId("menuCatalogLockNotice").textContent = menuCatalogDraftDirty ? "Há alterações em rascunho. Clientes continuam vendo a versão anterior até você usar “Publicar alterações”." : "Você pode editar produtos com segurança: as mudanças ficarão em rascunho e não interromperão os pedidos.";
+        if (published && byId("menuCatalogLockNotice")) byId("menuCatalogLockNotice").textContent = menuCatalogDraftDirty ? "Clientes continuam vendo a versão anterior. Abra Cardápio → Publicação para publicar os rascunhos salvos." : "Alterações salvas ficam em rascunho até a publicação.";
         byId("menuSettingsForm")?.classList.toggle("hidden", !canManageMenu());
         if (byId("menuSlug")) byId("menuSlug").disabled = published;
         for (const id of ["menuPrimaryColor", "menuAccentColor"]) if (byId(id)) byId(id).disabled = published;
@@ -386,6 +392,7 @@
         byId("menuPriceRows").innerHTML = ""; byId("menuOptionGroupRows").innerHTML = ""; addMenuPriceRow();
         byId("menuItemImagePreview").classList.add("hidden"); byId("menuItemImagePreview").querySelector("img").removeAttribute("src");
         byId("menuItemSubmit").textContent = "Salvar produto"; byId("menuItemCancel").classList.add("hidden");
+        window.OgritechPanelNavigation?.closeEditor();
     }
 
     function editMenuCatalogItem(categoryId, itemId) {
@@ -403,6 +410,7 @@
         byId("menuOptionGroupRows").innerHTML = "";
         (item.menu_item_option_groups || []).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map((link)=>link.menu_option_groups).filter(Boolean).forEach((group)=>addMenuOptionGroup({...group,options:(group.menu_options||[]).filter((option)=>option.available)}));
         byId("menuItemSubmit").textContent = "Atualizar produto"; byId("menuItemCancel").classList.remove("hidden");
+        window.OgritechPanelNavigation?.openEditor(true);
         byId("menuItemForm").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
@@ -998,4 +1006,9 @@
         notify(byId("menuOperationMessage"), "Há um novo pedido. Use Atualizar pedidos para carregar os dados mais recentes.");
     });
     window.loadMenuAdmin = loadMenuAdmin;
+    window.OgritechMenuWorkspace = {
+        select: selectMenuWorkspace,
+        newProduct() { if (!canManageMenu() || !menuDataReady || menuBusy) return; resetMenuItemEditor(); window.OgritechPanelNavigation?.openEditor(false); },
+        state: () => ({ published: Boolean(menuRecord?.published), ready: menuDataReady, busy: menuBusy, canManage: canManageMenu(), workspace: selectedMenuWorkspace, next: nextMenuWorkspace(), dirtySettings: menuSettingsDirty })
+    };
 })();

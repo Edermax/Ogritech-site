@@ -1,0 +1,78 @@
+/* Daily navigation: one stable destination for each task. */
+body.panel-readable-controls .menu-item svg{flex:0 0 auto;width:20px;height:20px;color:var(--control-accent-ink)}
+body.panel-readable-controls .menu-item .panel-nav-label{width:auto;height:auto;border:0;font:inherit;line-height:1.3}
+body.panel-readable-controls .topbar{align-items:center;gap:16px}
+html[data-panel-theme] body.panel-readable-controls #panelPageHeader{background:transparent}
+body.panel-readable-controls .topbar-actions{margin-left:auto;width:auto}
+body.panel-readable-controls .topbar #panelAssistantOpen{display:inline-flex;align-items:center;gap:8px;min-height:44px;width:auto;padding:8px 12px;margin:0;border:1px solid var(--control-border);border-radius:10px;background:var(--control-surface);color:var(--control-text)}
+body.panel-readable-controls .topbar #panelAssistantOpen img{width:24px;height:24px}
+body.panel-readable-controls .topbar #panelAssistantOpen span{display:block}
+body.panel-readable-controls .topbar #panelAssistantOpen strong{font-size:13px;font-weight:650}
+body.panel-readable-controls .ogri-assistant--panel :is(.ogri-assistant__toggle,.ogri-assistant__hint){display:none}
+body.panel-readable-controls[data-panel-route]:not([data-panel-route="menu"]) #menuView .menu-workspace-header{display:none}
+body.panel-readable-controls[data-panel-published="true"]:not([data-panel-route="menu"]) #menuWorkspaceTabs{display:none}
+body.panel-readable-controls[data-panel-route="sales"] #menuWorkspaceTabs{display:none}
+body.panel-readable-controls[data-panel-published="true"][data-panel-route="menu"] #menuWorkspaceTabs{grid-template-columns:repeat(2,minmax(0,1fr));position:static}
+body.panel-readable-controls[data-panel-published="true"][data-panel-route="menu"] #menuWorkspaceTabs :is(#menuTabCatalog,#menuTabOperation){display:none}
+body.panel-readable-controls #menuCatalogWorkspace{display:block}
+body.panel-readable-controls #menuCatalogWorkspace.menu-workspace-hidden>article:first-child{display:none}
+body.panel-readable-controls #menuView .panel-section-toolbar,
+body.panel-readable-controls #menuCatalogWorkspace>article>.panel-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+body.panel-readable-controls #menuCatalogWorkspace>article>.panel-header>div{flex:1 1 260px;min-width:0}
+body.panel-readable-controls #menuView #menuOrdersPanel{margin-top:0}
+body.panel-readable-controls #menuPublicLink{display:none!important}
+body.panel-readable-controls #menuOrdersPanel>.clients-toolbar{align-items:flex-start}
+body.panel-readable-controls .panel-order-preferences{border-top:1px solid var(--border);margin-top:20px;padding-top:12px}
+body.panel-readable-controls :is(.panel-order-preferences,.panel-sharing)>summary{min-height:44px;padding:10px 0;color:var(--control-accent-ink);font-size:14px;font-weight:600;cursor:pointer}
+body.panel-readable-controls .panel-sharing{padding:8px 20px;border:1px solid var(--border);border-radius:14px;background:var(--control-surface);color:var(--control-text)}
+body.panel-readable-controls #menuView .panel-sharing #menuShareLink{margin:8px 0 14px}
+body.panel-readable-controls .panel-sharing #menuSharePanel{padding:0;border:0;box-shadow:none;background:transparent}
+body.panel-readable-controls .panel-product-editor{scroll-margin-top:20px}
+body.panel-readable-controls .panel-product-editor>h3{margin:0 0 16px;font-size:18px;color:var(--control-text)}
+body.panel-readable-controls #menuView .panel-editor-actions{position:sticky;bottom:12px;z-index:3;padding:12px;background:var(--control-surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 20px #10212d12}
+body.panel-readable-controls #menuView .panel-editor-actions>button{flex:1 1 120px}
+body.panel-readable-controls #menuView #menuCatalogList [data-move-menu-item],
+body.panel-readable-controls #menuView #menuCatalogList [data-move-category]{min-width:44px;min-height:44px}
+body.panel-readable-controls #menuCatalogList article>header>.commercial-actions{flex:0 0 auto;min-width:0}
+body.panel-readable-controls #menuCatalogList .menu-catalog-editor-item>div:not(.commercial-actions){min-width:0}
+body.panel-readable-controls .panel-product-more{min-width:0}
+body.panel-readable-controls #menuView .panel-product-more>summary{display:flex;align-items:center;justify-content:center;min-height:44px;padding:10px 14px;border:1px solid var(--control-border);border-radius:10px;font-size:13px;color:var(--control-text);cursor:pointer;list-style:none}
+body.panel-readable-controls .panel-product-more>summary::-webkit-details-marker{display:none}
+body.panel-readable-controls .panel-product-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+body.panel-readable-controls #settingsView{display:grid;gap:20px}
+body.panel-readable-controls #settingsView.hidden{display:none}
+body.panel-readable-controls .panel-account-card{padding:24px}
+body.panel-readable-controls .panel-account-card h2{font-size:20px;margin:0 0 8px;color:var(--control-text)}
+body.panel-readable-controls .panel-account-card>button{margin-top:18px}
+body.panel-readable-controls .panel-account-card [hidden]{display:none}
+body.panel-readable-controls .panel-sales-list{display:grid;gap:10px;margin-top:18px}
+body.panel-readable-controls .panel-sales-list .panel-notification-item{margin:0;min-height:44px}
+body.panel-readable-controls #menuPilotMetricsPanel .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+body.panel-readable-controls #menuPilotMetricsPanel .stat-card{min-height:100px}
+@media(max-width:720px){
+  body.panel-readable-controls .sidebar>.brand{flex:1 1 0;min-width:0}
+  body.panel-readable-controls .sidebar .logo-image.platform-symbol{display:none}
+  body.panel-readable-controls .sidebar .tenant-badge{width:100%;min-width:0}
+  body.panel-readable-controls .sidebar .tenant-badge strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.panel-readable-controls .sidebar>.user-area{flex:0 0 auto}
+  body.panel-readable-controls .menu{grid-template-columns:repeat(5,minmax(0,1fr));left:10px;right:10px;gap:2px;padding:6px 4px}
+  body.panel-readable-controls[data-panel-manager="false"] .menu{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.panel-readable-controls .menu-item{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;min-height:54px;padding:6px 2px;font-size:11px}
+  body.panel-readable-controls .menu-item.active{padding:6px 2px}
+  body.panel-readable-controls .topbar{display:flex;flex-direction:row;flex-wrap:nowrap;gap:8px}
+  body.panel-readable-controls .topbar>div:first-child{min-width:0;flex:1}
+  body.panel-readable-controls .topbar h1{font-size:24px}
+  body.panel-readable-controls .topbar .eyebrow{display:none}
+  body.panel-readable-controls .topbar-actions{flex:0 0 auto}
+  body.panel-readable-controls .main-content{padding:20px 14px 104px}
+  body.panel-readable-controls #menuView .panel-editor-actions{bottom:calc(78px + max(10px,env(safe-area-inset-bottom)));padding:10px;gap:8px}
+  body.panel-readable-controls #menuView .panel-editor-actions>button{flex:1 1 0;min-width:0;padding:10px 8px;font-size:13px}
+  body.panel-readable-controls .panel-account-card{padding:20px 18px}
+  body.panel-readable-controls .panel-account-card>button{width:100%}
+  body.panel-readable-controls .panel-section-toolbar>.table-button{width:100%}
+  body.panel-readable-controls #menuCatalogWorkspace>article>.panel-header{flex-direction:column;align-items:stretch}
+  body.panel-readable-controls #menuCatalogWorkspace>article>.panel-header>div{flex:auto}
+  body.panel-readable-controls #menuCatalogList .commercial-actions{display:flex;flex-wrap:wrap}
+  body.panel-readable-controls #menuCatalogList .menu-catalog-editor-item{grid-template-columns:60px minmax(0,1fr)}
+  body.panel-readable-controls #menuCatalogList .menu-catalog-editor-item>.commercial-actions{grid-column:1/-1}
+}

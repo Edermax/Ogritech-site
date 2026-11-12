@@ -68,7 +68,7 @@ const employeeProfessional =
 // =========================================================
 const pageTitle = document.getElementById("page-title");
 const menuItems = document.querySelectorAll(".menu-item");
-const PRODUCT_SECTION_CODES = { agenda: "agenda", landing: "pages", orcamentos: "quotes", cardapio: "menu" };
+const PRODUCT_SECTION_CODES = { agenda: "agenda", landing: "pages", orcamentos: "quotes", cardapio: "menu", produtos: "menu", loja: "menu", vendas: "menu" };
 const AGENDA_SECTIONS = new Set(["dashboard", "clientes", "agenda", "servicos", "profissionais", "financeiro", "configuracoes"]);
 let activeProductCodes = new Set();
 
@@ -536,7 +536,7 @@ const titles = {
     orcamentos: "Ogritech Orçamentos",
     cardapio: "Ogritech Cardápio",
     financeiro: "Financeiro",
-    configuracoes: "Assinatura e dados"
+    configuracoes: "Conta"
 };
 
 function hideAllViews() {
@@ -553,6 +553,8 @@ function hideAllViews() {
 }
 
 function showSection(section, { reload = true } = {}) {
+    const destination = section;
+    if (["produtos", "loja", "vendas"].includes(section)) section = "cardapio";
     if (!["cardapio", "configuracoes"].includes(section)) section = "cardapio";
     hideAllViews();
 
@@ -597,11 +599,14 @@ function showSection(section, { reload = true } = {}) {
 
     pageTitle.textContent =
         titles[section] || "Dashboard";
+    window.OgritechPanelNavigation?.show(destination);
 }
 
 menuItems.forEach((item) => {
     item.addEventListener("click", (event) => {
         event.preventDefault();
+
+        if (window.OgritechPanelNavigation?.canLeave(item.dataset.section) === false) return;
 
         if (item.dataset.productAllowed === "false") {
             alert("Esta solução não está ativa para o negócio. Consulte os produtos contratados ou fale com a Ogritech.");

@@ -46,10 +46,13 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:panel-theme-browser
       - run: npm run test:account-theme-browser
+      - run: npm run test:panel-navigation-browser
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: panel-theme-review-${{ github.sha }}
-          path: outputs/panel-theme-review/
+          path: |
+            outputs/panel-theme-review/
+            outputs/panel-navigation/
           retention-days: 7
           if-no-files-found: ignore

@@ -73,7 +73,11 @@ function renderUser(profile) {
 
     document.querySelectorAll("[data-owner-only]").forEach((element) => element.classList.toggle("hidden", profile.role !== "owner"));
     const accountLink = document.querySelector('[data-section="configuracoes"]');
-    if (accountLink && profile.role !== "owner") accountLink.innerHTML = '<span aria-hidden="true">⚙</span>Minha conta';
+    if (accountLink && profile.role !== "owner") {
+        const label = accountLink.querySelector?.(".panel-nav-label");
+        if (label) label.textContent = "Conta";
+        else accountLink.innerHTML = '<span aria-hidden="true">⚙</span>Minha conta';
+    }
 
     if (profile.role === "employee") {
         document
