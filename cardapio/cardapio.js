@@ -428,7 +428,7 @@
     } catch { error = {message:"Confira sua conexão e tente novamente. Seus itens foram preservados."}; }
     if (error) { $("orderSubmitButton").disabled = false; $("orderMessage").textContent = error.message === "Item indisponível ou fora dos limites" ? `Confira a data do pedido. Os itens escolhidos exigem pelo menos ${leadTime || 48} horas de antecedência.` : `Não foi possível enviar o pedido: ${error.message}`; $("orderMessage").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     pendingRequestId = null;
-    const publicCode = String(data.reference || "").replace(/[^a-z0-9]/gi, "").toUpperCase().slice(0, 8), formattedCode = publicCode.length > 4 ? `${publicCode.slice(0, 4)}-${publicCode.slice(4)}` : publicCode;
+    const publicCode = String(data.reference || "").replace(/[^a-z0-9]/gi, "").toUpperCase().slice(0, 8), formattedCode = Number.isSafeInteger(Number(data.order_number)) && Number(data.order_number) > 0 ? `#${data.order_number}` : publicCode.length > 4 ? `${publicCode.slice(0, 4)}-${publicCode.slice(4)}` : publicCode;
     const trackingUrl = ogritechEnvironmentUrl(`/pedido/?referencia=${encodeURIComponent(data.reference)}&token=${encodeURIComponent(data.token)}&empresa=${encodeURIComponent(slug)}`);
     const whatsappPhone = String(page.menu.whatsapp_phone || "");
     const whatsappText = whatsappPhone ? globalThis.OgritechMenuWhatsapp.format({

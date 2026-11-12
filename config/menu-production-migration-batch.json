@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-11",
+  "updatedAt": "2026-11-12",
   "baseline": "menu_trial_review_api_hardening",
   "strategy": "contiguous_tail",
   "authorized": false,
@@ -22,12 +22,20 @@
     "aliasCompatibility": "Remote inventory compared by migration name; existing history unchanged; only the two reviewed trial-protection migrations are pending."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [],
+  "requiredMenuMigrations": [
+    "menu_order_receipts_and_sequence",
+    "menu_sales_notification_reports",
+    "menu_order_response_snapshot"
+  ],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
     "commercial_callbacks_and_billing": [],
-    "menu_release_required": [],
+    "menu_release_required": [
+      "menu_order_receipts_and_sequence",
+      "menu_sales_notification_reports",
+      "menu_order_response_snapshot"
+    ],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],

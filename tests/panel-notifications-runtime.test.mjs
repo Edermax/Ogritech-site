@@ -14,7 +14,7 @@ class Element {
     showModal() { this.open = true; }
     close() { this.open = false; this.listeners.close?.(); }
 }
-const order = { id: "order-1", public_reference: "TEST-001", status: "received", fulfillment_type: "pickup", created_at: "2026-01-01T00:00:00Z", is_test: false, customer_name: "Private customer" };
+const order = { id: "order-1", public_reference: "TEST-001", order_number: 1, status: "received", fulfillment_type: "pickup", created_at: "2026-01-01T00:00:00Z", is_test: false, customer_name: "Private customer",customer_phone:"11999999999",total_amount:49.9 };
 function fixture() {
     const nodes = new Map(), stored = new Map(), filters = [], events = [];
     const state = { orders: [order], notices: [], error: null, pending: null };
@@ -66,7 +66,10 @@ test("reading an order opens operation without changing order status; status cha
     f.api.setOrders([{ ...order, status: "confirmed" }, { ...order, id: "test", is_test: true }], { businessId: scope.businessId });
     assert.equal(f.byId("panelNotificationBadge").textContent, "1");
     assert.equal(f.byId("panelNotificationOrders").children.length, 1);
-    assert.equal(f.byId("panelNotificationOrders").children[0].children[1].textContent, "Confirmado · Retirada");
+    const detail=f.byId("panelNotificationOrders").children[0];
+    assert.match(detail.children[0].textContent,/Pedido #1 · Private customer/);
+    assert.match(detail.children[1].textContent,/Telefone: 11999999999 · Valor: R\$\s*49,90 · Confirmado · Retirada/);
+    assert.match(detail.children[2].textContent,/Enviado em/);
 });
 
 test("order refresh failure preserves the last snapshot and releases the retry button", async () => {
