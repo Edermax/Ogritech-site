@@ -8,7 +8,7 @@ Implementados: CPF responsável no CNPJ; limite persistente de tentativas; hist�
 
 Homologação (`fuesdztsvrkkgnbqhcxi`): migrations `menu_trial_abuse_protection` (versão remota `20261111225657`) e `menu_trial_review_api_hardening` (`20261111230807`) aplicadas. `ogritech-billing` v30 ativo, com o adaptador incluído. Configuração pública confirmou `phone_verification:false`, `available:true`, chave de CAPTCHA vazia. Nenhum SMS real enviado.
 
-Produção: migrations e função **ainda não promovidas**; frontend ainda não publicado. A política registra as duas migrations retidas, sem alterar o baseline de produção.
+Produção (`mvzcoaiiwytycdqcvydf`): ambas as migrations aplicadas, versões remotas `20261112024937` e `20261112024955`, e `ogritech-billing` v19 ativo. Política atualizada para 93 migrations aplicadas, sem pendências. A interface faz parte do PR #104 e é publicada pelo merge em `main` via GitHub Pages.
 
 ## Verificação
 
@@ -27,6 +27,15 @@ A revisão automática recusou executar um novo backup por exportar dados de pro
 
 O [teste isolado 43138593427](https://github.com/Edermax/Ogritech-site/actions/runs/43138593427) passou. As etapas de verificação de schema/RLS/testes, remoção dos arquivos descriptografados e remoção do banco temporário concluíram com sucesso. Nada foi restaurado no banco de produção.
 
-A tentativa de promoção por `apply_migration` retornou confirmação expirada duas vezes. Nenhuma migration ou função foi publicada em produção nessas tentativas. Aguardando confirmação específica da publicação antes de nova tentativa.
+As primeiras tentativas de promoção por `apply_migration` retornaram confirmação expirada, sem alteração em produção. Após a confirmação explícita do responsável para publicar banco, função e interface, as duas migrations e a função foram publicadas com sucesso.
+
+## Conferência de produção
+
+- Digest dos registros anteriores de `billing_signups`, excluída a coluna nova, idêntico antes/depois: `9ee3fc3b7de783a49d915f2f388f44bb`. Um registro anterior preservado e um histórico de teste utilizado criado.
+- Quatro novas tabelas privadas com RLS; anônimo sem acesso à criação/revisão e usuário comum sem acesso ao backend de elegibilidade. Wrappers públicos da revisão sem elevação de privilégios.
+- API real: configuração 200 (`phone_verification:false`, `available:true`), cotação mensal 200 (R$ 49,90), payload incompleto 422, limite de corpo 413, SMS desativado 503, revisão/elegibilidade anônimas 401 e método inválido 405. Sem cadastro real, convite, cobrança ou SMS em produção.
+- Advisor de segurança: somente INFO de RLS sem policies para as quatro tabelas privadas, intencional por não concederem acesso direto aos usuários. Sem novo aviso sobre elevação de privilégios na API pública.
+- Restauração isolada autorizada: 274 verificações aprovadas; arquivos descriptografados e banco temporário removidos.
+- Após a publicação do frontend: conferir respostas HTTP dos novos assets, campos de CPF responsável, área de revisão administrativa e layout em celular/desktop. Os fluxos já foram exercitados no navegador com fixtures, sem efeitos reais nos clientes.
 
 Operação e ativação futura: [TESTE-GRATIS-PROTECAO.md](../TESTE-GRATIS-PROTECAO.md).

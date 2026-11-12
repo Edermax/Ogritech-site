@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-11",
-  "baseline": "menu_order_push_transport",
+  "baseline": "menu_trial_review_api_hardening",
   "strategy": "contiguous_tail",
   "authorized": false,
   "decision": "PENDING",
@@ -15,24 +15,18 @@
   "productionDryRun": {
     "status": "PASSED",
     "executedAt": "2026-11-11",
-    "migrationCount": 2,
+    "migrationCount": 0,
     "remoteChangesPerformed": false,
-    "mode": "READ_ONLY_REMOTE_INVENTORY_COMPARISON",
+    "mode": "POST_PROMOTION_READ_ONLY",
     "evidence": "docs/evidencias/protecao-teste-gratis-2026-11-11.md",
     "aliasCompatibility": "Remote inventory compared by migration name; existing history unchanged; only the two reviewed trial-protection migrations are pending."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "menu_trial_abuse_protection",
-    "menu_trial_review_api_hardening"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
-    "commercial_callbacks_and_billing": [
-      "menu_trial_abuse_protection",
-      "menu_trial_review_api_hardening"
-    ],
+    "commercial_callbacks_and_billing": [],
     "menu_release_required": [],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
@@ -83,26 +77,29 @@
     "business_whatsapp_shares",
     "menu_optional_pix",
     "menu_pix_order_amount",
-    "menu_service_area"
+    "menu_service_area",
+    "menu_trial_abuse_protection",
+    "menu_trial_review_api_hardening"
   ],
-  "authorizationSource": "Pedido do responsável nesta conversa para concluir, testar e publicar a jornada funcional do Cardápio.",
-  "authorizationScope": "Correção preserve_menu_special_hours e jornada de criação e gestão do Cardápio.",
+  "authorizationSource": "Autorização explícita do responsável nesta conversa para publicar as duas atualizações de banco, a função de cadastro e a interface do PR #104 em produção, mantendo SMS desativado.",
+  "authorizationScope": "Proteção contra repetição do teste gratuito do Cardápio e revisão administrativa de cadastros suspeitos.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
-    "executedAt": "2026-11-04",
+    "executedAt": "2026-11-11",
     "migrations": [
-      "preserve_menu_special_hours"
+      "menu_trial_abuse_protection",
+      "menu_trial_review_api_hardening"
     ],
-    "reviewedPendingCount": 1,
-    "sourceCommit": "cb558031f6c1dcef0802798d11c32396061eb60d",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41842463893",
-    "stagingMigrationCount": 82,
-    "productionMigrationCount": 82,
+    "reviewedPendingCount": 2,
+    "sourceCommit": "d117fbba6bf4b1ea552c06f3852b8d57f0dbe4ed",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43143831220",
+    "stagingMigrationCount": 93,
+    "productionMigrationCount": 93,
     "postPromotionPendingCount": 0,
-    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41818989689",
-    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41843052561",
+    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43009849096",
+    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43138593427",
     "restoreStatus": "SUCCESS",
-    "evidence": "docs/evidencias/jornada-cardapio-2026-11-04.md"
+    "evidence": "docs/evidencias/protecao-teste-gratis-2026-11-11.md"
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",
