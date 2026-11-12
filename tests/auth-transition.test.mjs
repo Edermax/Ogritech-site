@@ -25,7 +25,8 @@ test("painel não recarrega quando veio de um login com contexto atual", () => {
 });
 
 test("service worker invalida o shell antigo e não pré-carrega a rota legada de login", () => {
-  assert.match(serviceWorkerSource, /ogritech-shell-v18/);
+  const cacheVersion = serviceWorkerSource.match(/const CACHE_NAME = "ogritech-shell-v(\d+)"/);
+  assert.ok(cacheVersion && Number(cacheVersion[1]) >= 18, "o cache deve invalidar as versões anteriores à correção de login");
   assert.doesNotMatch(serviceWorkerSource, /"\.\/login\.html"/);
 });
 
