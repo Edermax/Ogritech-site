@@ -19,8 +19,10 @@ html[data-panel-theme="dark"] body:is(.panel-readable-controls,.platform-admin-p
 html[data-panel-theme="dark"] body.panel-readable-controls :is(.gold-button,.table-button.edit,.menu-workspace-tab[aria-selected="true"],.pwa-install-button){background:#08b9d3;color:#042630;border-color:#08b9d3}
 html[data-panel-theme="dark"] body.panel-readable-controls #menuView :is(a.table-button,button.table-button){background:var(--control-raised);color:var(--control-text);border-color:var(--control-border)}
 html[data-panel-theme="dark"] body.panel-readable-controls #menuView :is(a.table-button.edit,button.table-button.edit){background:#08b9d3;color:#042630;border-color:#08b9d3}
-html[data-panel-theme="dark"] body.panel-readable-controls :is(#menuView .table-button.delete,#menuView [data-order-action="reject"],#menuUnpublishButton,#menuBrandingDiscard){background:var(--control-raised);color:var(--control-text);border-color:var(--control-border)}
+/* Legacy light rules group IDs inside :is(); keep the same workspace scope. */
+html[data-panel-theme="dark"] body.panel-readable-controls #menuView :is(.table-button.delete,[data-order-action="reject"],#menuUnpublishButton,#menuBrandingDiscard){background:var(--control-raised);color:var(--control-text);border-color:var(--control-border)}
 html[data-panel-theme="dark"] body.panel-readable-controls :is(.tenant-badge,.order-notifications,.menu-order-details,.panel-notification-info){background:var(--control-raised);color:var(--control-text);border-color:var(--border)}
+html[data-panel-theme="dark"] body.panel-readable-controls .menu-operation-status[data-state="draft"]{background:var(--control-raised);color:var(--control-muted);border-color:var(--border)}
 html[data-panel-theme="dark"] body:is(.panel-readable-controls,.platform-admin-page) :is(.section-description,.trial-review-card p,.modal-description,.sales-report-note,.platform-topbar p,footer a){color:var(--control-muted)}
 html[data-panel-theme="dark"] body:is(.panel-readable-controls,.platform-admin-page) :is(th,td,.business-table,.menu-order-details dl){border-color:var(--border)}
 html[data-panel-theme="dark"] body:is(.panel-readable-controls,.platform-admin-page) :is(a,.menu-order-details summary,.platform-kicker,.eyebrow,.panel-help-link){color:var(--control-accent-ink)}
@@ -32,3 +34,13 @@ html[data-panel-theme="dark"] body.platform-admin-page :is(.platform-stats artic
 html[data-panel-theme="dark"] body.platform-admin-page :is(button.cyan-button,button.pwa-install-button){background:#08b9d3;color:#042630;border-color:#08b9d3}
 html[data-panel-theme="dark"] body:is(.panel-readable-controls,.platform-admin-page) :is(.brand-name,.platform-owner-card strong,.platform-panel h2,.platform-topbar h1,.menu-workspace-header h2){color:var(--control-text)}
 html[data-panel-theme="dark"] body:is(.panel-readable-controls,.platform-admin-page) :is(a,button,input,select,textarea,summary):focus-visible{outline-color:#6be5f3}
+/* The floating helper has light surfaces outside the main workspace. */
+html[data-panel-theme="dark"] body.panel-readable-controls :is(.ogri-assistant__hint,.ogri-assistant__panel,.ogri-assistant__toggle){background:var(--control-surface);color:var(--control-text);border-color:var(--border)}
+html[data-panel-theme="dark"] body.panel-readable-controls :is(.ogri-assistant__head,.ogri-assistant__choice span){background:var(--control-raised);color:var(--control-text);border-color:var(--border)}
+html[data-panel-theme="dark"] body.panel-readable-controls :is(.ogri-assistant__action,.ogri-assistant__submit){background:#08b9d3;color:#042630;border-color:#08b9d3}
+html[data-panel-theme="dark"] body.panel-readable-controls .ogri-assistant__action--quiet{background:var(--control-raised);color:var(--control-text);border-color:var(--control-border)}
+html[data-panel-theme="dark"] body.panel-readable-controls :is(.ogri-assistant__back,.ogri-assistant__form-message){color:var(--control-accent-ink)}
+html[data-panel-theme="dark"] body.panel-readable-controls .ogri-assistant__back{background:transparent;border-color:transparent}
+html[data-panel-theme="dark"] body.panel-readable-controls .ogri-assistant__choice input:checked+span{background:var(--control-tint);color:var(--control-accent-ink);border-color:#40869a}
+html[data-panel-theme="dark"] body:is(.panel-readable-controls,.platform-admin-page) :is(button,.table-button,.gold-button):disabled,
+html[data-panel-theme="dark"] body.panel-readable-controls #menuView :is(.table-button,.gold-button,#menuUnpublishButton,#menuBrandingDiscard):disabled{background:#172734;color:#a3b7c4;border-color:var(--border);box-shadow:none;cursor:not-allowed}
