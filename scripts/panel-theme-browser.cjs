@@ -3,6 +3,10 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
 const {chromium}=require('playwright');
 const {server,setup,extra}=require('./menu-merchant-browser.cjs');
 const out='outputs/panel-theme-review';fs.mkdirSync(out,{recursive:true});
+async function settle(page){await page.evaluate(async()=>{
+ await new Promise(resolve=>requestAnimationFrame(resolve));
+ await Promise.all(document.getAnimations().filter(animation=>animation instanceof CSSTransition).map(animation=>animation.finished.catch(()=>{})));
+});}
 
 async function styles(page){return page.evaluate(()=>[...document.querySelectorAll('body *')]
  .filter(el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden'&&!['SCRIPT','STYLE','OPTION'].includes(el.tagName))
@@ -37,11 +41,15 @@ async function darkIssues(page){return page.evaluate(()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_EXECUTABLE_PATH||(process.platform==='win32'?'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe':undefined)});
  const results=[];
  async function check(page,label){
-  await page.evaluate(()=>OgritechPanelTheme.set('light'));const original=await styles(page);
-  await page.evaluate(()=>OgritechPanelTheme.set('dark'));
+  // Compare identical interaction states: clicking a launcher can leave :hover
+  // behind a modal until Chromium recomputes hit testing on the next frame.
+  await page.mouse.move(1,1);
+  await settle(page);
+  await page.evaluate(()=>OgritechPanelTheme.set('light'));await settle(page);const original=await styles(page);
+  await page.evaluate(()=>OgritechPanelTheme.set('dark'));await settle(page);
   const issues=await darkIssues(page);assert.deepEqual(issues,[],label);
   if(/assistant|operation|review|account/.test(label))await page.screenshot({path:out+'/'+label+'-dark.png'});
-  await page.evaluate(()=>OgritechPanelTheme.set('light'));assert.deepEqual(await styles(page),original,'Original light appearance: '+label);
+  await page.evaluate(()=>OgritechPanelTheme.set('light'));await settle(page);assert.deepEqual(await styles(page),original,'Original light appearance: '+label);
   results.push({scene:label,darkContrastPassed:true,lightPreserved:true});
  }
  try{
