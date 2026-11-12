@@ -18,7 +18,9 @@
   }
   function body(action) { return { action, barbershop_id: current.businessId, order_id: current.order.id }; }
   function announce(text, error = false) {
-    const message = $("menuOperationMessage"); if (message) { message.textContent = text; message.classList.toggle("error",error); }
+    for (const id of ["menuOperationMessage","menuWorkspaceMessage"]) {
+      const message = $(id); if (message) { message.textContent = text; message.classList.toggle("error",error); }
+    }
   }
   async function discard() {
     if (!receiptId || !current) return;
