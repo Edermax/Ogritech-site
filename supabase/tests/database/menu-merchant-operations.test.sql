@@ -22,24 +22,24 @@ insert into public.profiles(id,barbershop_id,full_name,role) values
  ('e1300000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','Owner A','owner'),
  ('e1300000-0000-4000-8000-000000000002','e1100000-0000-4000-8000-000000000002','Owner B','owner'),
  ('e1300000-0000-4000-8000-000000000003','e1100000-0000-4000-8000-000000000001','Staff A','employee');
-insert into public.online_menus(id,barbershop_id,slug,title,published,created_at) values
- ('e1400000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','merchant-ops-a','Merchant A',true,'2025-01-01'),
- ('e1400000-0000-4000-8000-000000000002','e1100000-0000-4000-8000-000000000002','merchant-ops-b','Merchant B',true,'2025-01-01');
+insert into public.online_menus(id,barbershop_id,slug,title,published,published_at,created_at) values
+ ('e1400000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','merchant-ops-a','Merchant A',true,'2025-01-01','2025-01-01'),
+ ('e1400000-0000-4000-8000-000000000002','e1100000-0000-4000-8000-000000000002','merchant-ops-b','Merchant B',true,'2025-01-01','2025-01-01');
 insert into public.menu_categories(id,barbershop_id,menu_id,name) values('e1500000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','e1400000-0000-4000-8000-000000000001','Fixture');
 insert into public.menu_items(id,barbershop_id,category_id,name,item_type) values('e1600000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','e1500000-0000-4000-8000-000000000001','Most sold fixture','unit');
 insert into public.menu_item_prices(id,barbershop_id,menu_item_id,label,price) values('e1700000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','e1600000-0000-4000-8000-000000000001','Unidade',50);
 create temporary table order_response as select public.public_create_menu_order_v2('merchant-ops-a','Client A','','11999999999','pickup',null,'',
- '[{"menu_item_price_id":"e1700000-0000-4000-8000-000000000001","quantity":2}]',true,'e1800000-0000-4000-8000-000000000001') payload;
+ '[{"menu_item_price_id":"e1700000-0000-4000-8000-000000000001","quantity":2,"selections":[]}]',true,'e1800000-0000-4000-8000-000000000001') payload;
 select extensions.is((select payload->>'order_code' from order_response),'#1','first real order displays #1');
 select extensions.is((public.public_create_menu_order_v2('merchant-ops-a','Client A','','11999999999','pickup',null,'',
- '[{"menu_item_price_id":"e1700000-0000-4000-8000-000000000001","quantity":2}]',true,'e1800000-0000-4000-8000-000000000001')->>'order_number')::integer,1,'idempotent retry keeps the same sequential number');
+ '[{"menu_item_price_id":"e1700000-0000-4000-8000-000000000001","quantity":2,"selections":[]}]',true,'e1800000-0000-4000-8000-000000000001')->>'order_number')::integer,1,'idempotent retry keeps the same sequential number');
 select extensions.is((public.public_get_menu_order((select payload->>'reference' from order_response),(select payload->>'token' from order_response))->>'order_number')::integer,1,'existing tokenized tracking returns the short number');
 select extensions.ok(public.public_get_menu_order('#1',(select payload->>'token' from order_response)) is null,'number alone never grants tracking access');
-insert into public.menu_orders(id,barbershop_id,menu_id,customer_name,customer_phone,fulfillment_type,public_token_hash,is_test,subtotal) values
- ('e1900000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','e1400000-0000-4000-8000-000000000001','Test','00000000000','pickup','fixture',true,999),
- ('e1900000-0000-4000-8000-000000000002','e1100000-0000-4000-8000-000000000001','e1400000-0000-4000-8000-000000000001','Second A','11999999999','pickup','fixture',false,50),
- ('e1900000-0000-4000-8000-000000000003','e1100000-0000-4000-8000-000000000002','e1400000-0000-4000-8000-000000000002','First B','11999999998','pickup','fixture',false,999),
- ('e1900000-0000-4000-8000-000000000004','e1100000-0000-4000-8000-000000000001','e1400000-0000-4000-8000-000000000001','Third A','11999999999','pickup','fixture',false,20);
+insert into public.menu_orders(id,barbershop_id,menu_id,customer_name,customer_phone,fulfillment_type,public_token_hash,is_test,subtotal,consent_at) values
+ ('e1900000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','e1400000-0000-4000-8000-000000000001','Test','00000000000','pickup','fixture',true,999,now()),
+ ('e1900000-0000-4000-8000-000000000002','e1100000-0000-4000-8000-000000000001','e1400000-0000-4000-8000-000000000001','Second A','11999999999','pickup','fixture',false,50,now()),
+ ('e1900000-0000-4000-8000-000000000003','e1100000-0000-4000-8000-000000000002','e1400000-0000-4000-8000-000000000002','First B','11999999998','pickup','fixture',false,999,now()),
+ ('e1900000-0000-4000-8000-000000000004','e1100000-0000-4000-8000-000000000001','e1400000-0000-4000-8000-000000000001','Third A','11999999999','pickup','fixture',false,20,now());
 select extensions.is((select order_number from public.menu_orders where id='e1900000-0000-4000-8000-000000000002'),2::bigint,'test orders do not consume real numbers');
 select extensions.is((select order_number from public.menu_orders where id='e1900000-0000-4000-8000-000000000003'),1::bigint,'another business starts its own sequence at #1');
 select extensions.throws_ok($$update public.menu_orders set order_number=99 where id='e1900000-0000-4000-8000-000000000002'$$,'23514','Order identity is immutable','order number cannot be rewritten');
