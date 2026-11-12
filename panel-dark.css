@@ -44,3 +44,17 @@ html[data-panel-theme="dark"] body.panel-readable-controls .ogri-assistant__back
 html[data-panel-theme="dark"] body.panel-readable-controls .ogri-assistant__choice input:checked+span{background:var(--control-tint);color:var(--control-accent-ink);border-color:#40869a}
 html[data-panel-theme="dark"] body:is(.panel-readable-controls,.platform-admin-page) :is(button,.table-button,.gold-button):disabled,
 html[data-panel-theme="dark"] body.panel-readable-controls #menuView :is(.table-button,.gold-button,#menuUnpublishButton,#menuBrandingDiscard):disabled{background:#172734;color:#a3b7c4;border-color:var(--border);box-shadow:none;cursor:not-allowed}
+/* Platform administration: the same primary/secondary actions and feedback. */
+html[data-panel-theme="dark"] body.platform-admin-page :is(button.cyan-button,button.pwa-install-button,.admin-row-actions [data-action="operate"]):not(:disabled){background:#08b9d3;color:#042630;border-color:#08b9d3}
+html[data-panel-theme="dark"] body.platform-admin-page button:not(:disabled):hover{background:var(--control-tint);color:var(--control-text);border-color:#40869a}
+html[data-panel-theme="dark"] body.platform-admin-page :is(button.cyan-button,button.pwa-install-button,.admin-row-actions [data-action="operate"]):not(:disabled):hover{background:#58d5e6;color:#042630;border-color:#58d5e6}
+html[data-panel-theme="dark"] body.platform-admin-page button.business-link{background:transparent;border:0}
+html[data-panel-theme="dark"] body.platform-admin-page .business-table tbody tr:hover{background:var(--control-tint)}
+html[data-panel-theme="dark"] body.platform-admin-page :is(.origin-badge,.suspended-badge){background:var(--control-raised);color:var(--control-muted);border-color:var(--border)}
+html[data-panel-theme="dark"] body.platform-admin-page :is(.active-badge,.plan-badge,.origin-badge.real,.billing-status,.platform-badge,.platform-status,.recommended-plan){background:var(--control-tint);color:var(--control-accent-ink);border-color:#40869a}
+html[data-panel-theme="dark"] body.platform-admin-page :is(.billing-status.void,.billing-status.refunded,.billing-status.partially_refunded,.billing-status.suspended,.billing-status.cancelled){background:var(--control-raised);color:var(--control-muted);border-color:var(--border)}
+html[data-panel-theme="dark"] body.platform-admin-page :is(.billing-status.overdue,.billing-status.past_due){background:var(--control-raised);color:var(--control-text);border-color:var(--control-border);border-style:dashed}
+html[data-panel-theme="dark"] body.platform-admin-page :is(input,select,textarea):disabled{background:#172734;color:#a3b7c4;border-color:var(--border)}
+html[data-panel-theme="dark"] body.platform-admin-page :is(button,input,select,textarea):disabled{opacity:1}
+html[data-panel-theme="dark"] body.platform-admin-page .platform-modal{background:rgb(3 10 18 / .7)}
+html[data-panel-theme="dark"] body.platform-admin-page .trial-review-dialog::backdrop{background:rgb(3 10 18 / .7)}
