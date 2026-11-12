@@ -1,3 +1,6 @@
+-- One atomic statement also supports the pinned CLI pipeline without embedded COMMIT.
+do $menu_orders_migration$
+begin
 -- Human-facing numbers are scoped to the business. Random references and tokens
 -- remain the tracking credentials, so sequential numbers never authorize access.
 lock table public.menu_orders in share row exclusive mode;
@@ -251,4 +254,6 @@ begin
 exception when others then raise log 'menu_receipt_cleanup_wakeup_failed';
 end $$;
 revoke all on function private.wake_menu_receipt_cleanup() from public,anon,authenticated;
-select cron.schedule('ogritech-menu-receipt-cleanup','15 * * * *','select private.wake_menu_receipt_cleanup();');
+perform cron.schedule('ogritech-menu-receipt-cleanup','15 * * * *','select private.wake_menu_receipt_cleanup();');
+end;
+$menu_orders_migration$;

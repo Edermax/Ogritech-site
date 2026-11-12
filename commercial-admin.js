@@ -741,6 +741,12 @@
             }).join("") || "<p class='section-description'>Nenhum pedido recebido.</p>";
             byId("menuOrdersList").querySelectorAll("[data-order]").forEach((button) => button.addEventListener("click", () => {
                 const action = button.dataset.orderAction;
+                const order = (orders || []).find(item => item.id === button.dataset.order);
+                if (order && window.OgritechOrderActions) {
+                    if (action === "mark_paid") return window.OgritechOrderActions.openPayment(order, BARBERSHOP_ID, loadMenuAdmin);
+                    if (action === "review_decision") return window.OgritechOrderActions.openReview(order, BARBERSHOP_ID, loadMenuAdmin);
+                    if (action === "view_receipt") return window.OgritechOrderActions.viewReceipt(order, BARBERSHOP_ID);
+                }
                 if (action === "reject" && !confirm("Recusar este pedido? O cliente verá o status Recusado no acompanhamento.")) return;
                 const messages = { confirm: ["Confirmando pedido...", "Pedido confirmado."], reject: ["Recusando pedido...", "Pedido recusado."], complete: ["Concluindo pedido...", "Pedido concluído."], mark_paid: ["Registrando pagamento...", "Pagamento marcado como recebido."] };
                 return runMenuAction("menuOperationMessage", messages[action][0], () => supabaseClient.rpc("update_menu_order_operation", { target_barbershop_id: BARBERSHOP_ID, target_order_id: button.dataset.order, target_action: action }), messages[action][1]);
