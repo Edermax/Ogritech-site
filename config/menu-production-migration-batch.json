@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-12",
-  "baseline": "menu_trial_review_api_hardening",
+  "baseline": "menu_order_response_snapshot",
   "strategy": "contiguous_tail",
   "authorized": false,
   "decision": "PENDING",
@@ -9,32 +9,25 @@
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
     "migrationCount": 96,
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43154975863",
-    "sourceCommit": "98843709a2cc369afc07f2605a03b2df920553cf"
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43156662230",
+    "sourceCommit": "5bd45c48cb2756692f16aea99e893629a90d3699"
   },
   "productionDryRun": {
-    "status": "PENDING",
-    "migrationCount": 3,
+    "status": "PASSED",
+    "executedAt": "2026-11-12",
+    "migrationCount": 0,
     "remoteChangesPerformed": false,
-    "mode": "AWAITING_RELEASE_DRY_RUN",
+    "mode": "POST_PROMOTION_READ_ONLY",
     "evidence": "docs/evidencias/pedidos-comprovantes-relatorios-2026-11-12.md",
-    "aliasCompatibility": "Read-only remote inventory confirms 93 existing migrations through menu_trial_review_api_hardening; three new migrations remain pending."
+    "aliasCompatibility": "Native MCP applied exactly the three reviewed migrations in order; 96 remote migrations verified by name and explicit version aliases, without changing existing history."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "menu_order_receipts_and_sequence",
-    "menu_sales_notification_reports",
-    "menu_order_response_snapshot"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
     "commercial_callbacks_and_billing": [],
-    "menu_release_required": [
-      "menu_order_receipts_and_sequence",
-      "menu_sales_notification_reports",
-      "menu_order_response_snapshot"
-    ],
+    "menu_release_required": [],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],
@@ -86,35 +79,39 @@
     "menu_pix_order_amount",
     "menu_service_area",
     "menu_trial_abuse_protection",
-    "menu_trial_review_api_hardening"
+    "menu_trial_review_api_hardening",
+    "menu_order_receipts_and_sequence",
+    "menu_sales_notification_reports",
+    "menu_order_response_snapshot"
   ],
-  "authorizationSource": "Pendente de autorização específica para a publicação do PR #105 e para novo backup criptografado com teste isolado de restauração.",
+  "authorizationSource": "Autorização explícita do responsável nesta conversa (Autorizado) para publicar o PR #105, gerar backup criptografado e testar restauração isolada no GitHub Actions privado com limpeza ao final.",
   "authorizationScope": "Comprovantes opcionais, revisão de confirmação/recusa, numeração de pedidos, notificações, relatórios e tema escuro opcional.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
-    "executedAt": "2026-11-11",
+    "executedAt": "2026-11-12",
     "migrations": [
-      "menu_trial_abuse_protection",
-      "menu_trial_review_api_hardening"
+      "menu_order_receipts_and_sequence",
+      "menu_sales_notification_reports",
+      "menu_order_response_snapshot"
     ],
-    "reviewedPendingCount": 2,
-    "sourceCommit": "d117fbba6bf4b1ea552c06f3852b8d57f0dbe4ed",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43143831220",
-    "stagingMigrationCount": 93,
-    "productionMigrationCount": 93,
+    "reviewedPendingCount": 3,
+    "sourceCommit": "5bd45c48cb2756692f16aea99e893629a90d3699",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43156662230",
+    "stagingMigrationCount": 96,
+    "productionMigrationCount": 96,
     "postPromotionPendingCount": 0,
-    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43009849096",
-    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43138593427",
+    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43158089637",
+    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43158503043",
     "restoreStatus": "SUCCESS",
-    "evidence": "docs/evidencias/protecao-teste-gratis-2026-11-11.md"
+    "evidence": "docs/evidencias/pedidos-comprovantes-relatorios-2026-11-12.md"
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43138593427",
-    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43009849096",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43158503043",
+    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43158089637",
     "verificationCount": 274,
     "decryptedFilesRemoved": true,
     "temporaryDatabaseRemoved": true,
-    "authorization": "Explicit user authorization in this conversation for the isolated test of the existing backup."
+    "authorization": "Explicit user authorization in this conversation for PR105 publication, fresh encrypted backup and isolated restore."
   }
 }

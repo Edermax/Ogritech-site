@@ -195,23 +195,10 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "menu_trial_review_api_hardening",
+    "appliedThrough": "menu_order_response_snapshot",
     "appliedOutOfOrder": [],
-    "heldMigrations": [
-      {
-        "name": "menu_order_receipts_and_sequence",
-        "reason": "Staging and clean CI replay passed; pending explicit production publication approval, fresh backup and isolated restore."
-      },
-      {
-        "name": "menu_sales_notification_reports",
-        "reason": "Staging and clean CI replay passed; pending explicit production publication approval, fresh backup and isolated restore."
-      },
-      {
-        "name": "menu_order_response_snapshot",
-        "reason": "Ensure the create response observes its newly inserted sequential order number."
-      }
-    ],
-    "observationEvidence": "docs/evidencias/protecao-teste-gratis-2026-11-11.md",
+    "heldMigrations": [],
+    "observationEvidence": "docs/evidencias/pedidos-comprovantes-relatorios-2026-11-12.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
       "business_whatsapp_shares": "20261107143521",
@@ -221,7 +208,10 @@
       "menu_order_push_notifications": "20261110235748",
       "menu_order_push_transport": "20261110235754",
       "menu_trial_abuse_protection": "20261112024937",
-      "menu_trial_review_api_hardening": "20261112024955"
+      "menu_trial_review_api_hardening": "20261112024955",
+      "menu_order_receipts_and_sequence": "20261112050314",
+      "menu_sales_notification_reports": "20261112050324",
+      "menu_order_response_snapshot": "20261112050335"
     }
   }
 }
