@@ -8,18 +8,17 @@
   "localReplay": {
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
-    "migrationCount": 93,
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43136973208",
-    "sourceCommit": "0e54dbfd4c1baf972bd34337d74e6bf0cf2d37d1"
+    "migrationCount": 96,
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43154975863",
+    "sourceCommit": "98843709a2cc369afc07f2605a03b2df920553cf"
   },
   "productionDryRun": {
-    "status": "PASSED",
-    "executedAt": "2026-11-11",
-    "migrationCount": 0,
+    "status": "PENDING",
+    "migrationCount": 3,
     "remoteChangesPerformed": false,
-    "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/protecao-teste-gratis-2026-11-11.md",
-    "aliasCompatibility": "Remote inventory compared by migration name; existing history unchanged; only the two reviewed trial-protection migrations are pending."
+    "mode": "AWAITING_RELEASE_DRY_RUN",
+    "evidence": "docs/evidencias/pedidos-comprovantes-relatorios-2026-11-12.md",
+    "aliasCompatibility": "Read-only remote inventory confirms 93 existing migrations through menu_trial_review_api_hardening; three new migrations remain pending."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [
@@ -89,8 +88,8 @@
     "menu_trial_abuse_protection",
     "menu_trial_review_api_hardening"
   ],
-  "authorizationSource": "Autorização explícita do responsável nesta conversa para publicar as duas atualizações de banco, a função de cadastro e a interface do PR #104 em produção, mantendo SMS desativado.",
-  "authorizationScope": "Proteção contra repetição do teste gratuito do Cardápio e revisão administrativa de cadastros suspeitos.",
+  "authorizationSource": "Pendente de autorização específica para a publicação do PR #105 e para novo backup criptografado com teste isolado de restauração.",
+  "authorizationScope": "Comprovantes opcionais, revisão de confirmação/recusa, numeração de pedidos, notificações, relatórios e tema escuro opcional.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
     "executedAt": "2026-11-11",

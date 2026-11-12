@@ -7,7 +7,7 @@ html[data-panel-theme="dark"] body:is(.panel-readable-controls,.platform-admin-p
  color-scheme:dark;--control-bg:#07121a;--control-surface:#10212d;--control-raised:#172f3e;--control-border:#526f80;--control-text:#edf5fa;--control-muted:#b0c4d0;--control-accent-ink:#6be5f3;--control-tint:#123b49;
  --black:#07121a;--black2:#10212d;--card:#10212d;--card2:#172f3e;--white:#edf5fa;--text:#edf5fa;--gray:#b0c4d0;--muted:#b0c4d0;--border:#304b5c;--line:#304b5c;--gold:#6be5f3;--gold-light:#6be5f3;--cyan-light:#6be5f3;--green:#6be5f3;--yellow:#6be5f3;
  --ui-surface:#10212d;--ui-ink:#edf5fa;--ui-muted:#b0c4d0;--ui-line:#304b5c;--ui-tint:#123b49;
- --admin-bg:#07121a;--admin-surface:#10212d;--admin-raised:#172f3e;--admin-line:#304b5c;--admin-control:#526f80;--admin-text:#edf5fa;--admin-muted:#b0c4d0;--admin-accent-ink:#6be5f3;
+ --admin-bg:#07121a;--admin-surface:#10212d;--admin-raised:#172f3e;--admin-surface-raised:#172f3e;--admin-line:#304b5c;--admin-control:#526f80;--admin-text:#edf5fa;--admin-muted:#b0c4d0;--admin-accent:#6be5f3;--admin-accent-ink:#6be5f3;--admin-tint:#123b49;
  background:#07121a;color:#edf5fa
 }
 html[data-panel-theme="dark"] body:is(.panel-readable-controls,.platform-admin-page) :is(.sidebar,.menu,.topbar,.panel,.menu-workspace-header,.menu-journey,.menu-workspace-navigation,.stat-card,.settings-panel,.module-panel,.menu-workspace-tab,.menu-catalog-editor-item,.panel-assistant-launcher,.panel-install-help,.modal-box,.platform-sidebar,.platform-panel,.platform-modal-card,.trial-review-card,.admin-shortcuts>a,.plan-card,.trial-review-dialog,footer,#menuSharePreview,#menuPilotMetricsPanel,#menuOrdersPanel,#changePasswordDialog,#panelNotificationDialog,.notification-button){background:var(--control-surface);color:var(--control-text);border-color:var(--border)}
@@ -28,5 +28,7 @@ html[data-panel-theme="dark"] body.panel-readable-controls :is(#changePasswordTi
 html[data-panel-theme="dark"] body.panel-readable-controls #menuWorkspaceTabs .menu-workspace-tab:disabled{background:#172734;color:#a3b7c4;border-color:var(--border)}
 html[data-panel-theme="dark"] body.panel-readable-controls :is(input,select,textarea):disabled{background:#172734;color:#a3b7c4;border-color:var(--border)}
 html[data-panel-theme="dark"] body.platform-admin-page :is(.platform-owner-card,.platform-status,.platform-badge,.billing-status,.demo-notice,.business-table thead){background:var(--control-raised);color:var(--control-text);border-color:var(--border)}
+html[data-panel-theme="dark"] body.platform-admin-page :is(.platform-stats article,.business-table tr){background:var(--control-surface);border-color:var(--border)}
+html[data-panel-theme="dark"] body.platform-admin-page :is(button.cyan-button,button.pwa-install-button){background:#08b9d3;color:#042630;border-color:#08b9d3}
 html[data-panel-theme="dark"] body:is(.panel-readable-controls,.platform-admin-page) :is(.brand-name,.platform-owner-card strong,.platform-panel h2,.platform-topbar h1,.menu-workspace-header h2){color:var(--control-text)}
 html[data-panel-theme="dark"] body:is(.panel-readable-controls,.platform-admin-page) :is(a,button,input,select,textarea,summary):focus-visible{outline-color:#6be5f3}

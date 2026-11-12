@@ -200,11 +200,11 @@
     "heldMigrations": [
       {
         "name": "menu_order_receipts_and_sequence",
-        "reason": "Pending staging validation and production approval for order receipts, sequential numbers and sales reports."
+        "reason": "Staging and clean CI replay passed; pending explicit production publication approval, fresh backup and isolated restore."
       },
       {
         "name": "menu_sales_notification_reports",
-        "reason": "Pending staging validation and production approval for order receipts, sequential numbers and sales reports."
+        "reason": "Staging and clean CI replay passed; pending explicit production publication approval, fresh backup and isolated restore."
       },
       {
         "name": "menu_order_response_snapshot",

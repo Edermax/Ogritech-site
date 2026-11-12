@@ -62,3 +62,17 @@ test('receipt downloads authorize ownership before issuing a URL valid for five 
  const f=await fixture();assert.equal((await f.request({action:'download'})).status,200);assert.equal(f.calls[0].name,'menu_order_receipt_access');
  assert.equal(f.calls.find(call=>call.action==='sign_download').seconds,300);
 });
+
+test('the cleanup worker requires the internal secret and never acknowledges a failed deletion',async()=>{
+ let handler;const calls=[],secret='fixture-secret-'.repeat(4);
+ const admin={rpc:async(name,args)=>{calls.push({name,args});return name==='backend_menu_receipt_cleanup'?{data:[{id:receipt,object_path:'business/ok.png'},{id:'other',object_path:'business/retry.png'}]}:{data:null};},
+  storage:{from:()=>({remove:async paths=>paths[0].includes('retry')?{error:{message:'temporary'}}:{data:[]}})}};
+ const source=await readFile(new URL('../supabase/functions/menu-receipt-cleanup/index.ts',import.meta.url),'utf8');
+ runInNewContext(stripTypeScriptTypes(source.replace(/^import .*;\r?\n/gm,'')),{createClient:()=>admin,crypto:webcrypto,TextEncoder,Uint8Array,Request,Response,
+  Deno:{env:{get:key=>({SUPABASE_URL:'https://fixture.invalid',SUPABASE_SERVICE_ROLE_KEY:'service',MENU_ORDER_PUSH_DISPATCH_SECRET:secret})[key]},serve:fn=>{handler=fn;}}});
+ const request=value=>new Request('https://fixture.invalid/cleanup',{method:'POST',headers:{'x-menu-receipts-secret':value}});
+ assert.equal((await handler(request('wrong'))).status,403);assert.equal(calls.length,0);
+ const response=await handler(request(secret));assert.equal(response.status,200);const result=(await response.json()).data;
+ assert.deepEqual(result,{claimed:2,cleaned:1,failed:1});
+ const acknowledgements=calls.filter(call=>call.name==='backend_menu_receipt_state');assert.equal(acknowledgements.length,1);assert.equal(acknowledgements[0].args.target_receipt_id,receipt);
+});
