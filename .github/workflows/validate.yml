@@ -45,6 +45,7 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npx playwright install --with-deps chromium
       - run: npm run test:panel-theme-browser
+      - run: npm run test:account-theme-browser
       - uses: actions/upload-artifact@v7
         if: always()
         with:

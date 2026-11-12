@@ -1,6 +1,6 @@
 /* Ogritech operator UI: light surfaces and one cyan accent. */
 body.panel-readable-controls {
-  color-scheme: light;
+  color-scheme: only light;
   --control-bg: #f5f8fb; --control-surface: #ffffff; --control-raised: #edf3f7;
   --control-border: #7b919e; --control-text: #172d3a; --control-muted: #526875;
   --control-cyan: #08b9d3; --control-accent-ink: #006b7e; --control-tint: #e9fafd;
