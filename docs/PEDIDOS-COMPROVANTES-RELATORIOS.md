@@ -12,11 +12,11 @@
 
 Base escolhida pelo responsável: **somente pagamentos recebidos**, excluindo recusados, cancelados e pedidos de teste. O período considera o registro do recebimento. Pagamentos antigos sem essa data usam a data do pedido e são sinalizados no relatório.
 
-Semanas: segunda-feira até domingo. Meses: meses de calendário. A geração diária às 08:00 de Brasília cria somente os períodos encerrados e recupera execução perdida sem duplicar notificações. As últimas 12 semanas e 12 mensalidades de relatórios ficam na lista; a consulta é reservada à gestão.
+Semanas: segunda-feira até domingo. Meses: meses de calendário. A geração diária às 08:00 de Brasília cria somente os períodos encerrados e recupera execução perdida sem duplicar notificações. As últimas 12 semanas e 12 meses de relatórios ficam na lista; a consulta é reservada à gestão.
 
 Ao abrir, o relatório recalcula os valores para refletir recusas/devoluções posteriores. Inclui quantidade de pedidos pagos, total recebido, produtos/entrega/descontos, dez itens mais comprados e comparação em reais e percentual com o período anterior. Se o valor anterior for zero e houver receita nova, informa ausência de base percentual em vez de inventar 100% ou infinito.
 
-JPEG, PNG e PDF são gerados no próprio navegador, sem enviar os valores a um conversor externo. O PDF contém a versão visual em A4; o conteúdo em HTML permanece disponível no painel. Os arquivos não são enviados por e-mail nem por mensageiro.
+JPEG, PNG e PDF são gerados no próprio navegador, sem enviar os valores a um conversor externo. O PDF contém a versão visual e adapta a altura quando necessário para preservar nomes longos; o conteúdo em HTML permanece disponível no painel. Os arquivos não são enviados por e-mail nem por mensageiro.
 
 ## Temas
 

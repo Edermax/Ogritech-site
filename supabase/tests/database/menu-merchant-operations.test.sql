@@ -8,10 +8,6 @@ insert into auth.users(id,email,role,aud) values
  ('e1300000-0000-4000-8000-000000000001','merchant-a@example.invalid','authenticated','authenticated'),
  ('e1300000-0000-4000-8000-000000000002','merchant-b@example.invalid','authenticated','authenticated'),
  ('e1300000-0000-4000-8000-000000000003','merchant-staff@example.invalid','authenticated','authenticated');
-insert into public.profiles(id,barbershop_id,full_name,role) values
- ('e1300000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','Owner A','owner'),
- ('e1300000-0000-4000-8000-000000000002','e1100000-0000-4000-8000-000000000002','Owner B','owner'),
- ('e1300000-0000-4000-8000-000000000003','e1100000-0000-4000-8000-000000000001','Staff A','employee');
 insert into public.saas_clients(id,name,segment,contact_name,owner_email,origin,plan,monthly_fee,status,barbershop_id) values
  ('e1200000-0000-4000-8000-000000000001','Merchant A','Restaurante','Owner A','merchant-a@example.invalid','Teste','Agenda',97,'Ativo','e1100000-0000-4000-8000-000000000001'),
  ('e1200000-0000-4000-8000-000000000002','Merchant B','Restaurante','Owner B','merchant-b@example.invalid','Teste','Agenda',97,'Ativo','e1100000-0000-4000-8000-000000000002');
@@ -22,6 +18,10 @@ select public.platform_set_product_subscription('e1200000-0000-4000-8000-0000000
 select public.platform_set_product_subscription('e1200000-0000-4000-8000-000000000002','menu',
  (select plan.id from public.saas_plans plan join public.platform_products product on product.id=plan.product_id where product.code='menu' and plan.code='foundation'),'active',null);
 delete from public.platform_admins where user_id='e1300000-0000-4000-8000-000000000001';
+insert into public.profiles(id,barbershop_id,full_name,role) values
+ ('e1300000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','Owner A','owner'),
+ ('e1300000-0000-4000-8000-000000000002','e1100000-0000-4000-8000-000000000002','Owner B','owner'),
+ ('e1300000-0000-4000-8000-000000000003','e1100000-0000-4000-8000-000000000001','Staff A','employee');
 insert into public.online_menus(id,barbershop_id,slug,title,published,created_at) values
  ('e1400000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','merchant-ops-a','Merchant A',true,'2025-01-01'),
  ('e1400000-0000-4000-8000-000000000002','e1100000-0000-4000-8000-000000000002','merchant-ops-b','Merchant B',true,'2025-01-01');
