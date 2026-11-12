@@ -46,7 +46,7 @@
     }
     const businessLines=lines(data.business_name,1096,30),shift=(businessLines.length-1)*36;
     const itemRows=data.current.top_items.slice(0,10).map(item=>({item,lines:lines(item.name,650,24)}));
-    const itemEnd=901+shift+itemRows.reduce((sum,row)=>sum+Math.max(48,row.lines.length*30)+8,0);
+    const itemEnd=901+shift+itemRows.reduce((sum,row)=>sum+Math.max(56,row.lines.length*30+20),0);
     canvas.height=Math.max(1754,itemEnd+230);
     ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);
     const text=(value,x,y,size=28,color=ink,weight=400,align="left",maxWidth)=>{
@@ -73,7 +73,7 @@
     let y=901;
     for(const row of itemRows){
       row.lines.forEach((value,index)=>text(value,72,y+index*30,24));text(row.item.quantity,850,y,26,ink,400,"right");text(money(row.item.amount),1168,y,26,ink,400,"right",270);
-      y+=Math.max(48,row.lines.length*30)+8;ctx.strokeStyle=line;ctx.beginPath();ctx.moveTo(72,y-14);ctx.lineTo(1168,y-14);ctx.stroke();
+      y+=Math.max(56,row.lines.length*30+20);ctx.strokeStyle=line;ctx.beginPath();ctx.moveTo(72,y-34);ctx.lineTo(1168,y-34);ctx.stroke();
     }
     if(!itemRows.length)text("Nenhum item vendido neste período.",72,y,27,muted);
     ctx.restore();

@@ -26,7 +26,7 @@ insert into public.online_menus(id,barbershop_id,slug,title,published,published_
  ('e1400000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','merchant-ops-a','Merchant A',false,null,'2025-01-01'),
  ('e1400000-0000-4000-8000-000000000002','e1100000-0000-4000-8000-000000000002','merchant-ops-b','Merchant B',false,null,'2025-01-01');
 insert into public.menu_categories(id,barbershop_id,menu_id,name) values('e1500000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','e1400000-0000-4000-8000-000000000001','Fixture');
-insert into public.menu_items(id,barbershop_id,category_id,name,item_type) values('e1600000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','e1500000-0000-4000-8000-000000000001','Most sold fixture','unit');
+insert into public.menu_items(id,barbershop_id,category_id,name,item_type) values('e1600000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','e1500000-0000-4000-8000-000000000001','Most sold fixture','simple');
 insert into public.menu_item_prices(id,barbershop_id,menu_item_id,label,price) values('e1700000-0000-4000-8000-000000000001','e1100000-0000-4000-8000-000000000001','e1600000-0000-4000-8000-000000000001','Unidade',50);
 update public.online_menus set published=true,published_at=now() where id in ('e1400000-0000-4000-8000-000000000001','e1400000-0000-4000-8000-000000000002');
 create temporary table order_response as select public.public_create_menu_order_v2('merchant-ops-a','Client A','','11999999999','pickup',null,'',
