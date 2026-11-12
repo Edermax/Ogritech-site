@@ -10,14 +10,28 @@
   "theme_color": "#080808",
   "icons": [
     {
-      "src": "ogritech-app-192.png",
+      "src": "ogritech-app-v2-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "ogritech-brand-symbol.png",
+      "src": "ogritech-app-v2-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "ogritech-app-v2-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "ogritech-app-v2-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "id": "/painel/"
