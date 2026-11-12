@@ -10,7 +10,9 @@
     "billing-lifecycle",
     "billing-email-dispatch",
     "menu-order-notifications",
-    "menu-order-push-dispatch"
+    "menu-order-push-dispatch",
+    "menu-order-receipts",
+    "menu-receipt-cleanup"
   ],
   "excludedFunctions": [
     "menu-sandbox-qa",
@@ -41,7 +43,15 @@
     "assistant-widget.js",
     "assistant-widget.css",
     "assistant-widget-mobile.css",
-    "ogritech-assistant-avatar.png"
+    "ogritech-assistant-avatar.png",
+    "menu-order-actions.js",
+    "menu-order-management.css",
+    "sales-reports.js",
+    "sales-reports.css",
+    "report-export.js",
+    "panel-theme.js",
+    "panel-dark.css",
+    "admin.html"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",

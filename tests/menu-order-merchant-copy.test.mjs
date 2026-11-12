@@ -50,3 +50,16 @@ test('image policy permits local previews and only the two trusted menu image bu
   assert.deepEqual(directive,["'self'",'data:','blob:','https://fuesdztsvrkkgnbqhcxi.supabase.co/storage/v1/object/public/menu-images/','https://mvzcoaiiwytycdqcvydf.supabase.co/storage/v1/object/public/menu-images/']);
   assert.doesNotMatch(headers,/img-src[^;]*(?:\*|https:;)/);
 });
+
+test('reviewing a paid order never tells the customer to pay again or implies an automatic refund',async()=>{
+ for(const status of ['confirmed','rejected']){
+  const root={innerHTML:''},globalThis={};runInNewContext(whatsappSource,{globalThis,Intl});
+  runInNewContext(source,{location:{search:'?referencia=FIXTURE&token=fixture'},URLSearchParams,Intl,globalThis,
+   document:{getElementById:id=>id==='order'?root:{addEventListener(){},disabled:false,textContent:''}},
+   supabaseClient:{rpc:async()=>({data:{reference:'FIXTURE',order_number:7,customer_name:'Teste',fulfillment_type:'pickup',status,payment_status:'paid',items:[],subtotal:25,delivery_fee:0,total_amount:25,whatsapp_phone:'5511999999999',menu_title:'Loja teste'}})}});
+  await new Promise(resolve=>setImmediate(resolve));assert.match(root.innerHTML,/#7/);
+  assert.doesNotMatch(decodeURIComponent(root.innerHTML),/O pedido ainda não foi pago/);
+  if(status==='rejected')assert.match(root.innerHTML,/eventual devolução/);
+  else assert.match(decodeURIComponent(root.innerHTML),/pagamento já está registrado como recebido/);
+ }
+});

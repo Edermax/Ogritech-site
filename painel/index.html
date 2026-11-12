@@ -21,7 +21,7 @@
     <link rel="apple-touch-icon" href="ogritech-app-192.png">
     <link rel="stylesheet" href="pwa.css?v=20261111.2">
     <link rel="manifest" href="manifest.webmanifest">
-    <script src="pwa.js?v=20261111.3"></script>
+    <script src="/panel-theme.js?v=20261112.1"></script><script src="pwa.js?v=20261111.3"></script>
     <!-- IMPORTANTE: este é o arquivo CSS separado -->
     <link rel="stylesheet" href="style.css?v=20261108.2">
     <link rel="stylesheet" href="action-arrows.css">
@@ -89,6 +89,9 @@
     </style>
 <link rel="stylesheet" href="/order-notifications.css?v=20261110.1">
 <link rel="stylesheet" href="/panel-controls.css?v=20261111.8">
+<link rel="stylesheet" href="/menu-order-management.css?v=20261112.1">
+<link rel="stylesheet" href="/sales-reports.css?v=20261112.1">
+<link rel="stylesheet" href="/panel-dark.css?v=20261112.1">
 </head>
 <body class="panel-readable-controls">
     <!-- Aplicação principal -->
@@ -482,7 +485,7 @@
                 </div>
 
                 <div id="settingsView" class="view-section hidden">
-                    <article class="panel settings-panel account-settings" id="accountSettings"><p class="eyebrow">SUA CONTA</p><h2>Acesso e segurança</h2><p class="section-description">Cuide da sua senha ou encerre sua sessão neste dispositivo.</p><div class="account-settings-actions"><button type="button" class="table-button edit" id="changePasswordButton" hidden>Alterar senha</button><button type="button" class="table-button" id="logoutButton">Sair da conta</button></div></article>
+                    <article class="panel settings-panel account-settings" id="accountSettings"><p class="eyebrow">SUA CONTA</p><h2>Acesso e segurança</h2><p class="section-description">Cuide da sua senha ou encerre sua sessão neste dispositivo.</p><div class="account-settings-actions"><button type="button" class="table-button edit" id="changePasswordButton" hidden>Alterar senha</button><button type="button" class="table-button" id="logoutButton">Sair da conta</button></div><label class="panel-theme-preference">Tema do painel<select data-panel-theme-select aria-label="Tema do painel"><option value="light">Claro</option><option value="dark">Escuro</option></select></label></article>
                     <article class="panel settings-panel" hidden><p class="eyebrow">PREFERÊNCIAS</p><h2>Configurações do negócio</h2><p class="section-description">Personalize a identificação, o expediente e o endereço público da agenda.</p><form id="settingsForm"><div class="form-row"><label>Nome do negócio<input id="settingsBusinessName" required maxlength="80"></label><label>Segmento<input id="settingsSegment" required maxlength="60"></label></div><div class="form-row"><label>Início do expediente<input type="time" id="settingsOpenTime" required></label><label>Fim do expediente<input type="time" id="settingsCloseTime" required></label></div><label>Duração padrão dos horários<select id="settingsSlotDuration"><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">60 minutos</option></select></label><fieldset class="public-booking-settings"><legend>Agendamento público</legend><label>Endereço da agenda<div class="slug-field"><span>ogritech.com.br/agendar/?empresa=</span><input id="settingsPublicSlug" pattern="[a-z0-9](?:[a-z0-9]|-){2,47}" maxlength="48" placeholder="nome-do-negocio"></div></label><label class="settings-toggle"><input type="checkbox" id="settingsPublicBookingEnabled"><span>Permitir novos agendamentos sem login</span></label><a class="table-button edit hidden" id="publicBookingLink" target="_blank" rel="noopener">Abrir agenda pública</a></fieldset><p class="form-message" id="settingsMessage" role="status"></p><button class="gold-button" type="submit">Salvar configurações</button></form></article>
                     <article class="panel settings-panel" id="subscriptionCenter" data-owner-only><div class="panel-header"><div><p class="eyebrow">ASSINATURA E DADOS</p><h2>Sua assinatura do Cardápio</h2><p class="section-description">Gerencie o plano e o pagamento do seu cardápio. Se preferir, <button class="panel-help-link" type="button" data-open-ogritech-assistant aria-controls="ogri-assistant-panel" aria-expanded="false" aria-haspopup="dialog">abra o Ajudante Ogritech</button>.</p></div><button class="table-button edit" id="exportBusinessData" type="button">Exportar meus dados</button></div><p class="form-message" id="subscriptionMessage" role="status"></p><div class="commercial-list" id="subscriptionList"><p class="section-description">Carregando assinatura...</p></div></article>
                 </div>
@@ -683,6 +686,7 @@
         <div class="panel-notification-tools"><button id="panelNotificationRefresh" class="table-button edit" type="button">Atualizar</button><button id="panelNotificationReadAll" class="table-button" type="button" disabled>Marcar todas como lidas</button></div>
         <p id="panelNotificationStatus" class="section-description" role="status" aria-live="polite">Carregando atualizações...</p>
         <section aria-labelledby="panelNotificationOrdersTitle"><h3 id="panelNotificationOrdersTitle">Pedidos</h3><div id="panelNotificationOrders"></div></section>
+        <section id="panelNotificationReportsSection" aria-labelledby="panelNotificationReportsTitle" hidden><h3 id="panelNotificationReportsTitle">Relatórios de vendas</h3><p class="panel-notification-footnote">Pagamentos recebidos, sem pedidos recusados, cancelados ou de teste. Consulte os últimos 12 resumos de cada tipo.</p><div id="panelNotificationReports"></div></section>
         <section aria-labelledby="panelNotificationOgritechTitle"><h3 id="panelNotificationOgritechTitle">Avisos da Ogritech</h3><div id="panelNotificationNotices"></div></section>
         <section class="panel-notification-info" aria-labelledby="panelNotificationInfoTitle"><h3 id="panelNotificationInfoTitle">Informações da Ogritech</h3><p>Quer ajuda com pedidos, configurações ou instalação do app?</p><button type="button" class="table-button edit" id="panelNotificationHelp">Abrir o Ajudante Ogritech</button><p class="panel-notification-footnote">A leitura é lembrada nesta conta e neste dispositivo. Para avisos com o painel fechado, ative as notificações na área de pedidos.</p></section>
     </dialog>
@@ -708,6 +712,10 @@
         </form>
     </dialog>
 
+
+    <dialog id="salesReportDialog" class="sales-report-dialog" aria-labelledby="salesReportTitle"><header><h2 id="salesReportTitle">Relatório de vendas</h2><button type="button" id="salesReportClose" class="table-button" aria-label="Fechar relatório">Fechar</button></header><p id="salesReportStatus" role="status" aria-live="polite"></p><nav id="salesReportExports" aria-label="Abrir relatório em outro formato" hidden><span>Abrir como</span><a id="salesReportJpeg" class="table-button" target="_blank" rel="noopener noreferrer">JPEG</a><a id="salesReportPng" class="table-button" target="_blank" rel="noopener noreferrer">PNG</a><a id="salesReportPdf" class="table-button" target="_blank" rel="noopener noreferrer">PDF</a></nav><div id="salesReportContent"></div></dialog>
+    <dialog id="menuPaymentDialog" class="menu-operation-dialog" aria-labelledby="menuPaymentTitle"><form id="menuPaymentForm"><h2 id="menuPaymentTitle">Pagamento recebido</h2><p id="menuPaymentOrder"></p><label>Anexar comprovante <span>(opcional)</span><input id="menuPaymentReceipt" type="file" accept="image/jpeg,image/png,application/pdf" aria-describedby="menuReceiptHint"></label><p id="menuReceiptHint">JPG, PNG ou PDF de até 5 MB. O comprovante fica disponível somente à gestão deste estabelecimento.</p><p>Marque como recebido somente após conferir o pagamento.</p><p id="menuPaymentMessage" role="status" aria-live="polite"></p><div class="commercial-actions"><button type="button" id="menuPaymentCancel" class="table-button">Cancelar</button><button type="submit" id="menuPaymentSave" class="table-button edit">Marcar como recebido</button></div></form></dialog>
+    <dialog id="menuDecisionDialog" class="menu-operation-dialog" aria-labelledby="menuDecisionTitle"><form id="menuDecisionForm"><h2 id="menuDecisionTitle">Rever decisão do pedido</h2><p id="menuDecisionOrder"></p><label>Nova decisão<select id="menuDecisionValue" required><option value="confirmed">Confirmar pedido</option><option value="rejected">Recusar pedido</option></select></label><label>Motivo da alteração<textarea id="menuDecisionReason" rows="3" minlength="5" maxlength="300" required></textarea></label><p>A alteração ficará registrada e aparecerá no acompanhamento do cliente.</p><p id="menuDecisionPaidHint" hidden>Este pedido já tem pagamento registrado. Mudar a decisão não realiza estorno; combine uma eventual devolução com o cliente.</p><p id="menuDecisionMessage" role="status" aria-live="polite"></p><div class="commercial-actions"><button type="button" id="menuDecisionCancel" class="table-button">Cancelar</button><button type="submit" id="menuDecisionSave" class="table-button edit">Salvar decisão</button></div></form></dialog>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
     <script src="supabase-config.js"></script>
     <script src="business-config.js"></script>
@@ -716,9 +724,9 @@
     <script src="auth.js?v=20261111.1"></script>
 
     <!-- JavaScript principal do dashboard -->
-    <script src="/panel-notifications.js?v=20261111.1"></script>
-    <script src="script.js?v=20261111.4"></script>
-    <script src="menu-branding.js?v=20261020.1"></script><script src="menu-branding-admin.js?v=20261111.1"></script><script src="/menu-order-notifications.js?v=20261110.1"></script><script src="commercial-admin.js?v=20261111.3"></script>
+    <script src="/report-export.js?v=20261112.1"></script><script src="/sales-reports.js?v=20261112.1"></script><script src="/panel-notifications.js?v=20261112.1"></script>
+    <script src="script.js?v=20261112.1"></script>
+    <script src="menu-branding.js?v=20261020.1"></script><script src="menu-branding-admin.js?v=20261111.1"></script><script src="/menu-order-notifications.js?v=20261110.1"></script><script src="/menu-order-actions.js?v=20261112.1"></script><script src="commercial-admin.js?v=20261112.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script><script src="/cardapio/share.js?v=20261111.1"></script><script src="subscription-admin.js"></script>
     <script src="/assistant-widget.js?v=20261111.6" data-context="panel"></script>
     <dialog class="panel-install-help" id="panelInstallHelp" aria-labelledby="panelInstallTitle">

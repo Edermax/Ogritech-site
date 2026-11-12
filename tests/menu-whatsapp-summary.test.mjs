@@ -37,7 +37,7 @@ test("pedido sob orçamento apresenta o valor como referência", () => {
 });
 
 test("resumo é usado no envio e no acompanhamento do pedido", () => {
-  for (const html of [menuHtml, trackingHtml]) assert.match(html, /menu-whatsapp\.js\?v=20261105\.2/);
+  for (const html of [menuHtml, trackingHtml]) assert.match(html, /menu-whatsapp\.js\?v=20261112\.1/);
   for (const script of [menu, tracking]) assert.match(script, /OgritechMenuWhatsapp\.format/);
   assert.match(menu, /total: data\.total_amount/);
   assert.match(tracking, /total: data\.total_amount/);

@@ -40,7 +40,8 @@
     "validate:agenda-pilot": "npm run validate && npm run test:agenda-bot",
     "prepare:menu-release": "node scripts/menu-release-package.mjs",
     "check:menu-production-preflight": "node scripts/menu-production-preflight.mjs",
-    "test:trial-protection-browser": "node scripts/menu-trial-protection-browser.cjs"
+    "test:trial-protection-browser": "node scripts/menu-trial-protection-browser.cjs",
+    "test:menu-merchant-browser": "node scripts/menu-merchant-browser.cjs"
   },
   "engines": {
     "node": ">=22"

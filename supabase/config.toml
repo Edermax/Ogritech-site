@@ -72,3 +72,10 @@ entrypoint = "./functions/menu-ai-assistant/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/menu-ai-assistant/*.html" ]
+
+# Both handlers authenticate inside the function before accessing private storage.
+[functions.menu-order-receipts]
+verify_jwt = false
+
+[functions.menu-receipt-cleanup]
+verify_jwt = false

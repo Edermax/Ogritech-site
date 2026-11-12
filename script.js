@@ -1823,7 +1823,7 @@ async function initializeOperationalDashboard() {
     if (savedSettings.segment) businessConfig.segment = savedSettings.segment;
     if (!BARBERSHOP_ID) return;
     await applyProductAccess();
-    window.OgritechPanelNotifications?.start({ businessId: BARBERSHOP_ID, userId: sessionStorage.getItem("japaUserId"), environment: window.OGRITECH_ENV || "production" });
+    window.OgritechPanelNotifications?.start({ businessId: BARBERSHOP_ID, userId: sessionStorage.getItem("japaUserId"), canViewReports: ["owner", "admin"].includes(currentRole), environment: window.OGRITECH_ENV || "production" });
 }
 
 let panelLoading = false;

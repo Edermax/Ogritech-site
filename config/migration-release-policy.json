@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-11-11",
+  "auditedAt": "2026-11-12",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -95,13 +95,19 @@
       "menu_order_push_notifications",
       "menu_order_push_transport",
       "menu_trial_abuse_protection",
-      "menu_trial_review_api_hardening"
+      "menu_trial_review_api_hardening",
+      "menu_order_receipts_and_sequence",
+      "menu_sales_notification_reports",
+      "menu_order_response_snapshot"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
       "menu_order_push_transport": "20261110235244",
       "menu_trial_abuse_protection": "20261111225657",
-      "menu_trial_review_api_hardening": "20261111230807"
+      "menu_trial_review_api_hardening": "20261111230807",
+      "menu_order_receipts_and_sequence": "20261112033426",
+      "menu_sales_notification_reports": "20261112033448",
+      "menu_order_response_snapshot": "20261112035316"
     },
     "observedMigrationNames": [
       "create_core_schema",
@@ -189,10 +195,10 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "menu_trial_review_api_hardening",
+    "appliedThrough": "menu_order_response_snapshot",
     "appliedOutOfOrder": [],
     "heldMigrations": [],
-    "observationEvidence": "docs/evidencias/protecao-teste-gratis-2026-11-11.md",
+    "observationEvidence": "docs/evidencias/pedidos-comprovantes-relatorios-2026-11-12.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
       "business_whatsapp_shares": "20261107143521",
@@ -202,7 +208,10 @@
       "menu_order_push_notifications": "20261110235748",
       "menu_order_push_transport": "20261110235754",
       "menu_trial_abuse_protection": "20261112024937",
-      "menu_trial_review_api_hardening": "20261112024955"
+      "menu_trial_review_api_hardening": "20261112024955",
+      "menu_order_receipts_and_sequence": "20261112050314",
+      "menu_sales_notification_reports": "20261112050324",
+      "menu_order_response_snapshot": "20261112050335"
     }
   }
 }
