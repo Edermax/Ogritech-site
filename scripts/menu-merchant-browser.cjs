@@ -60,7 +60,8 @@ const extra=async(page)=>page.addInitScript(()=>{
  };
  client.storage={from:()=>({uploadToSignedUrl:async(path,token,file)=>{window.__calls.push({upload:path,size:file.size});return{data:{path}};}})};
 });
-(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port,browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_EXECUTABLE_PATH||(process.platform==='win32'?'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe':undefined)}),results=[];
+module.exports={server,setup,extra};
+if(require.main===module) (async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port,browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_EXECUTABLE_PATH||(process.platform==='win32'?'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe':undefined)}),results=[];
 try{for(const width of[390,1440]){const context=await browser.newContext({viewport:{width,height:900},serviceWorkers:'block',reducedMotion:'reduce'}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await setup(page,'owner');await extra(page);await context.route('**/supabase-config.js*',r=>r.fulfill({contentType:'application/javascript',body:''}));await context.route('https://cdn.jsdelivr.net/**',r=>r.fulfill({contentType:'application/javascript',body:''}));await page.goto(base+'/painel/');await page.locator('#menuOrdersList [data-order-action="mark_paid"]').first().waitFor();
  assert.equal(await page.locator('html').getAttribute('data-panel-theme'),'light');const first=page.locator('#menuOrdersList article').first();assert.match(await first.textContent(),/#1/);

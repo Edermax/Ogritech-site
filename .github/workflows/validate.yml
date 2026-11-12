@@ -35,3 +35,20 @@ jobs:
       - run: supabase start --exclude mailpit
       - run: supabase db reset
       - run: supabase test db
+  panel-theme:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22 }
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:panel-theme-browser
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: panel-theme-review-${{ github.sha }}
+          path: outputs/panel-theme-review/
+          retention-days: 7
+          if-no-files-found: ignore
