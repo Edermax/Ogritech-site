@@ -14,8 +14,8 @@ test("jornada do Cardápio inicia teste gratuito e provisiona o produto correto"
   assert.match(page, /14 dias grátis/);
   assert.match(page, /R\$ 49,90/);
   assert.match(page, /Não pedimos cartão agora/);
-  assert.match(client, /product:"menu"/);
-  assert.match(client, /payment_method:"pix"/);
+  assert.match(client, /product:\s*"menu"/);
+  assert.match(client, /payment_method:\s*"pix"/);
   assert.match(billing, /menu: 4990/);
   assert.match(billing, /status: "trial"/);
   assert.match(migration, /unique\(product_code,tax_document\)/);

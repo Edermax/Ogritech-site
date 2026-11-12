@@ -117,3 +117,10 @@ body.platform-admin-page .pwa-install-button { background:#08b9d3; border-color:
  body.platform-admin-page .segment-grid { grid-template-columns:1fr; }
  body.platform-admin-page input:not([type=checkbox]),body.platform-admin-page select,body.platform-admin-page textarea { font-size:16px; }
 }
+
+.trial-reviews-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
+.trial-review-card{padding:20px;border:1px solid var(--admin-border,#cbdde5);border-radius:16px;background:#fff;overflow-wrap:anywhere}
+.trial-review-card h3{margin-top:0}.trial-review-card p{color:#3c5667;font-size:.94rem}
+.trial-review-card button,.trial-review-dialog button{min-height:44px;border:1px solid #087e91;border-radius:10px;background:#e5f9fc;color:#075e70;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
+.trial-review-dialog{max-width:520px;width:calc(100% - 32px);padding:24px;box-sizing:border-box;border:1px solid #cbdde5;border-radius:18px;background:#fff;color:#143347}
+.trial-review-dialog::backdrop{background:rgb(13 38 52 / .45)}.trial-review-dialog label{display:grid;gap:8px;margin:16px 0;font-weight:600}.trial-review-dialog select,.trial-review-dialog textarea{box-sizing:border-box;width:100%;padding:12px;border:1px solid #97b3bf;border-radius:10px;background:#fff;color:#143347;font:inherit}.trial-review-dialog p{line-height:1.6}.trial-review-dialog button:disabled{opacity:.6;cursor:wait}

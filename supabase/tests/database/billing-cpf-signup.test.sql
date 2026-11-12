@@ -3,7 +3,7 @@ set local search_path=public,extensions;
 select extensions.no_plan();
 create function pg_temp.cpf_signup(doc text, token text) returns void language sql as $$
  insert into private.billing_signups(tax_document,business_name,responsible_name,email,phone,cycle,payment_method,base_monthly_cents,cycle_months,discount_bps,total_cents,terms_version,management_token_hash,product_code)
- values(doc,'CPF fixture','Fixture','cpf-fixture@example.invalid','11999999999','monthly','pix',4990,1,0,4990,'fixture',token,'menu');
+ values(doc,'CPF fixture '||token,'Fixture',token||'@example.invalid',right(doc,11),'monthly','pix',4990,1,0,4990,'fixture',token,'menu');
 $$;
 select extensions.lives_ok($$select pg_temp.cpf_signup('52998224725','cpf-fixture-one')$$,'normalized CPF can start a menu signup');
 select extensions.lives_ok($$select pg_temp.cpf_signup('11222333000181','cpf-fixture-company')$$,'CNPJ remains accepted');

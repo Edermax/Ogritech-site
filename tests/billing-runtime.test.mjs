@@ -14,12 +14,90 @@ const signup = { id: "aabbccdd-1234-4000-8000-123456789012", product_code: "menu
 // Execute the real Edge handler with only the database and provider replaced.
 const runtimeLogs=[];
 
+const trialBody = { action: "start_trial", product: "menu", business_name: "Fixture", responsible_name: "Fixture",
+  tax_document: "52998224725", email: "fixture@example.invalid", phone: "11999999999", segment: "Restaurante",
+  cycle: "monthly", payment_method: "pix", terms_version: "fixture", accepted_terms: true, accepted_privacy: true, recurring_authorized: false };
+const trialEnvironment = { BILLING_TERMS_VERSION: "fixture", BILLING_TERMS_SHA256: "a".repeat(64) };
+const trialRequest = body => new Request("https://fixture.invalid/billing", { method: "POST", body: JSON.stringify(body) });
+test("trial protection fails closed and rate limiting never provisions an account", async () => {
+  for (const unavailable of [true, false]) {
+    const calls = [];
+    const handler = await loadHandler("ogritech-billing", { rpc: async name => {
+      calls.push(name); assert.equal(name, "backend_menu_trial_rate_limit");
+      return unavailable ? { error: {} } : { data: { allowed: false, retry_after_seconds: 123 } };
+    } }, () => assert.fail("no provider call"), trialEnvironment);
+    const response = await handler(trialRequest(trialBody));
+    assert.equal(response.status, unavailable ? 503 : 429); assert.equal(calls.length, 1);
+    if (!unavailable) assert.equal(response.headers.get("Retry-After"), "123");
+  }
+});
+test("duplicate signals return review, used documents conflict, and neither sends an invitation", async () => {
+  for (const decision of ["review", "used"]) {
+    const handler = await loadHandler("ogritech-billing", { rpc: async name => {
+      if (name === "backend_menu_trial_rate_limit") return { data: { allowed: true } };
+      assert.equal(name, "backend_menu_trial_evaluate"); return { data: { decision, review_id: "fixture-review", review_status: "pending" } };
+    } }, () => assert.fail("no provider call"), trialEnvironment);
+    const response = await handler(trialRequest(trialBody));
+    assert.equal(response.status, decision === "review" ? 202 : 409);
+    if (decision === "review") assert.equal((await response.json()).data.status, "review_required");
+  }
+});
+test("CNPJ requires a valid responsible CPF; spoofed verification cannot activate SMS", async () => {
+  const handler = await loadHandler("ogritech-billing", {}, () => assert.fail("SMS disabled"), trialEnvironment);
+  assert.equal((await handler(trialRequest({ ...trialBody, tax_document: "11222333000181" }))).status, 422);
+  const config = await (await handler(trialRequest({ action: "trial_configuration" }))).json();
+  assert.deepEqual(config.data, { phone_verification: false, available: true, turnstile_site_key: "" });
+  const response = await handler(trialRequest({ ...trialBody, action: "request_phone_code", sms_consent: true }));
+  assert.equal(response.status, 503);
+});
+test("payload limits apply without Content-Length and before any database call", async () => {
+  const handler = await loadHandler("ogritech-billing", {}, () => assert.fail("no provider call"));
+  const response = await handler(trialRequest({ ...trialBody, padding: "x".repeat(17000) }));
+  assert.equal(response.status, 413);
+});
+const phoneEnvironment = { ...trialEnvironment, TRIAL_PHONE_VERIFICATION_ENABLED: "true", TWILIO_ACCOUNT_SID: "AC" + "1".repeat(32),
+  TWILIO_AUTH_TOKEN: "fixture-only", TWILIO_VERIFY_SERVICE_SID: "VA" + "2".repeat(32), TURNSTILE_SITE_KEY: "fixture-public", TURNSTILE_SECRET_KEY: "fixture-secret" };
+test("SMS adapter uses a CAPTCHA and stores only a server-side provider challenge", async () => {
+  const calls = [], providerId = "VE" + "3".repeat(32);
+  const handler = await loadHandler("ogritech-billing", { rpc: async (name, args) => {
+    if (name === "backend_menu_trial_rate_limit") return { data: { allowed: true } };
+    assert.equal(args.action_name, "create"); assert.equal(args.payload.provider_id, providerId);
+    return { data: { challenge_id: "11111111-1111-4111-8111-111111111111" } };
+  } }, async (url, options) => {
+    calls.push(url);
+    if (url.includes("siteverify")) return Response.json({ success: true, hostname: "ogritech.com.br", action: "menu_trial" });
+    assert.equal(url, `https://verify.twilio.com/v2/Services/${phoneEnvironment.TWILIO_VERIFY_SERVICE_SID}/Verifications`);
+    assert.equal(options.body.get("To"), "+5511999999999"); assert.equal(options.body.get("Channel"), "sms");
+    return Response.json({ sid: providerId, status: "pending" });
+  }, phoneEnvironment);
+  const response = await handler(trialRequest({ ...trialBody, action: "request_phone_code", sms_consent: true, turnstile_token: "fixture" }));
+  assert.equal(response.status, 200); assert.equal(calls.length, 2);
+  assert.equal(JSON.stringify(await response.json()).includes(providerId), false);
+});
+test("SMS confirmation validates the challenge and issues a random, hashed proof", async () => {
+  const providerId = "VE" + "3".repeat(32), actions = [];
+  const handler = await loadHandler("ogritech-billing", { rpc: async (name, args) => {
+    if (name === "backend_menu_trial_rate_limit") return { data: { allowed: true } };
+    actions.push(args.action_name);
+    if (args.action_name === "attempt") return { data: { provider_id: providerId } };
+    assert.match(args.payload.proof_hash, /^[a-f0-9]{64}$/); assert.equal(args.payload.code, undefined);
+    return { data: { verified: true } };
+  } }, async (url, options) => {
+    assert.ok(url.endsWith("/VerificationCheck")); assert.equal(options.body.get("VerificationSid"), providerId);
+    assert.equal(options.body.get("Code"), "123456"); return Response.json({ sid: providerId, status: "approved" });
+  }, phoneEnvironment);
+  const response = await handler(trialRequest({ ...trialBody, action: "verify_phone_code", sms_consent: true, challenge_id: "11111111-1111-4111-8111-111111111111", code: "123456" }));
+  assert.equal(response.status, 200); assert.deepEqual(actions, ["attempt", "approve"]);
+  assert.match((await response.json()).data.phone_verification_token, /^[a-f0-9-]{72}$/);
+});
+
 async function loadHandler(name, admin, fetchImpl, environment = {}, clock = Date) {
   let handler;
   const source = await readFile(new URL(`supabase/functions/${name}/index.ts`, root), "utf8");
-  const code = stripTypeScriptTypes(source.replace(/^import .*;\r?\n/gm, ""));
+  const phone = name === "ogritech-billing" ? await readFile(new URL("supabase/functions/ogritech-billing/phone-verification.ts", root), "utf8") : "";
+  const code = stripTypeScriptTypes(phone.replace(/^export /gm, "") + "\n" + source.replace(/^import .*;\r?\n/gm, ""));
   runInNewContext(code, {
-    createClient: () => admin, z, fetch: fetchImpl, crypto: webcrypto, Request, Response, URL, URLSearchParams, Date: clock, TextEncoder, AbortSignal,
+    createClient: () => admin, z, fetch: fetchImpl, crypto: webcrypto, Request, Response, URL, URLSearchParams, Date: clock, TextEncoder, TextDecoder, FormData, btoa, AbortSignal,
     console: { error() {}, info(value) { runtimeLogs.push(JSON.parse(value)); } },
     Deno: { env: { get: key => ({ SUPABASE_URL: "https://fixture.invalid", SUPABASE_SERVICE_ROLE_KEY: "fixture",
       MERCADO_PAGO_ACCESS_TOKEN: "fixture", MERCADO_PAGO_WEBHOOK_SECRET: "fixture-secret", BILLING_CRON_SECRET: "fixture-cron", ...environment })[key] }, serve: value => { handler = value; } }
@@ -498,7 +576,7 @@ test("signup validates and persists the service invoice preference without chang
   for (const taxDocument of ["11222333000181", "52998224725"]) for (const preference of ["requested", "not_requested", undefined]) {
     let clientRecord, invitationRedirect;
     const admin = {
-      rpc: async name => ({ data: name === "backend_billing_signup_create" ? signup.id : null, error: null }),
+      rpc: async name => ({ data: name === "backend_billing_signup_create" ? signup.id : name === "backend_menu_trial_rate_limit" ? {allowed:true} : name === "backend_menu_trial_evaluate" ? {decision:"allow"} : null, error: null }),
       auth: { admin: { inviteUserByEmail: async (email, options) => { invitationRedirect=options.redirectTo; return { data: { user: { id: "fixture-owner" } }, error: null }; } } },
       from(table) {
         const chain = {
@@ -514,7 +592,7 @@ test("signup validates and persists the service invoice preference without chang
       ...(preference === "requested" ? { SUPABASE_URL: "https://fuesdztsvrkkgnbqhcxi.supabase.co", PUBLIC_APP_URL: "https://ogritech.com.br" } : {})
     });
     const body = { action: "start_trial", product: "menu", business_name: "Fixture", responsible_name: "Fixture",
-      tax_document: taxDocument, email: "fixture@example.invalid", phone: "11999999999", segment: "Restaurante",
+      tax_document: taxDocument, responsible_tax_document: "52998224725", email: "fixture@example.invalid", phone: "11999999999", segment: "Restaurante",
       cycle: "monthly", payment_method: "pix", terms_version: "fixture", accepted_terms: true, accepted_privacy: true,
       recurring_authorized: false, ...(preference === undefined ? {} : { service_invoice_preference: preference }) };
     const response = await handler(new Request("https://fixture.invalid/billing", { method: "POST", body: JSON.stringify(body) }));
