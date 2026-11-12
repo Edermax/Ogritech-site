@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="style.css?v=20261022.1">
     <link rel="stylesheet" href="admin.css?v=20261022.3">
     <link rel="stylesheet" href="admin-theme.css?v=20261111.2"><link rel="stylesheet" href="panel-dark.css?v=20261112.4">
+    <link rel="stylesheet" href="admin-navigation.css?v=20261112.1">
 </head>
 <body class="platform-admin-page">
     <div class="platform-shell">
@@ -21,38 +22,35 @@
             <div class="platform-brand-link">
                 <img src="ogritech-brand-symbol.png" alt="" class="platform-admin-logo">
                 <div class="brand-name">Ogritech</div>
-                <div class="brand-subtitle">GESTÃO DO CARDÁPIO</div>
+                <div class="brand-subtitle">ADMINISTRAÇÃO</div>
             </div>
 
             <nav class="platform-menu" aria-label="Navegação administrativa">
-                <a href="#overview" class="active"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#overview"></use></svg>Visão geral</a>
-                <a href="#businesses"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#store"></use></svg>Negócios</a>
-                <a href="#users"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#users"></use></svg>Acessos</a>
-
-                <a href="#plans"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#book"></use></svg>Plano do Cardápio</a>
-                <a href="#products"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#card"></use></svg>Assinaturas</a>
-                <a href="#trialReviews"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#users"></use></svg>Revisão de testes</a>
-                <a href="#billing"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#receipt"></use></svg>Cobranças</a>
+                <a href="#overview" class="active"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#overview"></use></svg><span>Resumo</span></a>
+                <a href="#businesses"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#store"></use></svg><span>Negócios</span></a>
+                <a href="#users"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#users"></use></svg><span>Acessos</span></a>
+                <a href="#billing"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#receipt"></use></svg><span>Financeiro</span></a>
+                <a href="#account"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#shield"></use></svg><span>Conta</span></a>
             </nav>
 
-<label class="panel-theme-preference">Tema do painel<select data-panel-theme-select aria-label="Tema do painel"><option value="light">Claro</option><option value="dark">Escuro</option></select></label>
-            <div class="platform-owner-card">
-                <span class="owner-avatar">ED</span>
-                <div><strong id="platformOwnerName">Edermax</strong><small>Proprietário Ogritech</small></div>
-                <button id="platformLogout" type="button"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#logout"></use></svg><span>Sair</span></button>
-            </div>
+
         </aside>
 
         <main class="platform-content" id="adminMain">
             <header class="platform-topbar" id="overview">
                 <div>
-                    <p class="platform-kicker">PAINEL EXCLUSIVO DO PROPRIETÁRIO</p>
-                    <h1 id="adminViewTitle" tabindex="-1">Visão geral</h1>
+                    <p class="platform-kicker">ADMINISTRAÇÃO DA OGRITECH</p>
+                    <h1 id="adminViewTitle" tabindex="-1">Resumo</h1>
                     <p><span id="adminViewDescription">Acompanhe seus clientes de Cardápio e acesse as tarefas do dia.</span></p>
                 </div>
                 <div class="security-pill"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#shield"></use></svg>Acesso privado</div>
             </header>
 
+
+            <nav class="admin-section-tabs" id="adminSectionTabs" aria-label="Seções da área atual" hidden>
+                <a href="#businesses" data-admin-group="businesses">Carteira</a><a href="#trialReviews" data-admin-group="businesses">Revisões de cadastro</a>
+                <a href="#billing" data-admin-group="billing">Cobranças</a><a href="#products" data-admin-group="billing">Assinaturas</a><a href="#plans" data-admin-group="billing">Planos</a>
+            </nav>
             <section id="adminSummary" class="platform-stats" aria-label="Resumo da carteira">
                 <article><svg class="admin-icon stat-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#store"></use></svg><span>Negócios com Cardápio</span><strong id="businessCount">0</strong><small>Cadastros do produto atual</small></article>
                 <article><svg class="admin-icon stat-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#pie"></use></svg><span>Segmentos atendidos</span><strong id="segmentCount">0</strong><small>Segmentos com Cardápio</small></article>
@@ -60,7 +58,7 @@
                 <article><svg class="admin-icon stat-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#chart"></use></svg><span>Receita mensal estimada</span><strong id="monthlyRevenue">R$ 0</strong><small>Estimativa dos clientes reais</small></article>
             </section>
 
-            <section class="admin-shortcuts" id="adminShortcuts" aria-label="Ações rápidas"><a href="#businesses"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#store"></use></svg><strong>Gerenciar negócios</strong><span>Cadastros e acesso aos cardápios</span></a><a href="#billing"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#receipt"></use></svg><strong>Conferir cobranças</strong><span>Faturas e recebimentos</span></a><a href="#users"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#users"></use></svg><strong>Gerenciar acessos</strong><span>Proprietários e equipe</span></a></section>
+            <section class="admin-shortcuts" id="adminShortcuts" aria-label="Ações rápidas"><a href="#businesses"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#store"></use></svg><strong>Gerenciar negócios</strong><span>Cadastros e acesso aos cardápios</span></a><a href="#billing"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#receipt"></use></svg><strong>Conferir cobranças</strong><span>Faturas e recebimentos</span></a><a href="#trialReviews"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#users"></use></svg><strong>Revisar cadastros</strong><span>Solicitações de teste gratuito</span></a></section>
             <section class="platform-panel" id="segments">
                 <div class="platform-section-title">
                     <div><p class="platform-kicker">DISTRIBUIÇÃO</p><h2>Clientes por segmento</h2></div>
@@ -78,7 +76,7 @@
                         <button type="button" class="cyan-button" id="newBusinessButton"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#plus"></use></svg>Criar cardápio</button>
                     </div>
                 </div>
-                <p class="demo-notice">Clique no nome para consultar o cadastro. “Operar” abre um Cardápio com acesso ativo. Os cadastros das soluções encerradas ficam disponíveis no filtro de histórico.</p>
+                <p class="demo-notice">Clique no nome para consultar o cadastro. “Abrir painel” abre um Cardápio com acesso ativo. Os cadastros das soluções encerradas ficam disponíveis no filtro de histórico.</p>
                 <div class="business-table-wrap">
                     <table class="business-table">
                         <thead><tr><th>Negócio</th><th>Segmento</th><th>Responsável</th><th>Contato</th><th>Origem</th><th>Plano</th><th>Mensalidade</th><th>Status</th><th>Ações</th></tr></thead>
@@ -138,9 +136,19 @@
 
             <section class="platform-panel" id="users">
                 <div class="platform-section-title business-heading"><div><p class="platform-kicker">ACESSOS</p><h2>Usuários dos negócios</h2></div><div class="business-controls"><select id="userBusinessFilter" aria-label="Filtrar usuários por negócio"></select><button type="button" class="cyan-button" id="newUserButton"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#plus"></use></svg>Adicionar usuário</button></div></div>
-                <p class="demo-notice">Esta seção mostra somente pessoas que receberam acesso ao sistema. Para abrir um cardápio, vá a <a href="#businesses">Negócios</a> e escolha “Operar”.</p>
+                <p class="demo-notice">Esta seção mostra somente pessoas que receberam acesso ao sistema. Para abrir um cardápio, vá a <a href="#businesses">Negócios</a> e escolha “Abrir painel”.</p>
                 <div class="business-table-wrap"><table class="business-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Negócio</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody id="usersTableBody"></tbody></table></div>
                 <div class="empty-state hidden" id="usersEmpty"><strong>Nenhum usuário encontrado.</strong><span>Adicione proprietários ou pessoas da equipe a um Cardápio cadastrado.</span></div>
+            </section>
+
+            <section class="platform-panel admin-account" id="adminAccount" hidden aria-labelledby="adminAccountTitle">
+                <div class="platform-section-title"><div><p class="platform-kicker">SEU ACESSO</p><h2 id="adminAccountTitle">Conta administrativa</h2></div></div>
+                <div class="platform-owner-card">
+                    <span class="owner-avatar">ED</span>
+                    <div><strong id="platformOwnerName">Edermax</strong><small>Administrador da plataforma</small></div>
+                </div>
+                <section class="admin-account-setting"><h3>Aparência</h3><p class="admin-muted">Escolha o tema usado neste dispositivo.</p><label class="panel-theme-preference">Tema do painel<select data-panel-theme-select aria-label="Tema do painel"><option value="light">Claro</option><option value="dark">Escuro</option></select></label></section>
+                <section class="admin-account-setting"><h3>Sessão</h3><p class="admin-muted">Encerre o acesso administrativo neste dispositivo.</p><button id="platformLogout" type="button"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#logout"></use></svg><span>Sair</span></button></section>
             </section>
         </main>
     </div>
@@ -198,7 +206,7 @@
             <div class="detail-stats" id="detailStats"></div>
             <div class="detail-information" id="detailInformation"></div>
             <div class="detail-actions">
-                <button type="button" class="cyan-button" id="detailOperateButton">Operar negócio</button>
+                <button type="button" class="cyan-button" id="detailOperateButton">Abrir painel</button>
                 <button type="button" class="outline-cyan-button" id="detailAddUserButton">Adicionar usuário</button>
                 <button type="button" class="outline-cyan-button" id="detailEditButton">Editar cadastro</button>
                 <button type="button" class="outline-cyan-button" id="detailBillingButton">Nova cobrança</button>
@@ -291,7 +299,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
     <script src="supabase-config.js"></script>
     <script src="admin-trial-reviews.js?v=20261111.1"></script>
-    <script src="admin.js?v=20261111.2"></script>
+    <script src="admin.js?v=20261112.1"></script>
+    <script src="admin-navigation.js?v=20261112.1"></script>
     <script src="pwa.js?v=20260831.2"></script>
 </body>
 </html>

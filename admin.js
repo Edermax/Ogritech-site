@@ -131,7 +131,7 @@ function renderBusinesses() {
         return `<tr><td><button class="business-link" data-action="detail" data-id="${business.id}"><span class="business-symbol" style="--segment-color:${meta.color}">${adminIcon("store")}</span><strong>${escapeHtml(business.name)}</strong></button></td>
         <td>${escapeHtml(business.segment)}</td><td>${escapeHtml(business.contact_name)}</td><td><strong>${escapeHtml(business.phone || "Telefone pendente")}</strong><br><small>${escapeHtml(business.owner_email || "E-mail pendente")}</small></td><td><span class="origin-badge">${escapeHtml(business.origin)}</span></td>
         <td><span class="plan-badge">${escapeHtml(isMenuBusiness(business) ? business.plan : "Histórico · " + business.plan)}</span></td><td>${money.format(business.monthly_fee)}</td><td><span class="${business.status === "Ativo" ? "active-badge" : "suspended-badge"}">${escapeHtml(business.status)}</span></td>
-        <td><div class="admin-row-actions"><button data-action="operate" data-id="${business.id}" ${canOperateMenu(business) ? "" : 'disabled title="A operação exige uma assinatura de Cardápio com acesso ativo"'}>${adminIcon("arrow")}Operar</button><button data-action="edit" data-id="${business.id}">${adminIcon("edit")}Editar</button><button class="danger" data-action="delete" data-id="${business.id}">${adminIcon("archive")}Arquivar</button></div></td></tr>`;
+        <td><div class="admin-row-actions"><button data-action="operate" data-id="${business.id}" ${canOperateMenu(business) ? "" : 'disabled title="A operação exige uma assinatura de Cardápio com acesso ativo"'}>${adminIcon("arrow")}Abrir painel</button><button data-action="edit" data-id="${business.id}">${adminIcon("edit")}Editar</button><button class="danger" data-action="delete" data-id="${business.id}">${adminIcon("archive")}Arquivar</button></div></td></tr>`;
     }).join("");
     $("businessEmpty").classList.toggle("hidden", filtered.length > 0);
     document.querySelector(".business-table-wrap").classList.toggle("hidden", filtered.length === 0);
@@ -488,23 +488,36 @@ function decorateAdminTables() {
     });
     $("newUserButton").disabled = !businesses.some(isMenuBusiness);
     $("newInvoiceButton").disabled = !businesses.some(isMenuBusiness);
+    window.OgritechAdminLayout?.organizeActions();
 }
 const adminViews = {
-    overview: ["Visão geral", "Acompanhe sua carteira de Cardápio e acesse as tarefas do dia.", ["adminSummary", "adminShortcuts", "segments"]],
+    overview: ["Resumo", "Acompanhe sua carteira de Cardápio e acesse as tarefas do dia.", ["adminSummary", "adminShortcuts", "segments"]],
     businesses: ["Negócios", "Consulte os cardápios e mantenha os cadastros organizados.", ["businesses"]],
     users: ["Acessos", "Gerencie proprietários e equipe dos seus clientes.", ["users"]],
     plans: ["Plano do Cardápio", "Confira os valores e as regras cadastrados para o produto.", ["plans"]],
     products: ["Assinaturas", "Consulte e gerencie o acesso ao Cardápio por negócio.", ["products"]],
     trialReviews: ["Revisão de testes", "Analise cadastros com dados já utilizados antes de liberar outro teste.", ["trialReviews"]],
-    billing: ["Cobranças", "Acompanhe faturas, recebimentos e registros financeiros.", ["billing"]]
+    billing: ["Financeiro", "Acompanhe faturas, recebimentos e registros financeiros.", ["billing"]],
+    account: ["Conta", "Gerencie a aparência do painel e sua sessão administrativa.", ["adminAccount"]]
 };
+const adminAreaFor = key => key === "trialReviews" ? "businesses" : ["products", "plans"].includes(key) ? "billing" : key;
 function selectAdminView(focus = false) {
     const requested = location.hash.slice(1); const key = Object.hasOwn(adminViews, requested) ? requested : "overview";
     const [title, description, visible] = adminViews[key];
-    $("adminViewTitle").textContent = title; $("adminViewDescription").textContent = description;
-    ["adminSummary", "adminShortcuts", "segments", "businesses", "users", "plans", "products", "billing", "trialReviews"].forEach((id) => { $(id).hidden = !visible.includes(id); });
+    const area = adminAreaFor(key);
+    const areaTitles = { overview: "Resumo", businesses: "Negócios", users: "Acessos", billing: "Financeiro", account: "Conta" };
+    $("adminViewTitle").textContent = areaTitles[area] || title; $("adminViewDescription").textContent = description;
+    if (document.body) document.body.dataset.adminArea = area;
+    ["adminSummary", "adminShortcuts", "segments", "businesses", "users", "plans", "products", "billing", "trialReviews", "adminAccount"].forEach((id) => { $(id).hidden = !visible.includes(id); });
     document.querySelectorAll(".platform-menu a").forEach((link) => {
-        const active = link.getAttribute("href") === `#${key}`; link.classList.toggle("active", active);
+        const active = link.getAttribute("href") === `#${area}`; link.classList.toggle("active", active);
+        if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
+    });
+    $("adminSectionTabs").hidden = !["businesses", "billing"].includes(area);
+    document.querySelectorAll("[data-admin-group]").forEach(link => {
+        link.hidden = link.dataset.adminGroup !== area;
+        const active = link.getAttribute("href") === `#${key}`;
+        link.classList.toggle("active", active);
         if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
     });
     if (key === "trialReviews") window.loadOgritechTrialReviews?.();
