@@ -1,4 +1,5 @@
-/* This file changes no existing light selector or rule. */
+/* An explicit light choice must also opt out of the browser's Auto Dark paint. */
+html[data-panel-theme="light"]{color-scheme:only light;background:#f5f8fb}
 .panel-theme-preference{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:20px;padding-top:18px;border-top:1px solid var(--border,#dce6ed);font-size:14px;font-weight:600}
 .panel-theme-preference select{min-height:44px;width:auto;min-width:120px;padding:8px 12px;border:1px solid var(--control-border,#7b919e);border-radius:10px;font:inherit;background:var(--control-surface,#fff);color:var(--control-text,#172d3a)}
 .platform-sidebar>.panel-theme-preference{margin:16px 12px}
