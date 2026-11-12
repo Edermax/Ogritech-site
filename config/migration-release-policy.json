@@ -194,11 +194,11 @@
     "heldMigrations": [
       {
         "name": "menu_trial_abuse_protection",
-        "reason": "Homologated; production publication pending authorization for the isolated restoration test of the existing encrypted backup."
+        "reason": "Homologated and isolated restore passed; production connector confirmation expired. Awaiting publication confirmation."
       },
       {
         "name": "menu_trial_review_api_hardening",
-        "reason": "Homologated; production publication pending authorization for the isolated restoration test of the existing encrypted backup."
+        "reason": "Homologated and isolated restore passed; production connector confirmation expired. Awaiting publication confirmation."
       }
     ],
     "observationEvidence": "docs/evidencias/cardapio-notificacoes-pedidos-2026-11-10.md",

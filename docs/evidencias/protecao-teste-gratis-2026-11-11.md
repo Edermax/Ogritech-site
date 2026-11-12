@@ -19,12 +19,14 @@ Produção: migrations e função **ainda não promovidas**; frontend ainda não
 - Smoke real da função em homologação: configuração 200, payload incompleto 422, cotação mensal 200 com R$ 49,90. Nenhum cadastro real, convite ou cobrança.
 - Advisor após a segunda migration: as novas tabelas têm apenas INFO por RLS sem policies, intencional em tabelas privadas sem concessão direta aos usuários. Os dois avisos por SECURITY DEFINER exposto foram removidos ao mover a implementação para `private`; autorização administrativa permanece obrigatória em ambos os caminhos.
 
-## Backup e autorização pendente
+## Backup e restauração isolada
 
 Backup diário já existente, concluído com sucesso em [43009849096](https://github.com/Edermax/Ogritech-site/actions/runs/43009849096), artefato privado criptografado `ogritech-production-20261111T111433Z`, não expirado. Apenas metadados foram consultados; o agente não baixou o backup.
 
-A revisão automática recusou executar um novo backup por exportar dados de produção a um artefato externo sem autorização específica. Também recusou iniciar `restore-drill.yml` sobre o backup existente por baixar/processar esses dados em infraestrutura temporária do GitHub. Nenhum desses dois workflows foi disparado pelo agente. Não houve tentativa de contornar as recusas.
+A revisão automática recusou executar um novo backup por exportar dados de produção a um artefato externo sem autorização específica. Também recusou iniciar `restore-drill.yml` sobre o backup existente por baixar/processar esses dados em infraestrutura temporária do GitHub. Após a autorização explícita do responsável para o teste isolado, o workflow de restauração foi disparado sobre o backup existente. Um novo backup não foi gerado.
 
-Para concluir a publicação, obter autorização específica para o teste de restauração do **backup existente** em GitHub Actions. Um novo backup não é necessário neste momento. Esse teste usa máquina efêmera e limpa os arquivos ao final, conforme workflow existente; não restaura nada no banco de produção.
+O [teste isolado 43138593427](https://github.com/Edermax/Ogritech-site/actions/runs/43138593427) passou. As etapas de verificação de schema/RLS/testes, remoção dos arquivos descriptografados e remoção do banco temporário concluíram com sucesso. Nada foi restaurado no banco de produção.
+
+A tentativa de promoção por `apply_migration` retornou confirmação expirada duas vezes. Nenhuma migration ou função foi publicada em produção nessas tentativas. Aguardando confirmação específica da publicação antes de nova tentativa.
 
 Operação e ativação futura: [TESTE-GRATIS-PROTECAO.md](../TESTE-GRATIS-PROTECAO.md).

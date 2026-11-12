@@ -8,18 +8,18 @@
   "localReplay": {
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
-    "migrationCount": 91,
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/42927189459",
-    "sourceCommit": "99f1e5e12c54426ec144553fc5736db865e39d77"
+    "migrationCount": 93,
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43136973208",
+    "sourceCommit": "0e54dbfd4c1baf972bd34337d74e6bf0cf2d37d1"
   },
   "productionDryRun": {
     "status": "PASSED",
-    "executedAt": "2026-11-10",
-    "migrationCount": 0,
+    "executedAt": "2026-11-11",
+    "migrationCount": 2,
     "remoteChangesPerformed": false,
-    "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/cardapio-notificacoes-pedidos-2026-11-10.md",
-    "aliasCompatibility": "Existing billing_rejected_email_event filename alias in isolated deployment directory; history unchanged."
+    "mode": "READ_ONLY_REMOTE_INVENTORY_COMPARISON",
+    "evidence": "docs/evidencias/protecao-teste-gratis-2026-11-11.md",
+    "aliasCompatibility": "Remote inventory compared by migration name; existing history unchanged; only the two reviewed trial-protection migrations are pending."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [
@@ -103,5 +103,14 @@
     "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/41843052561",
     "restoreStatus": "SUCCESS",
     "evidence": "docs/evidencias/jornada-cardapio-2026-11-04.md"
+  },
+  "latestRestoreCheck": {
+    "status": "SUCCESS",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43138593427",
+    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43009849096",
+    "verificationCount": 274,
+    "decryptedFilesRemoved": true,
+    "temporaryDatabaseRemoved": true,
+    "authorization": "Explicit user authorization in this conversation for the isolated test of the existing backup."
   }
 }
