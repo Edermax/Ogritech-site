@@ -770,7 +770,7 @@
             byId("menuCatalogList").querySelectorAll("[data-move-menu-item]").forEach((button)=>button.addEventListener("click",()=>moveMenuCatalogEntry("item",button.dataset.moveMenuItem,Number(button.dataset.direction))));
             byId("menuOrdersList").innerHTML = ordersError ? `<p role="status">${escapeHtml(menuError(ordersError))} Use “Atualizar pedidos” para tentar novamente.</p>` : (orders || []).map((order) => {
                 const status = order.status === "pending" ? "received" : order.status;
-                const actions = status === "received" ? [{ action: "confirm", label: "Confirmar" }, ...(order.payment_status === "pending" ? [{ action: "reject", label: "Recusar" }] : [])] : status === "confirmed" ? [{ action: "complete", label: "Concluir" }] : [];
+                const actions = status === "received" ? [{ action: "confirm", label: "Confirmar" }, ...(order.payment_status === "pending" ? [{ action: "reject", label: "Recusar" }] : [])] : status === "confirmed" ? [...(!whatsappOnly() ? [{ action: "ready", label: "Encomenda pronta" }] : []), { action: "complete", label: "Concluir" }] : [];
                 if (order.payment_status === "pending" && !["rejected", "cancelled"].includes(status)) actions.push({ action: "mark_paid", label: "Marcar pagamento recebido" });
                 if (["confirmed", "rejected"].includes(status)) actions.push({ action: "review_decision", label: "Rever decisão" });
                 if (order.payment_receipt_id) actions.push({ action: "view_receipt", label: "Ver comprovante" });
@@ -779,6 +779,10 @@
             byId("menuOrdersList").querySelectorAll("[data-order]").forEach((button) => button.addEventListener("click", () => {
                 const action = button.dataset.orderAction;
                 const order = (orders || []).find(item => item.id === button.dataset.order);
+                if (action === "ready") {
+                    if (!whatsappOnly() && canManageMenu() && order) window.OgritechOrderActions?.openReady(order, menuRecord?.title || businessConfig.name);
+                    return;
+                }
                 if (order && window.OgritechOrderActions) {
                     if (action === "mark_paid") return window.OgritechOrderActions.openPayment(order, BARBERSHOP_ID, loadMenuAdmin);
                     if (action === "review_decision") return window.OgritechOrderActions.openReview(order, BARBERSHOP_ID, loadMenuAdmin);

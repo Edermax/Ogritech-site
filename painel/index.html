@@ -89,7 +89,7 @@
     </style>
 <link rel="stylesheet" href="/order-notifications.css?v=20261110.1">
 <link rel="stylesheet" href="/panel-controls.css?v=20261113.3">
-<link rel="stylesheet" href="/menu-order-management.css?v=20261112.1">
+<link rel="stylesheet" href="/menu-order-management.css?v=20261113.4">
 <link rel="stylesheet" href="/sales-reports.css?v=20261112.2">
 <link rel="stylesheet" href="/panel-dark.css?v=20261112.4">
 <link rel="stylesheet" href="/panel-navigation.css?v=20261112.1">
@@ -729,6 +729,7 @@
             <div class="sales-report-export-actions"><a id="salesReportJpeg" class="table-button" target="_blank" rel="noopener noreferrer">JPEG</a><a id="salesReportPng" class="table-button" target="_blank" rel="noopener noreferrer">PNG</a><a id="salesReportPdf" class="table-button" target="_blank" rel="noopener noreferrer">PDF</a></div>
         </nav>
     </dialog>
+    <dialog id="menuReadyDialog" class="menu-operation-dialog" aria-labelledby="menuReadyTitle"><h2 id="menuReadyTitle">Encomenda pronta</h2><p id="menuReadyOrder"></p><p>Deseja avisar o cliente pelo WhatsApp?</p><label>Mensagem para o cliente<textarea id="menuReadyText" rows="5" maxlength="2000"></textarea></label><p id="menuReadyMessage" role="status" aria-live="polite"></p><div class="commercial-actions"><button type="button" id="menuReadyCancel" class="table-button">Agora não</button><a id="menuReadyWhatsApp" class="table-button edit" target="_blank" rel="noopener noreferrer" hidden>Abrir WhatsApp</a></div></dialog>
     <dialog id="menuPaymentDialog" class="menu-operation-dialog" aria-labelledby="menuPaymentTitle"><form id="menuPaymentForm"><h2 id="menuPaymentTitle">Pagamento recebido</h2><p id="menuPaymentOrder"></p><label>Anexar comprovante <span>(opcional)</span><input id="menuPaymentReceipt" type="file" accept="image/jpeg,image/png,application/pdf" aria-describedby="menuReceiptHint"></label><p id="menuReceiptHint">JPG, PNG ou PDF de até 5 MB. O comprovante fica disponível somente à gestão deste estabelecimento.</p><p>Marque como recebido somente após conferir o pagamento.</p><p id="menuPaymentMessage" role="status" aria-live="polite"></p><div class="commercial-actions"><button type="button" id="menuPaymentCancel" class="table-button">Cancelar</button><button type="submit" id="menuPaymentSave" class="table-button edit">Marcar como recebido</button></div></form></dialog>
     <dialog id="menuDecisionDialog" class="menu-operation-dialog" aria-labelledby="menuDecisionTitle"><form id="menuDecisionForm"><h2 id="menuDecisionTitle">Rever decisão do pedido</h2><p id="menuDecisionOrder"></p><label>Nova decisão<select id="menuDecisionValue" required><option value="confirmed">Confirmar pedido</option><option value="rejected">Recusar pedido</option></select></label><label>Motivo da alteração<textarea id="menuDecisionReason" rows="3" minlength="5" maxlength="300" required></textarea></label><p>A alteração ficará registrada e aparecerá no acompanhamento do cliente.</p><p id="menuDecisionPaidHint" hidden>Este pedido já tem pagamento registrado. Mudar a decisão não realiza estorno; combine uma eventual devolução com o cliente.</p><p id="menuDecisionMessage" role="status" aria-live="polite"></p><div class="commercial-actions"><button type="button" id="menuDecisionCancel" class="table-button">Cancelar</button><button type="submit" id="menuDecisionSave" class="table-button edit">Salvar decisão</button></div></form></dialog>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
@@ -741,7 +742,7 @@
     <!-- JavaScript principal do dashboard -->
     <script src="/report-export.js?v=20261112.1"></script><script src="/sales-reports.js?v=20261112.2"></script><script src="/panel-notifications.js?v=20261112.2"></script>
     <script src="script.js?v=20261112.2"></script>
-    <script src="menu-branding.js?v=20261020.1"></script><script src="/product-offers.js?v=20261113.2"></script><script src="menu-branding-admin.js?v=20261113.2"></script><script src="/menu-order-notifications.js?v=20261110.1"></script><script src="/menu-order-actions.js?v=20261112.1"></script><script src="commercial-admin.js?v=20261113.3"></script>
+    <script src="menu-branding.js?v=20261020.1"></script><script src="/product-offers.js?v=20261113.2"></script><script src="menu-branding-admin.js?v=20261113.2"></script><script src="/menu-order-notifications.js?v=20261110.1"></script><script src="/menu-order-actions.js?v=20261113.4"></script><script src="commercial-admin.js?v=20261113.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script><script src="/cardapio/share.js?v=20261112.1"></script><script src="subscription-admin.js?v=20261113.3"></script>
     <script src="/assistant-widget.js?v=20261113.2" data-context="panel"></script>
     <dialog class="panel-install-help" id="panelInstallHelp" aria-labelledby="panelInstallTitle">
