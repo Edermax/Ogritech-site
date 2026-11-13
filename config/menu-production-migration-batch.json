@@ -3,23 +3,23 @@
   "updatedAt": "2026-11-13",
   "baseline": "menu_order_response_snapshot",
   "strategy": "contiguous_tail",
-  "authorized": false,
-  "decision": "PENDING",
+  "authorized": true,
+  "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
-    "migrationCount": 96,
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43156662230",
-    "sourceCommit": "5bd45c48cb2756692f16aea99e893629a90d3699"
+    "migrationCount": 97,
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43494329088",
+    "sourceCommit": "7c7d2d9c4611ff0c05d02561763ae7a37df997fd"
   },
   "productionDryRun": {
     "status": "PASSED",
-    "executedAt": "2026-11-12",
-    "migrationCount": 0,
+    "executedAt": "2026-11-13",
+    "migrationCount": 1,
     "remoteChangesPerformed": false,
-    "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/pedidos-comprovantes-relatorios-2026-11-12.md",
-    "aliasCompatibility": "Native MCP applied exactly the three reviewed migrations in order; 96 remote migrations verified by name and explicit version aliases, without changing existing history."
+    "mode": "NATIVE_MCP_HISTORY_COMPARISON",
+    "evidence": "docs/OGRITECH_CARDAPIO_E_ENCOMENDAS.md",
+    "aliasCompatibility": "96 migrations in production match the reviewed baseline by name and explicit aliases; only split_menu_offers is pending. Staging already has all 97."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [
@@ -111,11 +111,11 @@
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43158503043",
-    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43158089637",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43491045932",
+    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43490064152",
     "verificationCount": 274,
     "decryptedFilesRemoved": true,
     "temporaryDatabaseRemoved": true,
-    "authorization": "Explicit user authorization in this conversation for PR105 publication, fresh encrypted backup and isolated restore."
+    "authorization": "User explicitly requested publication on 2026-11-13."
   }
 }
