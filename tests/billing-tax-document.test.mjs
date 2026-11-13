@@ -19,8 +19,10 @@ function formFixture(){
  const listeners={};
  const documentField={addEventListener:(name,fn)=>{listeners.documentInput=fn;}};
  const invoice={value:'',addEventListener:(name,fn)=>{listeners.invoiceChange=fn;}};
- const form={elements:{tax_document:documentField,service_invoice_preference:invoice,responsible_tax_document:{addEventListener(){}},phone:{addEventListener(){}}},addEventListener(){}};
- runInNewContext(frontend,{window:{},document:{querySelector:selector=>selector==='#menuTrialForm'?form:{addEventListener(){}}}});
+ const noop={addEventListener(){},value:""};
+ const form={elements:{offer:{...noop},cycle:{...noop},publish_whatsapp:{...noop},tax_document:documentField,service_invoice_preference:invoice,responsible_tax_document:{addEventListener(){}},phone:{addEventListener(){}}},addEventListener(){}};
+ const offers={offers:{cardapio:{monthlyCents:2990,annualCents:29900},encomendas:{monthlyCents:4990,annualCents:49900}},format:value=>String(value)};
+ runInNewContext(frontend,{OgritechOffers:offers,URLSearchParams,location:{search:""},window:{},document:{querySelector:selector=>selector==='#menuTrialForm'?form:{addEventListener(){}}}});
  return {invoice,input(value){const target={value};listeners.documentInput({target});return target.value;},choose(value){invoice.value=value;listeners.invoiceChange();}};
 }
 test('CPF selects the optional invoice default; switching to CNPJ requests a choice',()=>{

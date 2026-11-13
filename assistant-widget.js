@@ -49,9 +49,9 @@
   const panelTargetLabels = { operation: "Pedidos", catalog: "Produtos", settings: "Atendimento", review: "Publicação" };
 
   const topics = {
-    planos: "A Ogritech Cardápio custa R$ 49,90 por mês ou R$ 499 no plano anual. Não há comissão por pedido. <a href='/criar-cardapio/'>Começar agora</a>.",
-    teste: "Todo CNPJ elegível recebe uma única avaliação gratuita de 14 dias. Não há cobrança durante o teste e você pode cancelar sem falar com atendentes. <a href='/criar-cardapio/'>Iniciar teste</a>.",
-    beneficios: "A Ogritech Cardápio reúne produtos, fotos, categorias, preços e pedidos em um único link, com gestão pelo painel.",
+    planos: "Ogritech Cardápio: R$ 29,90/mês ou R$ 299,00/ano, com atendimento no WhatsApp. Ogritech Encomendas: R$ 49,90/mês ou R$ 499,00/ano, com gestão de pedidos no painel. Não há comissão por pedido. <a href='/criar-cardapio/'>Começar agora</a>.",
+    teste: "Cada CPF ou CNPJ elegível recebe um único teste de 14 dias entre Cardápio e Encomendas. Trocar de plano não reinicia o teste. Não há cobrança durante o teste e você pode cancelar sem falar com atendentes. <a href='/criar-cardapio/'>Iniciar teste</a>.",
+    beneficios: "Cardápio reúne fotos, preços, pesos e opções para o consumidor escolher e continuar no WhatsApp. Encomendas inclui entrega, retirada, agendamento e acompanhamento de pedidos no painel.",
     pagamento: "Aceitamos cartão recorrente e Pix. Não oferecemos boleto nem Pix Automático. O cancelamento é feito pela própria conta e o acesso continua até o fim do período pago.",
     contato: "Você pode solicitar retorno por ligação telefônica, WhatsApp ou e-mail. Escolha o canal e informe seus dados."
   };

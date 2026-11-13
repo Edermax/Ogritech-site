@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' https://cdn.jsdelivr.net;style-src 'self';img-src 'self' data: https:;connect-src 'self' http://127.0.0.1:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co https://viacep.com.br;object-src 'none';base-uri 'self';form-action 'self'">
   <title>Cardápio | Ogritech</title>
   <link rel="stylesheet" href="/commercial-public.css">
-  <link rel="stylesheet" href="/cardapio/catalog.css?v=20261110.1">
+  <link rel="stylesheet" href="/cardapio/catalog.css?v=20261113.2">
   <link rel="icon" href="/ogritech-favicon.ico">
 </head>
 <body>
@@ -31,7 +31,7 @@
       <section id="cartReview" class="public-card cart-review hidden" aria-labelledby="cartReviewTitle">
         <div class="cart-review-heading"><div><small>SEU PEDIDO</small><h2 id="cartReviewTitle">Revise os itens</h2></div><button id="closeCartReview" class="cart-review-close" type="button" aria-label="Fechar revisão do carrinho">×</button></div>
         <div id="cartItems" class="cart-items" aria-live="polite"></div>
-        <div class="cart-review-footer"><div><span>Total estimado</span><strong id="cartReviewTotal">R$ 0</strong></div><div class="cart-review-actions"><button id="continueShoppingButton" class="public-button secondary" type="button">Continuar escolhendo</button><button id="proceedCheckoutButton" class="public-button" type="button">Preencher dados</button></div></div>
+        <p id="whatsappSelectionNotice" class="public-message hidden">Revise os itens. O WhatsApp abrirá com uma mensagem para você enviar. Disponibilidade, pagamento e entrega serão combinados com o estabelecimento; esta seleção não confirma um pedido.</p><div class="cart-review-footer"><div><span>Total estimado</span><strong id="cartReviewTotal">R$ 0</strong></div><div class="cart-review-actions"><button id="continueShoppingButton" class="public-button secondary" type="button">Continuar escolhendo</button><a id="whatsappSelectionLink" class="public-button hidden" target="_blank" rel="noopener noreferrer">Continuar no WhatsApp</a><button id="proceedCheckoutButton" class="public-button" type="button">Preencher dados</button></div></div>
       </section>
       <article id="checkout" class="public-card hidden">
         <h2 id="checkoutTitle">Finalizar pedido</h2>
@@ -84,7 +84,7 @@
   </aside>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="/supabase-config.js"></script>
-  <script src="/menu-pricing.js?v=20261020.1"></script>
-  <script src="/menu-branding.js?v=20261020.1"></script><script src="/menu-whatsapp.js?v=20261112.1"></script><script src="/cardapio/cardapio.js?v=20261112.1"></script>
+  <script src="/whatsapp-selection.js?v=20261113.2"></script><script src="/menu-pricing.js?v=20261020.1"></script>
+  <script src="/menu-branding.js?v=20261020.1"></script><script src="/menu-whatsapp.js?v=20261112.1"></script><script src="/cardapio/cardapio.js?v=20261113.2"></script>
 </body>
 </html>

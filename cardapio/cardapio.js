@@ -4,6 +4,7 @@
   const slug = pathSlug || new URLSearchParams(location.search).get("empresa") || "";
   const isDinizMenu = slug === "diniz-doces" || slug === "diniz-doces-previa-7d1";
   const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }), cart = new Map(), prices = new Map();
+  const whatsappOnly = () => page?.menu?.offer_code === "cardapio";
   let page = null, pendingRequestId = null, assistantSessionToken = null, calculatedDeliveryFee = null;
   const createUuid = () => globalThis.crypto?.randomUUID?.() || "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => { const value = Math.floor(Math.random() * 16); return (char === "x" ? value : (value & 3) | 8).toString(16); });
   const clean = (value) => String(value || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
@@ -93,6 +94,7 @@
   };
   const requiredLeadTime = () => Math.max(0, ...[...cart.values()].map((entry) => Number(entry.leadTimeHours) || 0));
   function updateSchedulingRequirement() {
+    if (whatsappOnly()) { $("scheduledFor").required = false; return; }
     const input = $("scheduledFor"), hint = $("scheduledForHint"), leadTime = requiredLeadTime();
     input.required = leadTime > 0;
     if (!leadTime) { input.removeAttribute("min"); hint.textContent = "(opcional)"; return; }
@@ -193,9 +195,19 @@
       const decrementDisabled = entry.quantity <= entry.minimumQuantity ? " disabled" : "";
       return `<article class="cart-item" data-cart-item="${clean(signature)}"><div class="cart-item-copy"><strong>${clean(entry.name)}</strong>${variation ? `<span>${clean(variation)}</span>` : ""}<small>${money.format(estimatedUnitPrice(entry))} por unidade</small></div><div class="cart-item-controls"><div class="cart-quantity" aria-label="Quantidade de ${clean(entry.name)}"><button type="button" data-cart-decrease="${clean(signature)}" aria-label="Diminuir quantidade"${decrementDisabled}>−</button><output aria-live="polite">${entry.quantity}</output><button type="button" data-cart-increase="${clean(signature)}" aria-label="Aumentar quantidade">+</button></div><strong>${money.format(entry.quantity * estimatedUnitPrice(entry))}</strong><button class="cart-remove" type="button" data-cart-remove="${clean(signature)}">Remover</button></div></article>`;
     }).join("");
+    const link = $("whatsappSelectionLink");
+    if (link) {
+      link.classList.toggle("hidden", !whatsappOnly());
+      const target = globalThis.OgritechWhatsAppSelection?.url(page?.menu?.whatsapp_phone, [...cart.values()], estimatedUnitPrice);
+      if (target) link.href = target; else link.removeAttribute("href");
+      link.setAttribute("aria-disabled", String(!target));
+      $("whatsappSelectionNotice").classList.toggle("hidden", !whatsappOnly());
+      if (whatsappOnly() && !target) $("whatsappSelectionNotice").textContent = "O WhatsApp deste estabelecimento está indisponível. Entre em contato para continuar o atendimento.";
+      $("proceedCheckoutButton").classList.toggle("hidden", whatsappOnly());
+    }
     $("cartReviewTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total);
   }
-  function updateCart() { let count = 0, total = 0, hasQuote = false; cart.forEach((entry) => { count += entry.quantity; total += entry.quantity * estimatedUnitPrice(entry); hasQuote ||= entry.isQuote; }); $("cartCount").textContent = count; $("cartTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total); $("checkoutButton").textContent = hasQuote ? "Continuar solicitação" : "Finalizar pedido"; $("checkoutTitle").textContent = hasQuote ? "Enviar solicitação para análise" : "Finalizar pedido"; $("orderSubmitButton").textContent = hasQuote ? "Enviar solicitação" : "Enviar pedido"; $("cartBar").classList.toggle("hidden", !count); renderCartReview(total, hasQuote); if (!count) { $("cartReview").classList.add("hidden"); $("checkout").classList.add("hidden"); } updateBag(); updateSchedulingRequirement(); updateCheckoutEstimate(); }
+  function updateCart() { let count = 0, total = 0, hasQuote = false; cart.forEach((entry) => { count += entry.quantity; total += entry.quantity * estimatedUnitPrice(entry); hasQuote ||= entry.isQuote; }); $("cartCount").textContent = count; $("cartTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total); $("checkoutButton").textContent = whatsappOnly() ? "Revisar para WhatsApp" : hasQuote ? "Continuar solicitação" : "Finalizar pedido"; $("checkoutTitle").textContent = hasQuote ? "Enviar solicitação para análise" : "Finalizar pedido"; $("orderSubmitButton").textContent = hasQuote ? "Enviar solicitação" : "Enviar pedido"; $("cartBar").classList.toggle("hidden", !count); renderCartReview(total, hasQuote); if (!count) { $("cartReview").classList.add("hidden"); $("checkout").classList.add("hidden"); } updateBag(); updateSchedulingRequirement(); updateCheckoutEstimate(); }
   function updateBag() {
     const count = $("cartCount").textContent;
     $("menuBagCount").textContent = count;
@@ -296,7 +308,7 @@
     const data = await loadMenuData(); if (!data) return;
     const menuTitle = isDinizMenu ? data.menu.title.replace(/\s*[—-]\s*piloto privado\s*$/i, "").trim() : data.menu.title;
     data.categories = (data.categories || []).filter(category => (category.items || []).length > 0);
-    page = data; applyVisualIdentity(data.menu.visual_identity); document.title = `${menuTitle} | Ogritech`; $("menuTitle").textContent = menuTitle; $("menuDescription").textContent = data.menu.description; $("menuDescription").classList.toggle("hidden", !data.menu.description?.trim());
+    page = data; document.body.classList.toggle("menu-whatsapp-only", whatsappOnly()); applyVisualIdentity(data.menu.visual_identity); document.title = `${menuTitle} | Ogritech`; $("menuTitle").textContent = menuTitle; $("menuDescription").textContent = data.menu.description; $("menuDescription").classList.toggle("hidden", !data.menu.description?.trim());
     const logoUrl = globalThis.OgritechMenuBranding?.assetUrl(data.menu.visual_identity?.logo_path, window.OGRITECH_SUPABASE_URL);
     $("menuBrandLockup").classList.toggle("hidden", !logoUrl && !(isDinizMenu && data.menu.visual_identity?.customized !== true));
     if (logoUrl) { $("menuBrandLogo").src=logoUrl; $("menuBrandLogo").alt=menuTitle; }
@@ -347,12 +359,13 @@
     const refreshSelectedPrice = (itemId) => { const select = $("catalog").querySelector(`[data-price-select="${itemId}"]`), quantityInput = $("catalog").querySelector(`[data-quantity-select="${itemId}"]`), price = prices.get(select.value), output = $("catalog").querySelector(`[data-selected-price="${itemId}"]`), quantity = quantityInput ? Number(quantityInput.value) : 1; output.textContent = formatItemPrice(price, price.item, quantity, Boolean(quantityInput)); };
     $("catalog").querySelectorAll("[data-price-select]").forEach((select) => select.addEventListener("change", () => refreshSelectedPrice(select.dataset.priceSelect)));
     $("catalog").querySelectorAll("[data-quantity-select]").forEach((input) => input.addEventListener("input", () => { if (!input.validity.valid) return; refreshSelectedPrice(input.dataset.quantitySelect); }));
-    $("catalog").querySelectorAll("[data-add-selected]").forEach((button) => button.addEventListener("click", () => { const itemId = button.dataset.addSelected, select = $("catalog").querySelector(`[data-price-select="${itemId}"]`), quantityInput = $("catalog").querySelector(`[data-quantity-select="${itemId}"]`); if (quantityInput && !quantityInput.reportValidity()) return; configure(prices.get(select.value), quantityInput ? Number(quantityInput.value) : 1); })); $("loading").classList.add("hidden"); $("content").classList.remove("hidden"); initAssistant();
+    $("catalog").querySelectorAll("[data-add-selected]").forEach((button) => button.addEventListener("click", () => { const itemId = button.dataset.addSelected, select = $("catalog").querySelector(`[data-price-select="${itemId}"]`), quantityInput = $("catalog").querySelector(`[data-quantity-select="${itemId}"]`); if (quantityInput && !quantityInput.reportValidity()) return; configure(prices.get(select.value), quantityInput ? Number(quantityInput.value) : 1); })); $("loading").classList.add("hidden"); $("content").classList.remove("hidden"); if (!whatsappOnly()) initAssistant();
+    if (whatsappOnly()) { $("menuPayments").textContent = "Pagamento e entrega combinados pelo WhatsApp."; $("checkout").classList.add("hidden"); }
   }
   const enterCheckoutMode = () => { document.body.classList.add("menu-checkout-active"); $("menuAssistantPanel").classList.add("hidden"); document.body.classList.remove("menu-assistant-open"); };
   const leaveCheckoutMode = () => { if ($("checkout").classList.contains("hidden")) document.body.classList.remove("menu-checkout-active"); };
   const openCartReview = () => { if (!cart.size) return; enterCheckoutMode(); $("cartReview").classList.remove("hidden"); updateBag(); $("cartReview").scrollIntoView({ behavior: "smooth", block: "start" }); };
-  const openCheckout = () => { if (!cart.size) return; enterCheckoutMode(); $("cartReview").classList.remove("hidden"); $("checkout").classList.remove("hidden"); updateBag(); $("checkout").scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const openCheckout = () => { if (!cart.size) return; if (whatsappOnly()) return openCartReview(); enterCheckoutMode(); $("cartReview").classList.remove("hidden"); $("checkout").classList.remove("hidden"); updateBag(); $("checkout").scrollIntoView({ behavior: "smooth", block: "start" }); };
   $("menuBagButton").addEventListener("click", () => {
     if (!cart.size) { $("menuBagStatus").textContent = "Sua sacola está vazia."; return; }
     openCartReview();
@@ -392,7 +405,7 @@
   });
   $("orderForm").addEventListener("input", (event) => { event.target.removeAttribute("aria-invalid"); });
   $("orderForm").addEventListener("submit", async (event) => {
-    event.preventDefault(); if (!cart.size) return; const form = new FormData(event.target), fulfillment = form.get("fulfillment");
+    event.preventDefault(); if (!cart.size) return; if (whatsappOnly()) { openCartReview(); return; } const form = new FormData(event.target), fulfillment = form.get("fulfillment");
     if (isDinizMenu && fulfillment === "delivery" && !form.get("delivery_zone")) { $("orderMessage").textContent = "Complete o endereço e clique em Calcular entrega antes de enviar o pedido."; $("calculateDeliveryButton").focus(); $("calculateDeliveryButton").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     const leadTime = requiredLeadTime(), scheduledValue = form.get("scheduled_for"), scheduledDate = scheduledValue ? new Date(scheduledValue) : null;
     if (leadTime > 0 && (!scheduledDate || Number.isNaN(scheduledDate.getTime()) || scheduledDate.getTime() < Date.now() + leadTime * 60 * 60000)) { $("orderMessage").textContent = `Escolha uma data e um horário com pelo menos ${leadTime} horas de antecedência.`; $("scheduledFor").setAttribute("aria-invalid", "true"); $("scheduledFor").focus(); return; }

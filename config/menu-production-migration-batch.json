@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-12",
+  "updatedAt": "2026-11-13",
   "baseline": "menu_order_response_snapshot",
   "strategy": "contiguous_tail",
   "authorized": false,
@@ -22,12 +22,16 @@
     "aliasCompatibility": "Native MCP applied exactly the three reviewed migrations in order; 96 remote migrations verified by name and explicit version aliases, without changing existing history."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [],
+  "requiredMenuMigrations": [
+    "split_menu_offers"
+  ],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
     "commercial_callbacks_and_billing": [],
-    "menu_release_required": [],
+    "menu_release_required": [
+      "split_menu_offers"
+    ],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],
@@ -84,8 +88,8 @@
     "menu_sales_notification_reports",
     "menu_order_response_snapshot"
   ],
-  "authorizationSource": "Autorização explícita do responsável nesta conversa (Autorizado) para publicar o PR #105, gerar backup criptografado e testar restauração isolada no GitHub Actions privado com limpeza ao final.",
-  "authorizationScope": "Comprovantes opcionais, revisão de confirmação/recusa, numeração de pedidos, notificações, relatórios e tema escuro opcional.",
+  "authorizationSource": "Usuário: Publique — 13/11/2026. Autoriza esta divisão sobre a versão atual de produção.",
+  "authorizationScope": "Divisão Cardápio/Encomendas, preços mensais e anuais, teste único de 14 dias e atualização coordenada do banco, cobrança e painéis.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
     "executedAt": "2026-11-12",

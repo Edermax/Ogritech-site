@@ -51,7 +51,15 @@
     "report-export.js",
     "panel-theme.js",
     "panel-dark.css",
-    "admin.html"
+    "admin.html",
+    "product-offers.js",
+    "whatsapp-selection.js",
+    "subscription-admin.js",
+    "admin.js",
+    "assinatura/index.html",
+    "assinatura/assinatura.js",
+    "cardapio-digital/index.html",
+    "termos.html"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",

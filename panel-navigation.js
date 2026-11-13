@@ -157,6 +157,7 @@
   function show(section) {
     let target = aliases[section] || 'orders';
     if (!state.canManage && !['orders', 'account'].includes(target)) target = 'orders';
+    if (state.offer === 'cardapio' && ['orders','sales'].includes(target)) target = 'products';
     route = target;
     if (target !== 'menu') sharing.open = false;
     $('settingsView').classList.toggle('hidden', target !== 'account');

@@ -98,7 +98,8 @@
       "menu_trial_review_api_hardening",
       "menu_order_receipts_and_sequence",
       "menu_sales_notification_reports",
-      "menu_order_response_snapshot"
+      "menu_order_response_snapshot",
+      "split_menu_offers"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -107,7 +108,8 @@
       "menu_trial_review_api_hardening": "20261111230807",
       "menu_order_receipts_and_sequence": "20261112033426",
       "menu_sales_notification_reports": "20261112033448",
-      "menu_order_response_snapshot": "20261112035316"
+      "menu_order_response_snapshot": "20261112035316",
+      "split_menu_offers": "20261113192700"
     },
     "observedMigrationNames": [
       "create_core_schema",
@@ -197,7 +199,12 @@
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "menu_order_response_snapshot",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      {
+        "name": "split_menu_offers",
+        "reason": "Publicação dos dois planos autorizada pelo usuário em 13/11/2026; aguarda homologação e CI deste candidato."
+      }
+    ],
     "observationEvidence": "docs/evidencias/pedidos-comprovantes-relatorios-2026-11-12.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",

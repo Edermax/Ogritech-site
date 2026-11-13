@@ -19,12 +19,14 @@ export async function runMenuProductionPreflight(fetchImpl = fetch) {
       checks.push({ name, status: response.status, passed: validate(response.status, parsed) });
     } catch { checks.push({ name, status: null, passed: false }); }
   }
-  await probe('monthly_quote', 'ogritech-billing', { action: 'quote', product: 'menu', cycle: 'monthly' },
-    (status, body) => status === 200 && body?.data?.total_cents === 4990 && body?.data?.months === 1);
-  await probe('annual_quote', 'ogritech-billing', { action: 'quote', product: 'menu', cycle: 'annual' },
-    (status, body) => status === 200 && body?.data?.total_cents === 49900 && body?.data?.months === 12);
-  await probe('trial_readiness', 'ogritech-billing', { action: 'trial_readiness', product: 'menu' },
-    (status, body) => status === 200 && body?.data?.ready === true && body?.data?.product === 'menu');
+  for (const [offer, monthly, annual] of [['cardapio',2990,29900],['encomendas',4990,49900]]) {
+    await probe(`${offer}_monthly_quote`, 'ogritech-billing', { action:'quote', product:'menu', offer, cycle:'monthly' },
+      (status,body)=>status===200 && body?.data?.total_cents===monthly && body?.data?.months===1);
+    await probe(`${offer}_annual_quote`, 'ogritech-billing', { action:'quote', product:'menu', offer, cycle:'annual' },
+      (status,body)=>status===200 && body?.data?.total_cents===annual && body?.data?.months===12);
+    await probe(`${offer}_trial_readiness`, 'ogritech-billing', { action:'trial_readiness', product:'menu', offer },
+      (status,body)=>status===200 && body?.data?.ready===true && body?.data?.offer===offer);
+  }
   // Deliberately unsigned: the handler rejects before contacting Mercado Pago or writing events.
   await probe('unsigned_webhook_rejected', 'mercado-pago-webhook', { data: { id: 'readiness-probe' } },
     status => status === 400);

@@ -1,5 +1,17 @@
 # Cardápio Ogritech — cadastro e pagamento
 
+## Decisão vigente — 13/11/2026
+
+- **Cardápio:** R$ 29,90/mês ou R$ 299,00/ano. Catálogo configurável e resumo para WhatsApp, sem entrega ou acompanhamento de pedidos na plataforma.
+- **Encomendas:** R$ 49,90/mês ou R$ 499,00/ano. Mantém a operação completa do Cardápio anterior.
+- Os 14 dias gratuitos são únicos por CPF/CNPJ na família de ofertas. Upgrade, downgrade, cancelamento ou nova seleção não concedem outro teste.
+- Troca preserva catálogo, histórico e prazo de acesso. Novo preço na próxima cobrança, sem cobrança proporcional; pagamentos pendentes precisam ser resolvidos antes.
+- Cadastro seleciona plano e periodicidade. Assinaturas antigas mantêm Encomendas. Código técnico `menu` e plano legado `foundation` são preservados para compatibilidade.
+- Esta decisão está implementada localmente e exige publicação coordenada de banco, funções e frontend; o histórico abaixo descreve estados anteriores.
+
+Consulte [escopo e verificação](OGRITECH_CARDAPIO_E_ENCOMENDAS.md).
+
+
 ## Situação conferida em 31/10/2026
 
 O cadastro está disponível em https://ogritech.com.br/criar-cardapio/ e começa com 14 dias gratuitos, sem cartão. Mensal R$49,90 ou anual R$499. Os parâmetros públicos de versão/hash dos termos estão sincronizados com o backend; isso não substitui os aceites do cliente ou a revisão jurídica pendente.

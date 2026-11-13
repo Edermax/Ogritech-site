@@ -3,9 +3,9 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const root = new URL("../", import.meta.url);
-const officialProducts = ["Ogritech Cardápio"];
+const officialProducts = ["Ogritech Cardápio", "Ogritech Encomendas"];
 
-test("frontend apresenta o oferta exclusiva do Cardápio", async () => {
+test("frontend apresenta as duas ofertas atuais", async () => {
   const [home, contact, panel] = await Promise.all([
     readFile(new URL("index.html", root), "utf8"),
     readFile(new URL("contato/index.html", root), "utf8"),
