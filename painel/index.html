@@ -88,7 +88,7 @@
         #changePasswordForm button:disabled { opacity: .6; cursor: wait; }
     </style>
 <link rel="stylesheet" href="/order-notifications.css?v=20261110.1">
-<link rel="stylesheet" href="/panel-controls.css?v=20261112.1">
+<link rel="stylesheet" href="/panel-controls.css?v=20261113.3">
 <link rel="stylesheet" href="/menu-order-management.css?v=20261112.1">
 <link rel="stylesheet" href="/sales-reports.css?v=20261112.2">
 <link rel="stylesheet" href="/panel-dark.css?v=20261112.4">
@@ -112,7 +112,7 @@
                         <span class="tenant-icon hidden" id="tenantIcon" aria-hidden="true"></span>
                     </button>
                     <div>
-                        <small>EMPRESA ATIVA</small>
+                        <small id="tenantPlanLabel">EMPRESA ATIVA</small>
                         <strong id="tenantName">Seu negócio</strong>
                     </div>
                 </div>
@@ -492,7 +492,7 @@
                 <div id="settingsView" class="view-section hidden">
                     <article class="panel settings-panel account-settings" id="accountSettings"><p class="eyebrow">SUA CONTA</p><h2>Acesso e segurança</h2><p class="section-description">Cuide da sua senha ou encerre sua sessão neste dispositivo.</p><div class="account-settings-actions"><button type="button" class="table-button edit" id="changePasswordButton" hidden>Alterar senha</button><button type="button" class="table-button" id="logoutButton">Sair da conta</button></div><label class="panel-theme-preference">Tema do painel<select data-panel-theme-select aria-label="Tema do painel"><option value="light">Claro</option><option value="dark">Escuro</option></select></label></article>
                     <article class="panel settings-panel" hidden><p class="eyebrow">PREFERÊNCIAS</p><h2>Configurações do negócio</h2><p class="section-description">Personalize a identificação, o expediente e o endereço público da agenda.</p><form id="settingsForm"><div class="form-row"><label>Nome do negócio<input id="settingsBusinessName" required maxlength="80"></label><label>Segmento<input id="settingsSegment" required maxlength="60"></label></div><div class="form-row"><label>Início do expediente<input type="time" id="settingsOpenTime" required></label><label>Fim do expediente<input type="time" id="settingsCloseTime" required></label></div><label>Duração padrão dos horários<select id="settingsSlotDuration"><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">60 minutos</option></select></label><fieldset class="public-booking-settings"><legend>Agendamento público</legend><label>Endereço da agenda<div class="slug-field"><span>ogritech.com.br/agendar/?empresa=</span><input id="settingsPublicSlug" pattern="[a-z0-9](?:[a-z0-9]|-){2,47}" maxlength="48" placeholder="nome-do-negocio"></div></label><label class="settings-toggle"><input type="checkbox" id="settingsPublicBookingEnabled"><span>Permitir novos agendamentos sem login</span></label><a class="table-button edit hidden" id="publicBookingLink" target="_blank" rel="noopener">Abrir agenda pública</a></fieldset><p class="form-message" id="settingsMessage" role="status"></p><button class="gold-button" type="submit">Salvar configurações</button></form></article>
-                    <article class="panel settings-panel" id="subscriptionCenter" data-owner-only><div class="panel-header"><div><p class="eyebrow">ASSINATURA E DADOS</p><h2>Ogritech Cardápio e Ogritech Encomendas</h2><p class="section-description">Gerencie o plano e o pagamento do seu cardápio. Se preferir, <button class="panel-help-link" type="button" data-open-ogritech-assistant aria-controls="ogri-assistant-panel" aria-expanded="false" aria-haspopup="dialog">abra o Ajudante Ogritech</button>.</p></div><button class="table-button edit" id="exportBusinessData" type="button">Exportar meus dados</button></div><p class="form-message" id="subscriptionMessage" role="status"></p><div class="commercial-list" id="subscriptionList"><p class="section-description">Carregando assinatura...</p></div></article>
+                    <article class="panel settings-panel" id="subscriptionCenter" data-owner-only><div class="panel-header"><div><p class="eyebrow">ASSINATURA E DADOS</p><h2>Seu plano e assinatura</h2><p class="section-description">Confira seu plano atual, veja outras opções e gerencie o pagamento. Se preferir, <button class="panel-help-link" type="button" data-open-ogritech-assistant aria-controls="ogri-assistant-panel" aria-expanded="false" aria-haspopup="dialog">abra o Ajudante Ogritech</button>.</p></div><button class="table-button edit" id="exportBusinessData" type="button">Exportar meus dados</button></div><p class="form-message" id="subscriptionMessage" role="status"></p><div class="commercial-list" id="subscriptionList"><p class="section-description">Carregando assinatura...</p></div></article>
                 </div>
 
             </section>
@@ -741,8 +741,8 @@
     <!-- JavaScript principal do dashboard -->
     <script src="/report-export.js?v=20261112.1"></script><script src="/sales-reports.js?v=20261112.2"></script><script src="/panel-notifications.js?v=20261112.2"></script>
     <script src="script.js?v=20261112.2"></script>
-    <script src="menu-branding.js?v=20261020.1"></script><script src="/product-offers.js?v=20261113.2"></script><script src="menu-branding-admin.js?v=20261113.2"></script><script src="/menu-order-notifications.js?v=20261110.1"></script><script src="/menu-order-actions.js?v=20261112.1"></script><script src="commercial-admin.js?v=20261113.2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script><script src="/cardapio/share.js?v=20261112.1"></script><script src="subscription-admin.js"></script>
+    <script src="menu-branding.js?v=20261020.1"></script><script src="/product-offers.js?v=20261113.2"></script><script src="menu-branding-admin.js?v=20261113.2"></script><script src="/menu-order-notifications.js?v=20261110.1"></script><script src="/menu-order-actions.js?v=20261112.1"></script><script src="commercial-admin.js?v=20261113.3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script><script src="/cardapio/share.js?v=20261112.1"></script><script src="subscription-admin.js?v=20261113.3"></script>
     <script src="/assistant-widget.js?v=20261113.2" data-context="panel"></script>
     <dialog class="panel-install-help" id="panelInstallHelp" aria-labelledby="panelInstallTitle">
         <h2 id="panelInstallTitle">Instalar Ogritech</h2>
