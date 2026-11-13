@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-13",
-  "baseline": "menu_order_response_snapshot",
+  "baseline": "split_menu_offers",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
@@ -9,29 +9,25 @@
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
     "migrationCount": 97,
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43494329088",
-    "sourceCommit": "7c7d2d9c4611ff0c05d02561763ae7a37df997fd"
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43495220665",
+    "sourceCommit": "2ce401e4b4b3fe1176b5c5762e56c64e96bab24b"
   },
   "productionDryRun": {
     "status": "PASSED",
     "executedAt": "2026-11-13",
-    "migrationCount": 1,
+    "migrationCount": 0,
     "remoteChangesPerformed": false,
-    "mode": "NATIVE_MCP_HISTORY_COMPARISON",
+    "mode": "POST_PROMOTION_READ_ONLY",
     "evidence": "docs/OGRITECH_CARDAPIO_E_ENCOMENDAS.md",
-    "aliasCompatibility": "96 migrations in production match the reviewed baseline by name and explicit aliases; only split_menu_offers is pending. Staging already has all 97."
+    "aliasCompatibility": "97 migrations verified by name and explicit version aliases; no migration history repaired or reordered."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "split_menu_offers"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
     "commercial_callbacks_and_billing": [],
-    "menu_release_required": [
-      "split_menu_offers"
-    ],
+    "menu_release_required": [],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],
@@ -86,28 +82,27 @@
     "menu_trial_review_api_hardening",
     "menu_order_receipts_and_sequence",
     "menu_sales_notification_reports",
-    "menu_order_response_snapshot"
+    "menu_order_response_snapshot",
+    "split_menu_offers"
   ],
   "authorizationSource": "Usuário: Publique — 13/11/2026. Autoriza esta divisão sobre a versão atual de produção.",
   "authorizationScope": "Divisão Cardápio/Encomendas, preços mensais e anuais, teste único de 14 dias e atualização coordenada do banco, cobrança e painéis.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
-    "executedAt": "2026-11-12",
+    "executedAt": "2026-11-13",
     "migrations": [
-      "menu_order_receipts_and_sequence",
-      "menu_sales_notification_reports",
-      "menu_order_response_snapshot"
+      "split_menu_offers"
     ],
-    "reviewedPendingCount": 3,
-    "sourceCommit": "5bd45c48cb2756692f16aea99e893629a90d3699",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43156662230",
-    "stagingMigrationCount": 96,
-    "productionMigrationCount": 96,
+    "reviewedPendingCount": 1,
+    "sourceCommit": "2ce401e4b4b3fe1176b5c5762e56c64e96bab24b",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43495220665",
+    "stagingMigrationCount": 97,
+    "productionMigrationCount": 97,
     "postPromotionPendingCount": 0,
-    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43158089637",
-    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43158503043",
+    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43490064152",
+    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43491045932",
     "restoreStatus": "SUCCESS",
-    "evidence": "docs/evidencias/pedidos-comprovantes-relatorios-2026-11-12.md"
+    "evidence": "docs/OGRITECH_CARDAPIO_E_ENCOMENDAS.md"
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",

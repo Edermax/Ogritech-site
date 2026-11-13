@@ -1,6 +1,6 @@
 # Ogritech Cardápio e Ogritech Encomendas
 
-Decisão autorizada pelo usuário em 13/11/2026. Estado: implementado e verificado localmente, pendente de publicação coordenada.
+Decisão autorizada pelo usuário em 13/11/2026. Banco e funções publicados em produção; frontend entregue pelo PR #112, com publicação automática no GitHub Pages após merge.
 
 ## Oferta
 
@@ -52,14 +52,24 @@ O lojista mantém cadastro, edição, preços, fotos, identidade, horários e pu
 Publicar coordenadamente banco, funções e frontend. O novo frontend depende de `business_whatsapp_shares` e `split_menu_offers`; publicar apenas a página causaria divergência entre recursos anunciados e cobrança.
 
 1. Confirmar o candidato de release e o CI com replay limpo do banco; conferir backup/retorno conforme o procedimento existente.
-2. Homologar o lote pendente completo, incluindo a migration de WhatsApp já existente no diretório de trabalho.
+2. Homologar a migration `split_menu_offers`; WhatsApp já integrava a base atual.
 3. Publicar `ogritech-billing`, `billing-lifecycle` e `billing-email-dispatch` com os arquivos compartilhados correspondentes.
 4. Alinhar `BILLING_TERMS_VERSION=3.3-2026-11-13` e `BILLING_TERMS_SHA256=a515628a9b422c8f7d108180648480c9ef28a27e90b1b60fd28cff189d265617` aos bytes desta versão de `termos.html`, sem modificar aceites históricos.
 5. Publicar frontend e service worker `ogritech-shell-v34`; executar o preflight somente de leitura para ambos os planos, com os quatro valores e os dois catálogos.
 6. Homologar troca de plano com o provedor e a recorrência nos ambientes autorizados antes de considerar cobrança real validada.
 
-Nenhuma configuração remota, assinatura existente no provedor ou publicação em produção foi alterada nesta implementação. Registros históricos de evidências e migrations não foram reescritos para aparentar uma publicação.
+A publicação foi autorizada pelo usuário. Nenhuma assinatura real foi alterada no provedor pelos testes. Registros históricos de evidências e migrations foram preservados.
 
 ## Candidato de publicação — 13/11/2026
 
 Integrado sobre `1d3ac968dcf5964fbc88fca050f153200c8c1d0d`, preservando o tema, a navegação, o cadastro protegido, notificações, comprovantes e relatórios atuais. A migration agora estende as funções atuais sem substituir seus motores. Apenas `split_menu_offers` está pendente de promoção em produção; WhatsApp já estava publicado. Homologação de banco: 35 asserções aprovadas em transação com rollback no staging. Backup: run 43490064152. Restauração isolada: run 43491045932, ambos aprovados.
+
+## Promoção de produção — 13/11/2026
+
+- PR: https://github.com/Edermax/Ogritech-site/pull/112.
+- CI integral aprovado: https://github.com/Edermax/Ogritech-site/actions/runs/43495220665 (estática, replay limpo das 97 migrations com 698 asserções SQL, temas, navegação e os nove cenários dos novos planos).
+- Migration nativa `split_menu_offers`: staging `20261113192700`; produção `20261113194819`. Histórico remoto com 97 migrations, sem pendências.
+- Funções de produção: `ogritech-billing` v20, `billing-lifecycle` v15 e `billing-email-dispatch` v13. Autenticação própria e configuração de JWT preservadas.
+- Preflight de produção: quatro preços, readiness de ambos os planos e rejeição de webhook sem assinatura aprovados. Não iniciou conta, cobrança, pagamento ou mensagem.
+- Auditoria de segurança: sem achado ERROR; aviso existente de proteção contra senhas vazadas permanece, sem mudança de configuração de Auth nesta entrega.
+- Contratações antigas mantêm seus prazos, identidade, catálogo e recursos completos de Encomendas. Os termos 3.3 e seu hash são alinhados ao frontend no momento da liberação.
