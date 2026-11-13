@@ -83,6 +83,40 @@
     } catch (error) { $("menuDecisionMessage").textContent = error.message; }
     finally { setBusy(false); }
   });
+  const readyDialog = $("menuReadyDialog");
+  let readyPhone = null, readyReturnFocus = null;
+  function customerWhatsApp(phone) {
+    const raw = String(phone || "").trim();
+    if (!/^\+?[\d\s().-]+$/.test(raw)) return null;
+    const digits = raw.replace(/\D/g, "");
+    const international = !raw.startsWith("+") && [10,11].includes(digits.length) ? `55${digits}` : digits;
+    return /^55[1-9][0-9]{9,10}$/.test(international) ? international : null;
+  }
+  function updateReadyLink() {
+    const link = $("menuReadyWhatsApp"), text = $("menuReadyText").value.trim();
+    link.hidden = !readyPhone || !text;
+    if (link.hidden) link.removeAttribute("href");
+    else link.href = `https://wa.me/${readyPhone}?text=${encodeURIComponent(text)}`;
+  }
+  function openReady(order, businessName) {
+    if (busy || !readyDialog || order.is_test || order.status !== "confirmed") return;
+    readyReturnFocus = document.activeElement;
+    readyPhone = customerWhatsApp(order.customer_phone);
+    $("menuReadyOrder").textContent = `${code(order)} · ${order.customer_name}`;
+    const business = businessName || "nosso estabelecimento";
+    $("menuReadyText").value = `Olá, ${order.customer_name}! Sua encomenda ${code(order)} de ${business} está pronta${order.fulfillment_type === "delivery" ? "! Vamos combinar a entrega por aqui." : " para retirada! Podemos combinar a retirada por aqui."}`;
+    $("menuReadyMessage").textContent = readyPhone ? "O WhatsApp será aberto com a mensagem preenchida. Revise e envie por lá." : "Este pedido não tem um telefone válido. Confira o contato do cliente antes de enviar o aviso.";
+    updateReadyLink(); readyDialog.showModal();
+    (readyPhone ? $("menuReadyWhatsApp") : $("menuReadyCancel")).focus();
+  }
+  if (readyDialog) {
+    $("menuReadyCancel").addEventListener("click", () => readyDialog.close());
+    $("menuReadyText").addEventListener("input", updateReadyLink);
+    readyDialog.addEventListener("close", () => {
+      readyPhone = null; $("menuReadyText").value = ""; updateReadyLink();
+      readyReturnFocus?.focus();
+    });
+  }
   async function viewReceipt(order, businessId) {
     const popup = window.open("about:blank","_blank");
     if (popup) { popup.opener = null; popup.document.title = "Comprovante"; popup.document.body.textContent = "Carregando comprovante..."; }
@@ -98,5 +132,5 @@
       }
     } catch (error) { popup?.close(); announce(error.message,true); }
   }
-  window.OgritechOrderActions = { openPayment,openReview,viewReceipt };
+  window.OgritechOrderActions = { openPayment,openReview,viewReceipt,openReady };
 })();

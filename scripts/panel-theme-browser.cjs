@@ -54,7 +54,7 @@ async function darkIssues(page){return page.evaluate(()=>{
   await page.evaluate(()=>OgritechPanelTheme.set('light'));await settle(page);const original=await styles(page);
   await page.evaluate(()=>OgritechPanelTheme.set('dark'));await settle(page);
   const issues=await darkIssues(page);assert.deepEqual(issues,[],label);
-  if(/assistant|operation|review|account/.test(label))await page.screenshot({path:out+'/'+label+'-dark.png'});
+  if(/assistant|operation|review|account|ready-whatsapp/.test(label))await page.screenshot({path:out+'/'+label+'-dark.png'});
   await page.evaluate(()=>OgritechPanelTheme.set('light'));await settle(page);assert.deepEqual(await styles(page),original,'Original light appearance: '+label);
   results.push({scene:label,darkContrastPassed:true,lightPreserved:true});
  }
@@ -85,6 +85,15 @@ async function darkIssues(page){return page.evaluate(()=>{
    assert.ok(await orderControls.evaluateAll(elements=>elements.every(el=>getComputedStyle(el).backgroundColor==='rgb(23, 39, 52)')));
    await page.evaluate(()=>OgritechPanelTheme.set('light'));
    await orderControls.evaluateAll(elements=>elements.forEach(el=>{el.disabled=false;}));
+   assert.equal(await page.locator('#menuOrdersList [data-order-action="ready"]').count(),1);
+   const callsBeforeReady=await page.evaluate(()=>window.__calls.length);
+   await page.locator('#menuOrdersList [data-order-action="ready"]').click();
+   await check(page,'ready-whatsapp-'+width);
+   const readyUrl=new URL(await page.locator('#menuReadyWhatsApp').getAttribute('href'));
+   assert.equal(readyUrl.hostname,'wa.me');assert.equal(readyUrl.pathname,'/5511999999999');assert.match(readyUrl.searchParams.get('text'),/#2/);
+   await page.locator('#menuReadyText').fill('Sua encomenda está pronta!');assert.equal(new URL(await page.locator('#menuReadyWhatsApp').getAttribute('href')).searchParams.get('text'),'Sua encomenda está pronta!');
+   await page.locator('#menuReadyCancel').click();assert.equal(await page.evaluate(()=>window.__calls.length),callsBeforeReady);
+   assert.equal(await page.evaluate(()=>window.__notificationOrders[1].status),'confirmed');
    await page.locator('#menuOrdersList [data-order-action="mark_paid"]').first().click();await check(page,'payment-'+width);await page.locator('#menuPaymentCancel').click();
    await page.locator('#menuOrdersList [data-order-action="review_decision"]').first().click();await check(page,'decision-'+width);await page.locator('#menuDecisionCancel').click();
    await page.locator('#panelAssistantOpen').click();await page.locator('.ogri-assistant__panel').waitFor({state:'visible'});await check(page,'assistant-'+width);

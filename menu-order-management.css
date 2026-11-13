@@ -5,3 +5,5 @@
 .menu-operation-dialog :is(input,select,textarea){width:100%;padding:12px;border:1px solid var(--control-border,#7b919e);border-radius:10px;background:var(--control-surface,#fff);color:var(--control-text,#172d3a);font:inherit}
 .menu-operation-dialog input[type=file]{font-size:14px}.menu-operation-dialog :is(input,select,textarea,button):focus-visible{outline:3px solid #08b9d3;outline-offset:3px}
 .menu-operation-dialog .commercial-actions{display:flex;flex-wrap:wrap;gap:10px}.menu-operation-dialog button{min-height:44px}.menu-operation-dialog [hidden]{display:none!important}
+
+.menu-operation-dialog a.table-button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;text-decoration:none}
