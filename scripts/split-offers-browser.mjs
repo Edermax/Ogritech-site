@@ -100,7 +100,7 @@ try{
   await page.waitForFunction(()=>document.getElementById('plansGrid').querySelectorAll('.plan-card').length===2);
   for(const text of ['29,90','299,00','49,90','499,00'])assert.ok((await page.locator('#plansGrid').textContent()).includes(text));
   await page.locator('#plansGrid').screenshot({path:resolve(output,'admin-plans.png')});
-  await page.click('.platform-menu a[href="#products"]');await page.selectOption('[data-admin-offer]','cardapio');await page.click('[data-product-action="change_offer"]');
+  await page.click('a[href="#products"][data-admin-group]');await page.selectOption('[data-admin-offer]','cardapio');await page.click('[data-product-action="change_offer"]');
   await page.waitForFunction(()=>window.__offer==='cardapio');assert.ok((await page.evaluate(()=>window.__calls)).some(call=>call.args?.action==='change_offer'&&call.args.offer==='cardapio'));
   report.checks.push('master admin displays both monthly/annual prices and changes customer plan');await context.close();
  }
