@@ -8,7 +8,7 @@ const read = (path) => readFile(new URL(path, root), "utf8");
 test("centro de assinatura oferece jornada autônoma e suporte opcional", async () => {
   const page = await read("painel/index.html");
   const script = await read("subscription-admin.js");
-  for (const text of ["Ogritech Cardápio e Ogritech Encomendas", "Exportar meus dados", "Cancelar renovação", "Manter assinatura"]) assert.match(`${page}\n${script}`, new RegExp(text));
+  for (const text of ["Seu plano e assinatura", "Exportar meus dados", "Cancelar renovação", "Manter assinatura"]) assert.match(`${page}\n${script}`, new RegExp(text));
   assert.match(page, /data-open-ogritech-assistant[^>]*>abra o Ajudante Ogritech/);
   assert.match(script, /O acesso ao Cardápio será mantido/);
   assert.match(script, /current_period_end/);

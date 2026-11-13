@@ -13,6 +13,11 @@
     let menuOnboarding = null;
     const whatsappOnly = () => menuOnboarding?.offer_code === "cardapio";
     function renderMenuOffer() {
+        const planLabel = byId("tenantPlanLabel");
+        if (planLabel && ["cardapio", "encomendas"].includes(menuOnboarding?.offer_code)) {
+            planLabel.textContent = `Plano: ${menuOnboarding.offer_code === "cardapio" ? "Cardápio" : "Encomendas"}`;
+        }
+
         const simple = whatsappOnly();
         for (const id of ["menuOrdersPanel", "menuPilotMetricsPanel", "menuAssistantSettingsPanel", "menuFulfillmentChoices", "menuDeliveryZoneFields", "menuPaymentChoices", "menuPixForm", "menuServiceAreaForm", "panelSalesReports"]) byId(id)?.classList.toggle("menu-offer-hidden", simple);
         byId("menuTestOrderButton")?.classList.toggle("menu-offer-hidden", simple);

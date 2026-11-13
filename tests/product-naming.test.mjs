@@ -6,16 +6,18 @@ const root = new URL("../", import.meta.url);
 const officialProducts = ["Ogritech Cardápio", "Ogritech Encomendas"];
 
 test("frontend apresenta as duas ofertas atuais", async () => {
-  const [home, contact, panel] = await Promise.all([
+  const [home, contact, panel, offers] = await Promise.all([
     readFile(new URL("index.html", root), "utf8"),
     readFile(new URL("contato/index.html", root), "utf8"),
-    readFile(new URL("painel/index.html", root), "utf8")
+    readFile(new URL("painel/index.html", root), "utf8"),
+    readFile(new URL("product-offers.js", root), "utf8")
   ]);
 
   for (const product of officialProducts) {
     assert.ok(home.includes(product), `${product} deve aparecer na página inicial`);
     assert.ok(contact.includes(product), `${product} deve aparecer no formulário de contato`);
-    assert.ok(panel.includes(product), `${product} deve aparecer na navegação do painel`);
+    assert.match(panel, /src="\/product-offers\.js/);
+    assert.ok(offers.includes(product), `${product} deve estar no catálogo usado pelo painel`);
   }
 });
 

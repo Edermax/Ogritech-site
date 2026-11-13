@@ -85,15 +85,21 @@ try{
   }else{assert.equal(await page.locator('#checkout').isVisible(),true);assert.equal(await page.locator('#whatsappSelectionLink').isVisible(),false);}
   await page.screenshot({path:resolve(output,`catalog-${offer}-mobile.png`),fullPage:true});report.checks.push(`${offer} public consumer flow`);await context.close();
  }
- for(const offer of ['cardapio','encomendas']){
-  const {page,context}=await pageFor('panel',offer,1440);await page.goto(origin+'/painel/',{waitUntil:'networkidle'});
+ for(const width of [390,1440])for(const offer of ['cardapio','encomendas']){
+  const {page,context}=await pageFor('panel',offer,width);await page.goto(origin+'/painel/',{waitUntil:'networkidle'});
   await page.evaluate(async()=>{document.documentElement.style.visibility='visible';document.getElementById('content').hidden=false;document.querySelectorAll('.view-section').forEach(el=>el.classList.add('hidden'));document.getElementById('menuView').classList.remove('hidden');await window.loadMenuAdmin();await window.loadSubscriptionCenter();});
   await page.evaluate(()=>window.OgritechMenuWorkspace.select('settings'));assert.equal(await page.locator('#menuFulfillmentChoices').isVisible(),offer==='encomendas');assert.equal(await page.locator('#menuPaymentChoices').isVisible(),offer==='encomendas');
   await page.evaluate(()=>window.OgritechMenuWorkspace.select('review'));assert.equal(await page.locator('#menuTestOrderButton').evaluate(el=>el.classList.contains('menu-offer-hidden')),offer==='cardapio');
   await page.evaluate(()=>{window.OgritechPanelNavigation.show('configuracoes');document.querySelectorAll('[data-owner-only]').forEach(el=>{el.hidden=false;el.classList.remove('hidden');});});
   assert.equal(await page.locator('[data-billing-cycle]').inputValue(),'annual');
-  const other=offer==='cardapio'?'full-plan':'simple-plan';await page.selectOption('[data-plan-for]',other);await page.click('[data-subscription-action=change_plan]');await page.waitForFunction(expected=>window.__offer===expected,offer==='cardapio'?'encomendas':'cardapio');
-  await page.waitForFunction(()=>document.getElementById('subscriptionMessage').textContent.includes('sem novo teste'));assert.match(await page.locator('#subscriptionMessage').textContent(),/sem novo teste/i);report.checks.push(`${offer} owner plan switching and feature visibility`);await context.close();
+  const other=offer==='cardapio'?'encomendas':'cardapio';
+  const current=page.locator('[data-current-plan]');assert.equal(await current.getAttribute('data-current-plan'),offer);assert.match(await current.locator('header').textContent(),/Seu plano atual/);assert.match(await current.locator('header').textContent(),offer==='cardapio'?/Ogritech Cardápio/:/Ogritech Encomendas/);assert.match(await current.locator('.subscription-current-price').textContent(),offer==='cardapio'?/299,00 por ano/:/499,00 por ano/);
+  assert.equal(await page.locator('[data-alternative-plan]').count(),1);assert.equal(await page.locator('[data-alternative-plan]').getAttribute('data-alternative-plan'),other);assert.equal(await page.locator('[data-alternative-plan="'+offer+'"]').count(),0);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+  await page.locator('#subscriptionCenter').screenshot({path:resolve(output,`current-plan-${offer}-${width}.png`)});
+  page.once('dialog',dialog=>dialog.dismiss());await page.click('[data-subscription-action=change_plan]');assert.equal(await page.evaluate(()=>window.__offer),offer);assert.equal((await page.evaluate(()=>window.__calls)).filter(call=>call.args?.action==='change_offer').length,0);
+  page.once('dialog',dialog=>dialog.accept());await page.click('[data-subscription-action=change_plan]');await page.waitForFunction(expected=>window.__offer===expected,other);
+  await page.waitForFunction(()=>document.getElementById('subscriptionMessage').textContent.includes('sem novo teste'));assert.match(await page.locator('#subscriptionMessage').textContent(),/sem novo teste/i);assert.equal(await page.locator('[data-current-plan]').getAttribute('data-current-plan'),other);assert.equal(await page.locator('[data-alternative-plan]').getAttribute('data-alternative-plan'),offer);report.checks.push(`${offer} current plan, alternatives and confirmed switching ${width}px`);await context.close();
  }
  {
   const {page,context}=await pageFor('admin','encomendas',1440);await page.goto(origin+'/admin.html#plans',{waitUntil:'networkidle'});

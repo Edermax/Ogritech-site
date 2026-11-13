@@ -1,5 +1,5 @@
 importScripts("/menu-order-push-worker.js?v=20261110.1");
-const CACHE_NAME = "ogritech-shell-v34";
+const CACHE_NAME = "ogritech-shell-v35";
 const APP_SHELL = [
   "./", "./login/", "./painel/", "./style.css",
   "./auth.js", "./script.js", "./commercial-admin.js", "./cliente.js", "./login.js", "./business-config.js",
