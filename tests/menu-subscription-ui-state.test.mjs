@@ -6,7 +6,7 @@ const source=await readFile(new URL('../assinatura/assinatura.js',import.meta.ur
 function renderer(){
  const elements=new Map();
  const $=id=>{if(!elements.has(id)){const classes=new Set();elements.set(id,{removeAttribute(){},textContent:'',value:'',className:'',classList:{add(c){classes.add(c);},remove(c){classes.delete(c);},toggle(c,on){if(on)classes.add(c);else classes.delete(c);},contains(c){return classes.has(c);}}});}return elements.get(id);};
- const render=runInNewContext(source.slice(source.indexOf('function render(state)'),source.indexOf('async function load()'))+';render',{$,Date,URL,formatDate:value=>value});
+ const render=runInNewContext(source.slice(source.indexOf('function render(state)'),source.indexOf('async function load()'))+';render',{$,Date,URL,globalThis:{},currentOffer:"encomendas",formatDate:value=>value});
  return {render,$};
 }
 const future=new Date(Date.now()+86400000).toISOString();

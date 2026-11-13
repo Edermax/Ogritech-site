@@ -26,6 +26,12 @@ insert into public.profiles(id,barbershop_id,full_name,role) values
 insert into public.platform_modules(product_id,code,name,description)
 select id,'reports_plus','Relatórios avançados','Módulo local de teste' from public.platform_products where code='menu';
 
+-- Menu is provisioned by the signup/payment backend, never by an unbilled subscribe RPC.
+insert into public.platform_subscriptions(billing_customer_id,product_id,plan_id,status,base_amount,current_period_end)
+select c.id,p.id,plan.id,'active',49.90,now()+interval '1 month'
+from public.billing_customers c,public.platform_products p,public.saas_plans plan
+where c.saas_client_id='83000000-0000-4000-8000-000000000001' and p.code='menu' and plan.product_id=p.id and plan.code='foundation';
+
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"82000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select extensions.throws_ok($$select public.business_subscription_center('81000000-0000-4000-8000-000000000001')$$,'42501','Acesso negado','funcionário não administra assinatura');
@@ -37,12 +43,12 @@ select extensions.lives_ok($$select public.business_subscription_center('8100000
 select extensions.is((public.business_subscription_center('81000000-0000-4000-8000-000000000001')->'products' @> '[{"code":"menu"}]'::jsonb),true,'catálogo contém Cardápio');
 
 select extensions.throws_ok($$select public.self_service_product_subscription('81000000-0000-4000-8000-000000000001','menu','invalid',null,null)$$,'22023','Ação inválida','ação fora da lista é rejeitada');
-select extensions.throws_ok($$select public.self_service_product_subscription('81000000-0000-4000-8000-000000000001','menu','subscribe',(select id from public.saas_plans limit 1),null)$$,'22023','Plano incompatível ou inativo','plano de outro produto é rejeitado');
-select extensions.lives_ok($$select public.self_service_product_subscription('81000000-0000-4000-8000-000000000001','menu','subscribe',(select plan.id from public.saas_plans plan join public.platform_products product on product.id=plan.product_id where product.code='menu' and plan.code='foundation'),null)$$,'proprietário contrata Cardápio');
+select extensions.throws_ok($$select public.self_service_product_subscription('81000000-0000-4000-8000-000000000001','menu','change_plan',(select id from public.saas_plans where product_id=(select id from public.platform_products where code='agenda') limit 1),null)$$,'22023','Plano incompatível ou inativo','plano de outro produto é rejeitado');
+select extensions.lives_ok($$select public.self_service_product_subscription('81000000-0000-4000-8000-000000000001','menu','change_plan',(select plan.id from public.saas_plans plan join public.platform_products product on product.id=plan.product_id where product.code='menu' and plan.code='foundation'),null)$$,'proprietário administra plano provisionado pelo backend');
 set local role postgres;
 select extensions.is((select count(*) from public.platform_subscriptions s join public.billing_customers c on c.id=s.billing_customer_id join public.platform_products p on p.id=s.product_id where c.saas_client_id='83000000-0000-4000-8000-000000000001' and p.code='menu' and s.status='active'),1::bigint,'provisionamento cria assinatura ativa local');
 set local role authenticated;
-select extensions.throws_ok($$select public.self_service_product_subscription('81000000-0000-4000-8000-000000000001','menu','subscribe',(select plan.id from public.saas_plans plan join public.platform_products product on product.id=plan.product_id where product.code='menu' limit 1),null)$$,'23505','Solução já contratada','contratação duplicada é rejeitada');
+select extensions.throws_ok($$select public.self_service_product_subscription('81000000-0000-4000-8000-000000000001','menu','subscribe',(select plan.id from public.saas_plans plan join public.platform_products product on product.id=plan.product_id where product.code='menu' limit 1),null)$$,'23514','Use a contratação pelo cadastro ou a central de pagamento, sem novo teste gratuito','subscribe não fabrica outro período gratuito');
 
 select extensions.lives_ok($$select public.self_service_subscription_module('81000000-0000-4000-8000-000000000001','menu',(select id from public.platform_modules where code='reports_plus'),true)$$,'ativa módulo');
 set local role postgres;
@@ -71,15 +77,15 @@ select extensions.is((public.business_portability_export('81000000-0000-4000-800
 select extensions.is(jsonb_array_length(public.business_portability_export('81000000-0000-4000-8000-000000000001')->'business_clients'),1,'exportação limita clientes ao tenant');
 select extensions.ok((public.business_portability_export('81000000-0000-4000-8000-000000000001')::text not like '%public_access_token%'),'exportação não inclui token público');
 set local role postgres;
-select extensions.ok((select count(*)>=5 from public.platform_billing_audit_log where actor_id='82000000-0000-4000-8000-000000000001'),'operações self-service são auditadas');
+select extensions.ok((select count(*)>=4 from public.platform_billing_audit_log where actor_id='82000000-0000-4000-8000-000000000001'),'operações self-service são auditadas');
 
 update public.platform_subscriptions set cancel_at_period_end=true,current_period_end=now()-interval '1 second'
 where id=(select s.id from public.platform_subscriptions s join public.billing_customers c on c.id=s.billing_customer_id join public.platform_products p on p.id=s.product_id where c.saas_client_id='83000000-0000-4000-8000-000000000001' and p.code='menu' and s.status<>'cancelled');
 set local role authenticated;
-select extensions.lives_ok($$select public.self_service_product_subscription('81000000-0000-4000-8000-000000000001','menu','subscribe',(select plan.id from public.saas_plans plan join public.platform_products product on product.id=plan.product_id where product.code='menu' and plan.code='foundation'),null)$$,'nova contratação é permitida após o período cancelado');
+select extensions.throws_ok($$select public.self_service_product_subscription('81000000-0000-4000-8000-000000000001','menu','subscribe',(select plan.id from public.saas_plans plan join public.platform_products product on product.id=plan.product_id where product.code='menu' and plan.code='foundation'),null)$$,'23514','Use a contratação pelo cadastro ou a central de pagamento, sem novo teste gratuito','subscribe não reinicia acesso após o vencimento');
 set local role postgres;
-select extensions.is((select count(*) from public.platform_subscriptions s join public.billing_customers c on c.id=s.billing_customer_id join public.platform_products p on p.id=s.product_id where c.saas_client_id='83000000-0000-4000-8000-000000000001' and p.code='menu' and s.status='cancelled'),1::bigint,'assinatura vencida é encerrada');
-select extensions.is((select count(*) from public.platform_subscriptions s join public.billing_customers c on c.id=s.billing_customer_id join public.platform_products p on p.id=s.product_id where c.saas_client_id='83000000-0000-4000-8000-000000000001' and p.code='menu' and s.status='active'),1::bigint,'nova assinatura assume o acesso');
+select extensions.is((select count(*) from public.platform_subscriptions s join public.billing_customers c on c.id=s.billing_customer_id join public.platform_products p on p.id=s.product_id where c.saas_client_id='83000000-0000-4000-8000-000000000001' and p.code='menu' and s.current_period_end<=now()),1::bigint,'assinatura vencida não recebe extensão');
+select extensions.is((select count(*) from public.platform_subscriptions s join public.billing_customers c on c.id=s.billing_customer_id join public.platform_products p on p.id=s.product_id where c.saas_client_id='83000000-0000-4000-8000-000000000001' and p.code='menu' and s.status='active'),1::bigint,'subscribe rejeitado preserva uma única assinatura');
 
 select * from extensions.finish();
 rollback;

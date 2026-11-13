@@ -4,14 +4,14 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 
-test("painel master administra assinaturas do Cardápio", async () => {
+test("painel master administra assinaturas Cardápio e Encomendas", async () => {
   const [html,admin,sql] = await Promise.all([
     readFile(new URL("admin.html",root),"utf8"),
     readFile(new URL("admin.js",root),"utf8"),
     readFile(new URL("supabase/migrations/20260908200932_multiproduct_activation.sql",root),"utf8")
   ]);
   assert.match(html,/id="products"/);
-  assert.match(html,/Assinaturas do Cardápio/);
+  assert.match(html,/Assinaturas Ogritech/);
   assert.match(admin,/platform_set_product_subscription/);
   assert.match(admin,/Cancelar somente/);
   assert.match(sql,/target_product_code/);
@@ -36,7 +36,7 @@ test("painel do negócio oculta solução não contratada e abre a primeira solu
   assert.match(commercial,/received: "Recebido"/);
   assert.match(html,/data-menu-workspace="operation"/);
   assert.match(html,/id="menuOperationPublicLink"/);
-  assert.match(commercial,/if \(menuRecord\?\.published \|\| !canManageMenu\(\)\) return "operation"/);
+  assert.match(commercial,/if \(menuRecord\?\.published \|\| !canManageMenu\(\)\) return whatsappOnly\(\) \? "catalog" : "operation"/);
   assert.match(commercial,/menuOperationStatus/);
   assert.deepEqual([...script.matchAll(/(?:landing|orcamentos|cardapio):\s*"(pages|quotes|menu)"/g)].map((item)=>item[1]),["pages","quotes","menu"]);
 });

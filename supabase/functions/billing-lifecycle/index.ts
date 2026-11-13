@@ -50,7 +50,7 @@ Deno.serve(async (request) => {
     const response = await fetch(`https://api.mercadopago.com/v1/${useOrders ? "orders" : "payments"}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${signupToken}`, "Content-Type": "application/json", "X-Idempotency-Key": attempt.request_id },
-      body: JSON.stringify(useOrders ? menuPixOrderPayload(signup,attempt) : { transaction_amount: signup.total_cents / 100, description: "Renovação Ogritech Cardápio", payment_method_id: "pix", payer: { email: signup.email }, external_reference: externalReference, date_of_expiration: expiresAt, notification_url: `${url}/functions/v1/${sandbox ? "menu-sandbox-webhook" : "mercado-pago-webhook"}`, metadata: { signup_id: signup.id } }),
+      body: JSON.stringify(useOrders ? menuPixOrderPayload(signup,attempt) : { transaction_amount: signup.total_cents / 100, description: signup.offer_code === "cardapio" ? "Renovação Ogritech Cardápio" : "Renovação Ogritech Encomendas", payment_method_id: "pix", payer: { email: signup.email }, external_reference: externalReference, date_of_expiration: expiresAt, notification_url: `${url}/functions/v1/${sandbox ? "menu-sandbox-webhook" : "mercado-pago-webhook"}`, metadata: { signup_id: signup.id } }),
     });
     let payment = await response.json().catch(() => ({}));
     if (useOrders) {

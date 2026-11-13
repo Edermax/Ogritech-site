@@ -1,5 +1,17 @@
 # Ogritech Cardápio — visão e fio condutor
 
+## Decisão vigente — 13/11/2026
+
+- **Cardápio:** R$ 29,90/mês ou R$ 299,00/ano. Catálogo configurável e resumo para WhatsApp, sem entrega ou acompanhamento de pedidos na plataforma.
+- **Encomendas:** R$ 49,90/mês ou R$ 499,00/ano. Mantém a operação completa do Cardápio anterior.
+- Os 14 dias gratuitos são únicos por CPF/CNPJ na família de ofertas. Upgrade, downgrade, cancelamento ou nova seleção não concedem outro teste.
+- Troca preserva catálogo, histórico e prazo de acesso. Novo preço na próxima cobrança, sem cobrança proporcional; pagamentos pendentes precisam ser resolvidos antes.
+- Cadastro seleciona plano e periodicidade. Assinaturas antigas mantêm Encomendas. Código técnico `menu` e plano legado `foundation` são preservados para compatibilidade.
+- Esta decisão está implementada localmente e exige publicação coordenada de banco, funções e frontend; o histórico abaixo descreve estados anteriores.
+
+Consulte [escopo e verificação](OGRITECH_CARDAPIO_E_ENCOMENDAS.md).
+
+
 Registrado em: 08/09/2026.
 
 Estado em 19/10/2026: **ENTREGA PARCIAL EM PRODUÇÃO; CONCILIAÇÃO CONCLUÍDA E CORREÇÕES DA ASSINATURA VERIFICADAS EM ENSAIO ISOLADO**. As jornadas do lojista e dos pedidos foram consideradas concluídas pelo usuário. Ver [evidência vigente](evidencias/cardapio-retomada-2026-10-19.md) e `config/menu-production-launch.json` para pendências de nova liberação.

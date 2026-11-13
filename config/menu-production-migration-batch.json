@@ -1,25 +1,25 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-12",
-  "baseline": "menu_order_response_snapshot",
+  "updatedAt": "2026-11-13",
+  "baseline": "split_menu_offers",
   "strategy": "contiguous_tail",
-  "authorized": false,
-  "decision": "PENDING",
+  "authorized": true,
+  "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
-    "migrationCount": 96,
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43156662230",
-    "sourceCommit": "5bd45c48cb2756692f16aea99e893629a90d3699"
+    "migrationCount": 97,
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43495220665",
+    "sourceCommit": "2ce401e4b4b3fe1176b5c5762e56c64e96bab24b"
   },
   "productionDryRun": {
     "status": "PASSED",
-    "executedAt": "2026-11-12",
+    "executedAt": "2026-11-13",
     "migrationCount": 0,
     "remoteChangesPerformed": false,
     "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/pedidos-comprovantes-relatorios-2026-11-12.md",
-    "aliasCompatibility": "Native MCP applied exactly the three reviewed migrations in order; 96 remote migrations verified by name and explicit version aliases, without changing existing history."
+    "evidence": "docs/OGRITECH_CARDAPIO_E_ENCOMENDAS.md",
+    "aliasCompatibility": "97 migrations verified by name and explicit version aliases; no migration history repaired or reordered."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
@@ -82,36 +82,35 @@
     "menu_trial_review_api_hardening",
     "menu_order_receipts_and_sequence",
     "menu_sales_notification_reports",
-    "menu_order_response_snapshot"
+    "menu_order_response_snapshot",
+    "split_menu_offers"
   ],
-  "authorizationSource": "Autorização explícita do responsável nesta conversa (Autorizado) para publicar o PR #105, gerar backup criptografado e testar restauração isolada no GitHub Actions privado com limpeza ao final.",
-  "authorizationScope": "Comprovantes opcionais, revisão de confirmação/recusa, numeração de pedidos, notificações, relatórios e tema escuro opcional.",
+  "authorizationSource": "Usuário: Publique — 13/11/2026. Autoriza esta divisão sobre a versão atual de produção.",
+  "authorizationScope": "Divisão Cardápio/Encomendas, preços mensais e anuais, teste único de 14 dias e atualização coordenada do banco, cobrança e painéis.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
-    "executedAt": "2026-11-12",
+    "executedAt": "2026-11-13",
     "migrations": [
-      "menu_order_receipts_and_sequence",
-      "menu_sales_notification_reports",
-      "menu_order_response_snapshot"
+      "split_menu_offers"
     ],
-    "reviewedPendingCount": 3,
-    "sourceCommit": "5bd45c48cb2756692f16aea99e893629a90d3699",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43156662230",
-    "stagingMigrationCount": 96,
-    "productionMigrationCount": 96,
+    "reviewedPendingCount": 1,
+    "sourceCommit": "2ce401e4b4b3fe1176b5c5762e56c64e96bab24b",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43495220665",
+    "stagingMigrationCount": 97,
+    "productionMigrationCount": 97,
     "postPromotionPendingCount": 0,
-    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43158089637",
-    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43158503043",
+    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43490064152",
+    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43491045932",
     "restoreStatus": "SUCCESS",
-    "evidence": "docs/evidencias/pedidos-comprovantes-relatorios-2026-11-12.md"
+    "evidence": "docs/OGRITECH_CARDAPIO_E_ENCOMENDAS.md"
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43158503043",
-    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43158089637",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43491045932",
+    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43490064152",
     "verificationCount": 274,
     "decryptedFilesRemoved": true,
     "temporaryDatabaseRemoved": true,
-    "authorization": "Explicit user authorization in this conversation for PR105 publication, fresh encrypted backup and isolated restore."
+    "authorization": "User explicitly requested publication on 2026-11-13."
   }
 }

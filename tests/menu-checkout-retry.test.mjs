@@ -11,7 +11,7 @@ function setup({lead=0,scheduled=''}={}){
  const data={name:'Teste',phone:'00000000000',fulfillment:'pickup',privacy:'on',scheduled_for:scheduled};
  const cart=new Map([['item',{menu_item_price_id:'price',quantity:1,selections:[]}]]);
  const field=id=>{if(!fields.has(id))fields.set(id,{disabled:false,textContent:'',addEventListener:(name,fn)=>{handler=fn;},setAttribute(){},focus(){},scrollIntoView(){}});return fields.get(id);};
- const context={$:field,cart,FormData:class{get(key){return data[key]??'';}},requiredLeadTime:()=>lead,isDinizMenu:false,slug:'fixture',createUuid:()=>`request-${Math.random()}`,pendingRequestId:null,Date,Number,supabaseClient:{rpc:async(name,args)=>{ids.push(args.client_request_id);throw Error('network');}}};
+ const context={whatsappOnly:()=>false,$:field,cart,FormData:class{get(key){return data[key]??'';}},requiredLeadTime:()=>lead,isDinizMenu:false,slug:'fixture',createUuid:()=>`request-${Math.random()}`,pendingRequestId:null,Date,Number,supabaseClient:{rpc:async(name,args)=>{ids.push(args.client_request_id);throw Error('network');}}};
  vm.runInNewContext(body,context);
  return {fields,ids,cart,submit:()=>handler({preventDefault(){},target:{reset(){throw Error('must not reset on failure');}}})};
 }

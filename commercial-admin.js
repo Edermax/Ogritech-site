@@ -11,6 +11,22 @@
     let menuRecord = null;
     let menuTemplates = [];
     let menuOnboarding = null;
+    const whatsappOnly = () => menuOnboarding?.offer_code === "cardapio";
+    function renderMenuOffer() {
+        const simple = whatsappOnly();
+        for (const id of ["menuOrdersPanel", "menuPilotMetricsPanel", "menuAssistantSettingsPanel", "menuFulfillmentChoices", "menuDeliveryZoneFields", "menuPaymentChoices", "menuPixForm", "menuServiceAreaForm", "panelSalesReports"]) byId(id)?.classList.toggle("menu-offer-hidden", simple);
+        byId("menuTestOrderButton")?.classList.toggle("menu-offer-hidden", simple);
+        for (const id of ["menuMinimum", "menuDeliveryFee", "menuEstimatedMinutes"]) byId(id)?.closest?.("label")?.classList.toggle("menu-offer-hidden", simple);
+        document.querySelectorAll('[data-menu-workspace="operation"],[data-menu-workspace="sales"],.menu-item[data-panel-route="orders"],.menu-item[data-panel-route="sales"]').forEach(element => element.classList.toggle("menu-offer-hidden", simple));
+        if (byId("menuOfferNotice")) byId("menuOfferNotice").textContent = simple ? "Ogritech Cardápio: seus clientes escolhem os produtos e continuam no WhatsApp. Pagamento e entrega são combinados por lá." : "Ogritech Encomendas: receba e acompanhe seus pedidos pela plataforma.";
+        if (simple) {
+            journeyContent.settings = ["2. Configure seu cardápio", "Confira o nome, as cores e o horário de atendimento. Cadastre o WhatsApp público da unidade para receber as seleções dos clientes.", "Preencher configurações", "menuTitle"];
+            journeyContent.review = ["4. Revise e publique", "Revise o catálogo e o WhatsApp público. Confirme a revisão e publique para compartilhar seu link.", "Conferir minha revisão", "menuOnboardingPanel"];
+        } else {
+            journeyContent.settings = ["2. Configure o atendimento", "Confira o nome, escolha entrega ou retirada, marque os pagamentos aceitos e informe dias e horários. Salve no fim do formulário. Logo e capa são opcionais.", "Preencher configurações", "menuTitle"];
+            journeyContent.review = ["4. Revise e publique", "Confira o resumo, faça o pedido de teste e confirme a revisão. Por último, clique em Publicar cardápio. Só então o link estará disponível para seus clientes.", "Conferir minha revisão", "menuOnboardingPanel"];
+        }
+    }
     const menuStepLabels = { segment: "Modelo do segmento", identity: "Identidade visual", catalog: "Catálogo com preço", fulfillment: "Entrega ou retirada", payments: "Formas de pagamento", hours: "Horários", test_order: "Pedido de teste", review: "Revisão final" };
     const menuPaymentLabels = { pix: "Pix", cash: "Dinheiro", credit_card: "Crédito", debit_card: "Débito" };
     const menuOrderStatusLabels = { received: "Recebido", confirmed: "Confirmado", completed: "Concluído", cancelled: "Cancelado", rejected: "Recusado" };
@@ -39,7 +55,7 @@
         sales: ["Vendas", "Consulte os valores recebidos e seus relatórios.", "Ver relatórios", "panelSalesReports"]
     };
     function nextMenuWorkspace() {
-        if (menuRecord?.published || !canManageMenu()) return "operation";
+        if (menuRecord?.published || !canManageMenu()) return whatsappOnly() ? "catalog" : "operation";
         if (!menuRecord?.template_code) return "start";
         const checks = menuOnboarding?.checks || {};
         if (!["identity", "fulfillment", "payments", "hours"].every(key => checks[key])) return "settings";
@@ -110,7 +126,8 @@
             byId("menuJourneyNext").disabled = !allowed || index === 4 || menuSettingsDirty || menuBusy || !menuDataReady;
         }
         byId("menuStartComplete")?.classList.toggle("hidden", !menuRecord?.template_code);
-        window.OgritechPanelNavigation?.sync({ published, ready: menuDataReady, busy: menuBusy, canManage: canManageMenu(), workspace: selectedMenuWorkspace, next: nextMenuWorkspace(), dirtySettings: menuSettingsDirty });
+        renderMenuOffer();
+        window.OgritechPanelNavigation?.sync({ published, ready: menuDataReady, busy: menuBusy, canManage: canManageMenu(), offer: menuOnboarding?.offer_code || "encomendas", workspace: selectedMenuWorkspace, next: nextMenuWorkspace(), dirtySettings: menuSettingsDirty });
     }
     const menuWorkspaceGroups = {
         operation: ["menuOrdersPanel"],
@@ -127,7 +144,7 @@
             notify(byId("menuWorkspaceMessage"), "Salve suas configurações antes de mudar de seção.", true);
             return false;
         }
-        const selected = !canManageMenu() ? "operation" : menuWorkspaceGroups[workspace] ? workspace : "start";
+        const selected = whatsappOnly() && ["operation", "sales"].includes(workspace) ? "catalog" : !canManageMenu() ? "operation" : menuWorkspaceGroups[workspace] ? workspace : "start";
         selectedMenuWorkspace = selected;
         document.querySelectorAll("[data-menu-workspace]").forEach((button) => {
             const active = button.dataset.menuWorkspace === selected;
@@ -317,6 +334,10 @@
             ["Horário informado", menuHoursSummary(menu.weekly_hours)],
             ["Cores", `${menu.visual_identity?.primary_color || "—"} e ${menu.visual_identity?.accent_color || "—"}`]
         ];
+        if (whatsappOnly()) {
+            for (let index = rows.length - 1; index >= 0; index--) if (["Recebimento", "Pedido mínimo", "Regiões de entrega", "Pagamento combinado com o cliente"].includes(rows[index][0])) rows.splice(index, 1);
+            rows.push(["Atendimento", "Seleção enviada pelo consumidor ao WhatsApp; pagamento e entrega combinados com o estabelecimento."]);
+        }
         byId("menuReviewSummary").innerHTML = `<dl>${rows.map(([label, value]) => `<dt><strong>${escapeHtml(label)}</strong></dt><dd>${escapeHtml(value)}</dd>`).join("")}</dl>`;
         if (byId("menuSavedSettingsSummary")) byId("menuSavedSettingsSummary").innerHTML = `<dl>${rows.filter(([label]) => label !== "Catálogo disponível").map(([label, value]) => `<dt><strong>${escapeHtml(label)}</strong></dt><dd>${escapeHtml(value)}</dd>`).join("")}</dl>`;
         if (byId("menuSpecialHoursNotice")) {
@@ -691,10 +712,13 @@
             else { const zone=zones[0]||{}; if(byId("menuZoneCode")){ byId("menuZoneCode").value=zone.code||""; byId("menuZoneName").value=zone.name||""; byId("menuZoneFee").value=zone.fee??menu?.delivery_fee??0; byId("menuZoneMinimum").value=zone.minimum_order??menu?.minimum_order??0; } }
             updateMenuDeliveryZoneAvailability();
             const checks = onboarding?.checks || {};
-            const progress = `${onboarding?.completed_count || 0} de ${onboarding?.total_count || 8} etapas concluídas`;
+            const visibleChecks = Object.entries(checks).filter(([key]) => !whatsappOnly() || !["payments", "test_order"].includes(key));
+            const completedCount = whatsappOnly() ? visibleChecks.filter(([, complete]) => complete).length : (onboarding?.completed_count || 0);
+            const totalCount = whatsappOnly() ? visibleChecks.length : (onboarding?.total_count || 8);
+            const progress = `${completedCount} de ${totalCount} etapas concluídas`;
             byId("menuOnboardingProgress").textContent = progress;
-            byId("menuOnboardingBar").value = onboarding?.completed_count || 0;
-            byId("menuOnboardingBar").max = onboarding?.total_count || 8;
+            byId("menuOnboardingBar").value = completedCount;
+            byId("menuOnboardingBar").max = totalCount;
             byId("menuOnboardingBar").setAttribute("aria-valuetext", progress);
             byId("menuOnboardingChecklist").innerHTML = Object.entries(menuStepLabels).map(([code, label]) => `<li${onboarding?.next_step === code ? ' aria-current="step"' : ""}><span aria-hidden="true">${checks[code] ? "✓" : "○"}</span> ${escapeHtml(label)} — ${checks[code] ? "concluído" : "pendente"}</li>`).join("");
             byId("menuNextStep").textContent = menu?.published ? (menuCatalogDraftDirty ? "O cardápio público continua ativo. Há alterações de catálogo em rascunho aguardando publicação." : "Seu cardápio está publicado. Para editar as configurações gerais, retire o cardápio do ar e publique novamente ao terminar.") : onboarding?.next_step === "ready" ? "Revisão concluída. Você decide quando publicar seu cardápio." : `Próxima etapa: ${menuStepLabels[onboarding?.next_step] || menuStepLabels.segment}. Salve a configuração para retomar de onde parou.`;
@@ -781,10 +805,10 @@
     byId("menuSettingsForm")?.addEventListener("submit", async (event) => {
         event.preventDefault();
         if (!canManageMenu()) return;
-        const acceptsDelivery=byId("menuAcceptsDelivery").checked;
+        const acceptsDelivery=!whatsappOnly() && byId("menuAcceptsDelivery").checked;
         const zones=typeof document.createElement==="function"&&byId("menuDeliveryZoneRows")?[...byId("menuDeliveryZoneRows").querySelectorAll(".menu-delivery-zone-row")].map((row)=>({code:row.querySelector("[data-zone-code]").value.trim().toLowerCase(),name:row.querySelector("[data-zone-name]").value.trim(),fee:Number(row.querySelector("[data-zone-fee]").value||0),minimum_order:Number(row.querySelector("[data-zone-minimum]").value||0)})):(byId("menuZoneCode")?[{code:byId("menuZoneCode").value.trim().toLowerCase(),name:byId("menuZoneName").value.trim(),fee:Number(byId("menuZoneFee").value||0),minimum_order:Number(byId("menuZoneMinimum").value||0)}]:[]);
         const firstZone=zones[0]||null;
-        const settings={slug:byId("menuSlug").value.trim().toLowerCase(),title:byId("menuTitle").value.trim(),description:byId("menuDescription").value.trim(),minimum_order:Number(byId("menuMinimum").value||0),delivery_fee:Number(byId("menuDeliveryFee").value||0),accepts_delivery:acceptsDelivery,accepts_pickup:byId("menuAcceptsPickup").checked,visual_identity:{...menuRecord?.visual_identity,primary_color:byId("menuPrimaryColor").value,accent_color:byId("menuAccentColor").value},payment_methods:[...document.querySelectorAll(".menu-payment:checked")].map((input)=>input.value),weekdays:[...document.querySelectorAll(".menu-weekday:checked")].map((input)=>Number(input.value)),opens_at:byId("menuOpensAt").value,closes_at:byId("menuClosesAt").value,delivery_zone:acceptsDelivery?firstZone:null};
+        const settings={slug:byId("menuSlug").value.trim().toLowerCase(),title:byId("menuTitle").value.trim(),description:byId("menuDescription").value.trim(),minimum_order:Number(byId("menuMinimum").value||0),delivery_fee:Number(byId("menuDeliveryFee").value||0),accepts_delivery:acceptsDelivery,accepts_pickup:whatsappOnly() || byId("menuAcceptsPickup").checked,visual_identity:{...menuRecord?.visual_identity,primary_color:byId("menuPrimaryColor").value,accent_color:byId("menuAccentColor").value},payment_methods:whatsappOnly() ? ["pix"] : [...document.querySelectorAll(".menu-payment:checked")].map((input)=>input.value),weekdays:[...document.querySelectorAll(".menu-weekday:checked")].map((input)=>Number(input.value)),opens_at:byId("menuOpensAt").value,closes_at:byId("menuClosesAt").value,delivery_zone:acceptsDelivery?firstZone:null};
         if (!settings.accepts_pickup && !acceptsDelivery) return notify(byId("menuMessage"), "Ative a retirada, a entrega ou as duas opções.", true);
         if (!settings.payment_methods.length) return notify(byId("menuMessage"), "Selecione ao menos uma forma de pagamento.", true);
         if (!settings.weekdays.length || !settings.opens_at || settings.opens_at >= settings.closes_at) return notify(byId("menuMessage"), "Escolha os dias e um horário de encerramento posterior à abertura, no mesmo dia.", true);
@@ -1006,9 +1030,10 @@
         notify(byId("menuOperationMessage"), "Há um novo pedido. Use Atualizar pedidos para carregar os dados mais recentes.");
     });
     window.loadMenuAdmin = loadMenuAdmin;
+    window.addEventListener("ogritech:offer-changed", loadMenuAdmin);
     window.OgritechMenuWorkspace = {
         select: selectMenuWorkspace,
         newProduct() { if (!canManageMenu() || !menuDataReady || menuBusy) return; resetMenuItemEditor(); window.OgritechPanelNavigation?.openEditor(false); },
-        state: () => ({ published: Boolean(menuRecord?.published), ready: menuDataReady, busy: menuBusy, canManage: canManageMenu(), workspace: selectedMenuWorkspace, next: nextMenuWorkspace(), dirtySettings: menuSettingsDirty })
+        state: () => ({ published: Boolean(menuRecord?.published), ready: menuDataReady, busy: menuBusy, canManage: canManageMenu(), offer: menuOnboarding?.offer_code || "encomendas", workspace: selectedMenuWorkspace, next: nextMenuWorkspace(), dirtySettings: menuSettingsDirty })
     };
 })();

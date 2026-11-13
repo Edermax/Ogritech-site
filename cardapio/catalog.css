@@ -355,3 +355,5 @@ body:has(#cartBar:not(.hidden)) .menu-assistant { bottom: max(110px, calc(env(sa
   .menu-assistant-toggle { width: 44px; height: 44px; }
   body:has(#cartBar:not(.hidden)) .menu-assistant { bottom: max(142px, calc(env(safe-area-inset-bottom) + 132px)); }
 }
+
+#whatsappSelectionNotice{margin:18px;line-height:1.55}.cart-review-actions a{text-decoration:none;text-align:center}

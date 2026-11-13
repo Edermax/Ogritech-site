@@ -2,6 +2,7 @@
     const $ = (id) => document.getElementById(id);
     const environmentUrl = (path) => window.ogritechEnvironmentUrl?.(path) || path;
     let barbershopId = "";
+    let currentOffer = "encomendas";
     let pollTimer = null;
     let pollAttempts = 0;
 
@@ -18,6 +19,7 @@
         return data?.data ?? null;
     }
     function render(state) {
+        $("changeOfferForm").classList.add("hidden");
         $("resumeCheckout").classList.add("hidden"); $("resumeCheckout").removeAttribute("href");
         $("billingForm").classList.add("hidden");
         $("backToMenu").classList.add("hidden");
@@ -36,6 +38,14 @@
         }[state.status] || "Em análise";
         $("billingStatus").textContent = status;
         $("billingStatus").className = `status-pill ${state.status === "active" ? "success" : ["past_due", "cancelled"].includes(state.status) ? "danger" : ""}`;
+        const offer = globalThis.OgritechOffers?.offers[state.offer || "encomendas"];
+        currentOffer = state.offer || "encomendas";
+        $("billingOffer").value = currentOffer;
+        $("changeOfferForm").classList.toggle("hidden", !["trial_active", "active", "past_due"].includes(state.status));
+        if (offer) {
+            $("billingTitle").textContent = `Sua assinatura ${offer.name}`;
+            $("billingCycle").innerHTML = `<option value="monthly">Mensal · ${OgritechOffers.format(offer.monthlyCents)}</option><option value="annual">Anual · ${OgritechOffers.format(offer.annualCents)}</option>`;
+        }
         $("billingCycle").value = state.cycle === "annual" ? "annual" : "monthly";
         $("paymentMethod").value = state.payment_method === "card" ? "card" : "pix";
         $("recurringLabel").classList.toggle("hidden", $("paymentMethod").value !== "card");
@@ -95,6 +105,17 @@
             } else if (state?.status === "active") message("Pagamento confirmado. Seu acesso foi liberado.");
         } catch (error) { $("billingForm").classList.add("hidden"); message(error.message, true); }
     }
+    $("changeOfferForm").addEventListener("submit", async event => {
+        event.preventDefault();
+        const selected = $("billingOffer").value;
+        if (selected === currentOffer) return message("Este já é o seu plano atual.");
+        $("changeOfferButton").disabled = true;
+        try {
+            await invoke({ action: "change_offer", product: "menu", barbershop_id: barbershopId, offer: selected });
+            await load(); message("Plano alterado sem novo teste gratuito. O prazo de acesso foi preservado e o novo preço vale na próxima cobrança.");
+        } catch (error) { message(error.message, true); }
+        finally { $("changeOfferButton").disabled = false; }
+    });
     $("refreshBillingButton").addEventListener("click", async () => { $("refreshBillingButton").disabled = true; pollAttempts = 0; try { await load(); } finally { $("refreshBillingButton").disabled = false; } });
     $("paymentMethod").addEventListener("change", () => {
         const card = $("paymentMethod").value === "card";

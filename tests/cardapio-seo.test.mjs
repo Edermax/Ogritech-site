@@ -20,5 +20,5 @@ test('crawlable private and retired pages remain noindex and outside sitemap',as
 });
 test('structured product data is valid, matches the visible price and has no fabricated ratings',async()=>{
  const html=await read('index.html');const json=JSON.parse(html.match(/<script type="application\/ld\+json">([^]*?)<\/script>/)[1]);
- const app=json['@graph'].find(x=>x['@type']==='SoftwareApplication');assert.equal(app.name,'Ogritech Cardápio');assert.equal(app.offers.price,'49.90');assert.match(html,/R\$ 49,90/);assert.equal(app.offers.priceCurrency,'BRL');assert.ok(!app.aggregateRating);assert.ok(!app.review);
+ const app=json['@graph'].find(x=>x['@type']==='SoftwareApplication');assert.equal(app.name,'Ogritech Cardápio');assert.equal(app.offers[0].price,'29.90');assert.equal(app.offers[1].price,'299.00');const full=json['@graph'].find(x=>x.name==='Ogritech Encomendas');assert.equal(full.offers[0].price,'49.90');assert.equal(full.offers[1].price,'499.00');assert.match(html,/R\$ 49,90/);assert.equal(app.offers[0].priceCurrency,'BRL');assert.ok(!app.aggregateRating);assert.ok(!app.review);
 });

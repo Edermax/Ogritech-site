@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#f5f8fb">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <style>html{visibility:hidden}</style>
-    <title>Assinatura do Cardápio | Ogritech</title>
+    <title>Assinatura Cardápio e Encomendas | Ogritech</title>
     <link rel="icon" href="ogritech-favicon.ico" sizes="any">
     <link rel="stylesheet" href="assinatura/assinatura.css">
 <link rel="stylesheet" href="/site-theme.css?v=20261111.1"></head>
@@ -19,7 +19,7 @@
     </header>
     <main class="billing-shell">
         <section class="billing-intro" aria-labelledby="billingTitle">
-            <p class="eyebrow">OGRITECH CARDÁPIO</p>
+            <p class="eyebrow">SUA ASSINATURA OGRITECH</p>
             <h1 id="billingTitle">Mantenha seu cardápio disponível.</h1>
             <p id="billingSummary">Estamos consultando sua assinatura com segurança.</p>
             <div class="status-card" aria-live="polite">
@@ -36,7 +36,7 @@
                 <p>Nenhuma cobrança retroativa será feita. A liberação acontece automaticamente após a confirmação.</p>
             </div>
             <button id="refreshBillingButton" class="secondary-button" type="button">Atualizar status</button>
-            <form id="billingForm" class="hidden">
+            <form id="changeOfferForm" class="hidden"><label>Seu plano<select id="billingOffer"><option value="cardapio">Cardápio · R$ 29,90/mês ou R$ 299,00/ano</option><option value="encomendas">Encomendas · R$ 49,90/mês ou R$ 499,00/ano</option></select></label><p>A troca preserva seu prazo de acesso e não gera outro teste de 14 dias. O novo preço vale na próxima cobrança, sem cobrança proporcional.</p><button id="changeOfferButton" class="secondary-button" type="submit">Alterar plano</button></form><form id="billingForm" class="hidden">
                 <label>Periodicidade
                     <select id="billingCycle">
                         <option value="monthly">Mensal · R$ 49,90</option>
@@ -72,6 +72,6 @@
     <footer><a href="termos.html">Termos de Uso</a><a href="privacidade.html">Privacidade</a></footer>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
     <script src="supabase-config.js"></script>
-    <script src="assinatura/assinatura.js?v=20261020.2"></script>
+    <script src="/product-offers.js?v=20261113.1"></script><script src="assinatura/assinatura.js?v=20261113.2"></script>
 </body>
 </html>

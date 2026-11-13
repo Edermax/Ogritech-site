@@ -1910,3 +1910,5 @@ textarea:focus {
     #menuView .menu-catalog-editor-item { grid-template-columns: 56px minmax(0, 1fr); }
     #menuView .menu-catalog-editor-item > .commercial-actions { grid-column: 1 / -1; }
 }
+
+.menu-offer-hidden{display:none!important}

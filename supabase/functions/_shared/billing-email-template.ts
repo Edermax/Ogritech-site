@@ -1,4 +1,4 @@
-type BillingSignup = { business_name:string; responsible_name:string; cycle:string; total_cents:number; trial_ends_at:string; access_until:string|null; product_code:string };
+type BillingSignup = { business_name:string; responsible_name:string; cycle:string; total_cents:number; trial_ends_at:string; access_until:string|null; product_code:string; offer_code?:"cardapio"|"encomendas" };
 type BillingPayload = Record<string,unknown>;
 type Tone = "info"|"success"|"warning"|"danger"|"neutral";
 type EmailContent = { subject:string; preheader:string; title:string; message:string; detailLabel?:string; detailValue?:string; ctaLabel?:string; ctaUrl?:string; tone:Tone };
@@ -19,7 +19,7 @@ function layout(content:EmailContent,recipientName:string){
 }
 
 export function renderBillingEmail(eventType:string,payload:BillingPayload,signup:BillingSignup){
-  const productName=signup.product_code==="menu"?"Ogritech Cardápio":"Ogritech Agenda";
+  const productName=signup.product_code==="menu"?(signup.offer_code==="cardapio"?"Ogritech Cardápio":"Ogritech Encomendas"):"Ogritech Agenda";
   const business=escapeHtml(signup.business_name);
   const manageToken=String(payload?.management_token||"");
   const manageUrl=manageToken?`https://ogritech.com.br/contratar/#manage=${encodeURIComponent(manageToken)}`:"https://ogritech.com.br/contratar/";

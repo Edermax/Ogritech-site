@@ -16,7 +16,7 @@ test("landing dedicada apresenta oferta, recursos, preço e CTA para o teste", (
   assert.match(page, /id="preco"/);
   assert.match(page, /R\$ 49,90/);
   assert.match(page, /14 dias grátis/i);
-  assert.ok((page.match(/href="\.\.\/criar-cardapio\/"/g) || []).length >= 4);
+  assert.ok((page.match(/href="(?:\.\.\/|\/)criar-cardapio\/(?:\?plano=(?:cardapio|encomendas))?"/g) || []).length >= 4);
 });
 
 test("landing é indexável, canônica e responsiva", () => {

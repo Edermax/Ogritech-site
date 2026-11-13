@@ -295,3 +295,6 @@ footer nav a:hover { color:var(--teal); }
 }
 @media(max-width:380px) { .site-header { gap:8px; } .header-cta { padding:10px; font-size:12px; } .header-login { font-size:13px; } }
 @media(min-width:691px) { .hero { align-items:start; } .hero-copy { padding-top:clamp(30px,6vw,88px); } }
+
+
+.price-section{grid-template-columns:1fr;gap:36px}.price-copy{max-width:850px}.offer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.offer-grid .price-card{width:100%;max-width:none;display:flex;flex-direction:column}.offer-grid .price-card ul{flex:1}.offer-grid .price strong{font-size:clamp(2.6rem,5vw,3.6rem)}.price-note{grid-column:1/-1}@media(max-width:700px){.offer-grid{grid-template-columns:1fr}.offer-grid .price-card{margin:0}.price-section{gap:24px}}

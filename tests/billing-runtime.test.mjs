@@ -606,3 +606,100 @@ test("signup validates and persists the service invoice preference without chang
     assert.equal(invalid.status, 422);
   }
 });
+
+
+test("both monthly and annual offers are quoted by the real billing handler", async () => {
+  const handler = await loadHandler("ogritech-billing", {}, () => assert.fail("quotes cannot call payment provider"));
+  for (const [offer,monthly,annual] of [["cardapio",2990,29900],["encomendas",4990,49900]]) {
+    for (const [cycle,total] of [["monthly",monthly],["annual",annual]]) {
+      const response = await handler(new Request("https://fixture.invalid/billing", {method:"POST",body:JSON.stringify({action:"quote",product:"menu",offer,cycle})}));
+      assert.equal(response.status,200); const {data}=await response.json(); assert.equal(data.total_cents,total);assert.equal(data.base_monthly_cents,monthly);
+    }
+  }
+  for (const values of [{offer:"unknown",cycle:"monthly"},{offer:"cardapio",cycle:"quarterly"}]) {
+    const response=await handler(new Request("https://fixture.invalid/billing",{method:"POST",body:JSON.stringify({action:"quote",product:"menu",...values})}));assert.equal(response.status,422);
+  }
+});
+
+function offerChangeDb(row,{foreign=false,fail=false}={}) {
+  const calls=[];
+  const db={calls,auth:{getUser:async()=>({data:{user:{id:"fixture-owner"}},error:null})},
+    from(){const chain={select(){return chain;},eq(){return chain;},maybeSingle:async()=>({data:{role:"owner",active:true,barbershop_id:foreign?"other-business":row.barbershop_id}})};return chain;},
+    rpc:async(name,args)=>{calls.push({name,args});if(name==="is_platform_admin")return{data:false,error:null};if(name==="backend_billing_status")return{data:row,error:null};
+      return fail?{error:{code:"40001",message:"Concurrent update"}}:{data:{offer:args.target_offer,trial_ends_at:row.trial_ends_at,access_until:row.access_until}};}};
+  return db;
+}
+const offerRequest=(offer,headers={authorization:"Bearer fixture"})=>new Request("https://fixture.invalid/billing",{method:"POST",headers,body:JSON.stringify({action:"change_offer",product:"menu",barbershop_id:"aabbccdd-1234-4000-8000-123456789012",offer,total_cents:1,trial_ends_at:"2099-01-01"})});
+
+test("offer changes preserve the original trial in both directions and ignore client financial fields",async()=>{
+  for(const [from,to] of [["cardapio","encomendas"],["encomendas","cardapio"]]){
+    const row={...signup,offer_code:from,barbershop_id:signup.id,cycle:"monthly",updated_at:"2026-11-01T00:00:00Z"};const db=offerChangeDb(row);
+    const handler=await loadHandler("ogritech-billing",db,()=>assert.fail("Pix plan change cannot create a payment"));
+    const response=await handler(offerRequest(to));assert.equal(response.status,200);const {data}=await response.json();assert.equal(data.trial_ends_at,row.trial_ends_at);
+    const args=db.calls.find(call=>call.name==="backend_billing_change_offer").args;
+    assert.equal(args.target_offer,to);assert.equal(args.expected_updated_at,row.updated_at);assert.equal(args.total_cents,undefined);assert.equal(args.trial_ends_at,undefined);
+  }
+});
+
+test("offer change requires authenticated ownership and cannot cross businesses",async()=>{
+  const db=offerChangeDb({...signup,barbershop_id:signup.id},{foreign:true});const handler=await loadHandler("ogritech-billing",db,()=>assert.fail("unauthorized mutation"));
+  assert.equal((await handler(offerRequest("cardapio",{}))).status,401);
+  assert.equal((await handler(offerRequest("cardapio"))).status,403);
+  assert.ok(!db.calls.some(call=>call.name==="backend_billing_change_offer"));
+});
+
+test("pending and cancelled subscriptions cannot change their price",async()=>{
+  for(const status of ["payment_pending","cancelled","failed","cancel_at_period_end"]){
+    const db=offerChangeDb({...signup,status,offer_code:"encomendas",barbershop_id:signup.id});const handler=await loadHandler("ogritech-billing",db,()=>assert.fail("blocked mutation"));
+    assert.equal((await handler(offerRequest("cardapio"))).status,409);assert.ok(!db.calls.some(call=>call.name==="backend_billing_change_offer"));
+  }
+});
+
+test("card recurrence uses the selected offer and does not add a free trial",async()=>{
+  for(const [cycle,total] of [["monthly",2990],["annual",29900]]){
+    const row={...signup,offer_code:"encomendas",barbershop_id:signup.id,cycle,updated_at:"2026-11-01T00:00:00Z",provider_subscription_id:"fixture-provider"};const db=offerChangeDb(row);let sent;
+    const handler=await loadHandler("ogritech-billing",db,async(url,options)=>{assert.equal(options.method,"PUT");sent=JSON.parse(options.body);return Response.json({id:row.provider_subscription_id,auto_recurring:sent.auto_recurring});});
+    assert.equal((await handler(offerRequest("cardapio"))).status,200);assert.equal(sent.auto_recurring.transaction_amount,total/100);assert.equal(sent.auto_recurring.free_trial,undefined);assert.equal(sent.auto_recurring.start_date,undefined);
+  }
+});
+
+test("failed database persistence compensates the provider price before reporting failure",async()=>{
+  const row={...signup,offer_code:"encomendas",barbershop_id:signup.id,cycle:"monthly",updated_at:"2026-11-01T00:00:00Z",provider_subscription_id:"fixture-provider"};const db=offerChangeDb(row,{fail:true});const amounts=[];
+  const handler=await loadHandler("ogritech-billing",db,async(url,options)=>{const sent=JSON.parse(options.body);amounts.push(sent.auto_recurring.transaction_amount);return Response.json({id:row.provider_subscription_id,auto_recurring:sent.auto_recurring});});
+  assert.equal((await handler(offerRequest("cardapio"))).status,409);assert.deepEqual(amounts,[29.9,49.9]);
+});
+
+test("provider failure never changes the database offer",async()=>{
+  const row={...signup,offer_code:"encomendas",barbershop_id:signup.id,cycle:"monthly",updated_at:"2026-11-01T00:00:00Z",provider_subscription_id:"fixture-provider"};const db=offerChangeDb(row);
+  const handler=await loadHandler("ogritech-billing",db,async()=>Response.json({error:"unavailable"},{status:503}));
+  assert.equal((await handler(offerRequest("cardapio"))).status,502);assert.ok(!db.calls.some(call=>call.name==="backend_billing_change_offer"));
+});
+
+
+test("new signups persist the selected offer, billing cycle and 14-day boundary for all four prices",async()=>{
+ for(const [offer,cycle,total,base,planCode] of [["cardapio","monthly",2990,2990,"cardapio"],["cardapio","annual",29900,2990,"cardapio"],["encomendas","monthly",4990,4990,"foundation"],["encomendas","annual",49900,4990,"foundation"]]){
+  const records={},filters=[];let payload;
+  const db={rpc:async(name,args)=>{if(name==="backend_menu_trial_rate_limit")return{data:{allowed:true},error:null};if(name==="backend_menu_trial_evaluate")return{data:{decision:"allow"},error:null};if(name==="backend_billing_signup_create"){payload=args.payload;return{data:signup.id,error:null};}return{data:null,error:null};},auth:{admin:{inviteUserByEmail:async()=>({data:{user:{id:"fixture-owner"}},error:null})}},from(table){
+   const q={insert(value){records[table]=value;return q;},select(){return q;},eq(key,value){filters.push({table,key,value});return q;},update(){return q;},delete(){return q;},single:async()=>({data:{id:"fixture-id",share_id:"fixture-share"},error:null}),then(resolve,reject){return Promise.resolve({data:null,error:null}).then(resolve,reject);}};return q;
+  }};
+  const handler=await loadHandler("ogritech-billing",db,()=>assert.fail("trial must not charge"),{BILLING_TERMS_VERSION:"fixture",BILLING_TERMS_SHA256:"a".repeat(64)});
+  const body={action:"start_trial",product:"menu",offer,cycle,business_name:"Fixture",responsible_name:"Fixture",tax_document:"52998224725",email:"fixture@example.invalid",phone:"11999999999",publish_whatsapp:true,payment_method:"pix",terms_version:"fixture",accepted_terms:true,accepted_privacy:true,recurring_authorized:false,total_cents:1};
+  const response=await handler(new Request("https://fixture.invalid/billing",{method:"POST",body:JSON.stringify(body)}));assert.equal(response.status,201);
+  assert.equal(payload.offer_code,offer);assert.equal(payload.total_cents,total);assert.equal(payload.base_monthly_cents,base);assert.equal(records.platform_subscriptions.billing_cycle,cycle);
+  assert.equal(records.saas_clients.plan,offer==="cardapio"?"Cardápio":"Encomendas");assert.ok(filters.some(x=>x.table==="saas_plans"&&x.key==="code"&&x.value===planCode));
+  assert.ok(Math.abs(Date.parse(payload.trial_ends_at)-Date.now()-14*86400000)<5000);
+ }
+});
+
+test("Cardápio cannot publish a phone during signup without the public WhatsApp choice",async()=>{
+ const handler=await loadHandler("ogritech-billing",{},()=>assert.fail("must reject before provisioning"));
+ const response=await handler(new Request("https://fixture.invalid/billing",{method:"POST",body:JSON.stringify({action:"start_trial",product:"menu",offer:"cardapio",cycle:"monthly",business_name:"Fixture",responsible_name:"Fixture",tax_document:"52998224725",email:"fixture@example.invalid",phone:"11999999999",publish_whatsapp:false,payment_method:"pix",terms_version:"fixture",accepted_terms:true,accepted_privacy:true,recurring_authorized:false})}));
+ assert.equal(response.status,422);assert.equal((await response.json()).error.code,"public_whatsapp_required");
+});
+
+
+test("browser preflight permits the Supabase SDK headers used by plan switching",async()=>{
+ const handler=await loadHandler("ogritech-billing",{},()=>assert.fail("preflight cannot call provider"));
+ const response=await handler(new Request("https://fixture.invalid/billing",{method:"OPTIONS",headers:{Origin:"https://ogritech.com.br","Access-Control-Request-Method":"POST","Access-Control-Request-Headers":"authorization,apikey,content-type,x-client-info"}}));
+ assert.equal(response.status,204);assert.equal(response.headers.get("Access-Control-Allow-Origin"),"https://ogritech.com.br");assert.match(response.headers.get("Access-Control-Allow-Headers"),/x-client-info/);
+});

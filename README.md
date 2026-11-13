@@ -1,11 +1,13 @@
 # Ogritech
 
-Plataforma de gestão para negócios de atendimento.
+Catálogo digital e gestão de pedidos para negócios de alimentação.
+
+Oferta vigente: **Ogritech Cardápio** (R$ 29,90/mês ou R$ 299,00/ano) e **Ogritech Encomendas** (R$ 49,90/mês ou R$ 499,00/ano). Teste de 14 dias único por CPF/CNPJ, sem reinício ao trocar de plano. Veja [o escopo vigente](docs/OGRITECH_CARDAPIO_E_ENCOMENDAS.md).
 
 ## Estrutura de marca
 
 - **Ogritech** é a plataforma.
-- **Ogritech Agenda**, **Ogritech Páginas**, **Ogritech Orçamentos** e **Ogritech Cardápio** são as quatro soluções oficiais da plataforma.
+- **Ogritech Cardápio** e **Ogritech Encomendas** são as ofertas atuais. Agenda, Páginas e Orçamentos são históricos.
 - **Japa na Barba** é uma empresa fictícia usada na demonstração inicial.
 - A plataforma está em pré-operação; todos os negócios atualmente cadastrados são demonstrativos.
 - Cada negócio é isolado por `barbershop_id` e pelas políticas RLS do Supabase.

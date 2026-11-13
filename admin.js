@@ -141,7 +141,7 @@ function renderPlans() {
     $("plansGrid").innerHTML = plans.map((plan) => {
         const features = Array.isArray(plan.features) ? plan.features : [];
         const limit = (value) => value == null ? "Ilimitado" : Number(value).toLocaleString("pt-BR");
-        return `<article class="plan-card ${plan.featured ? "featured" : ""}">${plan.featured ? '<span class="recommended-plan">MAIS ESCOLHIDO</span>' : ""}<p class="platform-kicker">${escapeHtml(plan.name)}</p><strong>${money.format(plan.monthly_fee)}<small>/mês</small></strong><p>${escapeHtml(plan.description)}</p><div class="plan-limits"><span>${limit(plan.max_users)} usuários</span></div><ul>${features.map((feature) => `<li>✓ ${escapeHtml(feature)}</li>`).join("")}</ul><button type="button" class="outline-cyan-button full" data-edit-plan="${plan.id}">Editar regras</button></article>`;
+        return `<article class="plan-card ${plan.featured ? "featured" : ""}">${plan.featured ? '<span class="recommended-plan">MAIS ESCOLHIDO</span>' : ""}<p class="platform-kicker">${escapeHtml(plan.name)}</p><strong>${money.format(plan.monthly_fee)}<small>/mês</small></strong><p>Ou ${OgritechOffers.format(OgritechOffers.forPlan(plan).annualCents)}/ano · teste único de 14 dias</p><p>${escapeHtml(plan.description)}</p><div class="plan-limits"><span>${limit(plan.max_users)} usuários</span></div><ul>${features.map((feature) => `<li>✓ ${escapeHtml(feature)}</li>`).join("")}</ul><button type="button" class="outline-cyan-button full" data-edit-plan="${plan.id}">Editar regras</button></article>`;
     }).join("");
 }
 
@@ -155,6 +155,7 @@ function openPlanForm(plan) {
     $("planForm").reset(); $("planFormMessage").textContent = "";
     $("planId").value = plan.id; $("planName").value = plan.name;
     $("planPrice").value = Number(plan.monthly_fee).toFixed(2);
+    $("planPrice").readOnly = ["cardapio", "foundation"].includes(plan.code);
     $("planMaxUsers").value = plan.max_users ?? "";
     $("planMaxProfessionals").value = plan.max_professionals ?? "";
     $("planMaxServices").value = plan.max_services ?? "";
@@ -243,22 +244,30 @@ function renderProductAccess() {
         const status = subscription?.status || 'not_subscribed';
         const canActivate = business && plan && product.code === 'menu';
         const action = subscription
-            ? `<button class="danger" data-product-action="cancel" data-product-code="${product.code}" data-plan-id="${plan?.id || ''}">Cancelar</button>`
+            ? `<button data-product-action="change_offer" data-product-code="${product.code}">Alterar plano</button><button class="danger" data-product-action="cancel" data-product-code="${product.code}" data-plan-id="${plan?.id || ''}">Cancelar</button>`
             : canActivate ? `<button data-product-action="activate" data-product-code="${product.code}" data-plan-id="${plan.id}">Ativar</button>` : '<span>Plano indisponível</span>';
-        return `<tr><td><strong>${escapeHtml(product.name)}</strong><br><small>${escapeHtml(product.launch_state)}</small></td><td>${escapeHtml(plan?.name || 'Plano não configurado')}</td><td>${subscription ? moneyPrecise.format(subscription.base_amount) : '—'}</td><td><span class="${subscription ? 'active-badge' : 'suspended-badge'}">${escapeHtml(productStatusLabels[status] || 'Não contratado')}</span></td><td><div class="admin-row-actions">${action}</div></td></tr>`;
+        return `<tr><td><strong>${escapeHtml(product.name)}</strong><br><small>${escapeHtml(product.launch_state)}</small></td><td><select data-admin-offer aria-label="Plano do negócio">${plans.filter(item => item.product_id === product.id).map(item => `<option value="${escapeHtml(item.code === 'cardapio' ? 'cardapio' : 'encomendas')}"${item.id === plan?.id ? ' selected' : ''}>${escapeHtml(item.name)} · ${money.format(item.monthly_fee)}/mês · ${money.format(Number(item.monthly_fee)*10)}/ano</option>`).join('')}</select><small>Teste único de 14 dias; trocas preservam o prazo.</small></td><td>${subscription ? moneyPrecise.format(subscription.base_amount) : '—'}</td><td><span class="${subscription ? 'active-badge' : 'suspended-badge'}">${escapeHtml(productStatusLabels[status] || 'Não contratado')}</span></td><td><div class="admin-row-actions">${action}</div></td></tr>`;
     }).join('');
 }
 
 async function changeProductSubscription(button) {
     const business = businesses.find((item) => item.id === $('productBusinessFilter').value) || businesses.find(isMenuBusiness);
     if (!business || button.dataset.productCode !== 'menu') return;
+    if (button.dataset.productAction === 'change_offer') {
+        const offer = button.closest('tr').querySelector('[data-admin-offer]').value;
+        button.disabled = true;
+        const { data, error } = await supabaseClient.functions.invoke('ogritech-billing', { body: { action: 'change_offer', product: 'menu', barbershop_id: business.barbershop_id, offer } });
+        button.disabled = false;
+        if (error || data?.error) return alert(data?.error?.message || 'Não foi possível alterar o plano.');
+        await loadData(); populateSelectors(); refreshViews(); return;
+    }
     const cancelling = button.dataset.productAction === 'cancel';
     if (cancelling && !confirm(`Cancelar somente o acesso ao Cardápio de ${business.name}? O histórico de pedidos será preservado.`)) return;
     button.disabled = true;
     const { error } = await supabaseClient.rpc('platform_set_product_subscription', {
         target_saas_client_id: business.id,
         target_product_code: button.dataset.productCode,
-        target_plan_id: button.dataset.planId,
+        target_plan_id: cancelling ? button.dataset.planId : plans.find(plan => plan.code === (button.closest("tr").querySelector("[data-admin-offer]").value === "cardapio" ? "cardapio" : "foundation"))?.id,
         target_status: cancelling ? 'cancelled' : 'active',
         target_base_amount: null
     });
@@ -347,6 +356,7 @@ function selectExistingBusinessValue(id, value) {
 }
 
 function openBusinessForm(business = null) {
+    $("businessPlan").disabled = Boolean(business); $("businessPrice").readOnly = Boolean(business); $("businessPlan").title = "Altere o plano na área Soluções e acessos.";
     $("businessForm").reset(); $("businessFormMessage").textContent = ""; $("businessId").value = business?.id || "";
     $("businessModalTitle").textContent = business ? "Editar negócio" : "Cadastrar novo negócio";
     $("businessEmail").required = !business;
@@ -366,7 +376,7 @@ function openBusinessDetail(business) {
     $("detailAddUserButton").disabled = !isMenuBusiness(business);
     $("detailStatusButton").disabled = !isMenuBusiness(business);
     $("detailBillingButton").disabled = !isMenuBusiness(business);
-    $("detailStats").innerHTML = `<article><span>Produto</span><strong>${isMenuBusiness(business) ? "Cardápio" : "Histórico"}</strong></article><article><span>Acesso operacional</span><strong>${canOperateMenu(business) ? "Liberado" : "Indisponível"}</strong></article><article><span>Mensalidade cadastrada</span><strong>${money.format(business.monthly_fee || 0)}</strong></article><article><span>Origem</span><strong>${escapeHtml(business.origin)}</strong></article>`;
+    $("detailStats").innerHTML = `<article><span>Produto</span><strong>${isMenuBusiness(business) ? escapeHtml(business.plan) : "Histórico"}</strong></article><article><span>Acesso operacional</span><strong>${canOperateMenu(business) ? "Liberado" : "Indisponível"}</strong></article><article><span>Mensalidade cadastrada</span><strong>${money.format(business.monthly_fee || 0)}</strong></article><article><span>Origem</span><strong>${escapeHtml(business.origin)}</strong></article>`;
     $("detailInformation").innerHTML = `<p><span>Responsável</span><strong>${escapeHtml(business.contact_name)}</strong></p><p><span>E-mail</span><strong>${escapeHtml(business.owner_email || "Não informado")}</strong></p><p><span>Telefone</span><strong>${escapeHtml(business.phone || "Não informado")}</strong></p><p><span>Convite</span><strong>${escapeHtml(business.invite_status || "Pendente")}</strong></p><p class="full-detail"><span>Observações</span><strong>${escapeHtml(business.notes || "Sem observações")}</strong></p>`;
     $("detailStatusButton").textContent = business.status === "Ativo" ? "Suspender" : "Reativar";
     openAdminModal("businessDetailModal");
