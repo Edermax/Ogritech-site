@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 
 const source = await readFile(new URL("../menu-order-notifications.js", import.meta.url), "utf8");
 function browser({ permission = "default", available = true, failEnable = false, failDisable = false, ios = false, supported = true, existingSubscription = false } = {}) {
-  const calls = [], contexts = [];
+  const calls = [], contexts = [], registrations = [];
   let requestCount = 0, activeSubscription = null, serverEnabled = false;
   const nodes = () => ({ textContent: "", disabled: false, attrs: {}, events: {}, setAttribute(key, value) { this.attrs[key] = value; }, addEventListener(key, callback) { this.events[key] = callback; } });
   const cards = [0, 1].map(() => {
@@ -32,7 +32,7 @@ function browser({ permission = "default", available = true, failEnable = false,
   if (supported) window.PushManager = {};
   const context = vm.createContext({ window, Notification, Uint8Array, atob, MessageChannel: Channel, setTimeout, clearTimeout, Date,
     document: { querySelectorAll: () => cards }, localStorage: { getItem: () => null, removeItem() {} },
-    navigator: { userAgent: ios ? "iPhone" : "Desktop", serviceWorker: { register: async () => worker, getRegistration: async () => worker, addEventListener() {} } },
+    navigator: { userAgent: ios ? "iPhone" : "Desktop", serviceWorker: { register: async (url, options) => { registrations.push({url, scope: options.scope, cache: options.updateViaCache}); return worker; }, getRegistration: async () => worker, addEventListener() {} } },
     supabaseClient: { functions: { async invoke(name, { body }) {
       calls.push(body);
       if (body.action === "config") return { data: { data: { available, public_key: "B" + "A".repeat(86) } } };
@@ -43,7 +43,7 @@ function browser({ permission = "default", available = true, failEnable = false,
     } } }
   });
   vm.runInContext(source, context);
-  return { cards, calls, contexts, controller: window.OgritechOrderNotifications, requests: () => requestCount, serverEnabled: () => serverEnabled };
+  return { cards, calls, contexts, registrations, controller: window.OgritechOrderNotifications, requests: () => requestCount, serverEnabled: () => serverEnabled };
 }
 
 test("initialization never prompts and activation is explicit, tenant-scoped and reversible", async () => {
@@ -52,6 +52,7 @@ test("initialization never prompts and activation is explicit, tenant-scoped and
   assert.equal(page.requests(), 0);
   await page.cards[0].button.events.click();
   assert.equal(page.requests(), 1);
+  assert.deepEqual(page.registrations.at(-1), {url:"/sw.js?v=20261114.1",scope:"/",cache:"none"});
   assert.equal(page.serverEnabled(), true);
   assert.equal(page.cards[1].button.attrs["aria-pressed"], "true");
   assert.equal(page.calls.find(call => call.action === "enable").barbershop_id, "tenant-a");
