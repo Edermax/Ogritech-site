@@ -69,7 +69,6 @@ try {
       const ordinal = results.length + 1;
       await page.locator('[name="name"]').fill(`Cliente Sintético ${ordinal}`);
       await page.locator('[name="phone"]').fill(`1690000${String(ordinal).padStart(4, "0")}`);
-      await page.locator('[name="email"]').fill(`cliente-${ordinal}@fase7f.invalid`);
       await page.locator('[name="privacy"]').check();
       await page.locator("#orderSubmitButton").click();
       await page.waitForFunction(() => !document.getElementById("orderSuccess").classList.contains("hidden"));

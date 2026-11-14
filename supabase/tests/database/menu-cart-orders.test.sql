@@ -1,6 +1,6 @@
 begin;
 set local search_path=public,extensions;
-select extensions.plan(29);
+select extensions.plan(33);
 
 select extensions.has_table('public','menu_delivery_zones','áreas de entrega existem');
 select extensions.has_table('public','menu_order_item_options','snapshot de adicionais existe');
@@ -41,19 +41,20 @@ update public.online_menus set published=true,published_at=now(),accepts_deliver
 
 set local role anon;
 select extensions.is((public.public_menu('pedido-seguro')->'delivery_zones'->0->>'fee')::numeric,6::numeric,'menu público expõe frete controlado');
-select extensions.is((public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','delivery','{"text":"Rua Teste, 1","zone_code":"centro"}','', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[{"menu_option_id":"97000000-0000-4000-8000-000000000001","quantity":1}]}]',true,'98000000-0000-4000-8000-000000000001',null,'')->>'total_amount')::numeric,31::numeric,'servidor calcula item, adicional e entrega');
+select extensions.is((public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','','11999999999','delivery','{"text":"Rua Teste, 1","zone_code":"centro"}','', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[{"menu_option_id":"97000000-0000-4000-8000-000000000001","quantity":1}]}]',true,'98000000-0000-4000-8000-000000000001',null,'')->>'total_amount')::numeric,31::numeric,'servidor calcula item, adicional e entrega');
 reset role;
 select extensions.is((select count(*) from public.menu_orders where menu_id=(select id from public.online_menus where slug='pedido-seguro')),1::bigint,'primeiro envio cria um pedido');
+select extensions.ok((select coalesce(customer_email,'')='' from public.menu_orders where client_request_id='98000000-0000-4000-8000-000000000001'),'pedido funciona sem coleta de e-mail');
 select extensions.is((select subtotal from public.menu_orders where barbershop_id='91000000-0000-4000-8000-000000000001' and client_request_id='98000000-0000-4000-8000-000000000001'),25::numeric,'subtotal ignora qualquer cálculo do navegador');
 select extensions.is((select line_total from public.menu_order_item_options where barbershop_id='91000000-0000-4000-8000-000000000001' and menu_option_id='97000000-0000-4000-8000-000000000001'),5::numeric,'adicional é salvo como snapshot financeiro');
 set local role anon;
-select extensions.lives_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','delivery','{"text":"Rua Teste, 1","zone_code":"centro"}','', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[{"menu_option_id":"97000000-0000-4000-8000-000000000001","quantity":1}]}]',true,'98000000-0000-4000-8000-000000000001',null,'')$$,'reenvio idêntico devolve a resposta anterior');
+select extensions.lives_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','','11999999999','delivery','{"text":"Rua Teste, 1","zone_code":"centro"}','', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[{"menu_option_id":"97000000-0000-4000-8000-000000000001","quantity":1}]}]',true,'98000000-0000-4000-8000-000000000001',null,'')$$,'reenvio idêntico devolve a resposta anterior');
 reset role;
 select extensions.is((select count(*) from public.menu_orders where menu_id=(select id from public.online_menus where slug='pedido-seguro')),1::bigint,'reenvio não duplica pedido');
 set local role anon;
-select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','delivery','{"text":"Rua Teste, 1","zone_code":"centro"}','', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":2,"selections":[{"menu_option_id":"97000000-0000-4000-8000-000000000001","quantity":1}]}]',true,'98000000-0000-4000-8000-000000000001',null,'')$$,'23505','Chave de repetição usada com dados diferentes','chave reutilizada com payload diferente é rejeitada');
-select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','pickup',null,'', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[]}]',true,'98000000-0000-4000-8000-000000000002',null,'')$$,'22023','Seleções obrigatórias inválidas','grupo obrigatório é validado no servidor');
-select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','delivery','{"text":"Rua Teste, 1","zone_code":"fora"}','', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[{"menu_option_id":"97000000-0000-4000-8000-000000000001","quantity":1}]}]',true,'98000000-0000-4000-8000-000000000003',null,'')$$,'22023','Área de entrega inválida','área não cadastrada é rejeitada');
+select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','','11999999999','delivery','{"text":"Rua Teste, 1","zone_code":"centro"}','', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":2,"selections":[{"menu_option_id":"97000000-0000-4000-8000-000000000001","quantity":1}]}]',true,'98000000-0000-4000-8000-000000000001',null,'')$$,'23505','Chave de repetição usada com dados diferentes','chave reutilizada com payload diferente é rejeitada');
+select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','','11999999999','pickup',null,'', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[]}]',true,'98000000-0000-4000-8000-000000000002',null,'')$$,'22023','Seleções obrigatórias inválidas','grupo obrigatório é validado no servidor');
+select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','','11999999999','delivery','{"text":"Rua Teste, 1","zone_code":"fora"}','', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[{"menu_option_id":"97000000-0000-4000-8000-000000000001","quantity":1}]}]',true,'98000000-0000-4000-8000-000000000003',null,'')$$,'22023','Área de entrega inválida','área não cadastrada é rejeitada');
 reset role;
 select extensions.is((select count(*) from public.menu_orders where barbershop_id='91000000-0000-4000-8000-000000000001'),1::bigint,'tentativas inválidas não deixam pedidos parciais');
 
@@ -68,6 +69,10 @@ do $$ declare payload jsonb; begin
 end $$;
 set local role anon;
 select extensions.ok(public.public_get_menu_order(current_setting('rollback_test.reference'),current_setting('rollback_test.token')) is not null,'rollback: pedido existente pode ser acompanhado antes do fechamento');
+select extensions.is(public.public_get_menu_order(current_setting('rollback_test.reference'),current_setting('rollback_test.token'))->>'customer_name','Cliente Teste','acompanhamento preserva o nome do cliente');
+select extensions.is(public.public_get_menu_order(current_setting('rollback_test.reference'),current_setting('rollback_test.token'))->>'customer_phone','11999999999','resumo de acompanhamento inclui telefone do mesmo pedido');
+select extensions.ok(public.public_get_menu_order(current_setting('rollback_test.reference'),'token-incorreto') is null,'telefone não é exposto sem o token do pedido');
+
 select extensions.throws_ok($$select public.set_menu_publication('91000000-0000-4000-8000-000000000001',false)$$,'42501',null,'rollback: visitante não pode fechar entradas');
 reset role;
 set local role authenticated;
@@ -75,8 +80,8 @@ select extensions.lives_ok($$select public.set_menu_publication('91000000-0000-4
 reset role;
 set local role anon;
 select extensions.throws_ok($$select public.public_menu('pedido-seguro')$$,'22023','Cardápio indisponível','rollback: catálogo deixa de aceitar acesso público');
-select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','pickup',null,'','[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1}]',true,'98000000-0000-4000-8000-000000000004',null,'')$$,'22023','Cardápio indisponível','rollback: endpoint v2 bloqueia novo pedido após fechamento');
-select extensions.throws_ok($$select public.public_create_menu_order('pedido-seguro','Cliente Teste','cliente@example.invalid','11999999999','pickup',null,'','[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1}]',true,'')$$,'22023','Cardápio indisponível','rollback: endpoint legado também bloqueia novos pedidos');
+select extensions.throws_ok($$select public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','','11999999999','pickup',null,'','[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1}]',true,'98000000-0000-4000-8000-000000000004',null,'')$$,'22023','Cardápio indisponível','rollback: endpoint v2 bloqueia novo pedido após fechamento');
+select extensions.throws_ok($$select public.public_create_menu_order('pedido-seguro','Cliente Teste','','11999999999','pickup',null,'','[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1}]',true,'')$$,'22023','Cardápio indisponível','rollback: endpoint legado também bloqueia novos pedidos');
 select extensions.ok(public.public_get_menu_order(current_setting('rollback_test.reference'),current_setting('rollback_test.token')) is not null,'rollback: acompanhamento existente permanece disponível após fechamento');
 select extensions.ok(public.public_get_menu_order(current_setting('rollback_test.reference'),'invalid-token') is null,'rollback: fechamento não enfraquece proteção do acompanhamento');
 reset role;

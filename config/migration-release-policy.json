@@ -100,7 +100,8 @@
       "menu_sales_notification_reports",
       "menu_order_response_snapshot",
       "split_menu_offers",
-      "guard_menu_offer_changes"
+      "guard_menu_offer_changes",
+      "menu_tracking_customer_phone"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -111,7 +112,8 @@
       "menu_sales_notification_reports": "20261112033448",
       "menu_order_response_snapshot": "20261112035316",
       "split_menu_offers": "20261113192700",
-      "guard_menu_offer_changes": "20261114012026"
+      "guard_menu_offer_changes": "20261114012026",
+      "menu_tracking_customer_phone": "20261114173559"
     },
     "observedMigrationNames": [
       "create_core_schema",
@@ -199,10 +201,10 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "guard_menu_offer_changes",
+    "appliedThrough": "menu_tracking_customer_phone",
     "appliedOutOfOrder": [],
     "heldMigrations": [],
-    "observationEvidence": "docs/evidencias/correcao-trocas-whatsapp-2026-11-14.md",
+    "observationEvidence": "docs/evidencias/cardapio-dados-cliente-2026-11-14.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
       "business_whatsapp_shares": "20261107143521",
@@ -217,7 +219,8 @@
       "menu_sales_notification_reports": "20261112050324",
       "menu_order_response_snapshot": "20261112050335",
       "split_menu_offers": "20261113194819",
-      "guard_menu_offer_changes": "20261114012937"
+      "guard_menu_offer_changes": "20261114012937",
+      "menu_tracking_customer_phone": "20261114174015"
     }
   }
 }

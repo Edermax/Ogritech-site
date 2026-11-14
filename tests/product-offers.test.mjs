@@ -11,6 +11,14 @@ test("WhatsApp message keeps quantity, weight, options and subtotal without conf
  const url=context.OgritechWhatsAppSelection.url("5511999999999",[{name:"Bolo & chocolate",label:"2 kg",quantity:2,selections:[{quantity:1,name:"Brigadeiro"}]}],()=>100);
  const target=new URL(url);assert.equal(target.origin,"https://wa.me");const text=target.searchParams.get("text");for(const marker of ["2 × Bolo & chocolate","2 kg","1 × Brigadeiro","200,00","pagamento e entrega","não confirma o pedido"])assert.ok(text.includes(marker));
 });
+test("WhatsApp selection includes the customer name and phone supplied before sending",()=>{
+ const url=context.OgritechWhatsAppSelection.url("5511999999999",[{name:"Bolo",quantity:1}],()=>25,{name:" Maria & João ",phone:" (11) 98888-7777 "});
+ const message=new URL(url).searchParams.get("text");
+ assert.match(message,/Nome: Maria & João\nTelefone: \(11\) 98888-7777/);
+ assert.ok(message.indexOf("Nome:")<message.indexOf("1 × Bolo"));
+ assert.doesNotMatch(message,/undefined|null/);
+});
+
 test("WhatsApp links reject missing or unsafe numbers and empty selections",()=>{
  for(const phone of [null,"", "javascript:alert(1)","5511999999999?bad=1"]){assert.equal(context.OgritechWhatsAppSelection.url(phone,[{}],()=>0),null);}
  assert.equal(context.OgritechWhatsAppSelection.url("5511999999999",[],()=>0),null);

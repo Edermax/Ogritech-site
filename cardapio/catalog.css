@@ -380,3 +380,5 @@ body:has(#cartBar:not(.hidden)) .menu-assistant { bottom: max(110px, calc(env(sa
 }
 
 #whatsappSelectionNotice{margin:18px;line-height:1.55}.cart-review-actions a{text-decoration:none;text-align:center}
+
+.whatsapp-customer-form { padding:18px 24px; border-bottom:1px solid var(--menu-line); }

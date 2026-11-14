@@ -84,7 +84,6 @@ try {
       await page.locator('[name="fulfillment"]').selectOption("pickup");
       await page.locator('[name="name"]').fill("Cliente Fictício");
       await page.locator('[name="phone"]').fill("11999990000");
-      await page.locator('[name="email"]').fill("cliente@beta.invalid");
       await page.locator('[name="privacy"]').check();
       await page.locator('#orderForm button[type="submit"],#orderSubmitButton').first().click();
       try { await page.waitForFunction(() => {

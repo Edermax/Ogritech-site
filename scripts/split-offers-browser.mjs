@@ -80,6 +80,8 @@ try{
   const {page,context}=await pageFor('catalog',offer,390);await page.goto(origin+'/cardapio/?empresa=fixture',{waitUntil:'networkidle'});await page.click('[data-add-selected]');await page.click('#checkoutButton');
   if(offer==='cardapio'){
    assert.equal(await page.locator('#checkout').isVisible(),false);assert.equal(await page.locator('#whatsappSelectionLink').isVisible(),true);
+   assert.equal(await page.locator('#whatsappSelectionLink').getAttribute('href'),null);
+   await page.fill('#whatsappCustomerName','Cliente Teste');await page.fill('#whatsappCustomerPhone','11999999999');
    const target=new URL(await page.locator('#whatsappSelectionLink').getAttribute('href'));assert.equal(target.hostname,'wa.me');assert.match(target.searchParams.get('text'),/Bolo de chocolate.*2 kg/);assert.match(target.searchParams.get('text'),/pagamento e entrega/);
    assert.equal((await page.evaluate(()=>window.__calls)).some(call=>call.name.includes('create_menu_order')),false);
   }else{assert.equal(await page.locator('#checkout').isVisible(),true);assert.equal(await page.locator('#whatsappSelectionLink').isVisible(),false);}
