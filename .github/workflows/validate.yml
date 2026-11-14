@@ -51,6 +51,7 @@ jobs:
       - run: npm run test:admin-theme-browser
       - run: npm run test:admin-navigation-browser
       - run: node scripts/split-offers-browser.mjs
+      - run: node scripts/menu-theme-browser.mjs
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -60,5 +61,6 @@ jobs:
             outputs/panel-navigation/
             outputs/admin-navigation/
             outputs/split-offers/
+            outputs/menu-light-theme/
           retention-days: 7
           if-no-files-found: ignore

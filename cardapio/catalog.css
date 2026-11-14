@@ -165,14 +165,12 @@ body { background: var(--menu-canvas); color: var(--menu-ink); }
   box-shadow: var(--menu-shadow);
 }
 .public-form label { color: var(--menu-ink); }
-.public-form input, .public-form textarea, .public-form select,
-.order-payment-alert textarea {
+.public-form input, .public-form textarea, .public-form select {
   border-color: var(--menu-line);
   background: var(--menu-paper);
   color: var(--menu-ink);
   font: inherit;
 }
-.order-payment-alert textarea { width: 100%; padding: 12px; border: 1px solid var(--menu-line); border-radius: 10px; }
 .public-form input::placeholder, .public-form textarea::placeholder { color: var(--menu-muted); }
 .public-button.secondary { border: 1px solid var(--menu-line); background: var(--menu-tint); color: var(--menu-ink); }
 :where(button, a, input, select, textarea):focus-visible { outline: 2px solid var(--menu-action); outline-offset: 2px; }
@@ -186,24 +184,6 @@ body { background: var(--menu-canvas); color: var(--menu-ink); }
 .delivery-quote small { color:var(--menu-muted); font-size:9px; font-weight:800; letter-spacing:.11em; }
 .delivery-quote strong { color:var(--menu-action); font-size:22px; }
 .delivery-quote span { color:var(--menu-muted); font-size:12px; line-height:1.45; }
-.order-success { display:grid; gap:20px; max-width:860px; margin:32px auto; padding:clamp(24px,4vw,38px); border-color:var(--menu-line); background: var(--menu-tint); box-shadow: var(--menu-shadow); scroll-margin-top:84px; }
-.order-success-heading { display:flex; align-items:center; gap:16px; }
-.order-success-mark { width:48px; height:48px; flex:0 0 48px; display:grid; place-items:center; border-radius:50%; background:var(--menu-action); color:#fff; font-size:24px; font-weight:900; }
-.order-success small { color:var(--menu-muted); font-weight:800; letter-spacing:.11em; }
-.order-success h2,.order-success p { margin:0; }
-.order-success h2 { margin-top:4px; color:var(--menu-ink); font-size:clamp(25px,5vw,36px); }
-.order-code-box { padding:18px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; border:1px solid var(--menu-line); border-radius:16px; background:var(--menu-paper); }
-.order-code-box span { color:var(--menu-muted); font-size:13px; }
-.order-code-box strong { color:var(--menu-action); font-size:clamp(24px,5vw,34px); letter-spacing:.06em; }
-.order-payment-alert { padding:18px 20px; border-left:4px solid #e4bb35; border-radius:12px; background:#fff3cd; }
-.order-payment-alert strong { color:#684b06; }
-.order-payment-alert p { margin-top:8px; color:#684b06; line-height:1.6; }
-.order-payment-alert b { color:var(--menu-ink); }
-.order-success-actions { display:flex; flex-wrap:wrap; gap:12px; }
-.order-success .public-button { width:auto; display:inline-flex; align-items:center; justify-content:center; min-height:50px; text-decoration:none; }
-.order-success .order-whatsapp-action { background:var(--accent); color:var(--menu-on-accent, #000); }
-.order-success-note { color:var(--menu-muted); font-size:12px; line-height:1.5; }
-
 .cart-bar { z-index:20; gap:16px; }
 .cart-bar-actions { display:flex; align-items:center; gap:8px; }
 .cart-review { margin:28px 0; padding:0; overflow:hidden; border-color:var(--menu-line); background: var(--menu-tint); box-shadow: var(--menu-shadow); scroll-margin-top:84px; }
@@ -334,12 +314,7 @@ body.menu-checkout-active #ogritechStagingBadge { display:none !important; }
   .menu-assistant-input .public-button { width: 100%; min-height: 44px; }
 }
 
-@media (max-width: 640px) {
-  .order-success-heading { align-items: flex-start; }
-  .order-code-box { align-items: flex-start; flex-direction: column; }
-  .order-success-actions { display: grid; grid-template-columns: 1fr; }
-  .order-success .public-button { width: 100%; }
-}
+
 .checkout-estimate{display:grid;gap:9px;padding:16px;border:1px solid var(--menu-line);border-radius:14px;background:var(--menu-tint)}
 .checkout-estimate>div{display:flex;justify-content:space-between;gap:16px;color:var(--menu-ink)}
 .checkout-estimate>div:last-of-type{padding-top:10px;border-top:1px solid var(--menu-line);font-weight:800}

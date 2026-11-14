@@ -10,7 +10,7 @@ const output = resolve(root, 'outputs/menu-light-theme');
 const origin = 'https://menu-theme.ogritech.invalid';
 await mkdir(output, {recursive: true});
 const report = {scenarios: [], errors: [], externalRequests: []};
-const browser = await chromium.launch({headless: true, executablePath: process.env.OGRITECH_BROWSER_PATH || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'});
+const browser = await chromium.launch({headless: true, executablePath: process.env.OGRITECH_BROWSER_PATH || (process.platform === 'win32' ? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' : undefined)});
 
 async function checkStyles(page, selectors, surfaces = []) {
   const result = await page.evaluate(({selectors, surfaces}) => {
@@ -52,17 +52,18 @@ async function checkStyles(page, selectors, surfaces = []) {
 }
 
 try {
-  for (const width of [390, 1440]) for (const offer of ['cardapio', 'encomendas']) for (const accent of ['#f8a8d3', '#ffffff', '#000000']) {
+  for (const width of [320, 390, 1440]) for (const offer of ['cardapio', 'encomendas']) for (const accent of ['#f8a8d3', '#ffffff', '#000000']) {
     const colorScheme = accent === '#ffffff' ? 'light' : 'dark';
     const context = await browser.newContext({viewport: {width, height: 900}, colorScheme, reducedMotion: 'reduce', serviceWorkers: 'block'});
     await context.addInitScript(({offer, accent, origin}) => {
       window.ogritechEnvironmentUrl = path => new URL(path, location.origin).href;
       window.__calls = [];
+      Object.defineProperty(navigator, "clipboard", {value: {writeText: async text => { window.__copiedPix = text; }}, configurable: true});
       const item = {id: 'item', name: 'Brigadeiro Cremoso', description: 'Chocolate e leite condensado', prices: [{id: 'price', label: 'Padrão', price: 14.9}], option_groups: [{id: 'group', name: 'Escolha a cobertura', selection_type: 'single', minimum_selections: 1, maximum_selections: 1, options: [{id: 'option', name: 'Granulado', price_delta: 0}]}]};
       window.supabaseClient = {
         rpc: async (name, args) => {
           window.__calls.push({name, args});
-          if (name === 'public_menu') return {data: {menu: {title: 'Loja de teste', offer_code: offer, whatsapp_phone: '5511999999999', accepts_pickup: true, accepts_delivery: true, payment_methods: ['pix'], pix_key: 'fixture@example.invalid', visual_identity: {primary_color: '#a21d44', accent_color: accent, customized: true}}, delivery_zones: [{code: 'centro', name: 'Centro', fee: 5}], categories: [{id: 'category', name: 'Doces', items: [item]}]}};
+          if (name === 'public_menu') return {data: {menu: {title: 'Loja de teste', offer_code: offer, whatsapp_phone: '5511999999999', accepts_pickup: true, accepts_delivery: true, payment_methods: ['pix'], pix_key: 'fixture@example.invalid', pix_amount_city: 'SAO PAULO', visual_identity: {primary_color: '#a21d44', accent_color: accent, customized: true}}, delivery_zones: [{code: 'centro', name: 'Centro', fee: 5}], categories: [{id: 'category', name: 'Doces', items: [item]}]}};
           if (name === 'public_menu_assistant_status') return {data: {available: true}};
           if (name === 'public_menu_assistant_message') return {data: {reply: 'Confira esta opção.', suggestions: [{menu_item_price_id: 'price', name: item.name, label: 'Padrão', price: 14.9, requires_confirmation: true}]}};
           if (name === 'public_create_menu_order_v2') return {data: {reference: 'TEST1234', token: 'local-fixture', order_number: 1, subtotal: 29.8, delivery_fee: 5, total_amount: 34.8}};
@@ -133,8 +134,29 @@ try {
       await page.check('[name=privacy]');
       await page.click('#orderSubmitButton');
       await page.locator('#orderSuccess').waitFor({state: 'visible'});
-      checks += await checkStyles(page, ['.order-success h2', '.order-success small', '.order-code-box span', '.order-code-box strong', '.order-payment-alert strong', '.order-payment-alert p', '.order-payment-alert b', '.order-payment-alert label', '.order-payment-alert textarea', '.order-success .public-button', '.order-success-note'], ['#orderSuccess', '.order-code-box', '.order-payment-alert', '.order-payment-alert textarea']);
-      if (accent === '#f8a8d3') await page.locator('#orderSuccess').screenshot({path: resolve(output, `success-${width}.png`)});
+      const confirmationStyle = await page.locator('#orderSuccess').evaluate(el => ({
+        background:getComputedStyle(el).backgroundColor,
+        button:getComputedStyle(el.querySelector('.order-whatsapp-action')).backgroundColor,
+        headingSize:parseFloat(getComputedStyle(el.querySelector('h2')).fontSize),
+        font:getComputedStyle(el).fontFamily,
+        merchantAccent:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()
+      }));
+      assert.equal(confirmationStyle.background,'rgb(255, 255, 255)');
+      assert.equal(confirmationStyle.button,'rgb(8, 185, 211)');
+      assert.ok(confirmationStyle.headingSize>=22 && confirmationStyle.headingSize<=28);
+      assert.match(confirmationStyle.font,/ui-sans-serif/);
+      assert.equal(confirmationStyle.merchantAccent,accent);
+      assert.match(await page.locator('.order-pix-payment textarea').inputValue(),/^000201/);
+      if (accent === '#f8a8d3') {
+        await page.locator('#orderSuccess').evaluate(el=>el.scrollIntoView({behavior:'instant',block:'start'}));
+        await page.locator('#orderSuccess').screenshot({path: resolve(output, `success-${width}.png`)});
+      }
+      await page.click('#copyOrderPixKey');
+      await page.waitForFunction(()=>Boolean(window.__copiedPix));
+      assert.equal(await page.evaluate(()=>window.__copiedPix),await page.locator('.order-pix-payment textarea').inputValue());
+      assert.match(await page.locator('#copyOrderPixStatus').textContent(),/copiado/);
+
+      checks += await checkStyles(page, ['.order-success h2', '.order-success h3', '.order-total-box span', '.order-total-box strong', '.order-success small', '.order-code-box span', '.order-code-box strong', '.order-payment-alert strong', '.order-payment-alert p', '.order-payment-alert b', '.order-payment-alert label', '.order-payment-alert textarea', '.order-success .public-button', '.order-success-note'], ['#orderSuccess', '.order-code-box', '.order-payment-alert', '.order-payment-alert textarea']);
       assert.equal(await page.evaluate(() => window.__calls.filter(c => c.name.startsWith('public_create_menu_order')).length), 1);
       assert.equal(await page.evaluate(() => window.__calls.find(c => c.name==='public_create_menu_order_v2').args.supplied_email), '');
       assert.match(new URL(await page.locator('.order-whatsapp-action').getAttribute('href')).searchParams.get('text'), /Nome: Cliente de teste\nTelefone: 11999999999/);

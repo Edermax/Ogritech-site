@@ -1,0 +1,84 @@
+/* The order receipt uses the shared Ogritech utility palette. */
+.order-success.ogri-order-ui {
+  display: grid;
+  gap: 18px;
+  max-width: 760px;
+  margin: 28px auto;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--ui-surface);
+  color: var(--text);
+  box-shadow: none;
+  scroll-margin-top: 84px;
+}
+.ogri-order-ui .order-success-heading { display: flex; align-items: flex-start; gap: 12px; }
+.ogri-order-ui .order-success-heading > div { flex: 1; min-width: 0; }
+.ogri-order-ui .order-success-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #8adce8;
+  border-radius: 50%;
+  background: var(--ui-tint);
+  color: var(--cyan-light);
+  font-size: 21px;
+  font-weight: 750;
+}
+.ogri-order-ui .order-success-heading small { color: var(--cyan-light); font-size: 11px; font-weight: 750; letter-spacing: .1em; }
+.ogri-order-ui h2 { margin: 4px 0 0; color: var(--text); font-family: inherit; font-size: clamp(22px, 4vw, 28px); font-weight: 750; line-height: 1.15; letter-spacing: -.035em; }
+.ogri-order-ui h3 { margin: 0; color: var(--text); font-size: 16px; line-height: 1.35; }
+.ogri-order-ui .order-success-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ogri-order-ui .order-summary-box { display: grid; align-content: start; gap: 4px; min-width: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.ogri-order-ui .order-summary-box span { color: var(--muted); font-size: 12px; line-height: 1.4; }
+.ogri-order-ui .order-summary-box strong { color: var(--text); font-size: 24px; line-height: 1.25; overflow-wrap: anywhere; }
+.ogri-order-ui .order-code-box strong { color: var(--cyan-light); }
+.ogri-order-ui .order-payment-alert { display: grid; gap: 8px; padding: 14px 16px; border: 1px solid #8adce8; border-left: 3px solid var(--cyan); border-radius: 10px; background: var(--ui-tint); }
+.ogri-order-ui .order-payment-alert > strong { color: var(--cyan-light); font-size: 14px; line-height: 1.4; }
+.ogri-order-ui .order-payment-alert p { margin: 0; color: var(--text); font-size: 14px; line-height: 1.55; }
+.ogri-order-ui .order-payment-alert b { color: inherit; }
+.ogri-order-ui .order-success-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.ogri-order-ui .order-success-actions > a:only-child { grid-column: 1 / -1; }
+.ogri-order-ui .public-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 12px 16px;
+  border: 1px solid var(--cyan);
+  border-radius: 10px;
+  background: var(--cyan);
+  color: #062b35;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.4;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: none;
+  overflow-wrap: anywhere;
+}
+.ogri-order-ui .public-button:not(.secondary) { background: var(--cyan); color: #062b35; }
+.ogri-order-ui .public-button:not(.secondary):hover { background: #34c9df; }
+.ogri-order-ui .public-button.secondary { border-color: #7b919e; background: var(--ui-surface); color: var(--cyan-light); }
+.ogri-order-ui .public-button.secondary:hover { border-color: var(--cyan-light); background: var(--ui-tint); }
+.ogri-order-ui :is(a, button, textarea):focus-visible { outline: 3px solid var(--cyan-light); outline-offset: 3px; }
+.ogri-order-ui .order-success-note { margin: -6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.ogri-order-ui .order-pix-payment { gap: 12px; border: 1px solid var(--line); background: var(--ui-surface); }
+.ogri-order-ui .order-pix-payment label { display: grid; gap: 6px; min-width: 0; color: var(--text); font-size: 13px; font-weight: 650; }
+.ogri-order-ui .order-pix-payment textarea { display: block; width: 100%; min-width: 0; min-height: 80px; margin: 0; padding: 12px; border: 1px solid #7b919e; border-radius: 10px; background: var(--bg); color: var(--text); font: 12px/1.5 ui-monospace, monospace; overflow-wrap: anywhere; word-break: break-all; resize: vertical; }
+.ogri-order-ui .order-pix-payment .public-button { justify-self: start; }
+.ogri-order-ui .order-pix-payment .order-payment-help { color: var(--muted); font-size: 12px; }
+.ogri-order-ui #copyOrderPixStatus:empty { display: none; }
+@media (max-width: 560px) {
+  .order-success.ogri-order-ui { gap: 16px; padding: 18px; }
+  .ogri-order-ui .order-success-actions { grid-template-columns: 1fr; }
+  .ogri-order-ui .order-pix-payment .public-button { width: 100%; }
+  .ogri-order-ui .order-summary-box { padding: 12px; }
+  .ogri-order-ui .order-summary-box strong { font-size: 22px; }
+}
+@media (max-width: 350px) {
+  .ogri-order-ui .order-success-summary { grid-template-columns: 1fr; }
+}
