@@ -1,35 +1,33 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-14",
-  "baseline": "split_menu_offers",
+  "baseline": "guard_menu_offer_changes",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
-    "status": "PENDING",
+    "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
-    "migrationCount": 98
+    "migrationCount": 98,
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43540612413",
+    "sourceCommit": "30bf586a93efab12bf3eb803948030e0fe24af96"
   },
   "productionDryRun": {
     "status": "PASSED",
     "executedAt": "2026-11-14",
-    "migrationCount": 1,
+    "migrationCount": 0,
     "remoteChangesPerformed": false,
-    "mode": "NATIVE_MCP_HISTORY_COMPARISON",
+    "mode": "POST_PROMOTION_READ_ONLY",
     "evidence": "docs/evidencias/correcao-trocas-whatsapp-2026-11-14.md",
-    "aliasCompatibility": "97 production migrations match the reviewed baseline. Only guard_menu_offer_changes is pending; staging has 98."
+    "aliasCompatibility": "98 production migrations verified, with explicit native aliases and no history repair. No migration remains pending."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "guard_menu_offer_changes"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
     "commercial_callbacks_and_billing": [],
-    "menu_release_required": [
-      "guard_menu_offer_changes"
-    ],
+    "menu_release_required": [],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],
@@ -85,26 +83,27 @@
     "menu_order_receipts_and_sequence",
     "menu_sales_notification_reports",
     "menu_order_response_snapshot",
-    "split_menu_offers"
+    "split_menu_offers",
+    "guard_menu_offer_changes"
   ],
   "authorizationSource": "Usuário: Implementar as duas correções apontadas na revisão, com publicação autorizada nesta conversa.",
   "authorizationScope": "Divisão Cardápio/Encomendas, preços mensais e anuais, teste único de 14 dias e atualização coordenada do banco, cobrança e painéis.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
-    "executedAt": "2026-11-13",
+    "executedAt": "2026-11-14",
     "migrations": [
-      "split_menu_offers"
+      "guard_menu_offer_changes"
     ],
     "reviewedPendingCount": 1,
-    "sourceCommit": "2ce401e4b4b3fe1176b5c5762e56c64e96bab24b",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43495220665",
-    "stagingMigrationCount": 97,
-    "productionMigrationCount": 97,
+    "sourceCommit": "30bf586a93efab12bf3eb803948030e0fe24af96",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43540612413",
+    "stagingMigrationCount": 98,
+    "productionMigrationCount": 98,
     "postPromotionPendingCount": 0,
-    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43490064152",
-    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43491045932",
+    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43539297823",
+    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43539743553",
     "restoreStatus": "SUCCESS",
-    "evidence": "docs/OGRITECH_CARDAPIO_E_ENCOMENDAS.md"
+    "evidence": "docs/evidencias/correcao-trocas-whatsapp-2026-11-14.md"
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",

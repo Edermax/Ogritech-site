@@ -26,4 +26,6 @@ O usuário autorizou implementar os dois problemas reproduzidos na revisão. Bas
 
 Staging: migration nativa `guard_menu_offer_changes`, versão `20261114012026`; `ogritech-billing` v33 e `billing-lifecycle` v22. Nenhum pagamento, SMS, e-mail ou mudança de assinatura de cliente real foi realizado nos testes.
 
-Produção: aguarda CI integral deste candidato e promoção coordenada da migration e das duas funções. O frontend apenas melhora a apresentação dos erros, com cache atualizado. Não há alteração dos termos ou de segredos de pagamento.
+Produção: migration nativa `20261114012937`, `ogritech-billing` v22 e `billing-lifecycle` v17 publicados após CI integral aprovado. As 98 migrations estão aplicadas, sem pendências; a função antiga de commit não é executável pelo serviço e a reserva não é acessível a usuários anônimos. Zero operações pendentes no pós-deploy.
+
+CI: [43540612413](https://github.com/Edermax/Ogritech-site/actions/runs/43540612413). Frontend entregue pelo [PR #115](https://github.com/Edermax/Ogritech-site/pull/115), com publicação automática após merge e conferência dos arquivos públicos. O frontend apenas melhora a apresentação dos erros, com cache atualizado. Não há alteração dos termos ou de segredos de pagamento.
