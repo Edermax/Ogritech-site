@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const root = new URL("../", import.meta.url);
 const names = await readdir(root);
 const jsFiles = names.filter((name) => extname(name) === ".js");
-const nestedJsFiles = ["agendar/agendar.js", "criar-cardapio/criar-cardapio.js"];
+const nestedJsFiles = ["agendar/agendar.js", "criar-cardapio/criar-cardapio.js", "cardapio/cardapio.js"];
 for (const name of [...jsFiles, ...nestedJsFiles]) {
   const result = spawnSync(process.execPath, ["--check", join(fileURLToPath(root), name)], { encoding: "utf8" });
   if (result.status !== 0) throw new Error(`${name}: ${result.stderr}`);
