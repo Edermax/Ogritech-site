@@ -51,6 +51,8 @@ test("service worker only shows opted-in generic notifications and opens its own
   await dispatch("push"); assert.equal(notices.length, 0);
   await dispatch("message", { data: { type: "menu-order-push-context", enabled: true, environment: "production" }, ports: [{ postMessage: data => acknowledgements.push(data) }] });
   await dispatch("push"); assert.equal(notices.length, 1);
+  assert.equal(notices[0][1].badge, "/ogritech-notification-badge.png");
+  assert.equal(notices[0][1].icon, "/ogritech-app-192.png");
   assert.equal(notices[0][0], "Novo pedido no seu cardápio");
   await dispatch("notificationclick", { notification: { close() {}, data: { environment: "https://evil.invalid" } } });
   assert.equal(opened[0], "https://ogritech.com.br/painel/?env=production&notificacoes=pedidos");

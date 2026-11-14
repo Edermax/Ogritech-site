@@ -1,10 +1,10 @@
-importScripts("/menu-order-push-worker.js?v=20261110.1");
-const CACHE_NAME = "ogritech-shell-v37";
+importScripts("/menu-order-push-worker.js?v=20261114.1");
+const CACHE_NAME = "ogritech-shell-v38";
 const APP_SHELL = [
   "./", "./login/", "./painel/", "./style.css",
   "./auth.js", "./script.js", "./commercial-admin.js", "./cliente.js", "./login.js", "./business-config.js",
   "./supabase-config.js", "./pwa.js", "./pwa.css", "./manifest.webmanifest", "./menu-order-notifications.js",
-  "./ogritech-brand-symbol.png", "./ogritech-app-192.png", "./ogritech-favicon.ico",
+  "./ogritech-brand-symbol.png", "./ogritech-notification-badge.png", "./ogritech-app-192.png", "./ogritech-favicon.ico",
   "./ogritech-app-v2-192.png", "./ogritech-app-v2-512.png",
   "./ogritech-app-v2-maskable-192.png", "./ogritech-app-v2-maskable-512.png", "./ogritech-apple-touch-v2.png",
   "./product-offers.js", "./whatsapp-selection.js", "./home.css", "./home.js", "./commercial-public.css",

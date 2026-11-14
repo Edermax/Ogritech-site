@@ -60,7 +60,8 @@
     "assinatura/assinatura.js",
     "cardapio-digital/index.html",
     "termos.html",
-    "menu-whatsapp.js"
+    "menu-whatsapp.js",
+    "ogritech-notification-badge.png"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",
