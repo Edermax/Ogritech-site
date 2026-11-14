@@ -201,15 +201,10 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "guard_menu_offer_changes",
+    "appliedThrough": "menu_tracking_customer_phone",
     "appliedOutOfOrder": [],
-    "heldMigrations": [
-      {
-        "name": "menu_tracking_customer_phone",
-        "reason": "Preparada para validar telefone no resumo protegido por token antes da promoção."
-      }
-    ],
-    "observationEvidence": "docs/evidencias/correcao-trocas-whatsapp-2026-11-14.md",
+    "heldMigrations": [],
+    "observationEvidence": "docs/evidencias/cardapio-dados-cliente-2026-11-14.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
       "business_whatsapp_shares": "20261107143521",
@@ -224,7 +219,8 @@
       "menu_sales_notification_reports": "20261112050324",
       "menu_order_response_snapshot": "20261112050335",
       "split_menu_offers": "20261113194819",
-      "guard_menu_offer_changes": "20261114012937"
+      "guard_menu_offer_changes": "20261114012937",
+      "menu_tracking_customer_phone": "20261114174015"
     }
   }
 }

@@ -59,7 +59,8 @@
     "assinatura/index.html",
     "assinatura/assinatura.js",
     "cardapio-digital/index.html",
-    "termos.html"
+    "termos.html",
+    "menu-whatsapp.js"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",

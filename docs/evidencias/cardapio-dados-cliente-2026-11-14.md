@@ -18,3 +18,13 @@ Produção deve receber somente a migration de resposta de acompanhamento e o fr
 ## Homologação
 
 Staging recebeu somente `menu_tracking_customer_phone`, versão nativa `20261114173559`. As 33 verificações SQL de pedido passaram com fixtures sintéticas e rollback, incluindo criação sem e-mail e telefone protegido pelo token. Nenhum pedido de cliente foi alterado. O banco legado preserva e-mail ausente como vazio ou nulo; o teste verifica a ausência de valor sem exigir conversão dos registros.
+
+## Promoção do banco
+
+O CI completo passou na revisão `724c484`: estática, replay do banco, suíte SQL e testes de navegador. Execução: https://github.com/Edermax/Ogritech-site/actions/runs/43622126848.
+
+Produção recebeu somente `menu_tracking_customer_phone`, versão nativa `20261114174015`. Staging e produção têm 99 migrations. Verificações de produção confirmaram o telefone na definição da resposta, token obrigatório, wrapper público invoker e ausência de SELECT direto para anon. Zero resíduos da empresa sintética no staging.
+
+Backup diário criptografado disponível e não expirado: execução `43586284880`, artefato `ogritech-production-20261114T104230Z`. A restauração isolada já aprovada no mesmo dia é a execução `43539743553`, referente ao backup `43539297823`. Nenhum backup foi baixado ou restaurado em produção.
+
+O frontend aguarda o CI final dos metadados da promoção e o merge do PR #118.
