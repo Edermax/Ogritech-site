@@ -235,41 +235,54 @@ Deno.serve(async (request) => {
       if (result.error) return reply({ error: { code: "billing_change_failed", message: result.error.message } }, 409, origin);
       return reply({ data: { ...result.data, offer: parsed.data.offer } }, 200, origin);
     }
-    if ((signup.offer_code || "encomendas") === parsed.data.offer) return reply({ data: { offer: parsed.data.offer, trial_ends_at: signup.trial_ends_at } }, 200, origin);
-    if (["payment_pending", "cancelled", "failed", "cancel_at_period_end"].includes(signup.status)) return reply({ error: { code: "billing_change_unavailable", message: "Conclua o pagamento ou regularize a assinatura antes de trocar de plano." } }, 409, origin);
-    const target = quote(signup.cycle, "menu", parsed.data.offer);
+    const claimed = await admin.rpc("backend_billing_offer_change_claim", { target_barbershop_id: parsed.data.barbershop_id, target_offer: parsed.data.offer, expected_updated_at: signup.updated_at });
+    if (claimed.error) return reply({ error: { code: "billing_change_unavailable", message: ["55000", "40001", "23514"].includes(claimed.error.code) ? claimed.error.message : "Não foi possível iniciar a troca. Atualize sua assinatura e tente novamente." } }, 409, origin);
+    const operation = claimed.data;
+    if (!operation?.signup) return reply({ error: { code: "billing_status_unavailable" } }, 503, origin);
+    if (operation.unchanged) return reply({ data: { offer: operation.signup.offer_code, trial_ends_at: operation.signup.trial_ends_at } }, 200, origin);
+    const reserved = operation.signup;
+    const target = quote(reserved.cycle, "menu", parsed.data.offer);
     const sandbox = url === "https://fuesdztsvrkkgnbqhcxi.supabase.co";
     const token = Deno.env.get(sandbox ? "MP_MENU_SANDBOX_ACCESS_TOKEN" : "MERCADO_PAGO_ACCESS_TOKEN") || "";
-    if (signup.provider_subscription_id && !token) return reply({ error: { code: "billing_not_configured" } }, 503, origin);
-    let providerChanged = false, providerAttempted = false;
-    const updateProvider = async (amount: number) => {
+    const finish = async (needsReconciliation: boolean) => {
+      const result = await admin.rpc("backend_billing_offer_change_finish", { target_operation_id: operation.operation_id, target_token: operation.lease_token, needs_reconciliation: needsReconciliation });
+      if (result.error) console.error("change_offer.reservation_cleanup_failed", { signup_id: reserved.id });
+    };
+    const updateProvider = async (providerId: string, amount: number) => {
       if (!token) return false;
-      const response = await fetch(`https://api.mercadopago.com/preapproval/${encodeURIComponent(signup.provider_subscription_id)}`, {
+      const response = await fetch(`https://api.mercadopago.com/preapproval/${encodeURIComponent(providerId)}`, {
         method: "PUT", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ auto_recurring: { transaction_amount: amount / 100, currency_id: "BRL" } }), signal: AbortSignal.timeout(10000)
       });
       const resource = await response.json().catch(() => ({}));
-      return response.ok && String(resource.id) === String(signup.provider_subscription_id)
+      return response.ok && String(resource.id) === String(providerId)
         && Math.round(Number(resource.auto_recurring?.transaction_amount) * 100) === amount;
     };
+    // A timeout can hide a successful commit. Always reconcile to the current DB price, never a stale snapshot.
+    const reconcile = async () => {
+      try {
+        const latest = await admin.rpc("backend_billing_status", { target_barbershop_id: parsed.data.barbershop_id, target_product_code: "menu" });
+        if (latest.error || latest.data?.id !== reserved.id) return false;
+        return !latest.data.provider_subscription_id || await updateProvider(latest.data.provider_subscription_id, latest.data.total_cents);
+      } catch { return false; }
+    };
+    if (reserved.provider_subscription_id && !token) {
+      await finish(false); return reply({ error: { code: "billing_not_configured" } }, 503, origin);
+    }
     try {
-      if (signup.provider_subscription_id) {
-        providerAttempted = true;
-        providerChanged = await updateProvider(target.total_cents);
-        if (!providerChanged) {
-          try { if (!(await updateProvider(signup.total_cents))) console.error("change_offer.provider_rollback_failed", { signup_id: signup.id }); }
-          catch { console.error("change_offer.provider_rollback_failed", { signup_id: signup.id }); }
-          return reply({ error: { code: "provider_update_failed", message: "Não foi possível atualizar a próxima cobrança. Seu plano foi mantido." } }, 502, origin);
-        }
+      if (reserved.provider_subscription_id && !(await updateProvider(reserved.provider_subscription_id, target.total_cents))) {
+        await finish(!(await reconcile()));
+        return reply({ error: { code: "provider_update_failed", message: "Não foi possível confirmar a nova cobrança. Atualize sua assinatura antes de tentar novamente." } }, 502, origin);
       }
-      const result = await admin.rpc("backend_billing_change_offer", { target_barbershop_id: parsed.data.barbershop_id, target_offer: parsed.data.offer, expected_updated_at: signup.updated_at });
+      const result = await admin.rpc("backend_billing_offer_change_commit", { target_operation_id: operation.operation_id, target_token: operation.lease_token });
       if (result.error) {
-        if (providerChanged && !(await updateProvider(signup.total_cents))) console.error("change_offer.provider_rollback_failed", { signup_id: signup.id });
-        return reply({ error: { code: "billing_change_failed", message: result.error.message || "Não foi possível trocar o plano. Atualize e tente novamente." } }, 409, origin);
+        await finish(!(await reconcile()));
+        return reply({ error: { code: "billing_change_failed", message: "Não foi possível confirmar a troca. Atualize sua assinatura antes de tentar novamente." } }, 409, origin);
       }
+      await finish(false);
       return reply({ data: result.data }, 200, origin);
     } catch {
-      if (providerAttempted) { try { if (!(await updateProvider(signup.total_cents))) console.error("change_offer.provider_rollback_failed", { signup_id: signup.id }); } catch { console.error("change_offer.provider_rollback_failed", { signup_id: signup.id }); } }
+      try { await finish(!(await reconcile())); } catch { /* The scheduled recovery retains the reservation. */ }
       return reply({ error: { code: "billing_change_failed", message: "Não foi possível confirmar a troca agora. Consulte sua assinatura antes de tentar novamente." } }, 503, origin);
     }
   }

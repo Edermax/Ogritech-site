@@ -15,7 +15,7 @@
     }
     async function invoke(body) {
         const { data, error } = await supabaseClient.functions.invoke("ogritech-billing", { body });
-        if (error || data?.error) throw new Error(data?.error?.message || "Não foi possível consultar sua assinatura.");
+        if (error || data?.error) throw new Error(await OgritechOffers.errorMessage({data,error}, "Não foi possível consultar sua assinatura."));
         return data?.data ?? null;
     }
     function render(state) {

@@ -19,3 +19,10 @@ test("public price pages expose both products and preserve selection into signup
  for(const file of ["index.html","cardapio-digital/index.html"]){const html=await read(file);for(const text of ["R$ 29,90","R$ 299,00","R$ 49,90","R$ 499,00","?plano=cardapio","?plano=encomendas","não gera outro teste"])assert.ok(html.includes(text),`${file}: ${text}`);}
  const html=await read("criar-cardapio/index.html");assert.match(html,/name="offer"/);assert.match(html,/name="cycle"/);assert.match(html,/teste de 14 dias é único/);
 });
+
+
+test("billing conflict messages survive the Supabase HTTP error wrapper",async()=>{
+ const result={error:{context:{clone(){return {json:async()=>({error:{message:"Cadastre um WhatsApp válido antes de mudar para Cardápio."}})};}}}};
+ assert.match(await context.OgritechOffers.errorMessage(result,"Falha"),/WhatsApp válido/);
+ assert.equal(await context.OgritechOffers.errorMessage({error:{}},"Falha"),"Falha");
+});

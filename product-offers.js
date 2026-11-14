@@ -5,5 +5,10 @@
   });
   const forPlan = plan => plan?.code === "cardapio" ? offers.cardapio : offers.encomendas;
   const format = cents => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
-  globalThis.OgritechOffers = Object.freeze({ offers, forPlan, format, trialDays: 14 });
+  const errorMessage = async ({data,error}, fallback) => {
+    let payload = data;
+    if (!payload && error?.context?.clone) { try { payload = await error.context.clone().json(); } catch { /* Use the safe fallback for non-JSON failures. */ } }
+    return typeof payload?.error?.message === "string" ? payload.error.message : fallback;
+  };
+  globalThis.OgritechOffers = Object.freeze({ offers, forPlan, format, errorMessage, trialDays: 14 });
 })();
