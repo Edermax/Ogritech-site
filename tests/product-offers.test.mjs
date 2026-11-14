@@ -24,7 +24,7 @@ test("WhatsApp links reject missing or unsafe numbers and empty selections",()=>
  assert.equal(context.OgritechWhatsAppSelection.url("5511999999999",[],()=>0),null);
 });
 test("public price pages expose both products and preserve selection into signup",async()=>{
- for(const file of ["index.html","cardapio-digital/index.html"]){const html=await read(file);for(const text of ["R$ 29,90","R$ 299,00","R$ 49,90","R$ 499,00","?plano=cardapio","?plano=encomendas","não gera outro teste"])assert.ok(html.includes(text),`${file}: ${text}`);}
+ for(const file of ["index.html","cardapio-digital/index.html"]){const html=await read(file);for(const text of ["R$ 29,90","R$ 299,00","R$ 49,90","R$ 499,00","/criar-cardapio/cardapio/","/criar-cardapio/encomendas/","não gera outro teste"])assert.ok(html.includes(text),`${file}: ${text}`);}
  const html=await read("criar-cardapio/index.html");assert.match(html,/name="offer"/);assert.match(html,/name="cycle"/);assert.match(html,/teste de 14 dias é único/);
 });
 
@@ -33,4 +33,19 @@ test("billing conflict messages survive the Supabase HTTP error wrapper",async()
  const result={error:{context:{clone(){return {json:async()=>({error:{message:"Cadastre um WhatsApp válido antes de mudar para Cardápio."}})};}}}};
  assert.match(await context.OgritechOffers.errorMessage(result,"Falha"),/WhatsApp válido/);
  assert.equal(await context.OgritechOffers.errorMessage({error:{}},"Falha"),"Falha");
+});
+
+test("dedicated signup pages contain only the chosen plan and share the existing billing flow",async()=>{
+ for(const [code,name,other,monthly,annual] of [["cardapio","Cardápio","Encomendas","29,90","299,00"],["encomendas","Encomendas","Cardápio","49,90","499,00"]]){
+  const html=await read(`criar-cardapio/${code}/index.html`);
+  assert.ok(html.includes(`data-offer="${code}"`));
+  assert.ok(html.includes(`name="offer" id="offerChoice" value="${code}"`));
+  assert.doesNotMatch(html,/select name="offer"|class="signup-offers"/);
+  assert.ok(html.includes(`Ogritech ${name}`));
+  assert.ok(!html.includes(`Ogritech ${other}`));
+  assert.ok(html.includes(`R$ ${monthly}`));assert.ok(html.includes(`R$ ${annual}`));
+  assert.ok(html.includes(`/criar-cardapio/${code}/`));
+  assert.ok(html.includes('/criar-cardapio/criar-cardapio.js'));
+  assert.match(html,/href="\/criar-cardapio\/">Comparar os planos/);
+ }
 });

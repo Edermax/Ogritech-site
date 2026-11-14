@@ -36,5 +36,10 @@
 .signup-guide .price span{font-size:13px}
 .signup-guide .journey{grid-template-columns:1fr}
 #signupSection{scroll-margin-top:24px}
+.dedicated-benefits{padding-left:20px;margin:24px 0;color:var(--muted);font-size:14px;line-height:1.6}
+.dedicated-benefits li+li{margin-top:8px}
+.dedicated-benefits li::marker{color:var(--cyan-light)}
+.compare-link{font-size:13px;margin-top:20px}
+.dedicated-trial{font-size:14px;font-weight:650}
 @media(max-width:800px){.page-signup main{grid-template-columns:minmax(0,1fr);gap:28px}.signup-guide{position:static}.signup-guide .journey{display:none}}
 @media(max-width:620px){.signup-offer-grid{grid-template-columns:minmax(0,1fr);gap:24px}.signup-offer{padding:24px}.signup-offers>h2{font-size:24px}.page-signup main{padding-inline:20px}.signup-guide h2{font-size:24px}}

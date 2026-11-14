@@ -4,7 +4,16 @@
   const $ = id => document.querySelector('#' + id), digits = value => value.replace(/\D/g, "");
   const offerChoice = form.elements.offer, cycleChoice = form.elements.cycle;
   const requested = new URLSearchParams(location.search).get("plano");
-  offerChoice.value = requested === "cardapio" ? "cardapio" : "encomendas";
+  const dedicatedOffer = form.dataset?.offer;
+  if (!dedicatedOffer && ["cardapio", "encomendas"].includes(requested)) {
+    const destination = new URL(`/criar-cardapio/${requested}/`, location.href);
+    destination.search = location.search;
+    destination.searchParams.delete("plano");
+    destination.hash = location.hash;
+    location.replace(destination.href);
+    return;
+  }
+  offerChoice.value = dedicatedOffer === "cardapio" ? "cardapio" : "encomendas";
   function updateOffer() {
     const offer = OgritechOffers.offers[offerChoice.value], annual = cycleChoice.value === "annual";
     $("selectedOfferName").textContent = offer.name;
@@ -16,19 +25,11 @@
     $("offerDescription").textContent = offer.orders
       ? "Encomendas: receba e acompanhe os pedidos no painel, com entrega, retirada e agendamento."
       : "Cardápio: o consumidor escolhe os produtos e continua no seu WhatsApp para combinar pagamento e entrega.";
-    $("cardapioSelected").textContent = offer.orders ? "" : "Plano selecionado";
-    $("encomendasSelected").textContent = offer.orders ? "Plano selecionado" : "";
+    if ($("cardapioSelected")) $("cardapioSelected").textContent = offer.orders ? "" : "Plano selecionado";
+    if ($("encomendasSelected")) $("encomendasSelected").textContent = offer.orders ? "Plano selecionado" : "";
     $("orderNotificationsChoice").hidden = !offer.orders;
     form.elements.publish_whatsapp.required = !offer.orders;
     submit.textContent = offer.orders ? "Testar Encomendas grátis" : "Criar meu cardápio grátis";
-  }
-  for (const code of ["cardapio", "encomendas"]) {
-    $("choose-" + code).addEventListener("click", event => {
-      event.preventDefault();
-      offerChoice.value = code;
-      updateOffer();
-      offerChoice.focus();
-    });
   }
   offerChoice.addEventListener("change", updateOffer);
   cycleChoice.addEventListener("change", updateOffer);

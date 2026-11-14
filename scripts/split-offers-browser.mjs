@@ -68,7 +68,18 @@ try{
   const {page,context}=await pageFor('home','cardapio',width);await page.goto(origin+'/',{waitUntil:'networkidle'});
   for(const offer of ['cardapio','encomendas'])assert.equal(await page.locator(`[data-offer="${offer}"]`).count(),1);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
-  await page.locator('#preco').screenshot({path:resolve(output,`prices-${width}.png`),style:".site-header{visibility:hidden}"});report.checks.push(`home two offers ${width}px`);await context.close();
+  await page.locator('#preco').screenshot({path:resolve(output,`prices-${width}.png`),style:".site-header{visibility:hidden}"});
+  await page.click('.header-cta');
+  await page.waitForURL(origin+'/criar-cardapio/');
+  assert.equal(await page.locator('.signup-offers').isVisible(),true);
+  for(const code of ['cardapio','encomendas']){
+   await page.goto(origin+'/',{waitUntil:'networkidle'});
+   await page.click(`[data-offer="${code}"] a`);
+   await page.waitForURL(origin+'/criar-cardapio/'+code+'/');
+   assert.equal(await page.locator('[name=offer]').inputValue(),code);
+   assert.equal(await page.locator('.signup-offers').count(),0);
+  }
+  report.checks.push(`home generic CTA compares; plan CTAs go directly to signup ${width}px`);await context.close();
  }
  for(const width of [1440,390]){
   const {page,context}=await pageFor('signup','encomendas',width);
@@ -78,25 +89,33 @@ try{
   assert.equal(await page.locator('.plan-badge').textContent(),'Mais completo');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
   await page.locator('.signup-offers').screenshot({path:resolve(output,`signup-plans-${width}.png`)});
-  await page.fill('[name=business_name]','Nome preservado');
-  await page.click('#choose-cardapio');
-  assert.equal(await page.locator('[name=offer]').inputValue(),'cardapio');
-  assert.match(await page.locator('#selectedOfferName').textContent(),/Cardápio/);
-  assert.match(await page.locator('#selectedOfferSummary').textContent(),/29,90/);
-  assert.equal(await page.locator('[name=publish_whatsapp]').getAttribute('required'),'');
-  assert.equal(await page.locator('#orderNotificationsChoice').isVisible(),false);
-  await page.selectOption('[name=cycle]','annual');
-  await page.click('#choose-encomendas');
-  assert.equal(await page.locator('[name=business_name]').inputValue(),'Nome preservado');
-  assert.equal(await page.locator('[name=cycle]').inputValue(),'annual');
-  assert.match(await page.locator('#selectedOfferSummary').textContent(),/499,00 por ano/);
-  assert.equal(await page.locator('[name=publish_whatsapp]').getAttribute('required'),null);
-  assert.equal(await page.locator('#orderNotificationsChoice').isVisible(),true);
-  report.checks.push(`signup compares offers, preserves fields and updates plan/cycle ${width}px`);
+  for(const code of ['cardapio','encomendas']){
+   await page.goto(origin+'/criar-cardapio/',{waitUntil:'networkidle'});
+   await page.click('#choose-'+code);
+   await page.waitForURL(origin+'/criar-cardapio/'+code+'/');
+   assert.equal(await page.locator('[name=offer]').inputValue(),code);
+   assert.equal(await page.locator('select[name=offer]').count(),0);
+   assert.equal(await page.locator('.signup-offers').count(),0);
+   assert.match(await page.locator('#selectedOfferName').textContent(),code==='cardapio'?/Cardápio/:/Encomendas/);
+   assert.equal(await page.locator('#orderNotificationsChoice').isVisible(),code==='encomendas');
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+   await page.screenshot({path:resolve(output,`signup-${code}-${width}.png`),fullPage:true});
+  }
+  report.checks.push(`generic choices lead to dedicated signup pages ${width}px`);
+  await context.close();
+ }
+ for(const code of ['cardapio','encomendas']){
+  const {page,context}=await pageFor('signup',code,390);
+  await page.goto(origin+'/criar-cardapio/?plano='+code+'&env=staging',{waitUntil:'networkidle'});
+  assert.equal(new URL(page.url()).pathname,'/criar-cardapio/'+code+'/');
+  assert.equal(new URL(page.url()).searchParams.get('env'),'staging');
+  assert.equal(await page.locator('[name=offer]').inputValue(),code);
+  assert.equal(await page.locator('.signup-offers').count(),0);
+  report.checks.push(`${code} legacy link redirects and preserves environment`);
   await context.close();
  }
  for(const offer of ['cardapio','encomendas']){
-  const {page,context}=await pageFor('signup',offer,390);await page.goto(origin+'/criar-cardapio/?plano='+offer,{waitUntil:'networkidle'});
+  const {page,context}=await pageFor('signup',offer,390);await page.goto(origin+'/criar-cardapio/'+offer+'/?plano='+(offer==='cardapio'?'encomendas':'cardapio'),{waitUntil:'networkidle'});
   assert.equal(await page.locator('[name=offer]').inputValue(),offer);await page.selectOption('[name=cycle]','annual');assert.match(await page.locator('#selectedOfferPrice').textContent(),offer==='cardapio'?/299,00/:/499,00/);
   await page.fill('[name=business_name]','Loja Teste');await page.fill('[name=tax_document]','52998224725');await page.fill('[name=responsible_name]','Pessoa Teste');await page.fill('[name=email]','fixture@example.invalid');await page.fill('[name=phone]','11999999999');await page.selectOption('[name=segment]','Pizzaria');await page.selectOption('[name=service_invoice_preference]','not_requested');await page.check('[name=accepted_terms]');await page.check('[name=publish_whatsapp]');
   await page.click('#submitButton');await page.locator('#resultSection').waitFor({state:'visible'});assert.equal(report.billingRequests.at(-1).offer,offer);assert.equal(report.billingRequests.at(-1).cycle,'annual');report.checks.push(`${offer} annual signup payload`);await context.close();
