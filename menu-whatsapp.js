@@ -2,8 +2,11 @@
 (() => {
   const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
   const amount = (value) => money.format(Number(value) || 0);
-  const format = ({ code, businessName = "estabelecimento", items = [], subtotal, deliveryFee, total, fulfillment, address, scheduledFor, notes, paymentStatus = "pending", quote = false }) => {
-    const lines = [`Olá, ${businessName}! Meu pedido é ${code}.`, "", "Itens:"];
+  const format = ({ code, businessName = "estabelecimento", customerName = "", customerPhone = "", items = [], subtotal, deliveryFee, total, fulfillment, address, scheduledFor, notes, paymentStatus = "pending", quote = false }) => {
+    const lines = [`Olá, ${businessName}! Meu pedido é ${code}.`];
+    if (customerName?.trim()) lines.push(`Nome: ${customerName.trim()}`);
+    if (customerPhone?.trim()) lines.push(`Telefone: ${customerPhone.trim()}`);
+    lines.push("", "Itens:");
     for (const item of items) {
       const detail = [item.label, ...(item.selections || [])].filter(Boolean).join(" · ");
       lines.push(`• ${item.quantity}x ${item.name}${detail ? ` (${detail})` : ""} — ${amount(item.lineTotal)}`);

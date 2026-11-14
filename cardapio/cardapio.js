@@ -97,7 +97,7 @@
     if (whatsappOnly()) { $("scheduledFor").required = false; return; }
     const input = $("scheduledFor"), hint = $("scheduledForHint"), leadTime = requiredLeadTime();
     input.required = leadTime > 0;
-    if (!leadTime) { input.removeAttribute("min"); hint.textContent = "(opcional)"; return; }
+    if (!leadTime) { input.removeAttribute("min"); hint.textContent = "(Opcional)"; return; }
     input.min = localDateTimeValue(new Date(Date.now() + (leadTime * 60 + 5) * 60000));
     hint.textContent = `(obrigatório · mínimo de ${leadTime} horas de antecedência)`;
   }
@@ -198,11 +198,17 @@
     const link = $("whatsappSelectionLink");
     if (link) {
       link.classList.toggle("hidden", !whatsappOnly());
-      const target = globalThis.OgritechWhatsAppSelection?.url(page?.menu?.whatsapp_phone, [...cart.values()], estimatedUnitPrice);
+      const customer = { name: $("whatsappCustomerName").value.trim(), phone: $("whatsappCustomerPhone").value.trim() };
+      const validCustomer = customer.name.length >= 2 && customer.phone.replace(/\D/g, "").length >= 10 && $("whatsappCustomerForm").checkValidity();
+      const target = validCustomer ? globalThis.OgritechWhatsAppSelection?.url(page?.menu?.whatsapp_phone, [...cart.values()], estimatedUnitPrice, customer) : null;
       if (target) link.href = target; else link.removeAttribute("href");
       link.setAttribute("aria-disabled", String(!target));
+      $("whatsappCustomerForm").classList.toggle("hidden", !whatsappOnly());
       $("whatsappSelectionNotice").classList.toggle("hidden", !whatsappOnly());
-      if (whatsappOnly() && !target) $("whatsappSelectionNotice").textContent = "O WhatsApp deste estabelecimento está indisponível. Entre em contato para continuar o atendimento.";
+      if (whatsappOnly()) $("whatsappSelectionNotice").textContent = validCustomer
+        ? "O WhatsApp abrirá com seu nome, telefone e os itens escolhidos para você enviar. Disponibilidade, pagamento e entrega serão combinados com o estabelecimento."
+        : "Informe seu nome e telefone com DDD para continuar pelo WhatsApp.";
+      if (whatsappOnly() && validCustomer && !target) $("whatsappSelectionNotice").textContent = "O WhatsApp deste estabelecimento está indisponível. Entre em contato para continuar o atendimento.";
       $("proceedCheckoutButton").classList.toggle("hidden", whatsappOnly());
     }
     $("cartReviewTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total);
@@ -219,7 +225,7 @@
   function configure(price, quantity = Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1))) {
     const groups = price.item.option_groups || []; if (!groups.length) return addConfigured(price, [], quantity);
     $("configuratorTitle").textContent = price.item.name;
-    $("configuratorGroups").innerHTML = groups.map((group) => `<fieldset data-min="${group.minimum_selections}" data-max="${group.maximum_selections}"><legend>${clean(group.name)} <small>Escolha de ${group.minimum_selections} a ${group.maximum_selections}${Number(group.free_selections) ? ` · ${group.free_selections} incluídos` : ""}</small></legend>${group.options.map((option) => `<label><input type="${group.selection_type === "single" ? "radio" : "checkbox"}" name="group-${group.id}" value="${option.id}" data-price="${option.price_delta}" data-option-name="${clean(option.name)}"> <span>${clean(option.name)}${Number(option.price_delta) ? ` + ${money.format(option.price_delta)}` : ""}</span>${group.selection_type !== "single" && Number(option.maximum_quantity) > 1 ? `<input aria-label="Quantidade de ${clean(option.name)}" data-option-quantity="${option.id}" type="number" min="1" max="${option.maximum_quantity}" step="1" value="1">` : ""}</label>`).join("")}</fieldset>`).join("");
+    $("configuratorGroups").innerHTML = groups.map((group) => `<fieldset data-min="${group.minimum_selections}" data-max="${group.maximum_selections}"><legend>${clean(group.name)}${Number(group.minimum_selections) ? "" : " (Opcional)"} <small>Escolha de ${group.minimum_selections} a ${group.maximum_selections}${Number(group.free_selections) ? ` · ${group.free_selections} incluídos` : ""}</small></legend>${group.options.map((option) => `<label><input type="${group.selection_type === "single" ? "radio" : "checkbox"}" name="group-${group.id}" value="${option.id}" data-price="${option.price_delta}" data-option-name="${clean(option.name)}"> <span>${clean(option.name)}${Number(option.price_delta) ? ` + ${money.format(option.price_delta)}` : ""}</span>${group.selection_type !== "single" && Number(option.maximum_quantity) > 1 ? `<input aria-label="Quantidade de ${clean(option.name)}" data-option-quantity="${option.id}" type="number" min="1" max="${option.maximum_quantity}" step="1" value="1">` : ""}</label>`).join("")}</fieldset>`).join("");
     $("configurator").dataset.priceId = price.id; $("configurator").dataset.quantity = quantity; $("configuratorMessage").textContent = ""; $("configurator").showModal();
   }
   function assistantMessage(text, kind = "assistant") { const node = document.createElement("p"); node.className = `assistant-message${kind === "user" ? " user" : ""}`; node.textContent = text; $("menuAssistantMessages").append(node); node.scrollIntoView({ block: "nearest" }); }
@@ -389,6 +395,15 @@
       $("menuBagButton").focus();
     }
   });
+  const refreshWhatsappCustomer = () => renderCartReview([...cart.values()].reduce((sum, entry) => sum + entry.quantity * estimatedUnitPrice(entry), 0), [...cart.values()].some(entry => entry.isQuote));
+  $("whatsappCustomerForm").addEventListener("input", refreshWhatsappCustomer);
+  $("whatsappCustomerForm").addEventListener("submit", event => { event.preventDefault(); $("whatsappSelectionLink").click(); });
+  $("whatsappSelectionLink").addEventListener("click", event => {
+    if (!$("whatsappCustomerForm").reportValidity() || !$("whatsappSelectionLink").hasAttribute("href")) {
+      event.preventDefault();
+      $("whatsappSelectionNotice").textContent = "Informe seu nome e telefone com DDD para continuar pelo WhatsApp.";
+    }
+  });
   $("fulfillment").addEventListener("change", updateFulfillmentFields);
   $("deliveryZone").addEventListener("change", updateCheckoutEstimate);
   $("lookupCepButton").addEventListener("click", lookupCep);
@@ -410,7 +425,7 @@
     const leadTime = requiredLeadTime(), scheduledValue = form.get("scheduled_for"), scheduledDate = scheduledValue ? new Date(scheduledValue) : null;
     if (leadTime > 0 && (!scheduledDate || Number.isNaN(scheduledDate.getTime()) || scheduledDate.getTime() < Date.now() + leadTime * 60 * 60000)) { $("orderMessage").textContent = `Escolha uma data e um horário com pelo menos ${leadTime} horas de antecedência.`; $("scheduledFor").setAttribute("aria-invalid", "true"); $("scheduledFor").focus(); return; }
     const hasQuote = [...cart.values()].some((entry) => entry.isQuote); const suppliedNotes = `${hasQuote ? "SOLICITAÇÃO DE ORÇAMENTO — valor exibido é apenas referência e depende de confirmação humana. " : ""}${form.get("notes") || ""}`.trim();
-    const commonOrder = { target_slug: slug, supplied_name: form.get("name"), supplied_email: form.get("email"), supplied_phone: form.get("phone"), target_fulfillment_type: fulfillment, supplied_address: fulfillment === "delivery" ? { text: form.get("address"), cep: String(form.get("delivery_cep") || "").replace(/\D/g, ""), zone_code: form.get("delivery_zone") || null } : null, supplied_notes: suppliedNotes, supplied_items: [...cart.values()].map(({ menu_item_price_id, quantity, selections }) => ({ menu_item_price_id, quantity, selections: selections.map(({ menu_option_id, quantity }) => ({ menu_option_id, quantity })) })), accepted_privacy: form.get("privacy") === "on", website: form.get("website") };
+    const commonOrder = { target_slug: slug, supplied_name: form.get("name"), supplied_email: "", supplied_phone: form.get("phone"), target_fulfillment_type: fulfillment, supplied_address: fulfillment === "delivery" ? { text: form.get("address"), cep: String(form.get("delivery_cep") || "").replace(/\D/g, ""), zone_code: form.get("delivery_zone") || null } : null, supplied_notes: suppliedNotes, supplied_items: [...cart.values()].map(({ menu_item_price_id, quantity, selections }) => ({ menu_item_price_id, quantity, selections: selections.map(({ menu_option_id, quantity }) => ({ menu_option_id, quantity })) })), accepted_privacy: form.get("privacy") === "on", website: form.get("website") };
     if ($("orderSubmitButton").disabled) return;
     pendingRequestId ||= createUuid(); $("orderMessage").textContent = "Enviando pedido..."; $("orderSubmitButton").disabled = true;
     let data, error;
@@ -445,7 +460,7 @@
     const trackingUrl = ogritechEnvironmentUrl(`/pedido/?referencia=${encodeURIComponent(data.reference)}&token=${encodeURIComponent(data.token)}&empresa=${encodeURIComponent(slug)}`);
     const whatsappPhone = String(page.menu.whatsapp_phone || "");
     const whatsappText = whatsappPhone ? globalThis.OgritechMenuWhatsapp.format({
-      code: formattedCode, businessName: $("menuTitle").textContent,
+      code: formattedCode, businessName: $("menuTitle").textContent, customerName: form.get("name"), customerPhone: form.get("phone"),
       items: [...cart.values()].map((entry) => ({ name: entry.name, label: displayPriceLabel(entry.label), quantity: entry.quantity, selections: entry.selections.map((selection) => selection.name), lineTotal: entry.quantity * estimatedUnitPrice(entry) })),
       subtotal: data.subtotal, deliveryFee: data.delivery_fee, total: data.total_amount,
       fulfillment, address: fulfillment === "delivery" ? form.get("address") : "",

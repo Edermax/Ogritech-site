@@ -3,8 +3,8 @@
   "updatedAt": "2026-11-14",
   "baseline": "guard_menu_offer_changes",
   "strategy": "contiguous_tail",
-  "authorized": true,
-  "decision": "APPROVED",
+  "authorized": false,
+  "decision": "BLOCKED_PENDING_VALIDATION",
   "localReplay": {
     "status": "PASSED",
     "mode": "CLEAN_CI_REPLAY",
@@ -13,21 +13,23 @@
     "sourceCommit": "30bf586a93efab12bf3eb803948030e0fe24af96"
   },
   "productionDryRun": {
-    "status": "PASSED",
-    "executedAt": "2026-11-14",
-    "migrationCount": 0,
+    "status": "PENDING",
+    "migrationCount": 1,
     "remoteChangesPerformed": false,
-    "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/correcao-trocas-whatsapp-2026-11-14.md",
-    "aliasCompatibility": "98 production migrations verified, with explicit native aliases and no history repair. No migration remains pending."
+    "mode": "PREPARED_NOT_APPLIED",
+    "evidence": "Nova migration de telefone no acompanhamento ainda não promovida."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [],
+  "requiredMenuMigrations": [
+    "menu_tracking_customer_phone"
+  ],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
     "commercial_callbacks_and_billing": [],
-    "menu_release_required": [],
+    "menu_release_required": [
+      "menu_tracking_customer_phone"
+    ],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],

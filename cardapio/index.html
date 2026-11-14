@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' https://cdn.jsdelivr.net;style-src 'self';img-src 'self' data: https:;connect-src 'self' http://127.0.0.1:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co https://viacep.com.br;object-src 'none';base-uri 'self';form-action 'self'">
   <title>Cardápio | Ogritech</title>
   <link rel="stylesheet" href="/commercial-public.css">
-  <link rel="stylesheet" href="/cardapio/catalog.css?v=20261114.2">
+  <link rel="stylesheet" href="/cardapio/catalog.css?v=20261114.3">
   <link rel="icon" href="/ogritech-favicon.ico">
 </head>
 <body>
@@ -31,14 +31,17 @@
       <section id="cartReview" class="public-card cart-review hidden" aria-labelledby="cartReviewTitle">
         <div class="cart-review-heading"><div><small>SEU PEDIDO</small><h2 id="cartReviewTitle">Revise os itens</h2></div><button id="closeCartReview" class="cart-review-close" type="button" aria-label="Fechar revisão do carrinho">×</button></div>
         <div id="cartItems" class="cart-items" aria-live="polite"></div>
+        <form id="whatsappCustomerForm" class="public-form whatsapp-customer-form hidden" aria-label="Seus dados para o estabelecimento">
+          <label>Nome<input id="whatsappCustomerName" name="customer_name" autocomplete="name" required minlength="2" maxlength="150"></label>
+          <label>Telefone<input id="whatsappCustomerPhone" name="customer_phone" type="tel" autocomplete="tel" pattern="(?:\D*\d){10,15}\D*" title="Informe o telefone com DDD" required maxlength="20"></label>
+        </form>
         <p id="whatsappSelectionNotice" class="public-message hidden">Revise os itens. O WhatsApp abrirá com uma mensagem para você enviar. Disponibilidade, pagamento e entrega serão combinados com o estabelecimento; esta seleção não confirma um pedido.</p><div class="cart-review-footer"><div><span>Total estimado</span><strong id="cartReviewTotal">R$ 0</strong></div><div class="cart-review-actions"><button id="continueShoppingButton" class="public-button secondary" type="button">Continuar escolhendo</button><a id="whatsappSelectionLink" class="public-button hidden" target="_blank" rel="noopener noreferrer">Continuar no WhatsApp</a><button id="proceedCheckoutButton" class="public-button" type="button">Preencher dados</button></div></div>
       </section>
       <article id="checkout" class="public-card hidden">
         <h2 id="checkoutTitle">Finalizar pedido</h2>
         <form id="orderForm" class="public-form">
-          <label>Nome<input name="name" required maxlength="150"></label>
-          <label>Telefone<input name="phone" required maxlength="20"></label>
-          <label>E-mail<input name="email" type="email" maxlength="320"></label>
+          <label>Nome<input name="name" autocomplete="name" required minlength="2" maxlength="150"></label>
+          <label>Telefone<input name="phone" type="tel" autocomplete="tel" required maxlength="20"></label>
           <label>Recebimento<select name="fulfillment" id="fulfillment"></select></label>
           <label id="pickupConfirmation" class="hidden"><span><input type="checkbox" id="pickupConfirmed"> Vou retirar neste endereço</span><strong id="pickupLocation"></strong></label>
           <label id="deliveryZoneLabel" class="hidden">Região de entrega<select name="delivery_zone" id="deliveryZone"></select></label>
@@ -51,8 +54,8 @@
             <p id="deliveryProviderNotice" class="public-message delivery-provider-notice hidden">O endereço será consultado no serviço de mapas somente para calcular a rota e a taxa.</p>
             <aside id="deliveryQuote" class="delivery-quote hidden" aria-live="polite"><small>ENTREGA CALCULADA AUTOMATICAMENTE</small><strong id="deliveryQuoteValue"></strong><span id="deliveryQuoteDetail"></span></aside>
           </div>
-          <label id="scheduledForLabel">Data e horário desejados <span id="scheduledForHint">(opcional)</span><input id="scheduledFor" name="scheduled_for" type="datetime-local"></label>
-          <label>Observações<textarea name="notes" maxlength="2000"></textarea></label>
+          <label id="scheduledForLabel">Data e horário desejados <span id="scheduledForHint">(Opcional)</span><input id="scheduledFor" name="scheduled_for" type="datetime-local"></label>
+          <label>Observações (Opcional)<textarea name="notes" maxlength="2000"></textarea></label>
           <label class="honeypot">Site<input name="website" tabindex="-1"></label>
           <label><span><input name="privacy" type="checkbox" required> Aceito o aviso de privacidade.</span></label>
           <aside class="checkout-estimate" aria-live="polite"><div><span>Produtos</span><strong id="checkoutSubtotal"></strong></div><div><span>Entrega</span><strong id="checkoutDelivery"></strong></div><div><span>Total estimado</span><strong id="checkoutEstimateTotal"></strong></div><p id="checkoutEstimateNote"></p></aside>
@@ -84,7 +87,7 @@
   </aside>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="/supabase-config.js"></script>
-  <script src="/whatsapp-selection.js?v=20261113.2"></script><script src="/menu-pricing.js?v=20261020.1"></script>
-  <script src="/menu-branding.js?v=20261020.1"></script><script src="/menu-whatsapp.js?v=20261112.1"></script><script src="/cardapio/cardapio.js?v=20261113.2"></script>
+  <script src="/whatsapp-selection.js?v=20261114.3"></script><script src="/menu-pricing.js?v=20261020.1"></script>
+  <script src="/menu-branding.js?v=20261020.1"></script><script src="/menu-whatsapp.js?v=20261114.3"></script><script src="/cardapio/cardapio.js?v=20261114.3"></script>
 </body>
 </html>

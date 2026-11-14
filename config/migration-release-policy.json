@@ -100,7 +100,8 @@
       "menu_sales_notification_reports",
       "menu_order_response_snapshot",
       "split_menu_offers",
-      "guard_menu_offer_changes"
+      "guard_menu_offer_changes",
+      "menu_tracking_customer_phone"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -201,7 +202,12 @@
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "guard_menu_offer_changes",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      {
+        "name": "menu_tracking_customer_phone",
+        "reason": "Preparada para validar telefone no resumo protegido por token antes da promoção."
+      }
+    ],
     "observationEvidence": "docs/evidencias/correcao-trocas-whatsapp-2026-11-14.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",

@@ -66,7 +66,7 @@ try {
           if (name === 'public_menu_assistant_status') return {data: {available: true}};
           if (name === 'public_menu_assistant_message') return {data: {reply: 'Confira esta opção.', suggestions: [{menu_item_price_id: 'price', name: item.name, label: 'Padrão', price: 14.9, requires_confirmation: true}]}};
           if (name === 'public_create_menu_order_v2') return {data: {reference: 'TEST1234', token: 'local-fixture', order_number: 1, subtotal: 29.8, delivery_fee: 5, total_amount: 34.8}};
-          if (name === 'public_get_menu_order') return {data: {reference: 'TEST1234', order_number: 1, menu_title: 'Loja de teste', whatsapp_phone: '5511999999999', customer_name: 'Cliente de teste', fulfillment_type: 'delivery', status: 'received', payment_status: 'pending', subtotal: 29.8, delivery_fee: 5, total_amount: 34.8, items: [{name: item.name, label: 'Padrão', quantity: 2, line_total: 29.8}]}};
+          if (name === 'public_get_menu_order') return {data: {reference: 'TEST1234', order_number: 1, menu_title: 'Loja de teste', whatsapp_phone: '5511999999999', customer_name: 'Cliente de teste', customer_phone: '11999999999', fulfillment_type: 'delivery', status: 'received', payment_status: 'pending', subtotal: 29.8, delivery_fee: 5, total_amount: 34.8, items: [{name: item.name, label: 'Padrão', quantity: 2, line_total: 29.8}]}};
           throw new Error(`Unexpected fixture call ${name}`);
         },
         functions: {invoke: async () => ({data: {data: {delivery_quote: {zone_code: 'centro', fee: 5, distance_km: 2}}}})}
@@ -113,9 +113,14 @@ try {
     if (accent === '#f8a8d3') await page.locator('#cartReview').screenshot({path: resolve(output, `bag-${offer}-${width}.png`)});
     if (offer === 'cardapio') {
       assert.equal(await page.locator('#checkout').isVisible(), false);
+      assert.equal(await page.locator('#whatsappSelectionLink').getAttribute('href'), null);
+      await page.fill('#whatsappCustomerName','Cliente de teste');
+      await page.fill('#whatsappCustomerPhone','11999999999');
       assert.match(await page.locator('#whatsappSelectionLink').getAttribute('href'), /^https:\/\/wa.me\//);
+      assert.match(new URL(await page.locator('#whatsappSelectionLink').getAttribute('href')).searchParams.get('text'), /Nome: Cliente de teste\nTelefone: 11999999999/);
     } else {
       await page.click('#proceedCheckoutButton');
+      assert.equal(await page.locator('#orderForm [name=email]').count(),0);
       await page.selectOption('#fulfillment', 'delivery');
       await page.fill('#deliveryCep', '14000000');
       await page.fill('#deliveryAddress', 'Rua de Teste, 123');
@@ -131,8 +136,11 @@ try {
       checks += await checkStyles(page, ['.order-success h2', '.order-success small', '.order-code-box span', '.order-code-box strong', '.order-payment-alert strong', '.order-payment-alert p', '.order-payment-alert b', '.order-payment-alert label', '.order-payment-alert textarea', '.order-success .public-button', '.order-success-note'], ['#orderSuccess', '.order-code-box', '.order-payment-alert', '.order-payment-alert textarea']);
       if (accent === '#f8a8d3') await page.locator('#orderSuccess').screenshot({path: resolve(output, `success-${width}.png`)});
       assert.equal(await page.evaluate(() => window.__calls.filter(c => c.name.startsWith('public_create_menu_order')).length), 1);
+      assert.equal(await page.evaluate(() => window.__calls.find(c => c.name==='public_create_menu_order_v2').args.supplied_email), '');
+      assert.match(new URL(await page.locator('.order-whatsapp-action').getAttribute('href')).searchParams.get('text'), /Nome: Cliente de teste\nTelefone: 11999999999/);
       await page.locator('.order-success-actions a.secondary').click();
       await page.locator('.order-summary').waitFor({state: 'visible'});
+      assert.match(new URL(await page.locator('.order-whatsapp').getAttribute('href')).searchParams.get('text'), /Nome: Cliente de teste\nTelefone: 11999999999/);
       checks += await checkStyles(page, ['.order-hero h1', '.order-hero small', '.order-hero p', '.order-status', '.payment-status-card strong', '.payment-status-card p', '.order-summary h2', '.order-items .menu-price-row', '.order-items small', '.order-total span', '.proposal-total', '.order-whatsapp', '#refreshOrder', '#orderRefreshMessage'], ['.order-hero', '.order-status', '.payment-status-card', '.order-summary', '.order-contact']);
       if (accent === '#f8a8d3') await page.screenshot({path: resolve(output, `tracking-${width}.png`), fullPage: true});
     }

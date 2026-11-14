@@ -1,7 +1,10 @@
 (() => {
-  function url(phone, entries, unitPrice) {
+  function url(phone, entries, unitPrice, customer = {}) {
     if (!/^55[1-9][0-9]{9,10}$/.test(String(phone || "")) || !entries.length) return null;
     const lines = ["Olá! Gostaria de solicitar os seguintes produtos:"];
+    if (customer.name?.trim()) lines.push(`Nome: ${customer.name.trim()}`);
+    if (customer.phone?.trim()) lines.push(`Telefone: ${customer.phone.trim()}`);
+    lines.push("");
     let total = 0, quote = false;
     const money = value => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
     for (const entry of entries) {
