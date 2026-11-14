@@ -1,6 +1,6 @@
 /* Shared Ogritech pages. Customer storefronts keep their own visual identity. */
 html:has(> body.ogri-light) { color-scheme:light; background:#f5f8fb; }
-body.ogri-light {
+body.ogri-light, .ogri-order-ui {
  color-scheme:light;
  --bg:#f5f8fb; --black:#f5f8fb; --black2:#edf3f7; --card:#fff; --card2:#f3f7fa;
  --surface:#fff; --surface-2:#edf3f7; --panel:#fff; --line:#dce6ed; --border:#dce6ed;

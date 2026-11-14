@@ -61,7 +61,9 @@
     "cardapio-digital/index.html",
     "termos.html",
     "menu-whatsapp.js",
-    "ogritech-notification-badge.png"
+    "ogritech-notification-badge.png",
+    "site-theme.css",
+    "order-confirmation.css"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",

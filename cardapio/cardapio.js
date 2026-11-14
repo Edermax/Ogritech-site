@@ -470,9 +470,30 @@
     const pixKey = hasQuote ? "" : page.menu.pix_key;
     const pixCode = pixKey ? buildOrderPix(pixKey, page.menu.pix_amount_city, page.menu.title, Number(data.total_amount), formattedCode) : "";
     const pixLabel = pixCode ? "Pix Copia e Cola" : "Chave Pix";
-    const pixPayment = pixKey ? `<aside class="order-payment-alert"><strong>Pagar por Pix</strong><p>Valor do pedido: ${clean(money.format(Number(data.total_amount)))}</p><label>${pixLabel}<textarea readonly rows="3">${clean(pixCode || pixKey)}</textarea></label><button type="button" class="public-button secondary" id="copyOrderPixKey">Copiar ${pixCode ? "Pix com valor" : "chave Pix"}</button><p role="status" id="copyOrderPixStatus"></p><p>Confira o destinatário no seu banco. A loja confirma o pagamento após receber o Pix.</p></aside>` : "";
+    const pixPayment = pixKey ? `<aside class="order-payment-alert order-pix-payment" aria-labelledby="orderPixTitle">
+      <h3 id="orderPixTitle">Pagar por Pix</h3>
+      <p>Valor do pedido: <b>${clean(money.format(Number(data.total_amount)))}</b></p>
+      <label>${pixLabel}<textarea readonly rows="3" spellcheck="false">${clean(pixCode || pixKey)}</textarea></label>
+      <button type="button" class="public-button secondary" id="copyOrderPixKey">Copiar ${pixCode ? "Pix com valor" : "chave Pix"}</button>
+      <p role="status" id="copyOrderPixStatus"></p>
+      <p class="order-payment-help">Confira o destinatário no seu banco. A loja confirma o pagamento após receber o Pix.</p>
+    </aside>` : "";
     cart.clear(); updateCart();
-    $("orderSuccess").innerHTML = `<div class="order-success-heading"><span class="order-success-mark" aria-hidden="true">✓</span><div><small>PEDIDO REGISTRADO</small><h2>Recebemos sua solicitação</h2></div></div><div class="order-code-box"><span>Código do pedido</span><strong>${clean(formattedCode)}</strong></div><aside class="order-payment-alert"><strong>Pagamento ainda pendente</strong><p>${whatsappUrl ? `Envie o resumo do pedido <b>${clean(formattedCode)}</b> ao estabelecimento para confirmar os detalhes e combinar o pagamento.` : "Acompanhe a confirmação pelo link abaixo. O estabelecimento poderá entrar em contato pelo telefone informado para conferir os dados e combinar o pagamento."} O envio do pedido não realiza cobrança automática.</p></aside><div class="order-success-actions">${whatsappUrl ? `<a class="public-button order-whatsapp-action" href="${clean(whatsappUrl)}" target="_blank" rel="noopener noreferrer">Enviar resumo pelo WhatsApp</a>` : ""}<a class="public-button secondary" href="${clean(trackingUrl)}">Acompanhar pedido no site</a></div>${whatsappUrl ? '<p class="order-success-note">O WhatsApp será aberto somente se você escolher essa opção, em uma nova aba.</p>' : ""}`;
+    $("orderSuccess").innerHTML = `<div class="order-success-heading">
+      <span class="order-success-mark" aria-hidden="true">✓</span><div><small>PEDIDO REGISTRADO</small><h2>Recebemos sua solicitação</h2></div>
+    </div>
+    <div class="order-success-summary">
+      <div class="order-summary-box order-code-box"><span>Código do pedido</span><strong>${clean(formattedCode)}</strong></div>
+      <div class="order-summary-box order-total-box"><span>${hasQuote ? "Valor de referência" : "Total do pedido"}</span><strong>${clean(money.format(Number(data.total_amount)))}</strong></div>
+    </div>
+    <aside class="order-payment-alert" aria-labelledby="orderPaymentStatus"><strong id="orderPaymentStatus">Pagamento ainda pendente</strong>
+      <p>${whatsappUrl ? "Envie o resumo pelo WhatsApp para confirmar os detalhes e combinar o pagamento." : "Acompanhe a confirmação pelo link abaixo. A loja poderá entrar em contato pelo telefone informado para combinar o pagamento."} O envio do pedido não realiza cobrança automática.</p>
+    </aside>
+    <div class="order-success-actions">
+      ${whatsappUrl ? `<a class="public-button order-whatsapp-action" href="${clean(whatsappUrl)}" target="_blank" rel="noopener noreferrer">Enviar resumo pelo WhatsApp</a>` : ""}
+      <a class="public-button secondary" href="${clean(trackingUrl)}">Acompanhar pedido no site</a>
+    </div>
+    ${whatsappUrl ? '<p class="order-success-note">O WhatsApp será aberto somente se você escolher essa opção, em uma nova aba.</p>' : ""}`;
     $("orderSuccess").insertAdjacentHTML("beforeend", pixPayment);
     $("copyOrderPixKey")?.addEventListener("click", async () => {
       try {
