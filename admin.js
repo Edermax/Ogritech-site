@@ -258,7 +258,7 @@ async function changeProductSubscription(button) {
         button.disabled = true;
         const { data, error } = await supabaseClient.functions.invoke('ogritech-billing', { body: { action: 'change_offer', product: 'menu', barbershop_id: business.barbershop_id, offer } });
         button.disabled = false;
-        if (error || data?.error) return alert(data?.error?.message || 'Não foi possível alterar o plano.');
+        if (error || data?.error) return alert(await OgritechOffers.errorMessage({data,error}, 'Não foi possível alterar o plano.'));
         await loadData(); populateSelectors(); refreshViews(); return;
     }
     const cancelling = button.dataset.productAction === 'cancel';

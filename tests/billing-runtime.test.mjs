@@ -97,7 +97,7 @@ async function loadHandler(name, admin, fetchImpl, environment = {}, clock = Dat
   const phone = name === "ogritech-billing" ? await readFile(new URL("supabase/functions/ogritech-billing/phone-verification.ts", root), "utf8") : "";
   const code = stripTypeScriptTypes(phone.replace(/^export /gm, "") + "\n" + source.replace(/^import .*;\r?\n/gm, ""));
   runInNewContext(code, {
-    createClient: () => admin, z, fetch: fetchImpl, crypto: webcrypto, Request, Response, URL, URLSearchParams, Date: clock, TextEncoder, TextDecoder, FormData, btoa, AbortSignal,
+    createClient: () => admin, z, fetch: fetchImpl, crypto: webcrypto, Request, Response, URL, URLSearchParams, Date: clock, TextEncoder, TextDecoder, FormData, btoa, AbortSignal, setTimeout,
     console: { error() {}, info(value) { runtimeLogs.push(JSON.parse(value)); } },
     Deno: { env: { get: key => ({ SUPABASE_URL: "https://fixture.invalid", SUPABASE_SERVICE_ROLE_KEY: "fixture",
       MERCADO_PAGO_ACCESS_TOKEN: "fixture", MERCADO_PAGO_WEBHOOK_SECRET: "fixture-secret", BILLING_CRON_SECRET: "fixture-cron", ...environment })[key] }, serve: value => { handler = value; } }
@@ -190,7 +190,7 @@ test("a processed subscription invoice with a rejected payment does not grant ac
 
 test("lifecycle keeps the payment idempotency key stable after a persistence failure",async()=>{
   const keys=[],bodies=[];let writes=0;
-  const admin={rpc:async name=>name.endsWith("pix_due")?{data:[signup]}:name.endsWith("prepare_pix")?{data:pixAttempt}:name.endsWith("expired")?{data:[]}:{error:++writes===1?{code:"fixture"}:null}};
+  const admin={rpc:async name=>name.endsWith("offer_change_recover")?{data:[]}:name.endsWith("pix_due")?{data:[signup]}:name.endsWith("prepare_pix")?{data:pixAttempt}:name.endsWith("expired")?{data:[]}:{error:++writes===1?{code:"fixture"}:null}};
   const handler=await loadHandler("billing-lifecycle",admin,async(_url,options)=>{keys.push(options.headers["X-Idempotency-Key"]);bodies.push(JSON.parse(options.body));return Response.json({id:"provider-payment",payment_method_id:"pix",status:"pending",currency_id:"BRL",transaction_amount:49.9,point_of_interaction:{transaction_data:{qr_code:"fixture-qr"}}});});
   const request=()=>new Request("https://fixture.invalid/lifecycle",{method:"POST",headers:{"x-cron-secret":"fixture-cron"}});
   assert.equal((await handler(request())).status,502);
@@ -200,7 +200,7 @@ test("lifecycle keeps the payment idempotency key stable after a persistence fai
 
 test("lifecycle fails visibly when access suspension cannot be persisted",async()=>{
   const expired={...signup,trial_ends_at:new Date(Date.now()-3600000).toISOString()};
-  const admin={rpc:async name=>name.endsWith("pix_due")?{data:[]}:name.endsWith("prepare_pix")?{data:pixAttempt}:name.endsWith("expired")?{data:[expired]}:{error:{code:"fixture"}}};
+  const admin={rpc:async name=>name.endsWith("offer_change_recover")?{data:[]}:name.endsWith("pix_due")?{data:[]}:name.endsWith("prepare_pix")?{data:pixAttempt}:name.endsWith("expired")?{data:[expired]}:{error:{code:"fixture"}}};
   const handler=await loadHandler("billing-lifecycle",admin,provider);
   const response=await handler(new Request("https://fixture.invalid/lifecycle",{method:"POST",headers:{"x-cron-secret":"fixture-cron"}}));
   assert.equal(response.status,502);const body=await response.json();assert.equal(body.data.suspended,0);assert.equal(body.data.failures,1);
@@ -378,7 +378,7 @@ test("sandbox notification cannot mutate an Agenda signup or process live resour
 
 test("lifecycle generates renewal only for Cardápio and ignores retired Agenda",async()=>{
   const requests=[];
-  const admin={rpc:async name=>name.endsWith("pix_due")?{data:[signup,{...signup,id:"aabbccdd-1234-4000-8000-123456789013",product_code:"agenda"}]}:name.endsWith("prepare_pix")?{data:pixAttempt}:name.endsWith("expired")?{data:[]}:{error:null}};
+  const admin={rpc:async name=>name.endsWith("offer_change_recover")?{data:[]}:name.endsWith("pix_due")?{data:[signup,{...signup,id:"aabbccdd-1234-4000-8000-123456789013",product_code:"agenda"}]}:name.endsWith("prepare_pix")?{data:pixAttempt}:name.endsWith("expired")?{data:[]}:{error:null}};
   const handler=await loadHandler("billing-lifecycle",admin,async(_url,options)=>{
     requests.push({authorization:options.headers.Authorization,body:JSON.parse(options.body)});
     return Response.json({id:`fixture-${requests.length}`,payment_method_id:"pix",status:"pending",currency_id:"BRL",transaction_amount:49.9,point_of_interaction:{transaction_data:{qr_code:"fixture-qr"}}});
@@ -461,7 +461,7 @@ test('billing status resumes only the pending checkout belonging to this signup'
 test('Pix worker rejects a provider response without a valid QR or matching amount',async()=>{
  for(const override of [{point_of_interaction:{}},{transaction_amount:1},{currency_id:'USD'},{status:'approved'}]) {
   let writes=0;
-  const db={rpc:async name=>name.endsWith('pix_due')?{data:[signup]}:name.endsWith('prepare_pix')?{data:pixAttempt}:name.endsWith('expired')?{data:[]}:(writes++,{error:null})};
+  const db={rpc:async name=>name.endsWith('offer_change_recover')?{data:[]}:name.endsWith('pix_due')?{data:[signup]}:name.endsWith('prepare_pix')?{data:pixAttempt}:name.endsWith('expired')?{data:[]}:(writes++,{error:null})};
   const handler=await loadHandler('billing-lifecycle',db,async()=>Response.json({id:'pix-payment',payment_method_id:'pix',status:'pending',currency_id:'BRL',transaction_amount:49.9,point_of_interaction:{transaction_data:{qr_code:'fixture-qr'}},...override}));
   const response=await handler(new Request('https://fixture.invalid/lifecycle',{method:'POST',headers:{'x-cron-secret':'fixture-cron'}}));
   assert.equal(response.status,502);assert.equal(writes,0);assert.equal((await response.json()).data.pix_created,0);
@@ -495,7 +495,7 @@ const ordersEnv={SUPABASE_URL:'https://fuesdztsvrkkgnbqhcxi.supabase.co',MP_MENU
 test('production Pix uses Payments API and its production webhook even when the sandbox Orders flag is set',async()=>{
  const productionUrl='https://mvzcoaiiwytycdqcvydf.supabase.co';
  let sent,written,providerCalls=0;
- const db={rpc:async(name,args)=>name.endsWith('pix_due')?{data:[signup]}:name.endsWith('prepare_pix')?{data:pixAttempt}:name.endsWith('expired')?{data:[]}:(written=args,{error:null})};
+ const db={rpc:async(name,args)=>name.endsWith('offer_change_recover')?{data:[]}:name.endsWith('pix_due')?{data:[signup]}:name.endsWith('prepare_pix')?{data:pixAttempt}:name.endsWith('expired')?{data:[]}:(written=args,{error:null})};
  const handler=await loadHandler('billing-lifecycle',db,async(url,options)=>{
   providerCalls++;assert.equal(url,'https://api.mercadopago.com/v1/payments');
   assert.equal(options.headers.Authorization,'Bearer production-fixture-token');
@@ -524,7 +524,7 @@ test('production ignores signed Orders notifications before querying the provide
 
 test('Orders Pix worker is opt-in and records the order ID with a stable amount',async()=>{
  let sent,written;
- const db={rpc:async(name,args)=>name.endsWith('pix_due')?{data:[signup]}:name.endsWith('prepare_pix')?{data:pixAttempt}:name.endsWith('expired')?{data:[]}:(written=args,{error:null})};
+ const db={rpc:async(name,args)=>name.endsWith('offer_change_recover')?{data:[]}:name.endsWith('pix_due')?{data:[signup]}:name.endsWith('prepare_pix')?{data:pixAttempt}:name.endsWith('expired')?{data:[]}:(written=args,{error:null})};
  const handler=await loadHandler('billing-lifecycle',db,async(url,options)=>{
   assert.equal(url,'https://api.mercadopago.com/v1/orders');sent=JSON.parse(options.body);
   const order=orderFixture();order.status='action_required';order.transactions.payments[0].status='action_required';order.external_reference=pixAttempt.external_reference.replaceAll(":","_").slice(0,64);return Response.json(order);
@@ -621,14 +621,31 @@ test("both monthly and annual offers are quoted by the real billing handler", as
   }
 });
 
-function offerChangeDb(row,{foreign=false,fail=false}={}) {
-  const calls=[];
-  const db={calls,auth:{getUser:async()=>({data:{user:{id:"fixture-owner"}},error:null})},
+function offerChangeDb(row,{foreign=false,fail=false,commitResponseLost=false}={}) {
+  const calls=[]; let operation=null, stored={...row};
+  const db={calls,get row(){return stored;},get operation(){return operation;},auth:{getUser:async()=>({data:{user:{id:"fixture-owner"}},error:null})},
     from(){const chain={select(){return chain;},eq(){return chain;},maybeSingle:async()=>({data:{role:"owner",active:true,barbershop_id:foreign?"other-business":row.barbershop_id}})};return chain;},
-    rpc:async(name,args)=>{calls.push({name,args});if(name==="is_platform_admin")return{data:false,error:null};if(name==="backend_billing_status")return{data:row,error:null};
-      return fail?{error:{code:"40001",message:"Concurrent update"}}:{data:{offer:args.target_offer,trial_ends_at:row.trial_ends_at,access_until:row.access_until}};}};
+    rpc:async(name,args)=>{
+      calls.push({name,args});
+      if(name==="is_platform_admin")return{data:false,error:null};
+      if(name==="backend_billing_status")return{data:{...stored},error:null};
+      if(name==="backend_billing_offer_change_claim"){
+        if(operation)return{error:{code:"55000",message:"Alteração em processamento"}};
+        if(["payment_pending","cancelled","failed","cancel_at_period_end"].includes(stored.status))return{error:{code:"23514",message:"Regularize a assinatura"}};
+        operation={operation_id:"fixture-operation",lease_token:"fixture-lease",signup:{...stored},target_offer:args.target_offer};return{data:operation};
+      }
+      if(name==="backend_billing_offer_change_commit"){
+        if(fail)return{error:{code:"40001",message:"Concurrent update"}};
+        stored={...stored,offer_code:operation.target_offer,total_cents:operation.target_offer==="cardapio"?(stored.cycle==="annual"?29900:2990):(stored.cycle==="annual"?49900:4990)};
+        if(commitResponseLost)throw new Error("Lost commit response");
+        return{data:{offer:stored.offer_code,trial_ends_at:stored.trial_ends_at,access_until:stored.access_until}};
+      }
+      if(name==="backend_billing_offer_change_finish"){if(!args.needs_reconciliation)operation=null;return{data:true};}
+      throw new Error("Unexpected offer RPC "+name);
+    }};
   return db;
 }
+
 const offerRequest=(offer,headers={authorization:"Bearer fixture"})=>new Request("https://fixture.invalid/billing",{method:"POST",headers,body:JSON.stringify({action:"change_offer",product:"menu",barbershop_id:"aabbccdd-1234-4000-8000-123456789012",offer,total_cents:1,trial_ends_at:"2099-01-01"})});
 
 test("offer changes preserve the original trial in both directions and ignore client financial fields",async()=>{
@@ -636,7 +653,7 @@ test("offer changes preserve the original trial in both directions and ignore cl
     const row={...signup,offer_code:from,barbershop_id:signup.id,cycle:"monthly",updated_at:"2026-11-01T00:00:00Z"};const db=offerChangeDb(row);
     const handler=await loadHandler("ogritech-billing",db,()=>assert.fail("Pix plan change cannot create a payment"));
     const response=await handler(offerRequest(to));assert.equal(response.status,200);const {data}=await response.json();assert.equal(data.trial_ends_at,row.trial_ends_at);
-    const args=db.calls.find(call=>call.name==="backend_billing_change_offer").args;
+    const args=db.calls.find(call=>call.name==="backend_billing_offer_change_claim").args;
     assert.equal(args.target_offer,to);assert.equal(args.expected_updated_at,row.updated_at);assert.equal(args.total_cents,undefined);assert.equal(args.trial_ends_at,undefined);
   }
 });
@@ -645,13 +662,13 @@ test("offer change requires authenticated ownership and cannot cross businesses"
   const db=offerChangeDb({...signup,barbershop_id:signup.id},{foreign:true});const handler=await loadHandler("ogritech-billing",db,()=>assert.fail("unauthorized mutation"));
   assert.equal((await handler(offerRequest("cardapio",{}))).status,401);
   assert.equal((await handler(offerRequest("cardapio"))).status,403);
-  assert.ok(!db.calls.some(call=>call.name==="backend_billing_change_offer"));
+  assert.ok(!db.calls.some(call=>call.name==="backend_billing_offer_change_commit"));
 });
 
 test("pending and cancelled subscriptions cannot change their price",async()=>{
   for(const status of ["payment_pending","cancelled","failed","cancel_at_period_end"]){
     const db=offerChangeDb({...signup,status,offer_code:"encomendas",barbershop_id:signup.id});const handler=await loadHandler("ogritech-billing",db,()=>assert.fail("blocked mutation"));
-    assert.equal((await handler(offerRequest("cardapio"))).status,409);assert.ok(!db.calls.some(call=>call.name==="backend_billing_change_offer"));
+    assert.equal((await handler(offerRequest("cardapio"))).status,409);assert.ok(!db.calls.some(call=>call.name==="backend_billing_offer_change_commit"));
   }
 });
 
@@ -672,7 +689,7 @@ test("failed database persistence compensates the provider price before reportin
 test("provider failure never changes the database offer",async()=>{
   const row={...signup,offer_code:"encomendas",barbershop_id:signup.id,cycle:"monthly",updated_at:"2026-11-01T00:00:00Z",provider_subscription_id:"fixture-provider"};const db=offerChangeDb(row);
   const handler=await loadHandler("ogritech-billing",db,async()=>Response.json({error:"unavailable"},{status:503}));
-  assert.equal((await handler(offerRequest("cardapio"))).status,502);assert.ok(!db.calls.some(call=>call.name==="backend_billing_change_offer"));
+  assert.equal((await handler(offerRequest("cardapio"))).status,502);assert.ok(!db.calls.some(call=>call.name==="backend_billing_offer_change_commit"));
 });
 
 
@@ -702,4 +719,37 @@ test("browser preflight permits the Supabase SDK headers used by plan switching"
  const handler=await loadHandler("ogritech-billing",{},()=>assert.fail("preflight cannot call provider"));
  const response=await handler(new Request("https://fixture.invalid/billing",{method:"OPTIONS",headers:{Origin:"https://ogritech.com.br","Access-Control-Request-Method":"POST","Access-Control-Request-Headers":"authorization,apikey,content-type,x-client-info"}}));
  assert.equal(response.status,204);assert.equal(response.headers.get("Access-Control-Allow-Origin"),"https://ogritech.com.br");assert.match(response.headers.get("Access-Control-Allow-Headers"),/x-client-info/);
+});
+
+
+test("concurrent offer changes reserve before any provider update and cannot compensate a valid change",async()=>{
+ const row={...signup,offer_code:"encomendas",barbershop_id:signup.id,cycle:"monthly",updated_at:"2026-11-01T00:00:00Z",provider_subscription_id:"fixture-provider"};
+ const db=offerChangeDb(row);const amounts=[];
+ const handler=await loadHandler("ogritech-billing",db,async(url,options)=>{const sent=JSON.parse(options.body);amounts.push(sent.auto_recurring.transaction_amount);await new Promise(resolve=>setTimeout(resolve,5));return Response.json({id:row.provider_subscription_id,auto_recurring:sent.auto_recurring});});
+ const responses=await Promise.all([handler(offerRequest("cardapio")),handler(offerRequest("cardapio"))]);
+ assert.deepEqual(responses.map(r=>r.status).sort(),[200,409]);assert.deepEqual(amounts,[29.9]);assert.equal(db.row.offer_code,"cardapio");assert.equal(db.operation,null);
+});
+
+test("an ambiguous commit response reconciles to the committed price instead of the old snapshot",async()=>{
+ const row={...signup,offer_code:"encomendas",barbershop_id:signup.id,cycle:"monthly",updated_at:"2026-11-01T00:00:00Z",provider_subscription_id:"fixture-provider"};
+ const db=offerChangeDb(row,{commitResponseLost:true});const amounts=[];
+ const handler=await loadHandler("ogritech-billing",db,async(url,options)=>{const sent=JSON.parse(options.body);amounts.push(sent.auto_recurring.transaction_amount);return Response.json({id:row.provider_subscription_id,auto_recurring:sent.auto_recurring});});
+ assert.equal((await handler(offerRequest("cardapio"))).status,503);assert.deepEqual(amounts,[29.9,29.9]);assert.equal(db.row.offer_code,"cardapio");assert.equal(db.operation,null);
+});
+
+test("failed reconciliation keeps the reservation and blocks another provider mutation",async()=>{
+ const row={...signup,offer_code:"encomendas",barbershop_id:signup.id,cycle:"monthly",updated_at:"2026-11-01T00:00:00Z",provider_subscription_id:"fixture-provider"};
+ const db=offerChangeDb(row);let calls=0;
+ const handler=await loadHandler("ogritech-billing",db,async()=>{calls++;throw new Error("Provider timeout");});
+ assert.equal((await handler(offerRequest("cardapio"))).status,503);assert.ok(db.operation);assert.equal((await handler(offerRequest("cardapio"))).status,409);assert.equal(calls,2);
+});
+
+test("scheduled recovery verifies canonical provider amount before releasing a fenced operation",async()=>{
+ for(const consistent of [true,false]){
+  const calls=[];
+  const db={rpc:async(name,args)=>{calls.push({name,args});if(name.endsWith("offer_change_recover"))return{data:[{operation_id:"op",lease_token:"lease",provider_subscription_id:"provider",total_cents:2990,signup_id:"signup"}]};if(name.endsWith("pix_due")||name.endsWith("expired"))return{data:[]};return{data:true};}};
+  const handler=await loadHandler("billing-lifecycle",db,async(url,options)=>{assert.equal(JSON.parse(options.body).auto_recurring.transaction_amount,29.9);return Response.json({id:"provider",auto_recurring:{transaction_amount:consistent?29.9:49.9}});});
+  const response=await handler(new Request("https://fixture.invalid/lifecycle",{method:"POST",headers:{"x-cron-secret":"fixture-cron"}}));
+  assert.equal(response.status,consistent?200:502);const finished=calls.find(x=>x.name.endsWith("offer_change_finish"));assert.equal(finished.args.target_token,"lease");assert.equal(finished.args.needs_reconciliation,!consistent);
+ }
 });

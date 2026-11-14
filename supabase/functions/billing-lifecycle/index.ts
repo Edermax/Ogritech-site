@@ -29,6 +29,29 @@ Deno.serve(async (request) => {
   const now = new Date(), pixWindow = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();
   let pixCreated = 0, suspended = 0, finalized = 0, failures = 0;
 
+  const recovery = await admin.rpc("backend_billing_offer_change_recover");
+  if (recovery.error) return new Response("offer recovery query failed", { status: 500 });
+  for (const operation of recovery.data || []) {
+    let consistent = !operation.provider_subscription_id;
+    try {
+      if (!consistent) {
+        const recoveryToken = url === "https://fuesdztsvrkkgnbqhcxi.supabase.co" ? Deno.env.get("MP_MENU_SANDBOX_ACCESS_TOKEN") || "" : mpToken;
+        if (!recoveryToken) throw new Error("recovery_not_configured");
+        const response = await fetch(`https://api.mercadopago.com/preapproval/${encodeURIComponent(operation.provider_subscription_id)}`, {
+          method: "PUT", headers: { Authorization: `Bearer ${recoveryToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ auto_recurring: { transaction_amount: operation.total_cents / 100, currency_id: "BRL" } }), signal: AbortSignal.timeout(10000)
+        });
+        const resource = await response.json().catch(() => ({}));
+        consistent = response.ok && String(resource.id) === String(operation.provider_subscription_id)
+          && Math.round(Number(resource.auto_recurring?.transaction_amount) * 100) === operation.total_cents;
+      }
+    } catch { /* Keep failed work reserved and retry in the next recovery window. */ }
+    const finished = await admin.rpc("backend_billing_offer_change_finish", { target_operation_id: operation.operation_id, target_token: operation.lease_token, needs_reconciliation: !consistent });
+    if (!consistent || finished.error) {
+      failures++; console.error("billing_lifecycle.offer_recovery_failed", { signup_id: operation.signup_id });
+    }
+  }
+
   // Pix não é cobrado no início: o QR é emitido automaticamente 48 h antes do fim do acesso.
   const { data: pixDue, error: pixDueError } = await admin.rpc("backend_billing_lifecycle_pix_due", { target_cutoff: pixWindow });
   if (pixDueError) {

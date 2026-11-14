@@ -84,7 +84,7 @@
             const offer = OgritechOffers.forPlan(center.products.find(p => p.code === "menu")?.plans.find(p => p.id === plan));
             const { data, error } = await supabaseClient.functions.invoke("ogritech-billing", { body: { action: "change_offer", product: "menu", barbershop_id: BARBERSHOP_ID, offer: offer.code } });
             busy = false; byId("exportBusinessData").disabled = false;
-            if (error || data?.error) { render(); return message(data?.error?.message || "Não foi possível alterar o plano.", true); }
+            if (error || data?.error) { render(); return message(await OgritechOffers.errorMessage({data,error}, "Não foi possível alterar o plano."), true); }
             await load(); window.dispatchEvent(new Event("ogritech:offer-changed"));
             message("Plano alterado. O prazo de acesso foi preservado, sem novo teste gratuito. O novo preço vale na próxima cobrança.");
             return;

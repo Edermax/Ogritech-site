@@ -1,33 +1,35 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-13",
+  "updatedAt": "2026-11-14",
   "baseline": "split_menu_offers",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
-    "status": "PASSED",
+    "status": "PENDING",
     "mode": "CLEAN_CI_REPLAY",
-    "migrationCount": 97,
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43495220665",
-    "sourceCommit": "2ce401e4b4b3fe1176b5c5762e56c64e96bab24b"
+    "migrationCount": 98
   },
   "productionDryRun": {
     "status": "PASSED",
-    "executedAt": "2026-11-13",
-    "migrationCount": 0,
+    "executedAt": "2026-11-14",
+    "migrationCount": 1,
     "remoteChangesPerformed": false,
-    "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/OGRITECH_CARDAPIO_E_ENCOMENDAS.md",
-    "aliasCompatibility": "97 migrations verified by name and explicit version aliases; no migration history repaired or reordered."
+    "mode": "NATIVE_MCP_HISTORY_COMPARISON",
+    "evidence": "docs/evidencias/correcao-trocas-whatsapp-2026-11-14.md",
+    "aliasCompatibility": "97 production migrations match the reviewed baseline. Only guard_menu_offer_changes is pending; staging has 98."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [],
+  "requiredMenuMigrations": [
+    "guard_menu_offer_changes"
+  ],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
     "commercial_callbacks_and_billing": [],
-    "menu_release_required": [],
+    "menu_release_required": [
+      "guard_menu_offer_changes"
+    ],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
     "tenant_specific_diniz": [],
@@ -85,7 +87,7 @@
     "menu_order_response_snapshot",
     "split_menu_offers"
   ],
-  "authorizationSource": "Usuário: Publique — 13/11/2026. Autoriza esta divisão sobre a versão atual de produção.",
+  "authorizationSource": "Usuário: Implementar as duas correções apontadas na revisão, com publicação autorizada nesta conversa.",
   "authorizationScope": "Divisão Cardápio/Encomendas, preços mensais e anuais, teste único de 14 dias e atualização coordenada do banco, cobrança e painéis.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
@@ -106,11 +108,10 @@
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43491045932",
-    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43490064152",
-    "verificationCount": 274,
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43539743553",
+    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43539297823",
     "decryptedFilesRemoved": true,
     "temporaryDatabaseRemoved": true,
-    "authorization": "User explicitly requested publication on 2026-11-13."
+    "authorization": "Usuário autorizou implementar as correções e a publicação nesta conversa."
   }
 }

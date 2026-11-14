@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-11-13",
+  "auditedAt": "2026-11-14",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -99,7 +99,8 @@
       "menu_order_receipts_and_sequence",
       "menu_sales_notification_reports",
       "menu_order_response_snapshot",
-      "split_menu_offers"
+      "split_menu_offers",
+      "guard_menu_offer_changes"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -109,7 +110,8 @@
       "menu_order_receipts_and_sequence": "20261112033426",
       "menu_sales_notification_reports": "20261112033448",
       "menu_order_response_snapshot": "20261112035316",
-      "split_menu_offers": "20261113192700"
+      "split_menu_offers": "20261113192700",
+      "guard_menu_offer_changes": "20261114012026"
     },
     "observedMigrationNames": [
       "create_core_schema",
@@ -199,7 +201,12 @@
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "split_menu_offers",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      {
+        "name": "guard_menu_offer_changes",
+        "reason": "Correções autorizadas pelo usuário após revisão: concorrência de troca e contato obrigatório para Cardápio publicado. Aguarda CI e homologação."
+      }
+    ],
     "observationEvidence": "docs/OGRITECH_CARDAPIO_E_ENCOMENDAS.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
