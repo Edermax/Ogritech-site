@@ -112,7 +112,8 @@
       "menu_sales_notification_reports": "20261112033448",
       "menu_order_response_snapshot": "20261112035316",
       "split_menu_offers": "20261113192700",
-      "guard_menu_offer_changes": "20261114012026"
+      "guard_menu_offer_changes": "20261114012026",
+      "menu_tracking_customer_phone": "20261114173559"
     },
     "observedMigrationNames": [
       "create_core_schema",

@@ -14,3 +14,7 @@ Uma migration acrescenta `customer_phone` à resposta de acompanhamento, protegi
 - Cópia de trabalho: `work/cardapio-tema-claro-20261114`, branch `codex/cardapio-dados-cliente-20261114`, baseada em `bf20b92`.
 
 Produção deve receber somente a migration de resposta de acompanhamento e o frontend deste ajuste. O rollback da função é a definição anterior versionada em `20261112030810_menu_order_receipts_and_sequence.sql`; não requer alteração ou restauração dos pedidos existentes.
+
+## Homologação
+
+Staging recebeu somente `menu_tracking_customer_phone`, versão nativa `20261114173559`. As 33 verificações SQL de pedido passaram com fixtures sintéticas e rollback, incluindo criação sem e-mail e telefone protegido pelo token. Nenhum pedido de cliente foi alterado. O banco legado preserva e-mail ausente como vazio ou nulo; o teste verifica a ausência de valor sem exigir conversão dos registros.

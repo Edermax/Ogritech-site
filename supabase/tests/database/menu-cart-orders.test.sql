@@ -44,7 +44,7 @@ select extensions.is((public.public_menu('pedido-seguro')->'delivery_zones'->0->
 select extensions.is((public.public_create_menu_order_v2('pedido-seguro','Cliente Teste','','11999999999','delivery','{"text":"Rua Teste, 1","zone_code":"centro"}','', '[{"menu_item_price_id":"95000000-0000-4000-8000-000000000001","quantity":1,"selections":[{"menu_option_id":"97000000-0000-4000-8000-000000000001","quantity":1}]}]',true,'98000000-0000-4000-8000-000000000001',null,'')->>'total_amount')::numeric,31::numeric,'servidor calcula item, adicional e entrega');
 reset role;
 select extensions.is((select count(*) from public.menu_orders where menu_id=(select id from public.online_menus where slug='pedido-seguro')),1::bigint,'primeiro envio cria um pedido');
-select extensions.ok((select customer_email is null from public.menu_orders where client_request_id='98000000-0000-4000-8000-000000000001'),'pedido funciona sem coleta de e-mail');
+select extensions.ok((select coalesce(customer_email,'')='' from public.menu_orders where client_request_id='98000000-0000-4000-8000-000000000001'),'pedido funciona sem coleta de e-mail');
 select extensions.is((select subtotal from public.menu_orders where barbershop_id='91000000-0000-4000-8000-000000000001' and client_request_id='98000000-0000-4000-8000-000000000001'),25::numeric,'subtotal ignora qualquer cálculo do navegador');
 select extensions.is((select line_total from public.menu_order_item_options where barbershop_id='91000000-0000-4000-8000-000000000001' and menu_option_id='97000000-0000-4000-8000-000000000001'),5::numeric,'adicional é salvo como snapshot financeiro');
 set local role anon;

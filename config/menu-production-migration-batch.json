@@ -88,8 +88,8 @@
     "split_menu_offers",
     "guard_menu_offer_changes"
   ],
-  "authorizationSource": "Usuário: Implementar as duas correções apontadas na revisão, com publicação autorizada nesta conversa.",
-  "authorizationScope": "Divisão Cardápio/Encomendas, preços mensais e anuais, teste único de 14 dias e atualização coordenada do banco, cobrança e painéis.",
+  "authorizationSource": "Usuário solicitou os ajustes do cardápio e confirmou manter as regras de entrega, encomendas e privacidade.",
+  "authorizationScope": "Remoção do campo de e-mail, rótulos opcionais e nome/telefone nos resumos iniciados pelo cliente, incluindo acompanhamento protegido por token.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
     "executedAt": "2026-11-14",
