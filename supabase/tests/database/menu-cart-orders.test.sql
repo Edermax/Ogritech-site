@@ -1,6 +1,6 @@
 begin;
 set local search_path=public,extensions;
-select extensions.plan(33);
+select extensions.plan(35);
 
 select extensions.has_table('public','menu_delivery_zones','áreas de entrega existem');
 select extensions.has_table('public','menu_order_item_options','snapshot de adicionais existe');
@@ -71,6 +71,8 @@ set local role anon;
 select extensions.ok(public.public_get_menu_order(current_setting('rollback_test.reference'),current_setting('rollback_test.token')) is not null,'rollback: pedido existente pode ser acompanhado antes do fechamento');
 select extensions.is(public.public_get_menu_order(current_setting('rollback_test.reference'),current_setting('rollback_test.token'))->>'customer_name','Cliente Teste','acompanhamento preserva o nome do cliente');
 select extensions.is(public.public_get_menu_order(current_setting('rollback_test.reference'),current_setting('rollback_test.token'))->>'customer_phone','11999999999','resumo de acompanhamento inclui telefone do mesmo pedido');
+select extensions.is(public.public_get_menu_order(current_setting('rollback_test.reference'),current_setting('rollback_test.token'))->>'menu_slug','pedido-seguro','acompanhamento recebe o slug do próprio estabelecimento');
+select extensions.ok(jsonb_typeof(public.public_get_menu_order(current_setting('rollback_test.reference'),current_setting('rollback_test.token'))->'visual_identity')='object','acompanhamento recebe a identidade visual publicada');
 select extensions.ok(public.public_get_menu_order(current_setting('rollback_test.reference'),'token-incorreto') is null,'telefone não é exposto sem o token do pedido');
 
 select extensions.throws_ok($$select public.set_menu_publication('91000000-0000-4000-8000-000000000001',false)$$,'42501',null,'rollback: visitante não pode fechar entradas');

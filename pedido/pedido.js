@@ -19,6 +19,15 @@
     try {
     const { data, error } = await supabaseClient.rpc("public_get_menu_order", { target_reference: reference, target_token: token });
     if (error || !data) throw new Error("order_unavailable");
+    globalThis.OgritechMenuBranding?.applyColors(document.documentElement,data.visual_identity || {});
+    document.getElementById("orderMenuTitle").textContent=data.menu_title;
+    const menuSlug=data.menu_slug || params.get("empresa");
+    if (menuSlug) document.getElementById("orderMenuLink").href=ogritechEnvironmentUrl(`/cardapio/?empresa=${encodeURIComponent(menuSlug)}`);
+    const logo=document.getElementById("orderMenuLogo");
+    const logoUrl=globalThis.OgritechMenuBranding?.assetUrl(data.visual_identity?.logo_path,window.OGRITECH_SUPABASE_URL);
+    logo.hidden=!logoUrl;
+    if(logoUrl) logo.src=logoUrl;
+
     const code = Number.isSafeInteger(Number(data.order_number)) && Number(data.order_number) > 0 ? `#${data.order_number}` : publicCode(data.reference), whatsapp = String(data.whatsapp_phone || ""), terminal = ["rejected", "cancelled"].includes(data.status), paymentPending = data.payment_status === "pending";
     const whatsappText = whatsapp ? terminal ? `Olá, ${data.menu_title}! O pedido ${code} foi ${data.status === "rejected" ? "recusado" : "cancelado"}. Gostaria de mais informações.\n\nNome: ${data.customer_name}${data.customer_phone ? `\nTelefone: ${data.customer_phone}` : ""}` : globalThis.OgritechMenuWhatsapp.format({ code, businessName: data.menu_title, customerName: data.customer_name, customerPhone: data.customer_phone, items: data.items.map((item) => ({ name: item.name, label: item.label, quantity: item.quantity, lineTotal: item.line_total })), subtotal: data.subtotal, deliveryFee: data.delivery_fee, total: data.total_amount, fulfillment: data.fulfillment_type, paymentStatus: data.payment_status }) : "";
     const whatsappLink = whatsapp ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(whatsappText)}` : "";

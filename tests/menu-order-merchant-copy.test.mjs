@@ -11,7 +11,7 @@ test('order tracking uses the contact returned for the order, independent from t
     const globalThis={};
     runInNewContext(whatsappSource,{globalThis,Intl});
     runInNewContext(source,{
-      location:{search:`?referencia=FIXTURE&token=fixture&empresa=${slug}`},URLSearchParams,Intl,globalThis,
+      ogritechEnvironmentUrl:path=>path,location:{search:`?referencia=FIXTURE&token=fixture&empresa=${slug}`},URLSearchParams,Intl,globalThis,
       document:{getElementById:(id)=>id==='order'?root:{addEventListener(){},disabled:false,textContent:''}},
       supabaseClient:{rpc:async()=>({data:{reference:'FIXTURE',customer_name:'Teste',fulfillment_type:'pickup',status:'received',payment_status:'pending',items:[],total_amount:25,whatsapp_phone:phone,menu_title:name}})}
     });
@@ -32,7 +32,7 @@ test('rejected order does not ask for payment and offers a status question',asyn
   const globalThis={};
   runInNewContext(whatsappSource,{globalThis,Intl});
   runInNewContext(source,{
-    location:{search:'?referencia=FIXTURE&token=fixture'},URLSearchParams,Intl,globalThis,
+    ogritechEnvironmentUrl:path=>path,location:{search:'?referencia=FIXTURE&token=fixture'},URLSearchParams,Intl,globalThis,
     document:{getElementById:(id)=>id==='order'?root:{addEventListener(){},disabled:false,textContent:''}},
     supabaseClient:{rpc:async()=>({data:{reference:'FIXTURE',customer_name:'Teste',fulfillment_type:'pickup',status:'rejected',payment_status:'pending',items:[],total_amount:25,whatsapp_phone:'5511999999999',menu_title:'Loja teste'}})}
   });
@@ -54,7 +54,7 @@ test('image policy permits local previews and only the two trusted menu image bu
 test('reviewing a paid order never tells the customer to pay again or implies an automatic refund',async()=>{
  for(const status of ['confirmed','rejected']){
   const root={innerHTML:''},globalThis={};runInNewContext(whatsappSource,{globalThis,Intl});
-  runInNewContext(source,{location:{search:'?referencia=FIXTURE&token=fixture'},URLSearchParams,Intl,globalThis,
+  runInNewContext(source,{ogritechEnvironmentUrl:path=>path,location:{search:'?referencia=FIXTURE&token=fixture'},URLSearchParams,Intl,globalThis,
    document:{getElementById:id=>id==='order'?root:{addEventListener(){},disabled:false,textContent:''}},
    supabaseClient:{rpc:async()=>({data:{reference:'FIXTURE',order_number:7,customer_name:'Teste',fulfillment_type:'pickup',status,payment_status:'paid',items:[],subtotal:25,delivery_fee:0,total_amount:25,whatsapp_phone:'5511999999999',menu_title:'Loja teste'}})}});
   await new Promise(resolve=>setImmediate(resolve));assert.match(root.innerHTML,/#7/);

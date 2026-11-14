@@ -48,7 +48,7 @@
   const editor = node('section', '', 'panel-product-editor'); editor.id = 'panelProductEditor'; editor.hidden = true;
   const editorTitle = node('h3', 'Adicionar produto'); editorTitle.id = 'panelProductEditorTitle';
   editor.setAttribute('aria-labelledby', editorTitle.id); editor.append(editorTitle, form);
-  catalog.append(list, editor);
+  catalog.append(list, $('menuCatalogLockNotice'), editor);
   form.querySelector('.commercial-actions').classList.add('panel-editor-actions');
   form.addEventListener('input', () => { editorDirty = true; });
   form.addEventListener('change', () => { editorDirty = true; });
@@ -136,15 +136,7 @@
     });
     add.hidden = !state.canManage || !editor.hidden;
     add.disabled = !state.ready || state.busy;
-    list.querySelectorAll('.menu-catalog-editor-item>.commercial-actions').forEach(actions => {
-      if (actions.querySelector('.panel-product-more')) return;
-      const edit = actions.querySelector('[data-edit-menu-item]');
-      if (!edit) return;
-      const more = node('details', '', 'panel-product-more'), tools = node('div', '', 'panel-product-tools');
-      more.append(node('summary', 'Mais ações'), tools);
-      [...actions.children].filter(el => el !== edit).forEach(el => tools.append(el));
-      actions.append(edit, more);
-    });
+
   }
   function sync(next) {
     state = next;

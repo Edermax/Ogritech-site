@@ -76,7 +76,7 @@ async function darkIssues(page){return page.evaluate(()=>{
     await check(page,section+'-'+width);
    }
    await goWorkspace(page,'catalog');await page.locator('#panelAddProduct').click();await check(page,'product-editor-'+width);await page.locator('#menuItemCancel').click();
-   await page.locator('.panel-product-more>summary').first().click();await check(page,'product-actions-'+width);
+   assert.equal(await page.locator('.panel-product-more').count(),0);assert.ok(await page.locator('[data-toggle-menu-item]').first().isVisible());await check(page,'product-actions-'+width);
    await goWorkspace(page,'operation');
    const orderControls=page.locator('#menuOrdersList button');
    await orderControls.evaluateAll(elements=>elements.forEach(el=>{el.disabled=true;}));

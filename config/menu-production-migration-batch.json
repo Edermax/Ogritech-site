@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-14",
-  "baseline": "menu_tracking_customer_phone",
+  "baseline": "menu_tracking_branding",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
-    "mode": "CLEAN_CI_REPLAY",
-    "migrationCount": 99,
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43622126848",
-    "sourceCommit": "724c4843f7b599f26f36476bb378d299f7b9eacb"
+    "mode": "LOCAL_MIGRATION_UP_AND_PGTAP",
+    "migrationCount": 101,
+    "tests": 769,
+    "evidence": "docs/evidencias/cardapio-produtos-cores-2026-11-14.md"
   },
   "productionDryRun": {
     "status": "PASSED",
@@ -18,8 +18,8 @@
     "migrationCount": 0,
     "remoteChangesPerformed": false,
     "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/cardapio-dados-cliente-2026-11-14.md",
-    "aliasCompatibility": "99 migrations verified; native tracking-phone aliases recorded without history repair. No pending migration."
+    "evidence": "docs/evidencias/cardapio-produtos-cores-2026-11-14.md",
+    "aliasCompatibility": "101 migrations verified in staging and production; native visibility and branding aliases recorded without history repair. No pending migration."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
@@ -87,25 +87,21 @@
     "guard_menu_offer_changes",
     "menu_tracking_customer_phone"
   ],
-  "authorizationSource": "Usuário solicitou os ajustes do cardápio e confirmou manter as regras de entrega, encomendas e privacidade.",
-  "authorizationScope": "Remoção do campo de e-mail, rótulos opcionais e nome/telefone nos resumos iniciados pelo cliente, incluindo acompanhamento protegido por token.",
+  "authorizationSource": "Usuário solicitou excluir/ocultar/reativar produtos, preservar a cor do cliente em todas as etapas e retomar a implementação e publicação.",
+  "authorizationScope": "Ações explícitas no catálogo, visibilidade operacional imediata sincronizada ao rascunho, preservação da identidade visual na confirmação e no acompanhamento.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
     "executedAt": "2026-11-14",
     "migrations": [
-      "menu_tracking_customer_phone"
+      "menu_product_visibility",
+      "menu_tracking_branding"
     ],
-    "reviewedPendingCount": 1,
-    "sourceCommit": "724c4843f7b599f26f36476bb378d299f7b9eacb",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43622126848",
-    "stagingMigrationCount": 99,
-    "productionMigrationCount": 99,
+    "reviewedPendingCount": 2,
+    "sourceBaseCommit": "7c1dbb4362bb53fac7c96ce4d48f75751279e8e0",
+    "stagingMigrationCount": 101,
+    "productionMigrationCount": 101,
     "postPromotionPendingCount": 0,
-    "backupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43586284880",
-    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43539743553",
-    "restoredBackupRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43539297823",
-    "restoreStatus": "SUCCESS",
-    "evidence": "docs/evidencias/cardapio-dados-cliente-2026-11-14.md"
+    "evidence": "docs/evidencias/cardapio-produtos-cores-2026-11-14.md"
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",

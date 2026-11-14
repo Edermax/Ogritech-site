@@ -50,6 +50,31 @@ const out = 'outputs/panel-navigation'; fs.mkdirSync(out, { recursive: true });
         assert.equal(await page.locator('#panelProductEditor').isVisible(), false);
         assert.ok(await page.locator('[data-edit-menu-item]').first().evaluate(el => el.getBoundingClientRect().bottom < innerHeight - 85));
         await fit(page); await page.screenshot({ path: `${out}/products-${theme}-${width}.png` });
+        assert.equal(await page.locator('.panel-product-more').count(),0);
+        const product=page.locator('.menu-catalog-editor-item').first();
+        assert.equal(await product.locator('[data-delete-menu-item]').textContent(),'Excluir produto');
+        await product.locator('[data-toggle-menu-item]').click();
+        await page.waitForFunction(()=>document.querySelector('[data-toggle-menu-item]')?.textContent==='Reativar produto');
+        assert.match(await product.textContent(),/Oculto/);
+        assert.equal(await page.locator('.menu-catalog-editor-item').count(),2);
+        const hidden=await page.evaluate(()=>window.__fixtureMenu.menu_categories[0].menu_items[0]);
+        assert.equal(hidden.active,false);assert.equal(hidden.available,false);assert.equal(hidden.menu_item_prices[0].price,16.9);
+        await page.screenshot({path:`${out}/hidden-product-${theme}-${width}.png`});
+        await product.locator('[data-toggle-menu-item]').click();
+        await page.waitForFunction(()=>document.querySelector('[data-toggle-menu-item]')?.textContent==='Ocultar produto');
+        assert.match(await product.textContent(),/Disponível/);
+        page.once('dialog',dialog=>dialog.dismiss());
+        await product.locator('[data-delete-menu-item]').click();
+        assert.equal(await page.locator('.menu-catalog-editor-item').count(),2);
+        if(width===390 && theme==='light'){
+          await page.evaluate(()=>{window.__visibilityError=true;});
+          await product.locator('[data-toggle-menu-item]').click();
+          await page.waitForFunction(()=>!document.querySelector('[data-toggle-menu-item]').disabled);
+          assert.equal(await product.locator('[data-toggle-menu-item]').textContent(),'Ocultar produto');
+          assert.equal(await page.evaluate(()=>window.__fixtureMenu.menu_categories[0].menu_items[0].active),true);
+          await page.evaluate(()=>{window.__visibilityError=false;});
+        }
+
         await page.locator('#panelAddProduct').click();
         await page.locator('#menuItemName').fill('Produto ainda não salvo');
         const rejectDiscard = dialog => dialog.dismiss(); page.once('dialog', rejectDiscard);

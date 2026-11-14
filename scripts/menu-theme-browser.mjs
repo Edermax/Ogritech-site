@@ -67,7 +67,7 @@ try {
           if (name === 'public_menu_assistant_status') return {data: {available: true}};
           if (name === 'public_menu_assistant_message') return {data: {reply: 'Confira esta opção.', suggestions: [{menu_item_price_id: 'price', name: item.name, label: 'Padrão', price: 14.9, requires_confirmation: true}]}};
           if (name === 'public_create_menu_order_v2') return {data: {reference: 'TEST1234', token: 'local-fixture', order_number: 1, subtotal: 29.8, delivery_fee: 5, total_amount: 34.8}};
-          if (name === 'public_get_menu_order') return {data: {reference: 'TEST1234', order_number: 1, menu_title: 'Loja de teste', whatsapp_phone: '5511999999999', customer_name: 'Cliente de teste', customer_phone: '11999999999', fulfillment_type: 'delivery', status: 'received', payment_status: 'pending', subtotal: 29.8, delivery_fee: 5, total_amount: 34.8, items: [{name: item.name, label: 'Padrão', quantity: 2, line_total: 29.8}]}};
+          if (name === 'public_get_menu_order') return {data: {reference: 'TEST1234', order_number: 1, menu_title: 'Loja de teste', whatsapp_phone: '5511999999999', customer_name: 'Cliente de teste', customer_phone: '11999999999', menu_slug: 'loja-teste', visual_identity: {primary_color:'#a21d44',accent_color:accent}, fulfillment_type: 'delivery', status: 'received', payment_status: 'pending', subtotal: 29.8, delivery_fee: 5, total_amount: 34.8, items: [{name: item.name, label: 'Padrão', quantity: 2, line_total: 29.8}]}};
           throw new Error(`Unexpected fixture call ${name}`);
         },
         functions: {invoke: async () => ({data: {data: {delivery_quote: {zone_code: 'centro', fee: 5, distance_km: 2}}}})}
@@ -141,10 +141,10 @@ try {
         font:getComputedStyle(el).fontFamily,
         merchantAccent:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()
       }));
-      assert.equal(confirmationStyle.background,'rgb(255, 255, 255)');
-      assert.equal(confirmationStyle.button,'rgb(8, 185, 211)');
+      assert.equal(confirmationStyle.background,'rgb(255, 253, 250)');
+      assert.equal(confirmationStyle.button,`rgb(${parseInt(accent.slice(1,3),16)}, ${parseInt(accent.slice(3,5),16)}, ${parseInt(accent.slice(5,7),16)})`);
       assert.ok(confirmationStyle.headingSize>=22 && confirmationStyle.headingSize<=28);
-      assert.match(confirmationStyle.font,/ui-sans-serif/);
+      assert.match(confirmationStyle.font,/system-ui/);
       assert.equal(confirmationStyle.merchantAccent,accent);
       assert.match(await page.locator('#orderPixValue').textContent(),/^000201/);
       if (accent === '#f8a8d3') {
@@ -183,6 +183,11 @@ try {
       assert.match(new URL(await page.locator('.order-whatsapp-action').getAttribute('href')).searchParams.get('text'), /Nome: Cliente de teste\nTelefone: 11999999999/);
       await page.locator('.order-success-actions a.secondary').click();
       await page.locator('.order-summary').waitFor({state: 'visible'});
+      assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()),accent);
+      assert.equal(await page.locator('.order-whatsapp').evaluate(el=>getComputedStyle(el).backgroundColor),confirmationStyle.button);
+      assert.equal(await page.locator('#refreshOrder').evaluate(el=>getComputedStyle(el).backgroundColor),confirmationStyle.button);
+      assert.equal(await page.locator('#orderMenuTitle').textContent(),'Loja de teste');
+
       assert.match(new URL(await page.locator('.order-whatsapp').getAttribute('href')).searchParams.get('text'), /Nome: Cliente de teste\nTelefone: 11999999999/);
       checks += await checkStyles(page, ['.order-hero h1', '.order-hero small', '.order-hero p', '.order-status', '.payment-status-card strong', '.payment-status-card p', '.order-summary h2', '.order-items .menu-price-row', '.order-items small', '.order-total span', '.proposal-total', '.order-whatsapp', '#refreshOrder', '#orderRefreshMessage'], ['.order-hero', '.order-status', '.payment-status-card', '.order-summary', '.order-contact']);
       if (accent === '#f8a8d3') await page.screenshot({path: resolve(output, `tracking-${width}.png`), fullPage: true});
