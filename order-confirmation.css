@@ -1,5 +1,13 @@
-/* The order receipt uses the shared Ogritech utility palette. */
+/* The receipt keeps the merchant palette used by the catalog and checkout. */
 .order-success.ogri-order-ui {
+  --bg: var(--menu-canvas);
+  --line: var(--menu-line);
+  --text: var(--menu-ink);
+  --muted: var(--menu-muted);
+  --ui-surface: var(--menu-paper);
+  --ui-tint: var(--menu-tint);
+  color-scheme: light;
+  font-family: inherit;
   display: grid;
   gap: 18px;
   max-width: 760px;
@@ -20,23 +28,23 @@
   flex: 0 0 36px;
   width: 36px;
   height: 36px;
-  border: 1px solid #8adce8;
+  border: 1px solid var(--menu-line);
   border-radius: 50%;
   background: var(--ui-tint);
-  color: var(--cyan-light);
+  color: var(--menu-action);
   font-size: 21px;
   font-weight: 750;
 }
-.ogri-order-ui .order-success-heading small { color: var(--cyan-light); font-size: 11px; font-weight: 750; letter-spacing: .1em; }
+.ogri-order-ui .order-success-heading small { color: var(--menu-action); font-size: 11px; font-weight: 750; letter-spacing: .1em; }
 .ogri-order-ui h2 { margin: 4px 0 0; color: var(--text); font-family: inherit; font-size: clamp(22px, 4vw, 28px); font-weight: 750; line-height: 1.15; letter-spacing: -.035em; }
 .ogri-order-ui h3 { margin: 0; color: var(--text); font-size: 16px; line-height: 1.35; }
 .ogri-order-ui .order-success-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .ogri-order-ui .order-summary-box { display: grid; align-content: start; gap: 4px; min-width: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
 .ogri-order-ui .order-summary-box span { color: var(--muted); font-size: 12px; line-height: 1.4; }
 .ogri-order-ui .order-summary-box strong { color: var(--text); font-size: 24px; line-height: 1.25; overflow-wrap: anywhere; }
-.ogri-order-ui .order-code-box strong { color: var(--cyan-light); }
-.ogri-order-ui .order-payment-alert { display: grid; gap: 8px; padding: 14px 16px; border: 1px solid #8adce8; border-left: 3px solid var(--cyan); border-radius: 10px; background: var(--ui-tint); }
-.ogri-order-ui .order-payment-alert > strong { color: var(--cyan-light); font-size: 14px; line-height: 1.4; }
+.ogri-order-ui .order-code-box strong { color: var(--menu-action); }
+.ogri-order-ui .order-payment-alert { display: grid; gap: 8px; padding: 14px 16px; border: 1px solid var(--menu-line); border-left: 3px solid var(--accent); border-radius: 10px; background: var(--ui-tint); }
+.ogri-order-ui .order-payment-alert > strong { color: var(--menu-action); font-size: 14px; line-height: 1.4; }
 .ogri-order-ui .order-payment-alert p { margin: 0; color: var(--text); font-size: 14px; line-height: 1.55; }
 .ogri-order-ui .order-payment-alert b { color: inherit; }
 .ogri-order-ui .order-success-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -47,10 +55,10 @@
   justify-content: center;
   min-height: 44px;
   padding: 12px 16px;
-  border: 1px solid var(--cyan);
+  border: 1px solid var(--accent);
   border-radius: 10px;
-  background: var(--cyan);
-  color: #062b35;
+  background: var(--accent);
+  color: var(--menu-on-accent, #000);
   font-family: inherit;
   font-size: 14px;
   font-weight: 750;
@@ -60,17 +68,17 @@
   box-shadow: none;
   overflow-wrap: anywhere;
 }
-.ogri-order-ui .public-button:not(.secondary) { background: var(--cyan); color: #062b35; }
-.ogri-order-ui .public-button:not(.secondary):hover { background: #34c9df; }
-.ogri-order-ui .public-button.secondary { border-color: #7b919e; background: var(--ui-surface); color: var(--cyan-light); }
-.ogri-order-ui .public-button.secondary:hover { border-color: var(--cyan-light); background: var(--ui-tint); }
-.ogri-order-ui :is(a, button, summary, code):focus-visible { outline: 3px solid var(--cyan-light); outline-offset: 3px; }
+.ogri-order-ui .public-button:not(.secondary) { background: var(--accent); color: var(--menu-on-accent, #000); }
+.ogri-order-ui .public-button:not(.secondary):hover { filter: brightness(.95); }
+.ogri-order-ui .public-button.secondary { border-color: var(--menu-line); background: var(--ui-surface); color: var(--menu-action); }
+.ogri-order-ui .public-button.secondary:hover { border-color: var(--menu-action); background: var(--ui-tint); }
+.ogri-order-ui :is(a, button, summary, code):focus-visible { outline: 3px solid var(--menu-action); outline-offset: 3px; }
 .ogri-order-ui .order-success-note { margin: -6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .ogri-order-ui .order-pix-payment { gap: 12px; border: 1px solid var(--line); background: var(--ui-surface); }
 .ogri-order-ui .order-pix-payment .public-button { width: 100%; }
 .ogri-order-ui .order-pix-payment .order-pix-instruction { color: var(--muted); font-size: 13px; }
 .ogri-order-ui .order-pix-details { min-width: 0; border-top: 1px solid var(--line); }
-.ogri-order-ui .order-pix-details summary { min-height: 44px; padding: 10px 0; color: var(--cyan-light); font-size: 13px; font-weight: 650; cursor: pointer; }
+.ogri-order-ui .order-pix-details summary { min-height: 44px; padding: 10px 0; color: var(--menu-action); font-size: 13px; font-weight: 650; cursor: pointer; }
 .ogri-order-ui .order-pix-code { min-width: 0; max-width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
 .ogri-order-ui .order-pix-code code { display: block; color: var(--text); font: 12px/1.6 ui-monospace, monospace; white-space: normal; overflow-wrap: anywhere; word-break: break-all; user-select: text; }
 .ogri-order-ui .order-pix-payment .order-payment-help { color: var(--muted); font-size: 12px; }

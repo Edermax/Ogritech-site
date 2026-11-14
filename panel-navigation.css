@@ -35,10 +35,9 @@ body.panel-readable-controls #menuView #menuCatalogList [data-move-menu-item],
 body.panel-readable-controls #menuView #menuCatalogList [data-move-category]{min-width:44px;min-height:44px}
 body.panel-readable-controls #menuCatalogList article>header>.commercial-actions{flex:0 0 auto;min-width:0}
 body.panel-readable-controls #menuCatalogList .menu-catalog-editor-item>div:not(.commercial-actions){min-width:0}
-body.panel-readable-controls .panel-product-more{min-width:0}
-body.panel-readable-controls #menuView .panel-product-more>summary{display:flex;align-items:center;justify-content:center;min-height:44px;padding:10px 14px;border:1px solid var(--control-border);border-radius:10px;font-size:13px;color:var(--control-text);cursor:pointer;list-style:none}
-body.panel-readable-controls .panel-product-more>summary::-webkit-details-marker{display:none}
-body.panel-readable-controls .panel-product-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+body.panel-readable-controls #menuCatalogList .menu-catalog-editor-item{grid-template-columns:60px minmax(0,1fr)}
+body.panel-readable-controls #menuCatalogList .menu-catalog-editor-item>.commercial-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px}
+body.panel-readable-controls #menuCatalogList .menu-product-order{display:flex;gap:8px}
 body.panel-readable-controls #settingsView{display:grid;gap:20px}
 body.panel-readable-controls #settingsView.hidden{display:none}
 body.panel-readable-controls .panel-account-card{padding:24px}
