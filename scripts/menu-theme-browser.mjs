@@ -58,7 +58,7 @@ try {
     await context.addInitScript(({offer, accent, origin}) => {
       window.ogritechEnvironmentUrl = path => new URL(path, location.origin).href;
       window.__calls = [];
-      Object.defineProperty(navigator, "clipboard", {value: {writeText: async text => { window.__copiedPix = text; }}, configurable: true});
+      Object.defineProperty(navigator, "clipboard", {value: {writeText: async text => { if (window.__clipboardBlocked) throw new Error("clipboard blocked"); window.__copiedPix = text; }}, configurable: true});
       const item = {id: 'item', name: 'Brigadeiro Cremoso', description: 'Chocolate e leite condensado', prices: [{id: 'price', label: 'Padrão', price: 14.9}], option_groups: [{id: 'group', name: 'Escolha a cobertura', selection_type: 'single', minimum_selections: 1, maximum_selections: 1, options: [{id: 'option', name: 'Granulado', price_delta: 0}]}]};
       window.supabaseClient = {
         rpc: async (name, args) => {
@@ -146,17 +146,38 @@ try {
       assert.ok(confirmationStyle.headingSize>=22 && confirmationStyle.headingSize<=28);
       assert.match(confirmationStyle.font,/ui-sans-serif/);
       assert.equal(confirmationStyle.merchantAccent,accent);
-      assert.match(await page.locator('.order-pix-payment textarea').inputValue(),/^000201/);
+      assert.match(await page.locator('#orderPixValue').textContent(),/^000201/);
       if (accent === '#f8a8d3') {
         await page.locator('#orderSuccess').evaluate(el=>el.scrollIntoView({behavior:'instant',block:'start'}));
         await page.locator('#orderSuccess').screenshot({path: resolve(output, `success-${width}.png`)});
+        await page.locator('.order-pix-payment').screenshot({path: resolve(output, `pix-collapsed-${width}.png`)});
       }
       await page.click('#copyOrderPixKey');
       await page.waitForFunction(()=>Boolean(window.__copiedPix));
-      assert.equal(await page.evaluate(()=>window.__copiedPix),await page.locator('.order-pix-payment textarea').inputValue());
+      assert.equal(await page.evaluate(()=>window.__copiedPix),await page.locator('#orderPixValue').textContent());
       assert.match(await page.locator('#copyOrderPixStatus').textContent(),/copiado/);
+      assert.equal(await page.locator('#orderPixDetails').evaluate(el=>el.open),false);
+      await page.click('#orderPixDetails summary');
+      await page.waitForFunction(()=>document.querySelector('#orderPixDetails summary').textContent.includes('Ocultar'));
+      assert.equal(await page.locator('#orderPixValue').isVisible(),true);
+      const codeBox=await page.locator('.order-pix-code').evaluate(el=>({height:el.clientHeight,fullHeight:el.scrollHeight,width:el.clientWidth,fullWidth:el.scrollWidth}));
+      assert.ok(codeBox.fullHeight<=codeBox.height+1 && codeBox.fullWidth<=codeBox.width+1,'Full Pix code is visible without inner scrolling.');
+      if (accent === '#f8a8d3') {
+        await page.locator('.order-pix-payment').evaluate(el=>el.scrollIntoView({behavior:'instant',block:'start'}));
+        await page.locator('.order-pix-payment').screenshot({path: resolve(output, `pix-expanded-${width}.png`)});
+      }
 
-      checks += await checkStyles(page, ['.order-success h2', '.order-success h3', '.order-total-box span', '.order-total-box strong', '.order-success small', '.order-code-box span', '.order-code-box strong', '.order-payment-alert strong', '.order-payment-alert p', '.order-payment-alert b', '.order-payment-alert label', '.order-payment-alert textarea', '.order-success .public-button', '.order-success-note'], ['#orderSuccess', '.order-code-box', '.order-payment-alert', '.order-payment-alert textarea']);
+
+      checks += await checkStyles(page, ['.order-success h2', '.order-success h3', '.order-total-box span', '.order-total-box strong', '.order-success small', '.order-code-box span', '.order-code-box strong', '.order-payment-alert strong', '.order-payment-alert p', '.order-payment-alert b', '.order-pix-instruction', '#orderPixDetails summary', '#orderPixValue', '.order-success .public-button', '.order-success-note'], ['#orderSuccess', '.order-code-box', '.order-payment-alert', '.order-pix-code']);
+      await page.click('#orderPixDetails summary');
+      assert.equal(await page.locator('#orderPixDetails').evaluate(el=>el.open),false);
+      if (width===390 && accent==='#f8a8d3') {
+        await page.evaluate(()=>{window.__clipboardBlocked=true;});
+        await page.click('#copyOrderPixKey');
+        await page.waitForFunction(()=>document.getElementById('orderPixDetails').open);
+        assert.match(await page.locator('#copyOrderPixStatus').textContent(),/Não foi possível copiar automaticamente/);
+        assert.equal(await page.evaluate(()=>window.getSelection().toString()),await page.locator('#orderPixValue').textContent());
+      }
       assert.equal(await page.evaluate(() => window.__calls.filter(c => c.name.startsWith('public_create_menu_order')).length), 1);
       assert.equal(await page.evaluate(() => window.__calls.find(c => c.name==='public_create_menu_order_v2').args.supplied_email), '');
       assert.match(new URL(await page.locator('.order-whatsapp-action').getAttribute('href')).searchParams.get('text'), /Nome: Cliente de teste\nTelefone: 11999999999/);
