@@ -18,6 +18,18 @@ test('catalog connection failure offers retry and a later valid response can loa
   assert.equal((await context.loadMenuData()).menu.title,'Fixture');
 });
 
+test('unavailable catalog does not blame the connection and can reopen on retry',async()=>{
+  const $=fields();let available=false;
+  const body=catalog.slice(catalog.indexOf('  async function loadMenuData()'),catalog.indexOf('  async function init()'));
+  const context={$ ,slug:'fixture',init(){available=true;},supabaseClient:{rpc:async()=>available?{data:{menu:{title:'Reaberto'}}}:{error:{code:'22023',message:'Cardápio indisponível'}}}};
+  runInNewContext(body,context);
+  assert.equal(await context.loadMenuData(),null);
+  assert.match($('loading').innerHTML,/Cardápio temporariamente indisponível/);
+  assert.doesNotMatch($('loading').innerHTML,/conexão/);
+  $('retryMenuLoad').handlers.click();
+  assert.equal((await context.loadMenuData()).menu.title,'Reaberto');
+});
+
 test('tracking retries a failed first load, preserves last status on later failure and refreshes without another order',async()=>{
   const $=fields();let calls=0;
   const order=status=>({reference:'FIXTURE',customer_name:'Cliente',fulfillment_type:'pickup',status,payment_status:'pending',items:[],total_amount:25});
