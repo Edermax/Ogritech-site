@@ -48,6 +48,8 @@ test('image policy permits local previews and only the two trusted menu image bu
   const headers=await readFile(new URL('../_headers',import.meta.url),'utf8');
   const directive=headers.match(/img-src ([^;]+);/)[1].split(/\s+/);
   assert.deepEqual(directive,["'self'",'data:','blob:','https://fuesdztsvrkkgnbqhcxi.supabase.co/storage/v1/object/public/menu-images/','https://mvzcoaiiwytycdqcvydf.supabase.co/storage/v1/object/public/menu-images/']);
+  const tracking=await readFile(new URL('../pedido/index.html',import.meta.url),'utf8');
+  assert.deepEqual(tracking.match(/img-src ([^;]+);/)[1].split(/\s+/),directive.filter(source=>source!=='blob:'));
   assert.doesNotMatch(headers,/img-src[^;]*(?:\*|https:;)/);
 });
 
