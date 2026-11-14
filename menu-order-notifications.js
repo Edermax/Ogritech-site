@@ -39,7 +39,7 @@
   }
 
   async function readyWorker() {
-    const worker = await navigator.serviceWorker.register("/sw.js");
+    const worker = await navigator.serviceWorker.register("/sw.js?v=20261114.1", { scope: "/", updateViaCache: "none" });
     await worker.update();
     const installing = worker.installing;
     if (installing) await new Promise((resolve, reject) => {

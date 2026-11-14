@@ -36,7 +36,7 @@
     clearTimeout(promptTimer); clearTimeout(installTimer); help?.close(); say('Ogritech instalado. Abra pelo ícone no seu dispositivo.'); update();
   });
   standalone.addEventListener('change', update);
-  const registerWorker = async () => { try { await navigator.serviceWorker.register('/sw.js'); } catch { /* Installation remains optional. */ } };
+  const registerWorker = async () => { try { await navigator.serviceWorker.register('/sw.js?v=20261114.1', { scope: '/', updateViaCache: 'none' }); } catch { /* Installation remains optional. */ } };
   if ('serviceWorker' in navigator) {
     if (document.readyState === 'complete') registerWorker();
     else window.addEventListener('load', registerWorker, { once: true });

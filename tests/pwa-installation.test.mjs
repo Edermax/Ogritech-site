@@ -25,7 +25,7 @@ function fixture({native,ios=false,login=false}={}) {
   const window={addEventListener(key,callback){events[key]=callback;},matchMedia(){return display;}};
   if(!ios) window.onbeforeinstallprompt=null;
   const registrations=[];
-  const navigator={userActivation:{isActive:false},userAgent:ios?'iPhone':'Chrome Windows',platform:'',serviceWorker:{register:async url=>{registrations.push(url);return {};}}};
+  const navigator={userActivation:{isActive:false},userAgent:ios?'iPhone':'Chrome Windows',platform:'',serviceWorker:{register:async (url,options)=>{registrations.push({url,scope:options.scope,cache:options.updateViaCache});return {};}}};
   if(native)navigator.install=native;
   vm.runInNewContext(source,{window,document,navigator,setTimeout:callback=>{timers.set(++nextTimer,callback);return nextTimer;},clearTimeout:id=>timers.delete(id)});
   return {button,help,events,domEvents,timers,registrations,display,navigator,initialize(){domEvents.DOMContentLoaded();},
@@ -38,7 +38,7 @@ test('installation readiness is captured before DOM initialization and invokes t
   await pending;assert.equal(page.button.hidden,false,'acceptance alone is not confirmation of installation');
   assert.equal(page.button.textContent,'Instalando o app...');
   page.events.appinstalled();assert.equal(page.button.hidden,true);assert.equal(page.timers.size,0);
-  await page.events.load();assert.deepEqual(page.registrations,['/sw.js']);
+  await page.events.load();assert.deepEqual(page.registrations,[{url:'/sw.js?v=20261114.1',scope:'/',cache:'none'}]);
 });
 test('canceling a browser prompt does not claim installation or open a tutorial',async()=>{
   const page=fixture();page.initialize();const prompt=page.prompt('dismissed');
