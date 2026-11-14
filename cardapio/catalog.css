@@ -355,12 +355,14 @@ input[type=checkbox],input[type=radio]{accent-color:var(--accent)}
 .menu-back-to-top a { text-decoration:none; }
 
 .menu-platform-footer { display:flex; justify-content:center; margin-top:32px; }
-.menu-platform-footer img { display:block; width:128px; max-width:100%; }
+.menu-platform-footer img { display:block; max-width:100%; height:auto; object-fit:contain; }
+.menu-platform-footer .menu-platform-symbol { width:52px; }
+.menu-platform-footer .menu-platform-wordmark { width:128px; filter:brightness(0); }
 
 .public-button:not(.secondary) { background: var(--accent); color: var(--menu-on-accent, #000); }
 .menu-quote-notice { padding: 8px; border-radius: 8px; background: var(--menu-tint); }
 .menu-back-to-top a.public-button.secondary { border: 1px solid var(--menu-line); background: var(--menu-paper); color: var(--menu-ink); }
-.menu-platform-footer a { padding: 8px 12px; border-radius: 10px; background: #281c21; }
+.menu-platform-footer a { display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px; border-radius:10px; background:#fff; }
 .menu-assistant { top: auto; bottom: max(18px, env(safe-area-inset-bottom)); }
 .menu-assistant-panel { top: auto; bottom: 86px; }
 body:has(#cartBar:not(.hidden)) .menu-assistant { bottom: max(110px, calc(env(safe-area-inset-bottom) + 100px)); }
