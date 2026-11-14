@@ -225,8 +225,62 @@
   function configure(price, quantity = Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1))) {
     const groups = price.item.option_groups || []; if (!groups.length) return addConfigured(price, [], quantity);
     $("configuratorTitle").textContent = price.item.name;
-    $("configuratorGroups").innerHTML = groups.map((group) => `<fieldset data-min="${group.minimum_selections}" data-max="${group.maximum_selections}"><legend>${clean(group.name)}${Number(group.minimum_selections) ? "" : " (Opcional)"} <small>Escolha de ${group.minimum_selections} a ${group.maximum_selections}${Number(group.free_selections) ? ` · ${group.free_selections} incluídos` : ""}</small></legend>${group.options.map((option) => `<label><input type="${group.selection_type === "single" ? "radio" : "checkbox"}" name="group-${group.id}" value="${option.id}" data-price="${option.price_delta}" data-option-name="${clean(option.name)}"> <span>${clean(option.name)}${Number(option.price_delta) ? ` + ${money.format(option.price_delta)}` : ""}</span>${group.selection_type !== "single" && Number(option.maximum_quantity) > 1 ? `<input aria-label="Quantidade de ${clean(option.name)}" data-option-quantity="${option.id}" type="number" min="1" max="${option.maximum_quantity}" step="1" value="1">` : ""}</label>`).join("")}</fieldset>`).join("");
-    $("configurator").dataset.priceId = price.id; $("configurator").dataset.quantity = quantity; $("configuratorMessage").textContent = ""; $("configurator").showModal();
+    $("configuratorVariant").textContent = `${displayPriceLabel(price.label)} · Quantidade: ${quantity}`;
+    $("configuratorGroups").innerHTML = groups.map((group, index) => {
+      const min = Number(group.minimum_selections), max = Number(group.maximum_selections);
+      const rule = min === max ? `Escolha ${max} ${max === 1 ? "opção" : "opções"}` : min ? `Escolha de ${min} a ${max} opções` : `Escolha até ${max} ${max === 1 ? "opção" : "opções"}`;
+      const included = Number(group.free_selections) ? ` · ${group.free_selections} ${Number(group.free_selections) === 1 ? "escolha incluída" : "escolhas incluídas"}` : "";
+      return `<fieldset data-option-group="${group.id}" data-min="${min}" data-max="${max}" data-name="${clean(group.name)}"><legend><span class="configurator-step">${index + 1}</span><span class="configurator-group-title">${clean(group.name)}</span><small>${rule}${included}</small></legend><div class="configurator-group-status"><span class="configurator-requirement">${min ? "Obrigatório" : "Opcional"}</span><span data-group-status></span></div><p class="configurator-group-hint" data-group-hint></p>${group.options.length > 8 ? `<label class="configurator-filter">Buscar nas opções<input type="search" data-option-search placeholder="Digite para encontrar" aria-label="Buscar em ${clean(group.name)}" autocomplete="off"></label><p class="configurator-search-status" data-search-status role="status"></p>` : ""}<div class="configurator-options">${group.options.map((option) => `<label class="configurator-option"><input type="${group.selection_type === "single" ? "radio" : "checkbox"}" name="group-${group.id}" value="${option.id}" data-price="${option.price_delta}" data-option-name="${clean(option.name)}"><span class="configurator-option-copy"><span>${clean(option.name)}</span><small>${Number(option.price_delta) ? `+ ${money.format(option.price_delta)}${Number(group.free_selections) ? " após as escolhas incluídas" : ""}` : "Incluído"}</small></span>${group.selection_type !== "single" && Number(option.maximum_quantity) > 1 ? `<input aria-label="Quantidade de ${clean(option.name)}" data-option-quantity="${option.id}" data-option-max="${option.maximum_quantity}" type="number" min="1" max="${Math.min(Number(option.maximum_quantity), max)}" step="1" value="1" disabled>` : ""}</label>`).join("")}</div></fieldset>`;
+    }).join("");
+    $("configurator").dataset.priceId = price.id; $("configurator").dataset.quantity = quantity; $("configuratorMessage").textContent = "";
+    refreshConfigurator(); $("configurator").showModal(); $("configuratorGroups").scrollTop = 0;
+  }
+  function refreshConfigurator() {
+    const price = prices.get($("configurator").dataset.priceId); if (!price) return null;
+    const selections = []; let invalidFieldset = null, invalidInput = null, remaining = 0;
+    $("configuratorMessage").textContent = "";
+    for (const fieldset of $("configuratorGroups").querySelectorAll("fieldset")) {
+      const inputs = [...fieldset.querySelectorAll('input[type="radio"],input[type="checkbox"]')];
+      const checked = inputs.filter(input => input.checked), max = Number(fieldset.dataset.max), min = Number(fieldset.dataset.min);
+      let count = 0;
+      for (const input of checked) {
+        const quantityInput = fieldset.querySelector(`[data-option-quantity="${input.value}"]`);
+        const quantity = quantityInput ? Number(quantityInput.value) : 1;
+        count += Number.isFinite(quantity) ? quantity : 0;
+        selections.push({menu_option_id:input.value,quantity,price_delta:Number(input.dataset.price),name:input.dataset.optionName});
+      }
+      for (const input of inputs) {
+        input.disabled = input.type === "checkbox" && !input.checked && count >= max;
+        const quantityInput = fieldset.querySelector(`[data-option-quantity="${input.value}"]`);
+        if (quantityInput) {
+          quantityInput.disabled = !input.checked;
+          quantityInput.max = Math.min(Number(quantityInput.dataset.optionMax), Math.max(1, max - count + Number(quantityInput.value)));
+          if (input.checked && !quantityInput.validity.valid) { if (!invalidFieldset || invalidFieldset === fieldset) invalidInput ||= quantityInput; invalidFieldset ||= fieldset; }
+        }
+      }
+      const valid = count >= min && count <= max;
+      if (!valid) invalidFieldset ||= fieldset;
+      if (count < min) remaining++;
+      fieldset.querySelector("[data-group-status]").textContent = `${count} de ${max}`;
+      fieldset.querySelector("[data-group-hint]").textContent = count >= max && inputs.some(input => input.type === "checkbox") ? "Limite atingido. Desmarque uma opção para trocar." : "";
+      fieldset.classList.toggle("configurator-group-complete", valid && count > 0);
+      fieldset.removeAttribute("aria-invalid");
+      const search = fieldset.querySelector("[data-option-search]");
+      if (search) {
+        const query = normalizeSearch(search.value); let matches = 0;
+        for (const input of inputs) {
+          const match = !query || normalizeSearch(input.dataset.optionName).includes(query);
+          if (match) matches++;
+          input.closest("label").classList.toggle("hidden", !match && !input.checked);
+        }
+        fieldset.querySelector("[data-search-status]").textContent = query ? matches ? `${matches} ${matches === 1 ? "opção encontrada" : "opções encontradas"}.` : "Nenhuma opção encontrada. Tente outro termo." : "";
+      }
+    }
+    const total = globalThis.OgritechMenuPricing.unitPrice(price.amount, selections.filter(selection => Number.isFinite(selection.quantity) && selection.quantity > 0), price.item.option_groups) * Number($("configurator").dataset.quantity);
+    $("configuratorTotalLabel").textContent = isQuoteItem(price.item) ? "Valor de referência" : "Total estimado";
+    $("configuratorTotal").textContent = money.format(total);
+    $("configuratorProgress").textContent = invalidFieldset ? remaining ? `Falta completar ${remaining} ${remaining === 1 ? "etapa obrigatória" : "etapas obrigatórias"}.` : "Confira a quantidade das opções." : "Personalização pronta. Você pode adicionar à sacola.";
+    return {selections, invalidFieldset, invalidInput};
   }
   function assistantMessage(text, kind = "assistant") { const node = document.createElement("p"); node.className = `assistant-message${kind === "user" ? " user" : ""}`; node.textContent = text; $("menuAssistantMessages").append(node); node.scrollIntoView({ block: "nearest" }); }
   function assistantControls(data) {
@@ -282,22 +336,19 @@
 
   });
   $("configuratorForm").addEventListener("submit", (event) => {
-    event.preventDefault(); const selections = [];
-    for (const fieldset of $("configuratorGroups").querySelectorAll("fieldset")) {
-      const checked = [...fieldset.querySelectorAll('input[type="radio"]:checked,input[type="checkbox"]:checked')];
-      let count = 0;
-      for (const input of checked) {
-        const quantityInput = fieldset.querySelector(`[data-option-quantity="${input.value}"]`);
-        if (quantityInput && !quantityInput.reportValidity()) return;
-        const quantity = quantityInput ? Number(quantityInput.value) : 1;
-        count += quantity;
-        selections.push({menu_option_id:input.value,quantity,price_delta:Number(input.dataset.price),name:input.dataset.optionName});
-      }
-      if (count < Number(fieldset.dataset.min) || count > Number(fieldset.dataset.max)) { $("configuratorMessage").textContent = "Confira a quantidade de escolhas obrigatórias."; return; }
+    event.preventDefault(); const state = refreshConfigurator(); if (!state) return;
+    if (state.invalidFieldset) {
+      const fieldset = state.invalidFieldset;
+      fieldset.setAttribute("aria-invalid", "true");
+      $("configuratorMessage").textContent = `Escolha as opções de “${fieldset.dataset.name}” conforme o limite indicado.`;
+      if (state.invalidInput) { state.invalidInput.focus(); state.invalidInput.reportValidity(); }
+      else fieldset.querySelector("input:not(:disabled)")?.focus();
+      return;
     }
-    addConfigured(prices.get($("configurator").dataset.priceId), selections, Number($("configurator").dataset.quantity) || 1); $("configurator").close();
+    addConfigured(prices.get($("configurator").dataset.priceId), state.selections, Number($("configurator").dataset.quantity) || 1); $("configurator").close();
   });
   $("closeConfigurator").addEventListener("click", () => $("configurator").close());
+  $("configuratorGroups").addEventListener("input", refreshConfigurator);
   async function loadMenuData() {
     $("loading").innerHTML = '<p role="status">Carregando cardápio...</p>';
     try {
@@ -339,14 +390,14 @@
       const singleLabel = records.length === 1 ? displayPriceLabel(first.label) : "";
       const priceOptions = records.length === 1
         ? `<input type="hidden" data-price-select="${item.id}" value="${first.id}">${singleLabel && normalizeSearch(singleLabel) !== "padrao" ? `<p class="menu-single-option">${clean(singleLabel)}</p>` : ""}`
-        : `<label class="menu-price-picker"><span>${weightPickerLabel(records, quote)}</span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(displayPriceLabel(record.label))}</option>`).join("")}</select></label>`;
-      const pricePicker = records.length ? `<div class="menu-item-purchase">${priceOptions}${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button type="button" class="public-button" data-add-selected="${item.id}">${quote ? "Solicitar análise" : ((item.option_groups || []).length ? "Personalizar" : "Adicionar")}</button></div></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
+        : `<label class="menu-price-picker"><span>${weightPickerLabel(records, quote)}<small class="menu-variants-count">${records.length} opções</small></span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(displayPriceLabel(record.label))}</option>`).join("")}</select></label>`;
+      const pricePicker = records.length ? `<div class="menu-item-purchase">${priceOptions}${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button type="button" class="public-button" data-add-selected="${item.id}">${(item.option_groups || []).length ? (quote ? "Personalizar solicitação" : "Personalizar pedido") : (quote ? "Solicitar análise" : "Adicionar")}</button></div></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
       const illustration = dinizIllustration(category, item), media = item.image_url
         ? `<div class="menu-item-media"><img class="menu-item-image" loading="lazy" decoding="async" src="${clean(item.image_url)}" alt=""></div>`
         : illustration
           ? `<div class="menu-item-media"><img class="menu-item-image" loading="lazy" decoding="async" src="${illustration.src}" alt="${illustration.alt}"><span class="menu-image-note">Imagem ilustrativa</span></div>`
           : `<div class="menu-item-placeholder" aria-hidden="true"><small>${item.item_type === "preorder" || Number(item.lead_time_hours) > 0 ? "Feito por encomenda" : "Confira as opções"}</small></div>`;
-      return `<article class="menu-item-card${records.length > 1 || customQuantity ? " menu-item-card-with-pickers" : ""}" data-item="${item.id}">${media}<div class="menu-item-content"><div class="menu-item-heading"><h3>${clean(item.name)}</h3>${quote ? '<span class="menu-item-badge">Sob consulta</span>' : ((item.option_groups || []).length ? '<span class="menu-item-badge">Personalizável</span>' : "")}</div>${item.description ? `<p>${clean(item.description)}</p>` : ""}${pricePicker}</div></article>`;
+      return `<article class="menu-item-card${(item.option_groups || []).length ? " menu-item-personalizable" : ""}${records.length > 1 || customQuantity ? " menu-item-card-with-pickers" : ""}" data-item="${item.id}">${media}<div class="menu-item-content"><div class="menu-item-heading"><h3>${clean(item.name)}</h3>${quote ? '<span class="menu-item-badge">Sob consulta</span>' : ((item.option_groups || []).length ? '<span class="menu-item-badge">Personalizável</span>' : "")}</div>${item.description ? `<p>${clean(item.description)}</p>` : ""}${pricePicker}</div></article>`;
     }).join("")}</div></section>`).join("");
     const filterCatalog = () => {
       const query = normalizeSearch($("menuSearch").value);

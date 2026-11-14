@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' https://cdn.jsdelivr.net;style-src 'self';img-src 'self' data: https:;connect-src 'self' http://127.0.0.1:54321 https://fuesdztsvrkkgnbqhcxi.supabase.co https://mvzcoaiiwytycdqcvydf.supabase.co https://viacep.com.br;object-src 'none';base-uri 'self';form-action 'self'">
   <title>Cardápio | Ogritech</title>
   <link rel="stylesheet" href="/commercial-public.css">
-  <link rel="stylesheet" href="/cardapio/catalog.css?v=20261114.5">
+  <link rel="stylesheet" href="/cardapio/catalog.css?v=20261114.7">
   <link rel="stylesheet" href="/site-theme.css?v=20261114.3">
   <link rel="stylesheet" href="/order-confirmation.css?v=20261114.3">
   <link rel="icon" href="/ogritech-favicon.ico">
@@ -71,12 +71,13 @@
     </div>
     <footer class="menu-platform-footer"><div class="menu-platform-brand"><img class="menu-platform-symbol" src="/ogritech-brand-symbol.png" alt="" width="512" height="512"><img class="menu-platform-wordmark" src="/ogritech-logo.png" alt="Ogritech" width="900" height="228"></div></footer>
   </main>
-  <dialog id="configurator" class="public-card configurator">
+  <dialog id="configurator" class="public-card configurator" aria-labelledby="configuratorTitle">
     <form id="configuratorForm" class="public-form">
-      <div class="configurator-heading"><h2 id="configuratorTitle"></h2><button id="closeConfigurator" type="button" class="configurator-close" aria-label="Fechar escolhas"><span aria-hidden="true">×</span></button></div>
+      <div class="configurator-heading"><div><small class="configurator-eyebrow">PERSONALIZE SEU PEDIDO</small><h2 id="configuratorTitle"></h2><p id="configuratorVariant"></p></div><button id="closeConfigurator" type="button" class="configurator-close" aria-label="Fechar escolhas"><span aria-hidden="true">×</span></button></div>
       <div id="configuratorGroups"></div>
-      <p id="configuratorMessage" class="public-message"></p>
-      <button type="submit" class="public-button">Adicionar ao carrinho</button>
+      <div class="configurator-summary"><div><span id="configuratorTotalLabel">Total estimado</span><strong id="configuratorTotal"></strong></div><p id="configuratorProgress" role="status"></p></div>
+      <p id="configuratorMessage" class="public-message" role="alert"></p>
+      <button type="submit" class="public-button">Adicionar à sacola</button>
     </form>
   </dialog>
   <aside id="menuAssistant" class="menu-assistant hidden" aria-label="Assistente do cardápio">
@@ -90,6 +91,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="/supabase-config.js"></script>
   <script src="/whatsapp-selection.js?v=20261114.3"></script><script src="/menu-pricing.js?v=20261020.1"></script>
-  <script src="/menu-branding.js?v=20261020.1"></script><script src="/menu-whatsapp.js?v=20261114.3"></script><script src="/cardapio/cardapio.js?v=20261114.6"></script>
+  <script src="/menu-branding.js?v=20261020.1"></script><script src="/menu-whatsapp.js?v=20261114.3"></script><script src="/cardapio/cardapio.js?v=20261114.7"></script>
 </body>
 </html>

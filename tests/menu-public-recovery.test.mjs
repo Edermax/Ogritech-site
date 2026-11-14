@@ -48,7 +48,7 @@ test('tracking retries a failed first load, preserves last status on later failu
 test('assistant selections use the minimum product quantity and preserve an explicit valid quantity',()=>{
   const $=fields(),cart=new Map();
   const body=catalog.slice(catalog.indexOf('  function addConfigured('),catalog.indexOf('  function assistantMessage('));
-  const context={$ ,cart,pendingRequestId:null,updateCart(){},isQuoteItem:()=>false,clean:String,money:new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'})};
+  const context={$ ,cart,prices:new Map(),pendingRequestId:null,updateCart(){},displayPriceLabel:String,isQuoteItem:()=>false,clean:String,money:new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'})};
   runInNewContext(body,context);
   const price={id:'price',amount:1.5,label:'Unidade',item:{name:'Doces',minimum_quantity:50,maximum_quantity:100,option_groups:[]}};
   context.configure(price);assert.equal([...cart.values()][0].quantity,50);
