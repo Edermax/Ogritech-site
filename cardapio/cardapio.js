@@ -302,6 +302,11 @@
     $("loading").innerHTML = '<p role="status">Carregando cardápio...</p>';
     try {
       const { data, error } = await supabaseClient.rpc("public_menu", { target_slug: slug });
+      if (error?.code === "22023") {
+        $("loading").innerHTML = '<h1>Cardápio temporariamente indisponível</h1><p>Este estabelecimento não está recebendo acessos pelo cardápio agora. Tente novamente mais tarde.</p><button id="retryMenuLoad" type="button" class="public-button">Tentar novamente</button>';
+        $("retryMenuLoad").addEventListener("click", init);
+        return null;
+      }
       if (error || !data?.menu) throw new Error("menu_unavailable");
       return data;
     } catch {
