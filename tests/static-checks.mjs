@@ -6,12 +6,12 @@ import { fileURLToPath } from "node:url";
 const root = new URL("../", import.meta.url);
 const names = await readdir(root);
 const jsFiles = names.filter((name) => extname(name) === ".js");
-const nestedJsFiles = ["agendar/agendar.js"];
+const nestedJsFiles = ["agendar/agendar.js", "criar-cardapio/criar-cardapio.js"];
 for (const name of [...jsFiles, ...nestedJsFiles]) {
   const result = spawnSync(process.execPath, ["--check", join(fileURLToPath(root), name)], { encoding: "utf8" });
   if (result.status !== 0) throw new Error(`${name}: ${result.stderr}`);
 }
-const htmlFiles = [...names.filter((name) => extname(name) === ".html"), "agendar/index.html"];
+const htmlFiles = [...names.filter((name) => extname(name) === ".html"), "agendar/index.html", "criar-cardapio/index.html", "criar-cardapio/cardapio/index.html", "criar-cardapio/encomendas/index.html"];
 for (const name of htmlFiles) {
   const pageUrl = new URL(name, root);
   const html = await readFile(pageUrl, "utf8");
