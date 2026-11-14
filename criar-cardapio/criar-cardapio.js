@@ -2,7 +2,37 @@
   const TERMS_VERSION = "3.3-2026-11-13", form = document.querySelector("#menuTrialForm");
   const message = document.querySelector("#formMessage"), submit = document.querySelector("#submitButton");
   const $ = id => document.querySelector('#' + id), digits = value => value.replace(/\D/g, "");
-  const offerChoice=form.elements.offer,cycleChoice=form.elements.cycle;const requested=new URLSearchParams(location.search).get("plano");offerChoice.value=requested==="encomendas"?"encomendas":"cardapio";function updateOffer(){const offer=OgritechOffers.offers[offerChoice.value],annual=cycleChoice.value==="annual";document.querySelector("#selectedOfferPrice").textContent=OgritechOffers.format(annual?offer.annualCents:offer.monthlyCents);document.querySelector("#selectedOfferPeriod").textContent=annual?"/ano após o teste":"/mês após o teste";document.querySelector("#selectedMonthlyPrice").textContent=OgritechOffers.format(offer.monthlyCents);document.querySelector("#selectedAnnualPrice").textContent=OgritechOffers.format(offer.annualCents);document.querySelector("#selectedOfferSummary").textContent=`14 dias completos. Depois: ${OgritechOffers.format(annual?offer.annualCents:offer.monthlyCents)} por ${annual?"ano":"mês"}.`;document.querySelector("#offerDescription").textContent=offer.orders?"Encomendas: receba e acompanhe os pedidos no painel, com entrega, retirada e agendamento.":"Cardápio: o consumidor escolhe os produtos e continua no seu WhatsApp para combinar pagamento e entrega.";form.elements.publish_whatsapp.required=!offer.orders;}offerChoice.addEventListener("change",updateOffer);cycleChoice.addEventListener("change",updateOffer);updateOffer();
+  const offerChoice = form.elements.offer, cycleChoice = form.elements.cycle;
+  const requested = new URLSearchParams(location.search).get("plano");
+  offerChoice.value = requested === "cardapio" ? "cardapio" : "encomendas";
+  function updateOffer() {
+    const offer = OgritechOffers.offers[offerChoice.value], annual = cycleChoice.value === "annual";
+    $("selectedOfferName").textContent = offer.name;
+    $("selectedOfferPrice").textContent = OgritechOffers.format(annual ? offer.annualCents : offer.monthlyCents);
+    $("selectedOfferPeriod").textContent = annual ? "/ano após o teste" : "/mês após o teste";
+    $("selectedMonthlyPrice").textContent = OgritechOffers.format(offer.monthlyCents);
+    $("selectedAnnualPrice").textContent = OgritechOffers.format(offer.annualCents);
+    $("selectedOfferSummary").textContent = `14 dias completos de ${offer.name}. Depois: ${OgritechOffers.format(annual ? offer.annualCents : offer.monthlyCents)} por ${annual ? "ano" : "mês"}.`;
+    $("offerDescription").textContent = offer.orders
+      ? "Encomendas: receba e acompanhe os pedidos no painel, com entrega, retirada e agendamento."
+      : "Cardápio: o consumidor escolhe os produtos e continua no seu WhatsApp para combinar pagamento e entrega.";
+    $("cardapioSelected").textContent = offer.orders ? "" : "Plano selecionado";
+    $("encomendasSelected").textContent = offer.orders ? "Plano selecionado" : "";
+    $("orderNotificationsChoice").hidden = !offer.orders;
+    form.elements.publish_whatsapp.required = !offer.orders;
+    submit.textContent = offer.orders ? "Testar Encomendas grátis" : "Criar meu cardápio grátis";
+  }
+  for (const code of ["cardapio", "encomendas"]) {
+    $("choose-" + code).addEventListener("click", event => {
+      event.preventDefault();
+      offerChoice.value = code;
+      updateOffer();
+      offerChoice.focus();
+    });
+  }
+  offerChoice.addEventListener("change", updateOffer);
+  cycleChoice.addEventListener("change", updateOffer);
+  updateOffer();
   const documentField = form.elements.tax_document, invoiceField = form.elements.service_invoice_preference;
   let invoiceChosen = false, phoneToken = "", challengeId = "", captchaToken = "", widgetId;
   let configuration = null, configurationError = false;
@@ -92,7 +122,7 @@
         submit.textContent = "Verificar liberação do teste"; return;
       }
       if (!result.trial_ends_at) throw new Error("Não foi possível confirmar a criação do cardápio. Tente novamente.");
-      try { if (form.elements.order_notifications?.checked) localStorage.setItem("ogritechOrderPushInterest", String(Date.now())); else localStorage.removeItem("ogritechOrderPushInterest"); } catch {}
+      try { if (data.offer === "encomendas" && form.elements.order_notifications?.checked) localStorage.setItem("ogritechOrderPushInterest", String(Date.now())); else localStorage.removeItem("ogritechOrderPushInterest"); } catch {}
       $("signupSection").hidden = true; $("resultSection").hidden = false;
       $("resultMessage").textContent = "Enviamos o convite para " + data.email + ". Seu teste vai até " + new Date(result.trial_ends_at).toLocaleDateString("pt-BR") + ".";
       $("loginLink").href = result.login_url || "/login/";

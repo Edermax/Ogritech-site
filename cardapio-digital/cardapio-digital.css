@@ -71,3 +71,7 @@ footer{min-height:150px;padding:40px max(5vw,28px);border-color:var(--line);colo
 /* Cardápio e Encomendas */
 
 .price-section{grid-template-columns:1fr;gap:36px}.price-copy{max-width:850px}.offer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.offer-grid .price-card{width:100%;max-width:none;display:flex;flex-direction:column}.offer-grid .price-card ul{flex:1}.offer-grid .price strong{font-size:clamp(2.6rem,5vw,3.6rem)}.price-note{grid-column:1/-1}@media(max-width:700px){.offer-grid{grid-template-columns:1fr}.offer-grid .price-card{margin:0}.price-section{gap:24px}}
+
+body.ogri-light.page-product .offer-grid .price-card-featured{border-color:#73cbd9;background:linear-gradient(150deg,#f0fcfe,#fff 65%)}
+.offer-badge{display:inline-block;margin-left:6px;border:1px solid #9edce7;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:700;color:#006b7e;background:#e9fafd;vertical-align:middle}
+.offer-grid .offer-upgrade{font-size:13px;line-height:1.5;color:#006b7e;margin:14px 0 0}

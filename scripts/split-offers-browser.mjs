@@ -70,6 +70,31 @@ try{
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
   await page.locator('#preco').screenshot({path:resolve(output,`prices-${width}.png`),style:".site-header{visibility:hidden}"});report.checks.push(`home two offers ${width}px`);await context.close();
  }
+ for(const width of [1440,390]){
+  const {page,context}=await pageFor('signup','encomendas',width);
+  await page.goto(origin+'/criar-cardapio/',{waitUntil:'networkidle'});
+  assert.equal(await page.locator('[name=offer]').inputValue(),'encomendas');
+  for(const code of ['cardapio','encomendas'])assert.equal(await page.locator('#choose-'+code).isVisible(),true);
+  assert.equal(await page.locator('.plan-badge').textContent(),'Mais completo');
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+  await page.locator('.signup-offers').screenshot({path:resolve(output,`signup-plans-${width}.png`)});
+  await page.fill('[name=business_name]','Nome preservado');
+  await page.click('#choose-cardapio');
+  assert.equal(await page.locator('[name=offer]').inputValue(),'cardapio');
+  assert.match(await page.locator('#selectedOfferName').textContent(),/Cardápio/);
+  assert.match(await page.locator('#selectedOfferSummary').textContent(),/29,90/);
+  assert.equal(await page.locator('[name=publish_whatsapp]').getAttribute('required'),'');
+  assert.equal(await page.locator('#orderNotificationsChoice').isVisible(),false);
+  await page.selectOption('[name=cycle]','annual');
+  await page.click('#choose-encomendas');
+  assert.equal(await page.locator('[name=business_name]').inputValue(),'Nome preservado');
+  assert.equal(await page.locator('[name=cycle]').inputValue(),'annual');
+  assert.match(await page.locator('#selectedOfferSummary').textContent(),/499,00 por ano/);
+  assert.equal(await page.locator('[name=publish_whatsapp]').getAttribute('required'),null);
+  assert.equal(await page.locator('#orderNotificationsChoice').isVisible(),true);
+  report.checks.push(`signup compares offers, preserves fields and updates plan/cycle ${width}px`);
+  await context.close();
+ }
  for(const offer of ['cardapio','encomendas']){
   const {page,context}=await pageFor('signup',offer,390);await page.goto(origin+'/criar-cardapio/?plano='+offer,{waitUntil:'networkidle'});
   assert.equal(await page.locator('[name=offer]').inputValue(),offer);await page.selectOption('[name=cycle]','annual');assert.match(await page.locator('#selectedOfferPrice').textContent(),offer==='cardapio'?/299,00/:/499,00/);
