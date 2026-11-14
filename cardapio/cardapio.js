@@ -473,9 +473,13 @@
     const pixPayment = pixKey ? `<aside class="order-payment-alert order-pix-payment" aria-labelledby="orderPixTitle">
       <h3 id="orderPixTitle">Pagar por Pix</h3>
       <p>Valor do pedido: <b>${clean(money.format(Number(data.total_amount)))}</b></p>
-      <label>${pixLabel}<textarea readonly rows="3" spellcheck="false">${clean(pixCode || pixKey)}</textarea></label>
-      <button type="button" class="public-button secondary" id="copyOrderPixKey">Copiar ${pixCode ? "Pix com valor" : "chave Pix"}</button>
+      <p class="order-pix-instruction">${pixCode ? "Copie e cole o código no app do seu banco." : "Copie a chave e informe o valor no app do seu banco."}</p>
+      <button type="button" class="public-button" id="copyOrderPixKey">${pixCode ? "Copiar código Pix" : "Copiar chave Pix"}</button>
       <p role="status" id="copyOrderPixStatus"></p>
+      <details class="order-pix-details" id="orderPixDetails">
+        <summary>${pixCode ? "Ver código completo" : "Ver chave Pix"}</summary>
+        <div class="order-pix-code"><code id="orderPixValue" tabindex="-1" aria-label="${pixLabel}">${clean(pixCode || pixKey)}</code></div>
+      </details>
       <p class="order-payment-help">Confira o destinatário no seu banco. A loja confirma o pagamento após receber o Pix.</p>
     </aside>` : "";
     cart.clear(); updateCart();
@@ -495,12 +499,25 @@
     </div>
     ${whatsappUrl ? '<p class="order-success-note">O WhatsApp será aberto somente se você escolher essa opção, em uma nova aba.</p>' : ""}`;
     $("orderSuccess").insertAdjacentHTML("beforeend", pixPayment);
+    const pixDetails = $("orderPixDetails");
+    pixDetails?.addEventListener("toggle", () => {
+      pixDetails.querySelector("summary").textContent = pixDetails.open
+        ? (pixCode ? "Ocultar código" : "Ocultar chave")
+        : (pixCode ? "Ver código completo" : "Ver chave Pix");
+    });
     $("copyOrderPixKey")?.addEventListener("click", async () => {
       try {
         await navigator.clipboard.writeText(pixCode || pixKey);
         $("copyOrderPixStatus").textContent = pixCode ? "Código Pix copiado." : "Chave Pix copiada.";
       } catch {
-        $("copyOrderPixStatus").textContent = "Selecione e copie o conteúdo exibido acima.";
+        pixDetails.open = true;
+        $("copyOrderPixStatus").textContent = "Não foi possível copiar automaticamente. Selecione e copie o conteúdo abaixo.";
+        const value = $("orderPixValue"), selection = window.getSelection();
+        value.focus({ preventScroll: true });
+        if (selection) {
+          const range = document.createRange(); range.selectNodeContents(value);
+          selection.removeAllRanges(); selection.addRange(range);
+        }
       }
     });
     $("orderSuccess").classList.remove("hidden"); $("orderSuccess").scrollIntoView({ behavior: "smooth", block: "center" }); event.target.reset();

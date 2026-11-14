@@ -64,12 +64,15 @@
 .ogri-order-ui .public-button:not(.secondary):hover { background: #34c9df; }
 .ogri-order-ui .public-button.secondary { border-color: #7b919e; background: var(--ui-surface); color: var(--cyan-light); }
 .ogri-order-ui .public-button.secondary:hover { border-color: var(--cyan-light); background: var(--ui-tint); }
-.ogri-order-ui :is(a, button, textarea):focus-visible { outline: 3px solid var(--cyan-light); outline-offset: 3px; }
+.ogri-order-ui :is(a, button, summary, code):focus-visible { outline: 3px solid var(--cyan-light); outline-offset: 3px; }
 .ogri-order-ui .order-success-note { margin: -6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .ogri-order-ui .order-pix-payment { gap: 12px; border: 1px solid var(--line); background: var(--ui-surface); }
-.ogri-order-ui .order-pix-payment label { display: grid; gap: 6px; min-width: 0; color: var(--text); font-size: 13px; font-weight: 650; }
-.ogri-order-ui .order-pix-payment textarea { display: block; width: 100%; min-width: 0; min-height: 80px; margin: 0; padding: 12px; border: 1px solid #7b919e; border-radius: 10px; background: var(--bg); color: var(--text); font: 12px/1.5 ui-monospace, monospace; overflow-wrap: anywhere; word-break: break-all; resize: vertical; }
-.ogri-order-ui .order-pix-payment .public-button { justify-self: start; }
+.ogri-order-ui .order-pix-payment .public-button { width: 100%; }
+.ogri-order-ui .order-pix-payment .order-pix-instruction { color: var(--muted); font-size: 13px; }
+.ogri-order-ui .order-pix-details { min-width: 0; border-top: 1px solid var(--line); }
+.ogri-order-ui .order-pix-details summary { min-height: 44px; padding: 10px 0; color: var(--cyan-light); font-size: 13px; font-weight: 650; cursor: pointer; }
+.ogri-order-ui .order-pix-code { min-width: 0; max-width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.ogri-order-ui .order-pix-code code { display: block; color: var(--text); font: 12px/1.6 ui-monospace, monospace; white-space: normal; overflow-wrap: anywhere; word-break: break-all; user-select: text; }
 .ogri-order-ui .order-pix-payment .order-payment-help { color: var(--muted); font-size: 12px; }
 .ogri-order-ui #copyOrderPixStatus:empty { display: none; }
 @media (max-width: 560px) {
