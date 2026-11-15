@@ -45,5 +45,7 @@
 .existing-account-help a{font-weight:700}
 .existing-account-help button{background:#fff;color:var(--cyan-light);border:1px solid var(--line)}
 .existing-account-help small{font-size:12px;line-height:1.5}
+.first-access-steps{padding-left:22px;margin:20px 0;color:var(--muted);font-size:15px;line-height:1.6}
+.first-access-steps li+li{margin-top:10px}
 @media(max-width:800px){.page-signup main{grid-template-columns:minmax(0,1fr);gap:28px}.signup-guide{position:static}.signup-guide .journey{display:none}}
 @media(max-width:620px){.signup-offer-grid{grid-template-columns:minmax(0,1fr);gap:24px}.signup-offer{padding:24px}.signup-offers>h2{font-size:24px}.page-signup main{padding-inline:20px}.signup-guide h2{font-size:24px}}

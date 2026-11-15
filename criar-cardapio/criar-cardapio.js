@@ -132,7 +132,10 @@
       try { if (data.offer === "encomendas" && form.elements.order_notifications?.checked) localStorage.setItem("ogritechOrderPushInterest", String(Date.now())); else localStorage.removeItem("ogritechOrderPushInterest"); } catch {}
       $("signupSection").hidden = true; $("resultSection").hidden = false;
       $("resultMessage").textContent = "Enviamos o convite para " + data.email + ". Seu teste vai até " + new Date(result.trial_ends_at).toLocaleDateString("pt-BR") + ".";
-      $("loginLink").href = result.login_url || "/login/";
+      try { sessionStorage.setItem(`ogritechSignupEmail:${window.OGRITECH_ENV || "production"}`, data.email.trim().toLowerCase()); } catch { /* Login still requires an explicit account when storage is unavailable. */ }
+      const accountLogin = new URL(result.login_url || "/login/", location.href);
+      accountLogin.searchParams.set("primeiro_acesso", "1");
+      $("loginLink").href = accountLogin.href;
     } catch (error) { message.textContent = error.message; $("existingAccountHelp").hidden = error.code !== "email_already_registered"; }
     finally { submit.disabled = false; resetCaptcha(); }
   });
