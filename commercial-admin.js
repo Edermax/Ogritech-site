@@ -102,7 +102,7 @@
         const content = [...journeyContent[selectedMenuWorkspace]];
         if (menuRecord?.published && selectedMenuWorkspace === "settings") content[1] = "A configuração geral está protegida enquanto o cardápio está no ar. Para mudar atendimento, pagamentos ou horários, abra Publicar e despublique primeiro. Publique novamente ao terminar.";
         if (menuRecord?.published && selectedMenuWorkspace === "review") content[1] = menuCatalogDraftDirty ? "Seu cardápio está no ar. Confira o resumo das alterações e clique em Publicar alterações para atualizar o que seus clientes veem." : "Seu cardápio está no ar. Use Ver cardápio público para conferir e compartilhar. Para editar as configurações gerais, use Retirar cardápio do ar.";
-        if (menuRecord?.published && selectedMenuWorkspace === "catalog") content[1] = "Edite e salve seus produtos. As mudanças ficam em rascunho; seus clientes continuam vendo a versão atual. Quando terminar, abra Publicar e use Publicar alterações.";
+        if (menuRecord?.published && selectedMenuWorkspace === "catalog") content[1] = "Salve o produto para atualizar o cardápio online sem sair de Produtos. Produtos ocultos continuam fora da vitrine. Salvar também atualiza as alterações pendentes do catálogo.";
         const checks = menuOnboarding?.checks || {};
         const complete = { start: Boolean(menuRecord?.template_code), settings: ["identity", "fulfillment", "payments", "hours"].every(key => checks[key]), catalog: Boolean(checks.catalog), review: Boolean(menuRecord?.published), operation: false };
         if (byId("menuJourneyTitle")) byId("menuJourneyTitle").textContent = content[0];
@@ -263,7 +263,9 @@
         byId("menuPublishedSetupNotice")?.classList.toggle("hidden", !published);
         byId("menuSettingsLockNotice")?.classList.toggle("hidden", !published);
         byId("menuCatalogLockNotice")?.classList.toggle("hidden", !published);
-        if (published && byId("menuCatalogLockNotice")) byId("menuCatalogLockNotice").textContent = menuCatalogDraftDirty ? "Clientes continuam vendo a versão anterior. Ocultar/reativar vale na hora." : "Edições ficam em rascunho. Ocultar/reativar atualiza o cardápio na hora.";
+        if (published && byId("menuCatalogLockNotice")) byId("menuCatalogLockNotice").textContent = "Salvar produto atualiza o cardápio online. Produtos ocultos continuam fora da vitrine.";
+        byId("menuCatalogPublicationNotice")?.classList.toggle("hidden", !published || !menuCatalogDraftDirty);
+        if (byId("menuCatalogPublishButton")) byId("menuCatalogPublishButton").disabled = !canManageMenu() || unavailable || menuSettingsDirty || !published || !menuCatalogDraftDirty;
         byId("menuSettingsForm")?.classList.toggle("hidden", !canManageMenu());
         if (byId("menuSlug")) byId("menuSlug").disabled = published;
         for (const id of ["menuPrimaryColor", "menuAccentColor"]) if (byId(id)) byId(id).disabled = published;
@@ -300,9 +302,10 @@
                 selectMenuWorkspace(destinations[messageId] || selectedMenuWorkspace);
             }
             const message = typeof successMessage === "function" ? successMessage(result?.data) : successMessage;
-            const feedback = refreshed ? message : `${message} Use “Atualizar dados” para conferir o estado salvo.`;
-            notify(byId(messageId), feedback, !refreshed);
-            notify(byId("menuWorkspaceMessage"), feedback, !refreshed);
+            const warning = result?.warning && (!refreshed || menuCatalogDraftDirty) ? result.warning : "";
+            const feedback = warning ? `${warning}${refreshed ? "" : " Use Atualizar dados para conferir o estado salvo."}` : (refreshed ? message : `${message} Use “Atualizar dados” para conferir o estado salvo.`);
+            notify(byId(messageId), feedback, !refreshed || Boolean(warning));
+            notify(byId("menuWorkspaceMessage"), feedback, !refreshed || Boolean(warning));
         } catch (error) {
             menuCatalogCategories = previousCatalog;
             notify(byId(messageId), menuError(error), true);
@@ -447,6 +450,21 @@
         return supabaseClient.rpc("save_menu_catalog_draft", { target_barbershop_id: BARBERSHOP_ID, draft_payload: menuDraftPayload() });
     }
 
+    async function publishSavedMenuProduct() {
+        try {
+            const result = await supabaseClient.rpc("publish_menu_catalog_draft", { target_barbershop_id: BARBERSHOP_ID });
+            if (result.error) throw result.error;
+            return result;
+        } catch {
+            return { warning: "Produto salvo, mas não foi possível atualizar o cardápio online. Use Atualizar cardápio aqui em Produtos para tentar novamente." };
+        }
+    }
+
+    byId("menuCatalogPublishButton")?.addEventListener("click", () => {
+        if (!canManageMenu() || !menuRecord?.published || !menuCatalogDraftDirty || menuSettingsDirty) return;
+        return runMenuAction("menuItemMessage", "Atualizando cardápio online...", () => supabaseClient.rpc("publish_menu_catalog_draft", { target_barbershop_id: BARBERSHOP_ID }), "Cardápio online atualizado. Produtos ocultos continuam fora da vitrine.");
+    });
+
     async function moveMenuCatalogEntry(kind, id, direction) {
         if (!canManageMenu() || menuBusy || !menuDataReady) return;
         const entries = kind === "category" ? menuCatalogCategories : menuCatalogCategories.find(category => category.menu_items?.some(item => item.id === id))?.menu_items;
@@ -460,7 +478,7 @@
             const categoryIds = menuCatalogCategories.map(entry => entry.id);
             const itemIds = menuCatalogCategories.flatMap(entry => entry.menu_items || []).map(item => item.id);
             return menuRecord?.published ? savePublishedMenuDraft() : supabaseClient.rpc("reorder_menu_catalog", { target_barbershop_id: BARBERSHOP_ID, category_ids: categoryIds, item_ids: itemIds });
-        }, menuRecord?.published ? "Ordem salva no rascunho. Publique as alterações quando terminar." : "Ordem do catálogo atualizada.");
+        }, menuRecord?.published ? "Ordem salva. Use Atualizar cardápio aqui em Produtos para colocar as alterações no ar." : "Ordem do catálogo atualizada.");
     }
 
     async function loadLandingAdmin() {
@@ -1033,13 +1051,15 @@
                 menuCatalogCategories=menuCatalogCategories.filter((entry)=>entry.menu_items?.length);
                 const result=await savePublishedMenuDraft();
                 if(result.error){ if(uploadedPath) await supabaseClient.storage.from("menu-images").remove([uploadedPath]); return result; }
-                resetMenuItemEditor(); return result;
+                const publication = await publishSavedMenuProduct();
+                resetMenuItemEditor();
+                return { ...publication, data: { ...publication.data, item_visible: payload.active && payload.available } };
             }
             const result=await supabaseClient.rpc("save_menu_catalog_item",{target_barbershop_id:BARBERSHOP_ID,payload});
             if(result.error){ if(uploadedPath) await supabaseClient.storage.from("menu-images").remove([uploadedPath]); return result; }
             if(previousPath && previousPath!==uploadedPath && (uploadedPath || menuImageRemoveRequested)) await supabaseClient.storage.from("menu-images").remove([previousPath]);
             resetMenuItemEditor(); return result;
-        }, menuRecord.published?"1. Produto salvo como rascunho. Abra Publicar para revisar as alterações.":"Produto salvo. Confira o catálogo e as etapas pendentes.");
+        }, (data) => menuRecord.published ? (data?.item_visible ? "Produto salvo e atualizado no cardápio online." : "Produto salvo como oculto. Ele não aparece no cardápio online.") : "Produto salvo. Confira o catálogo e as etapas pendentes.");
     });
 
     setupMenuDeliveryZoneEditor();

@@ -33,7 +33,6 @@ test("published catalog changes stay in a private draft until atomic promotion",
   assert.match(draftMigration, /if not private\.menu_catalog_is_ready\(menu\.id\)/i);
   assert.match(admin, /rpc\("save_menu_catalog_draft"/);
   assert.match(admin, /rpc\("publish_menu_catalog_draft"/);
-  assert.match(admin, /Clientes continuam vendo a versão anterior/);
 });
 
 test("product photos use a constrained tenant-scoped storage bucket", () => {
