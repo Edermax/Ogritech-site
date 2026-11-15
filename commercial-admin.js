@@ -274,6 +274,7 @@
         byId("menuCatalogList")?.querySelectorAll("button").forEach((button) => { button.disabled = !catalogEditable; });
         byId("menuPilotMetricsPanel")?.classList.toggle("hidden", !canManageMenu());
         if (byId("menuReviewDetails")) byId("menuReviewDetails").open = !published || menuCatalogDraftDirty;
+        if (typeof Event === "function") window.dispatchEvent?.(new Event("ogritech:menu-context-changed"));
     }
 
     const menuError = (error) => {
@@ -1077,6 +1078,6 @@
     window.OgritechMenuWorkspace = {
         select: selectMenuWorkspace,
         newProduct() { if (!canManageMenu() || !menuDataReady || menuBusy) return; resetMenuItemEditor(); window.OgritechPanelNavigation?.openEditor(false); },
-        state: () => ({ published: Boolean(menuRecord?.published), ready: menuDataReady, busy: menuBusy, canManage: canManageMenu(), offer: menuOnboarding?.offer_code || "encomendas", workspace: selectedMenuWorkspace, next: nextMenuWorkspace(), dirtySettings: menuSettingsDirty })
+        state: () => ({ role: typeof currentRole === "undefined" ? null : currentRole, published: Boolean(menuRecord?.published), ready: menuDataReady, busy: menuBusy, canManage: canManageMenu(), offer: menuOnboarding?.offer_code || "encomendas", workspace: selectedMenuWorkspace, next: nextMenuWorkspace(), dirtySettings: menuSettingsDirty })
     };
 })();
