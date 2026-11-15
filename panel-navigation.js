@@ -38,7 +38,7 @@
 
   // Existing products come before a deliberately opened editor.
   const form = $('menuItemForm'), list = $('menuCatalogList'), catalog = form.closest('article');
-  catalog.querySelector('.panel-header .section-description').textContent = 'Com o cardápio publicado, salvar um produto atualiza a versão online. Ocultar ou reativar muda a exibição imediatamente.';
+  catalog.querySelector('.panel-header .section-description').textContent = 'Salvar, ocultar ou reativar produtos atualiza o cardápio publicado na hora.';
   catalog.querySelector('.panel-header .eyebrow').hidden = true;
   catalog.querySelector('.panel-header h2').hidden = true;
   catalog.setAttribute('aria-label', 'Produtos cadastrados');
