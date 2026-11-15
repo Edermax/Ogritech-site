@@ -10,7 +10,7 @@ O administrador escolhe um pagamento recebido, informa o valor, o tipo/chave Pix
 
 O código contém a chave do cliente, o valor canônico em centavos, nome/cidade compatíveis com BR Code e referência de conciliação. Usa CRC-16/CCITT-FALSE. É um **novo Pix ao cliente**; a interface distingue esse fluxo da devolução pela transação Pix original no banco. Fontes primárias: [Manual de Padrões do Pix](https://www.bcb.gov.br/content/estabilidadefinanceira/pix/Regulamento_Pix/II_ManualdePadroesparaIniciacaodoPix.pdf) e [orientação do BCB sobre devolução](https://bcb.gov.br/meubc/faqs/p/devolucao-de-dinheiro-com-pix).
 
-Pagamentos aprovados do self-service também aparecem para devolução. Quando necessário, a preparação concilia uma única fatura e pagamento no financeiro antes de reservar o reembolso. A preparação não altera o pagamento original nem cancela a assinatura. Reembolsos/chargebacks/créditos anteriores continuam respeitando o saldo reservado. Somente devoluções concluídas afetam o total devolvido.
+Pagamentos aprovados do self-service também aparecem para devolução. Quando necessário, a preparação concilia uma única fatura e pagamento no financeiro antes de reservar o reembolso. A preparação não altera o pagamento original nem cancela a assinatura. Reembolsos/chargebacks/créditos anteriores continuam respeitando o saldo reservado. Somente devoluções concluídas afetam o total devolvido. Um recibo conciliado não autoriza nova devolução quando o pagamento online original já foi estornado ou seu valor diverge do registro do provedor. A interface confere novamente a validade antes de copiar o código e bloqueia preparações cujo pagamento original tenha sido revertido.
 
 ## Abono
 
@@ -31,11 +31,12 @@ A seleção de pagamento passa a reservar a contratação antes da chamada exter
 | Migration | Local | Staging | Produção |
 | --- | --- | --- | --- |
 | subscription_billing_adjustments | 20261115191635 | 20261115195345 | 20261115195924 |
+| guard_reversed_online_refunds | 20261115200901 | 20261115201304 | 20261115201311 |
 
-104 migrations nos dois ambientes, sem pendências e sem reparos no histórico. `ogritech-billing` v36 em staging e v25 em produção, bundle SHA-256 `0a9138784934ec95b1ca8c7c8a8bb0b85d4f2fc3a87014dc91e2dac3c9dda738`. A configuração anterior do gateway e a autenticação própria foram mantidas.
+105 migrations nos dois ambientes, sem pendências e sem reparos no histórico. `ogritech-billing` v36 em staging e v25 em produção, bundle SHA-256 `0a9138784934ec95b1ca8c7c8a8bb0b85d4f2fc3a87014dc91e2dac3c9dda738`. A configuração anterior do gateway e a autenticação própria foram mantidas.
 
 - 458 testes da aplicação aprovados, incluindo 2 de BR Code/CRC e 3 de reserva e resultado incerto do checkout.
-- Banco local isolado: 32 arquivos, 862 verificações; 40 novas sobre saldo, idempotência, referência bancária, abonos, controle administrativo, checkout/Pix concorrente, prazo gratuito e reconciliação de pagamento online.
+- Banco local isolado: 32 arquivos, 867 verificações; 45 novas sobre saldo, idempotência, referência bancária, abonos, controle administrativo, checkout/Pix concorrente, prazo gratuito e reconciliação de pagamento online.
 - Navegador em 390/1440 px: preparação sem confirmação automática, cópia do código com clipboard simulado, falha preservando dados, confirmação manual, observação vazia e cartão preservado. Formulário verificado no tema escuro.
 - 63 cenas administrativas de tema claro/escuro e navegação anterior aprovadas. O novo fluxo tem teste próprio na CI.
 - Produção antes/depois: 2 faturas e 1 devolução histórica, resumo financeiro `1132ffd03d5f121b51638b6bc951f598` inalterado. Nenhum abono ou transferência nova criado.

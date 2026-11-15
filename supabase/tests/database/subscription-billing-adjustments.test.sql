@@ -1,5 +1,5 @@
 begin;
-select extensions.plan(40);
+select extensions.plan(45);
 insert into public.barbershops(id,name,slug,segment) values('eb100000-0000-4000-8000-000000000001','Adjustment fixture','adjustments-fixture','Restaurante');
 insert into public.saas_clients(id,name,segment,contact_name,owner_email,origin,plan,monthly_fee,status,barbershop_id) values('eb200000-0000-4000-8000-000000000001','Adjustment fixture','Restaurante','Fixture','adjustment@example.invalid','Teste','Encomendas',49.90,'Ativo','eb100000-0000-4000-8000-000000000001');
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values
@@ -87,5 +87,20 @@ select extensions.lives_ok($$select public.platform_waive_subscription_month('eb
 reset role;
 select extensions.is((select trial_ends_at::text from private.billing_signups where id='eb300000-0000-4000-8000-000000000001'),current_setting('test.original_trial'),'waiver never resets the unique free-trial deadline');
 select extensions.ok(public.backend_billing_lifecycle_prepare_pix('eb300000-0000-4000-8000-000000000001') is null,'billing worker does not charge the waived period');
+select set_config('test.online_ledger_id',(select id::text from public.platform_payments where provider='mercado_pago' and provider_payment_id='adjustment-online-payment'),true);
+set local role authenticated;
+select extensions.lives_ok($$select public.platform_prepare_subscription_refund('eb900000-0000-4000-8000-000000000001',pg_temp.refund_payload(1000,'eb600000-0000-4000-8000-000000000004')||jsonb_build_object('payment_id',current_setting('test.online_ledger_id')))$$,'unreversed online receipt can still be prepared through its reconciled ledger entry');
+reset role;
+update private.billing_payment_intents set status='refunded' where id='eb510000-0000-4000-8000-000000000001';
+set local role authenticated;
+select extensions.is((select item->>'payment_valid' from jsonb_array_elements(public.platform_subscription_finance('eb900000-0000-4000-8000-000000000001')->'transfers') item where item->>'id'='eb600000-0000-4000-8000-000000000004'),'false','pending transfer is flagged when its original payment is reversed');
+select extensions.throws_ok($$select public.platform_prepare_subscription_refund('eb900000-0000-4000-8000-000000000001',pg_temp.refund_payload(1000,'eb600000-0000-4000-8000-000000000005')||jsonb_build_object('payment_id',current_setting('test.online_ledger_id')))$$,'23514',null,'a reconciled but reversed payment cannot fund a second payout');
+select extensions.ok(not exists(select 1 from jsonb_array_elements(public.platform_subscription_finance('eb900000-0000-4000-8000-000000000001')->'payments') item where item->>'id'=current_setting('test.online_ledger_id')),'reversed original is removed from selectable paid receipts');
+reset role;
+update private.billing_payment_intents set status='approved' where id='eb510000-0000-4000-8000-000000000001';
+update public.platform_payments set gross_amount=55 where id=current_setting('test.online_ledger_id')::uuid;
+set local role authenticated;
+select extensions.throws_ok($$select public.platform_prepare_subscription_refund('eb900000-0000-4000-8000-000000000001',pg_temp.refund_payload(1000,'eb600000-0000-4000-8000-000000000005')||jsonb_build_object('payment_id',current_setting('test.online_ledger_id')))$$,'23514',null,'ledger amount must match the authoritative online payment');
+reset role;
 select * from extensions.finish();
 rollback;

@@ -14,9 +14,9 @@
     requestId = crypto.randomUUID();
   }
   function showPrepared(transfer) {
-    if (transfer.status !== "prepared") {
+    if (transfer.status !== "prepared" || transfer.payment_valid === false) {
       prepared = null; $("subscriptionRefundForm").hidden = true; $("subscriptionRefundPrepared").hidden = true;
-      message("Esta preparação já foi concluída ou cancelada. Confira o histórico antes de iniciar outra devolução."); return;
+      message("Esta preparação não está disponível: foi concluída, cancelada ou o pagamento original foi estornado. Confira a conciliação antes de pagar."); return;
     }
     prepared = transfer;
     $("subscriptionRefundForm").hidden = true; $("subscriptionWaiverForm").hidden = true;
@@ -89,8 +89,22 @@
     });
   });
   $("subscriptionRefundCopy").addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText($("subscriptionRefundCode").value); message("Código Pix copiado. O pagamento deve ser realizado no banco."); }
-    catch { $("subscriptionRefundCode").focus(); $("subscriptionRefundCode").select(); message("Selecione e copie o código manualmente."); }
+    if (!prepared || busy) return;
+    const transferId = prepared.id, subscriptionId = selectedId, currentEpoch = epoch;
+    $("subscriptionRefundCopy").disabled = true;
+    try {
+      const { data, error } = await supabaseClient.rpc("platform_subscription_finance", { target_subscription_id: subscriptionId });
+      if (currentEpoch !== epoch || prepared?.id !== transferId || $("subscriptionAdjustmentModal").classList.contains("hidden")) return;
+      if (error || !data) throw new Error("Não foi possível conferir a devolução. Atualize os dados antes de copiar e pagar.");
+      const current = data.transfers.find(item => item.id === transferId);
+      if (!current || current.status !== "prepared" || current.payment_valid === false) {
+        $("subscriptionRefundPrepared").hidden = true; prepared = null; message("Esta devolução não está mais disponível. Confira se o pagamento original foi estornado antes de fazer outro Pix."); return;
+      }
+      $("subscriptionRefundCode").value = OgritechPixCode.build(current);
+      try { await navigator.clipboard.writeText($("subscriptionRefundCode").value); message("Código Pix copiado. O pagamento deve ser realizado no banco."); }
+      catch { $("subscriptionRefundCode").focus(); $("subscriptionRefundCode").select(); message("Selecione e copie o código manualmente."); }
+    } catch (error) { if (currentEpoch === epoch) message(error.message); }
+    finally { $("subscriptionRefundCopy").disabled = false; }
   });
   $("subscriptionRefundFinishForm").addEventListener("submit", event => {
     event.preventDefault(); if (!prepared || !$("subscriptionRefundPaid").checked) return;

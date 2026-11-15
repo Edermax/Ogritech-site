@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-15",
-  "baseline": "subscription_billing_adjustments",
+  "baseline": "guard_reversed_online_refunds",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "LOCAL_MIGRATION_UP_AND_PGTAP",
-    "migrationCount": 104,
-    "tests": 862,
+    "migrationCount": 105,
+    "tests": 867,
     "evidence": "docs/evidencias/abonos-devolucoes-2026-11-15.md"
   },
   "productionDryRun": {
@@ -19,7 +19,7 @@
     "remoteChangesPerformed": false,
     "mode": "POST_PROMOTION_READ_ONLY",
     "evidence": "docs/evidencias/abonos-devolucoes-2026-11-15.md",
-    "aliasCompatibility": "104 migrations verified in staging and production; native subscription_billing_adjustments aliases recorded without history repair. No pending migration."
+    "aliasCompatibility": "105 migrations verified in staging and production; native adjustment and original-payment reversal guard aliases recorded without history repair. No pending migration."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
@@ -93,12 +93,13 @@
     "status": "APPLIED_AND_VERIFIED",
     "executedAt": "2026-11-15",
     "migrations": [
-      "subscription_billing_adjustments"
+      "subscription_billing_adjustments",
+      "guard_reversed_online_refunds"
     ],
-    "reviewedPendingCount": 1,
+    "reviewedPendingCount": 2,
     "sourceBaseCommit": "9981c6d89b5da79f44eafda9effb7742bfe8e2b8",
-    "stagingMigrationCount": 104,
-    "productionMigrationCount": 104,
+    "stagingMigrationCount": 105,
+    "productionMigrationCount": 105,
     "postPromotionPendingCount": 0,
     "evidence": "docs/evidencias/abonos-devolucoes-2026-11-15.md"
   },
