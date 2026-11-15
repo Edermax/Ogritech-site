@@ -383,6 +383,11 @@ Deno.serve(async (request) => {
     if (input.payment_method === "card" && (!accessToken || (sandbox && !Deno.env.get("MP_MENU_SANDBOX_WEBHOOK_SECRET")))) {
       return reply({ error: { code: "billing_not_configured", message: "O pagamento por cartão ainda não está disponível. Escolha Pix ou tente novamente mais tarde." } }, 503, origin);
     }
+    const claim = await admin.rpc("backend_billing_payment_choice_claim", { target_signup_id: signup.id, expected_updated_at: signup.updated_at });
+    if (claim.error || !claim.data?.token) return reply({ error: { code: "billing_busy", message: claim.error?.code === "40001" ? "A mensalidade foi atualizada. Confira sua assinatura antes de configurar o pagamento." : "Uma configuração de pagamento está em andamento. Atualize a assinatura ou procure o suporte." } }, 409, origin);
+    const selectionToken = claim.data.token;
+    let releaseChoice = input.payment_method !== "card";
+    try {
     let checkoutUrl = "", providerId = "";
     if (input.payment_method === "card") {
       const appUrl = Deno.env.get("PUBLIC_APP_URL") || "https://ogritech.com.br";
@@ -391,6 +396,7 @@ Deno.serve(async (request) => {
         ...(sandbox ? { notification_url: `${url}/functions/v1/menu-sandbox-webhook` } : {}),
       }) });
       const result = await response.json().catch(() => ({}));
+      if (!response.ok && response.status >= 400 && response.status < 500 && !result.id) releaseChoice = true;
       if (!response.ok || !safeCheckoutUrl(result.init_point) || !result.id) {
         console.error("choose_payment.mercado_pago", { status: response.status, signup_id: signup.id });
         return reply({ error: { code: "provider_unavailable", message: "Não foi possível abrir o pagamento por cartão agora." } }, 502, origin);
@@ -398,13 +404,14 @@ Deno.serve(async (request) => {
       checkoutUrl = safeCheckoutUrl(result.init_point); providerId = result.id;
     }
     const { error: signupUpdateError } = await admin.rpc("backend_billing_choose_payment_update", { target_signup_id: signup.id, payload: {
-      cycle: input.cycle, payment_method: input.payment_method, base_monthly_cents: chosen.base_monthly_cents,
+      selection_token: selectionToken, cycle: input.cycle, payment_method: input.payment_method, base_monthly_cents: chosen.base_monthly_cents,
       cycle_months: chosen.months, discount_bps: chosen.discount_bps, total_cents: chosen.total_cents,
       provider_plan_id: planId || "", provider_subscription_id: providerId || "",
       status: input.payment_method === "card" ? "payment_pending" : (Date.parse(signup.access_until || signup.trial_ends_at) <= Date.now() ? "past_due" : "trial_active"),
       recurring_authorized: input.payment_method === "card",
     } });
     if (signupUpdateError) return reply({ error: { code: "billing_update_failed" } }, 500, origin);
+    releaseChoice = true;
     const { data: customer } = await admin.from("billing_customers").update({ payment_method: input.payment_method === "card" ? "credit_card" : "pix", provider_subscription_id: providerId || null }).eq("saas_client_id", signup.saas_client_id).select("id").single();
     const { data: menuProduct } = await admin.from("platform_products").select("id").eq("code", "menu").single();
     if (!customer || !menuProduct) return reply({ error: { code: "billing_update_failed" } }, 500, origin);
@@ -415,6 +422,17 @@ Deno.serve(async (request) => {
       details: { product: "menu", cycle: input.cycle, payment_method: input.payment_method, recurring_authorized: input.payment_method === "card" } });
     if (audit.error) return reply({ error: { code: "billing_update_failed" } }, 500, origin);
     return reply({ data: { cycle: input.cycle, payment_method: input.payment_method, total_cents: chosen.total_cents, checkout_url: checkoutUrl || null, trial_ends_at: signup.trial_ends_at } }, 200, origin);
+    } catch {
+      return reply({ error: { code: "provider_unavailable", message: "Não foi possível confirmar a configuração do pagamento. Atualize o status antes de tentar novamente; se persistir, fale com o suporte." } }, 502, origin);
+    } finally {
+      // Ambiguous card-creation outcomes stay reserved for reconciliation; no waiver can race them.
+      if (releaseChoice) {
+        try {
+          const released = await admin.rpc("backend_billing_payment_choice_release", { target_signup_id: signup.id, target_token: selectionToken });
+          if (released.error) console.error("choose_payment.reservation_cleanup_failed", { signup_id: signup.id });
+        } catch { console.error("choose_payment.reservation_cleanup_failed", { signup_id: signup.id }); }
+      }
+    }
   }
 
   if ((json as { action?: string }).action === "trial_readiness") {

@@ -205,3 +205,12 @@
 
 .platform-admin-page #planForm label:has(input[type="checkbox"]) { flex-direction:row; align-items:center; gap:10px; }
 .platform-admin-page #planForm input[type="checkbox"] { width:20px; height:20px; min-height:20px; flex:0 0 20px; margin:0; padding:0; }
+
+.platform-admin-page #subscriptionAdjustmentModal textarea { width:100%; }
+.platform-admin-page .subscription-adjustment-consent { display:flex; align-items:center; gap:10px; margin:16px 0; }
+.platform-admin-page .subscription-adjustment-consent input { width:20px; height:20px; min-height:20px; flex:0 0 20px; }
+.platform-admin-page #subscriptionAdjustmentHistory { margin-top:24px; }
+.platform-admin-page #subscriptionAdjustmentHistory article { padding:14px 0; border-top:1px solid var(--admin-line); }
+.platform-admin-page #subscriptionAdjustmentModal form>button,.platform-admin-page #subscriptionRefundPrepared>button { margin-top:12px; }
+
+@media(max-width:520px) { .platform-admin-page #subscriptionAdjustmentModal .admin-modal-actions { flex-direction:column; } .platform-admin-page #subscriptionAdjustmentModal .admin-modal-actions>button { flex:0 0 auto; width:100%; } }

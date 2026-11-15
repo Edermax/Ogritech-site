@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="ogritech-apple-touch-v2.png">
     <link rel="manifest" href="manifest.webmanifest"><script src="panel-theme.js?v=20261112.1"></script>
     <link rel="stylesheet" href="style.css?v=20261113.2">
-    <link rel="stylesheet" href="admin.css?v=20261115.1">
+    <link rel="stylesheet" href="admin.css?v=20261115.2">
     <link rel="stylesheet" href="admin-theme.css?v=20261111.2"><link rel="stylesheet" href="panel-dark.css?v=20261115.2">
     <link rel="stylesheet" href="admin-navigation.css?v=20261112.1">
 </head>
@@ -253,6 +253,12 @@
         </div>
     </div>
 
+    <div class="platform-modal hidden" id="subscriptionAdjustmentModal" role="dialog" aria-modal="true" aria-labelledby="subscriptionAdjustmentTitle"><div class="platform-modal-card"><button type="button" class="modal-close" data-close-modal aria-label="Fechar">×</button><p class="platform-kicker">MENSALIDADE</p><h2 id="subscriptionAdjustmentTitle">Ajuste da mensalidade</h2><p id="subscriptionAdjustmentBusiness" class="modal-description"></p><p id="subscriptionAdjustmentMessage" class="form-message" role="status"></p>
+    <form id="subscriptionWaiverForm" hidden><p id="subscriptionWaiverSummary"></p><div class="platform-form-grid"><label>Competência da próxima mensalidade<input id="subscriptionWaiverMonth" type="month" required readonly></label><label class="full-field">Observação (opcional)<textarea id="subscriptionWaiverNote" rows="3" maxlength="500"></textarea></label></div><button id="subscriptionWaiverSubmit" type="submit" class="cyan-button full">Abonar esta mensalidade</button></form>
+    <form id="subscriptionRefundForm" hidden><div class="platform-form-grid"><label class="full-field">Mensalidade paga<select id="subscriptionRefundPayment" required></select></label><label>Valor a devolver (R$)<input id="subscriptionRefundAmount" type="number" min="0.01" step="0.01" required></label><label>Tipo da chave Pix<select id="subscriptionRefundKeyType" required><option value="cpf">CPF</option><option value="cnpj">CNPJ</option><option value="email">E-mail</option><option value="phone">Telefone com DDI</option><option value="random">Chave aleatória</option></select></label><label class="full-field">Chave Pix do cliente<input id="subscriptionRefundKey" maxlength="77" autocomplete="off" required></label><label>Nome do favorecido<input id="subscriptionRefundName" minlength="2" maxlength="80" required></label><label>Cidade do favorecido<input id="subscriptionRefundCity" minlength="2" maxlength="60" required></label><label class="full-field">Observação (opcional)<textarea id="subscriptionRefundReason" maxlength="500" rows="2"></textarea></label></div><p class="modal-description">O código prepara um novo Pix ao cliente; não realiza o pagamento nem cancela a assinatura. Para devolver um Pix pela transação original, use a opção Devolver no banco. Confira a chave e o favorecido antes de pagar.</p><button id="subscriptionRefundPrepare" type="submit" class="cyan-button full">Gerar Pix Copia e Cola</button></form>
+    <section id="subscriptionRefundPrepared" hidden><p id="subscriptionRefundPreparedSummary"></p><label>Pix Copia e Cola<textarea id="subscriptionRefundCode" rows="4" readonly spellcheck="false"></textarea></label><button id="subscriptionRefundCopy" type="button" class="outline-cyan-button full">Copiar código Pix</button><form id="subscriptionRefundFinishForm"><label>Referência do Pix realizado no banco<input id="subscriptionRefundBankReference" minlength="6" maxlength="120" required autocomplete="off"></label><label class="subscription-adjustment-consent"><input id="subscriptionRefundPaid" type="checkbox" required><span>Já realizei o pagamento da devolução ao cliente.</span></label><button id="subscriptionRefundComplete" type="submit" class="cyan-button full">Confirmar devolução</button></form><button id="subscriptionRefundCancel" type="button" class="outline-cyan-button full">Cancelar preparação</button></section>
+    <section id="subscriptionAdjustmentHistory" aria-label="Histórico de ajustes"></section></div></div>
+
     <div class="platform-modal hidden" id="refundModal" role="dialog" aria-modal="true" aria-labelledby="refundModalTitle">
         <div class="platform-modal-card compact-card">
             <button type="button" class="modal-close" data-close-modal aria-label="Fechar">×</button>
@@ -300,8 +306,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
     <script src="supabase-config.js"></script>
     <script src="admin-support.js?v=20261115.1"></script><script src="admin-trial-reviews.js?v=20261111.1"></script>
-    <script src="/product-offers.js?v=20261115.2"></script><script src="admin.js?v=20261115.2"></script>
-    <script src="admin-navigation.js?v=20261112.1"></script>
+    <script src="/product-offers.js?v=20261115.2"></script><script src="admin.js?v=20261115.3"></script>
+    <script src="pix-copy-code.js?v=20261115.1"></script><script src="admin-billing-adjustments.js?v=20261115.1"></script><script src="admin-navigation.js?v=20261115.1"></script>
     <script src="pwa.js?v=20261114.1"></script>
 </body>
 </html>

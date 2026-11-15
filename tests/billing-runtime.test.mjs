@@ -99,6 +99,11 @@ const customMenuPlan = { id: "33333333-3333-4333-8333-333333333333", code: "enco
 async function loadHandler(name, admin, fetchImpl, environment = {}, clock = Date) {
   let handler;
   const client = Object.create(admin);
+  if (name === "ogritech-billing") client.rpc = (rpcName, args) => {
+    if (!admin.testPaymentChoiceLease && rpcName === "backend_billing_payment_choice_claim") return Promise.resolve({ data: { token: "fixture-selection-token" } });
+    if (!admin.testPaymentChoiceLease && rpcName === "backend_billing_payment_choice_release") return Promise.resolve({ data: null });
+    return admin.rpc(rpcName, args);
+  };
   if (name === "ogritech-billing") client.from = table => {
     if (table !== "saas_plans") return admin.from(table);
     const filters = [];
@@ -843,4 +848,25 @@ test('stale change-plan prices release the reservation without touching the paym
   const handler=await loadHandler('ogritech-billing',db,()=>assert.fail('price conflict cannot update provider'));
   const response=await handler(new Request('https://fixture.invalid/billing',{method:'POST',headers:{authorization:'Bearer fixture'},body:JSON.stringify({action:'change_offer',product:'menu',barbershop_id:signup.id,offer:'encomendas',plan_id:customMenuPlan.id,expected_total_cents:59900})}));
   assert.equal(response.status,409);assert.equal((await response.json()).error.code,'price_changed');assert.equal(db.operation,null);assert.equal(db.row.total_cents,row.total_cents);
+});
+const paymentSelectionDb = (claimError = null) => {
+  const calls=[];
+  const db={testPaymentChoiceLease:true,calls,auth:{getUser:async()=>({data:{user:{id:'fixture-owner'}}})},rpc:async(name,args)=>{
+    calls.push({name,args});if(name.endsWith('lookup'))return {data:{...signup,updated_at:'2026-11-15T00:00:00Z'}};
+    if(name==='backend_billing_payment_choice_claim')return claimError?{error:claimError}:{data:{token:'11111111-1111-4111-8111-111111111111'}};
+    return {data:null};
+  },from:table=>{const result={data:table==='profiles'?{active:true,role:'owner',barbershop_id:signup.id}:{id:'fixture-id'}};
+    const q={select(){return q;},update(){return q;},eq(){return q;},insert:async()=>result,maybeSingle:async()=>result,single:async()=>result,then(resolve,reject){return Promise.resolve(result).then(resolve,reject);}};return q;}};
+  return db;
+};
+const paymentSelectionRequest=method=>new Request('https://fixture.invalid/billing',{method:'POST',headers:{authorization:'Bearer fixture'},body:JSON.stringify({action:'choose_payment',product:'menu',barbershop_id:signup.id,cycle:'monthly',payment_method:method,recurring_authorized:method==='card'})});
+test('stale or reserved payment choice stops before creating a provider checkout',async()=>{
+ for(const code of ['40001','55000']){const db=paymentSelectionDb({code});const handler=await loadHandler('ogritech-billing',db,()=>assert.fail('reserved choice cannot call provider'));const response=await handler(paymentSelectionRequest('card'));assert.equal(response.status,409);assert.equal(db.calls.some(call=>call.name==='backend_billing_choose_payment_update'),false);}
+});
+test('uncertain card-creation outcome keeps the choice reserved so a waiver cannot race it',async()=>{
+ const db=paymentSelectionDb();const handler=await loadHandler('ogritech-billing',db,async()=>{throw new Error('network outcome unknown');});const response=await handler(paymentSelectionRequest('card'));assert.equal(response.status,502);assert.equal(db.calls.some(call=>call.name==='backend_billing_payment_choice_release'),false);
+});
+test('known persisted payment choice releases its reservation after the financial records',async()=>{
+ const db=paymentSelectionDb();const handler=await loadHandler('ogritech-billing',db,()=>assert.fail('Pix selection does not create a card checkout'));const response=await handler(paymentSelectionRequest('pix'));assert.equal(response.status,200);
+ const updated=db.calls.findIndex(call=>call.name==='backend_billing_choose_payment_update'),released=db.calls.findIndex(call=>call.name==='backend_billing_payment_choice_release');assert.ok(updated>=0&&released>updated);assert.equal(db.calls[updated].args.payload.selection_token,'11111111-1111-4111-8111-111111111111');
 });

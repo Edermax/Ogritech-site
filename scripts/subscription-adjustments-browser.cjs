@@ -1,0 +1,36 @@
+// Actual administration UI with synthetic finance responses. Never contacts a bank or payment provider.
+const fs=require('fs'),http=require('http'),path=require('path'),assert=require('assert/strict');
+const {chromium}=require('playwright'),fixture=require('../tests/fixtures/platform-admin.cjs'),{darkIssues,settle}=require('./panel-theme-checks.cjs');
+const root=process.cwd(),out='outputs/subscription-adjustments';fs.mkdirSync(out,{recursive:true});
+const server=http.createServer((req,res)=>{try{const pathname=new URL(req.url,'http://localhost').pathname,file=path.resolve(root,'.'+pathname+(pathname.endsWith('/')?'index.html':''));if(!file.startsWith(root+path.sep)||/^\/(?:\.|supabase|node_modules|outputs|tests)(?:\/|$)/.test(pathname))return res.writeHead(403).end();res.writeHead(200,{'content-type':{'.html':'text/html; charset=utf-8','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.ico':'image/x-icon'}[path.extname(file)]||'application/octet-stream'}).end(fs.readFileSync(file));}catch{res.writeHead(404).end();}});
+(async()=>{
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`;
+ const browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_EXECUTABLE_PATH||(process.platform==='win32'?'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe':undefined)}),report=[];
+ try{for(const width of [390,1440]){
+  const context=await browser.newContext({viewport:{width,height:940},serviceWorkers:'block'}),page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await context.route('https://**',r=>r.fulfill({body:'',contentType:'application/javascript'}));
+  await context.route('**/supabase-config.js*',r=>r.fulfill({contentType:'application/javascript',body:fixture+`
+   window.__adjustments=[];window.__refundFailure=true;window.__waiverAllowed=true;
+   const finance={subscription_id:'subscription-1',monthly_cents:4990,waiver_amount_cents:4990,cycle:'monthly',next_competence:'2026-12',period_start:'2026-12-15T12:00:00Z',period_end:'2027-01-15T12:00:00Z',payments:[{source:'platform',id:'payment-1',paid_at:'2026-11-15T12:00:00Z',amount_cents:4990,available_cents:4990,label:'TESTE-001'}],transfers:[],waivers:[]};
+   const rpc=supabaseClient.rpc.bind(supabaseClient);supabaseClient.rpc=async(name,args)=>{
+    window.__adjustments.push({name,args});if(name==='platform_subscription_finance')return{data:JSON.parse(JSON.stringify({...finance,waiver_allowed:window.__waiverAllowed,waiver_block_reason:window.__waiverAllowed?'':'O cartão automático permanece inalterado.'}))};
+    if(name==='platform_prepare_subscription_refund'){if(window.__refundFailure)return{error:{message:'Falha simulada. Tente novamente.'}};const p=args.payload;const transfer={...p,id:p.request_id,status:'prepared',reference:p.request_id.replace(/-/g,'').slice(0,25),created_at:'2026-11-15T12:00:00Z'};finance.transfers=[transfer];finance.payments[0].available_cents-=p.amount_cents;return{data:transfer};}
+    if(name==='platform_finish_subscription_refund'){const transfer=finance.transfers.find(item=>item.id===args.target_transfer_id);transfer.status=args.complete?'completed':'cancelled';if(!args.complete)finance.payments[0].available_cents+=transfer.amount_cents;return{data:transfer};}
+    if(name==='platform_waive_subscription_month'){finance.waivers.push({competence:args.competence+'-01',amount_cents:4990,note:args.note});return{data:finance.waivers.at(-1)};}
+    return rpc(name,args);
+   };
+   Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__copiedRefund=text;}}});
+  `}));
+  await page.goto(origin+'/admin.html#products');await page.locator('#adminLoading').waitFor({state:'hidden'});
+  await page.locator('[data-subscription-adjustment=refund]').click();await page.locator('#subscriptionRefundForm').waitFor({state:'visible'});
+  await page.locator('#subscriptionRefundKeyType').selectOption('email');await page.locator('#subscriptionRefundKey').fill('customer@example.invalid');await page.locator('#subscriptionRefundCity').fill('Franca');await page.locator('#subscriptionRefundPrepare').click();await page.locator('#subscriptionAdjustmentMessage').filter({hasText:'Falha simulada'}).waitFor();assert.equal(await page.locator('#subscriptionRefundKey').inputValue(),'customer@example.invalid');
+  await page.evaluate(()=>{window.__refundFailure=false;});await page.locator('#subscriptionRefundPrepare').click();await page.locator('#subscriptionRefundPrepared').waitFor({state:'visible'});const code=await page.locator('#subscriptionRefundCode').inputValue();assert.ok(code.startsWith('000201'));assert.ok(code.includes('540549.90'));assert.ok(code.includes('customer@example.invalid'));assert.equal((await page.evaluate(()=>window.__adjustments)).filter(call=>call.name==='platform_finish_subscription_refund').length,0);
+  await page.locator('#subscriptionRefundCopy').click();assert.equal(await page.evaluate(()=>window.__copiedRefund),code);
+  await page.evaluate(()=>OgritechPanelTheme.set('dark'));await settle(page);assert.deepEqual(await darkIssues(page),[],'refund form contrast');await page.screenshot({path:`${out}/refund-${width}.png`});
+  await page.locator('#subscriptionRefundBankReference').fill('BANK-REFERENCE-001');await page.locator('#subscriptionRefundPaid').check();await page.locator('#subscriptionRefundComplete').click();await page.locator('#subscriptionAdjustmentMessage').filter({hasText:'registrada como realizada'}).waitFor();assert.equal((await page.evaluate(()=>window.__adjustments)).filter(call=>call.name==='platform_finish_subscription_refund').length,1);
+  await page.keyboard.press('Escape');await page.locator('[data-subscription-adjustment=waive]').click();await page.locator('#subscriptionWaiverForm').waitFor({state:'visible'});assert.equal(await page.locator('#subscriptionWaiverNote').getAttribute('required'),null);await page.locator('#subscriptionWaiverSubmit').click();await page.locator('#subscriptionAdjustmentMessage').filter({hasText:'Mensalidade abonada'}).waitFor();const waiver=(await page.evaluate(()=>window.__adjustments)).find(call=>call.name==='platform_waive_subscription_month');assert.equal(waiver.args.note,'');assert.equal(waiver.args.expected_amount_cents,4990);
+  await page.keyboard.press('Escape');await page.evaluate(()=>{window.__waiverAllowed=false;});await page.locator('[data-subscription-adjustment=waive]').click();await page.locator('#subscriptionAdjustmentMessage').filter({hasText:'cartão automático'}).waitFor();assert.equal(await page.locator('#subscriptionWaiverSubmit').isDisabled(),true);
+  assert.deepEqual(errors,[]);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));report.push({width,refundPreparedBeforeConfirmation:true,copyCode:true,failedRequestPreservesFields:true,emptyWaiverNote:true,automaticCardUnchanged:true});await context.close();
+ }}finally{await browser.close();server.close();}
+ fs.writeFileSync(`${out}/result.json`,JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+})().catch(error=>{console.error(error);process.exitCode=1;server.close();});

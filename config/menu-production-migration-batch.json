@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-15",
-  "baseline": "assistant_human_contact_channels",
+  "baseline": "subscription_billing_adjustments",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "LOCAL_MIGRATION_UP_AND_PGTAP",
-    "migrationCount": 103,
-    "tests": 822,
-    "evidence": "docs/evidencias/atendimento-humano-2026-11-15.md"
+    "migrationCount": 104,
+    "tests": 862,
+    "evidence": "docs/evidencias/abonos-devolucoes-2026-11-15.md"
   },
   "productionDryRun": {
     "status": "PASSED",
@@ -18,8 +18,8 @@
     "migrationCount": 0,
     "remoteChangesPerformed": false,
     "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/atendimento-humano-2026-11-15.md",
-    "aliasCompatibility": "103 migrations verified in staging and production. Native assistant_human_contact_channels aliases recorded without history repair. No pending migration."
+    "evidence": "docs/evidencias/abonos-devolucoes-2026-11-15.md",
+    "aliasCompatibility": "104 migrations verified in staging and production; native subscription_billing_adjustments aliases recorded without history repair. No pending migration."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
@@ -87,20 +87,20 @@
     "guard_menu_offer_changes",
     "menu_tracking_customer_phone"
   ],
-  "authorizationSource": "Usuário solicitou atendimento humano por perfil e assinatura e confirmou o retorno pelos três canais e o número oficial.",
-  "authorizationScope": "Retorno humano no Ajudante, e-mail para visitantes/leads e telefone/WhatsApp/e-mail para clientes ativos ou em teste vigente; fila administrativa de atendimento.",
+  "authorizationSource": "Usuário solicitou devolução com Pix Copia e Cola e abono mensal com observação opcional; escolheu preservar cartão automático e habilitar abono somente para Pix/manual.",
+  "authorizationScope": "Preparação e confirmação manual de devoluções; abono de uma mensalidade Pix/manual, histórico financeiro, auditoria e proteção contra cobranças concorrentes.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
     "executedAt": "2026-11-15",
     "migrations": [
-      "assistant_human_contact_channels"
+      "subscription_billing_adjustments"
     ],
     "reviewedPendingCount": 1,
-    "sourceBaseCommit": "3add81462fe5f72b473a38f019331ec8ddd2077b",
-    "stagingMigrationCount": 103,
-    "productionMigrationCount": 103,
+    "sourceBaseCommit": "9981c6d89b5da79f44eafda9effb7742bfe8e2b8",
+    "stagingMigrationCount": 104,
+    "productionMigrationCount": 104,
     "postPromotionPendingCount": 0,
-    "evidence": "docs/evidencias/atendimento-humano-2026-11-15.md"
+    "evidence": "docs/evidencias/abonos-devolucoes-2026-11-15.md"
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",
