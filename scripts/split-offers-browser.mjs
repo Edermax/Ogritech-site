@@ -64,6 +64,20 @@ async function pageFor(kind,offer='cardapio',width=1440){
  });
  const page=await context.newPage();page.on('pageerror',error=>report.pageErrors.push(error.message));return{page,context};
 }
+async function checkSignupScroll(page,label){
+ for(const fraction of [0,.25,.5,.75,1]){
+  const overlap=await page.evaluate(fraction=>{
+   window.scrollTo(0,(document.documentElement.scrollHeight-innerHeight)*fraction);
+   const guide=document.querySelector('.signup-guide').getBoundingClientRect();
+   const payment=document.querySelector('.payment-after-trial').getBoundingClientRect();
+   return Math.min(guide.right,payment.right)-Math.max(guide.left,payment.left)>1 &&
+    Math.min(guide.bottom,payment.bottom)-Math.max(guide.top,payment.top)>1;
+  },fraction);
+  assert.equal(overlap,false,`${label}: plan guide must not overlap payment information at scroll ${fraction}`);
+ }
+ await page.screenshot({path:resolve(output,`${label}-scroll.png`)});
+ report.checks.push(`${label} scrolling keeps plan guide clear of payment information`);
+}
 try{
  for(const width of [1440,390]){
   const {page,context}=await pageFor('home','cardapio',width);await page.goto(origin+'/',{waitUntil:'networkidle'});
@@ -90,6 +104,7 @@ try{
   assert.equal(await page.locator('.plan-badge').textContent(),'Mais completo');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
   await page.locator('.signup-offers').screenshot({path:resolve(output,`signup-plans-${width}.png`)});
+  await checkSignupScroll(page,`signup-comparison-${width}`);
   for(const code of ['cardapio','encomendas']){
    await page.goto(origin+'/criar-cardapio/',{waitUntil:'networkidle'});
    await page.click('#choose-'+code);
@@ -101,6 +116,7 @@ try{
    assert.equal(await page.locator('#orderNotificationsChoice').isVisible(),code==='encomendas');
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
    await page.screenshot({path:resolve(output,`signup-${code}-${width}.png`),fullPage:true});
+   await checkSignupScroll(page,`signup-${code}-${width}`);
   }
   report.checks.push(`generic choices lead to dedicated signup pages ${width}px`);
   await context.close();
