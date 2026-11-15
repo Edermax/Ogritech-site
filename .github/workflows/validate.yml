@@ -48,6 +48,7 @@ jobs:
       - run: npm run test:panel-theme-browser
       - run: npm run test:account-theme-browser
       - run: npm run test:panel-navigation-browser
+      - run: node scripts/assistant-profiles-browser.cjs
       - run: npm run test:admin-theme-browser
       - run: npm run test:admin-navigation-browser
       - run: node scripts/split-offers-browser.mjs
@@ -61,6 +62,7 @@ jobs:
           path: |
             outputs/panel-theme-review/
             outputs/panel-navigation/
+            outputs/assistant-profiles/
             outputs/admin-navigation/
             outputs/split-offers/
             outputs/menu-light-theme/

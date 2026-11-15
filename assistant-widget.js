@@ -37,16 +37,64 @@
   const hint = root.querySelector(".ogri-assistant__hint");
   let hasInteracted = false;
   let opener = toggle;
-  const panelTopics = {
-    pedidos: "Abra Pedidos para conferir o que chegou. Use Atualizar pedidos para carregar os dados recentes, confirme o atendimento e marque como concluído ao finalizar.",
-    produtos: "Abra Produtos para ver seu catálogo. Use Adicionar produto para cadastrar um item ou Editar no produto que deseja mudar. Salve o rascunho e depois abra Cardápio → Publicação para publicar as alterações.",
-    configuracoes: "Em Cardápio → Atendimento ficam os dados, formas de atendimento e horários. Para alterar as opções protegidas enquanto o cardápio está publicado, abra Publicação, retire do ar e publique novamente após salvar.",
-    publicacao: "Salve as alterações de produtos, abra Publicação, confira o resumo e use Publicar alterações. Seus clientes continuam vendo a versão anterior até a publicação. Se o botão estiver desativado, confira as etapas pendentes indicadas pelo painel.",
-    notificacoes: "Em Pedidos recentes, toque em Ativar neste dispositivo e confirme a permissão do navegador. Faça isso em cada aparelho. No iPhone ou iPad, adicione a Ogritech à Tela de Início pelo Safari e abra pelo ícone antes de ativar.",
-    aplicativo: "Abra Conta → Aplicativo e toque em Instalar o app. Confirme a instalação na janela do navegador. Se a instalação direta não estiver disponível, o botão mostra as opções para o dispositivo."
+  let activeHelpTopic = null;
+  let lastHelpContext = "";
+  const helpContext = () => window.OgritechMenuWorkspace?.state() || {};
+  const contextKey = context => JSON.stringify([context.ready, context.offer, context.role, context.published, context.next, context.busy, context.dirtySettings]);
+  const helpNode = (tag, text, className) => {
+    const node = document.createElement(tag);
+    if (text) node.textContent = text;
+    if (className) node.className = className;
+    return node;
   };
-  const panelTargets = { pedidos: "operation", produtos: "catalog", configuracoes: "settings", publicacao: "review", notificacoes: "operation" };
-  const panelTargetLabels = { operation: "Pedidos", catalog: "Produtos", settings: "Atendimento", review: "Publicação" };
+  function helpActionAvailable(action, context) {
+    if (!context.ready || context.busy || !window.OgritechPanelNavigation || typeof navigateTo !== "function") return false;
+    if (["plan", "upgrade"].includes(action.id) && (context.role !== "owner" || !document.getElementById("subscriptionCenter") || document.getElementById("subscriptionCenter").classList.contains("hidden"))) return false;
+    if (context.dirtySettings && action.section !== "configuracoes" && action.workspace !== "settings") return false;
+    const target = action.workspace ? document.querySelector(`[data-menu-workspace="${action.workspace}"]`) : document.querySelector(`.menu-item[data-section="${action.section}"]`);
+    return Boolean(target && !target.disabled && !target.hidden && !target.classList.contains("hidden") && !target.classList.contains("menu-offer-hidden"));
+  }
+  function planHelpUrl() {
+    const path = "/painel/?secao=configuracoes";
+    const url = new URL(window.ogritechEnvironmentUrl ? window.ogritechEnvironmentUrl(path) : path, location.href);
+    if (["local", "staging", "production"].includes(window.OGRITECH_ENV)) url.searchParams.set("env", window.OGRITECH_ENV);
+    url.hash = "subscriptionCenter";
+    return url.href;
+  }
+  function renderPanelHelp(topic = null) {
+    activeHelpTopic = topic;
+    const context = helpContext(), model = window.OgritechPanelHelp;
+    lastHelpContext = contextKey(context);
+    const fallback = { greeting: "Aguarde o carregamento do plano e do perfil. Se não carregar, atualize o painel e tente novamente.", topics: [] };
+    const entry = topic && model ? model.answer(topic, context) : null;
+    const choices = entry ? null : model?.menu(context) || fallback;
+    body.replaceChildren(helpNode("p", entry?.text || choices.greeting, "ogri-assistant__message"));
+    if (choices?.topics.length) {
+      const options = helpNode("div", "", "ogri-assistant__options");
+      for (const item of choices.topics) {
+        const button = helpNode("button", item.label, "ogri-assistant__option");
+        button.type = "button"; button.dataset.topic = item.id; options.append(button);
+      }
+      body.append(options);
+    }
+    if (entry) {
+      const available = entry.actions.filter(action => helpActionAvailable(action, context));
+      if (available.length) {
+        const actions = helpNode("div", "", "ogri-assistant__actions");
+        if (available.length === 1) actions.style.gridTemplateColumns = "1fr";
+        for (const action of available) {
+          const isPlan = ["plan", "upgrade"].includes(action.id);
+          const link = helpNode(isPlan ? "a" : "button", action.label, "ogri-assistant__action");
+          if (isPlan) link.href = planHelpUrl(); else link.type = "button";
+          link.dataset.panelHelpAction = action.id; actions.append(link);
+        }
+        body.append(actions);
+      }
+      if (entry.actions.length && !available.length) body.append(helpNode("p", context.busy ? "Aguarde a operação em andamento para usar os atalhos." : context.dirtySettings ? "Salve as configurações de atendimento antes de mudar de área." : "O atalho ainda não está disponível nesta etapa. Siga as etapas indicadas no painel.", "ogri-assistant__notice"));
+      const back = helpNode("button", "← Ver outras dúvidas", "ogri-assistant__back");
+      back.type = "button"; back.addEventListener("click", menu); body.append(back);
+    }
+  }
 
   const topics = {
     planos: "Ogritech Cardápio: R$ 29,90/mês ou R$ 299,00/ano, com atendimento no WhatsApp. Ogritech Encomendas: R$ 49,90/mês ou R$ 499,00/ano, com gestão de pedidos no painel. Não há comissão por pedido. <a href='/criar-cardapio/'>Começar agora</a>.",
@@ -57,17 +105,7 @@
   };
 
   function menu() {
-    if (panelMode) {
-      body.innerHTML = `<p class="ogri-assistant__message">Olá! Sou o Ajudante Ogritech. Em que parte do painel você precisa de ajuda?</p><div class="ogri-assistant__options">
-        <button type="button" class="ogri-assistant__option" data-topic="pedidos">Pedidos e atendimento</button>
-        <button type="button" class="ogri-assistant__option" data-topic="produtos">Produtos, fotos e preços</button>
-        <button type="button" class="ogri-assistant__option" data-topic="configuracoes">Configurações e horários</button>
-        <button type="button" class="ogri-assistant__option" data-topic="publicacao">Publicar alterações</button>
-        <button type="button" class="ogri-assistant__option" data-topic="notificacoes">Notificações de pedidos</button>
-        <button type="button" class="ogri-assistant__option" data-topic="aplicativo">Instalar aplicativo</button>
-      </div>`;
-      return;
-    }
+    if (panelMode) { renderPanelHelp(); return; }
     body.innerHTML = `<p class="ogri-assistant__message">Como posso ajudar com a Ogritech Cardápio?</p><div class="ogri-assistant__options">
       <button class="ogri-assistant__option" data-topic="planos">Planos e valores</button>
       <button class="ogri-assistant__option" data-topic="teste">Período gratuito</button>
@@ -78,15 +116,7 @@
   }
 
   function answer(topic) {
-    if (panelMode) {
-      if (!Object.hasOwn(panelTopics, topic)) return;
-      const target = panelTargets[topic];
-      const tab = target && document.querySelector(`[data-menu-workspace="${target}"]`);
-      const available = tab && !tab.disabled && !tab.classList.contains("hidden");
-      body.innerHTML = `<p class="ogri-assistant__message">${panelTopics[topic]}</p>${available ? `<div class="ogri-assistant__actions"><button class="ogri-assistant__action" type="button" data-panel-target="${target}">Abrir ${panelTargetLabels[target]}</button></div>` : ""}<button class="ogri-assistant__back" type="button">← Ver outras dúvidas</button>`;
-      body.querySelector(".ogri-assistant__back").addEventListener("click", menu);
-      return;
-    }
+    if (panelMode) { renderPanelHelp(topic); return; }
     body.innerHTML = `<p class="ogri-assistant__message">${topics[topic]}</p><div class="ogri-assistant__actions"><button class="ogri-assistant__action" type="button" data-request-contact="${topic}">Solicitar contato</button></div><button class="ogri-assistant__back" type="button">← Ver outras dúvidas</button>`;
     body.querySelector(".ogri-assistant__back").addEventListener("click", menu);
   }
@@ -199,15 +229,28 @@
     if (panelMode) {
       const topic = event.target.closest("[data-topic]");
       if (topic) answer(topic.dataset.topic);
-      const navigation = event.target.closest("[data-panel-target]");
+      const navigation = event.target.closest("[data-panel-help-action]");
       if (navigation) {
-        const tab = document.querySelector(`[data-menu-workspace="${navigation.dataset.panelTarget}"]`);
-        if (tab && !tab.disabled && !tab.classList.contains("hidden")) {
-          setOpen(false);
-          const section = { operation: "cardapio", catalog: "produtos", settings: "loja", review: "loja" }[navigation.dataset.panelTarget];
-          if (window.OgritechPanelNavigation && typeof navigateTo === "function") navigateTo(section, { reload: false });
-          tab.click();
-          (document.querySelector(`[data-section="${section}"]`) || tab).focus();
+        const context = helpContext();
+        const action = window.OgritechPanelHelp?.answer(activeHelpTopic, context).actions.find(item => item.id === navigation.dataset.panelHelpAction);
+        if (!action || !helpActionAvailable(action, context)) { event.preventDefault(); renderPanelHelp(activeHelpTopic); return; }
+        if (navigation.tagName === "A" && (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)) return;
+        event.preventDefault();
+        if (window.OgritechPanelNavigation.canLeave?.(action.section) === false) return;
+        navigateTo(action.section, { reload: false });
+        const expected = { cardapio: "orders", produtos: "products", loja: "menu", vendas: "sales", configuracoes: "account" }[action.section];
+        if (document.body.dataset.panelRoute !== expected) return;
+        if (action.workspace) {
+          const tab = document.querySelector(`[data-menu-workspace="${action.workspace}"]`);
+          if (tab?.disabled) return;
+          tab?.click();
+          if (helpContext().workspace !== action.workspace) return;
+        }
+        setOpen(false);
+        const target = action.selector ? document.querySelector(action.selector) || document.getElementById("subscriptionCenter") : document.querySelector(`.menu-item[data-section="${action.section}"]`);
+        if (target) {
+          if (action.selector) { target.setAttribute("tabindex", "-1"); target.scrollIntoView({ block: "start", behavior: "instant" }); }
+          target.focus({ preventScroll: true });
         }
       }
       return;
@@ -220,6 +263,9 @@
     }
     const requestButton = event.target.closest("[data-request-contact]");
     if (requestButton) callbackForm(requestButton.dataset.requestContact);
+  });
+  if (panelMode) window.addEventListener("ogritech:menu-context-changed", () => {
+    if (!panel.hidden && contextKey(helpContext()) !== lastHelpContext) renderPanelHelp(activeHelpTopic);
   });
   document.addEventListener("keydown", event => { if (event.key === "Escape" && !panel.hidden) setOpen(false); });
 })();
