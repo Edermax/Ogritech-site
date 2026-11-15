@@ -28,7 +28,7 @@
 .signup-offer .secondary{margin:0}
 .plan-selection{min-height:20px;font-size:12px;font-weight:650;color:#006b7e;margin:10px 0 0;text-align:center}
 .plans-trust{font-size:13px;color:var(--muted);margin:16px 0 0}
-.signup-guide{align-self:start;position:sticky;top:24px}
+.signup-guide{align-self:start;position:static}
 .signup-guide h2{font-size:28px;margin:0}
 .signup-guide .eyebrow{font-size:12px;margin-top:0}
 .signup-guide .price{margin-top:16px}
