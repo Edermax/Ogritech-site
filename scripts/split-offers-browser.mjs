@@ -120,6 +120,26 @@ try{
   await page.fill('[name=business_name]','Loja Teste');await page.fill('[name=tax_document]','52998224725');await page.fill('[name=responsible_name]','Pessoa Teste');await page.fill('[name=email]','fixture@example.invalid');await page.fill('[name=phone]','11999999999');await page.selectOption('[name=segment]','Pizzaria');await page.selectOption('[name=service_invoice_preference]','not_requested');await page.check('[name=accepted_terms]');await page.check('[name=publish_whatsapp]');
   await page.click('#submitButton');await page.locator('#resultSection').waitFor({state:'visible'});assert.equal(report.billingRequests.at(-1).offer,offer);assert.equal(report.billingRequests.at(-1).cycle,'annual');report.checks.push(`${offer} annual signup payload`);await context.close();
  }
+ {
+  const {page,context}=await pageFor('signup','cardapio',390);
+  await page.route('**/functions/v1/ogritech-billing',async route=>{
+   const body=route.request().postDataJSON();
+   if(body.action==='trial_configuration')return route.fulfill({contentType:'application/json',body:JSON.stringify({data:{available:true,phone_verification:false,turnstile_site_key:''}})});
+   report.billingRequests.push(body);
+   if(body.email==='taken@example.invalid')return route.fulfill({status:409,contentType:'application/json',body:JSON.stringify({error:{code:'email_already_registered',message:'Este e-mail já tem uma conta na Ogritech.'}})});
+   return route.fulfill({contentType:'application/json',body:JSON.stringify({data:{trial_ends_at:'2026-12-01T00:00:00Z',login_url:'/login/'}})});
+  });
+  await page.goto(origin+'/criar-cardapio/cardapio/',{waitUntil:'networkidle'});
+  await page.fill('[name=business_name]','Loja preservada');await page.fill('[name=tax_document]','52998224725');await page.fill('[name=responsible_name]','Pessoa Teste');await page.fill('[name=email]','taken@example.invalid');await page.fill('[name=phone]','11999999999');await page.selectOption('[name=segment]','Pizzaria');await page.selectOption('[name=service_invoice_preference]','not_requested');await page.check('[name=accepted_terms]');await page.check('[name=publish_whatsapp]');
+  await page.click('#submitButton');await page.locator('#existingAccountHelp').waitFor({state:'visible'});
+  assert.equal(await page.locator('#submitButton').isEnabled(),true);
+  assert.equal(await page.locator('[name=business_name]').inputValue(),'Loja preservada');
+  await page.click('#changeSignupEmail');assert.equal(await page.locator('[name=email]').evaluate(el=>el===document.activeElement),true);
+  await page.fill('[name=email]','new@example.invalid');assert.equal(await page.locator('#existingAccountHelp').isVisible(),false);
+  await page.click('#submitButton');await page.locator('#resultSection').waitFor({state:'visible'});
+  assert.equal(report.billingRequests.at(-1).email,'new@example.invalid');assert.equal(report.billingRequests.at(-1).offer,'cardapio');
+  report.checks.push('existing email conflict preserves form and supports correcting the email without a duplicate account');await context.close();
+ }
  for(const offer of ['cardapio','encomendas']){
   const {page,context}=await pageFor('catalog',offer,390);await page.goto(origin+'/cardapio/?empresa=fixture',{waitUntil:'networkidle'});await page.click('[data-add-selected]');await page.click('#checkoutButton');
   if(offer==='cardapio'){
