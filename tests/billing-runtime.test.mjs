@@ -581,7 +581,7 @@ test("signup validates and persists the service invoice preference without chang
       from(table) {
         const chain = {
           insert(value) { if (table === "saas_clients") clientRecord = value; return chain; },
-          select() { return chain; }, eq() { return chain; }, update() { return chain; }, delete() { return chain; },
+          select() { return chain; }, eq() { return chain; }, ilike() { return chain; }, limit() { return chain; }, maybeSingle: async () => ({data:null,error:null}), update() { return chain; }, delete() { return chain; },
           single: async () => ({ data: { id: "fixture-id" }, error: null }),
           then(resolve, reject) { return Promise.resolve({ data: null, error: null }).then(resolve, reject); }
         }; return chain;
@@ -697,7 +697,7 @@ test("new signups persist the selected offer, billing cycle and 14-day boundary 
  for(const [offer,cycle,total,base,planCode] of [["cardapio","monthly",2990,2990,"cardapio"],["cardapio","annual",29900,2990,"cardapio"],["encomendas","monthly",4990,4990,"foundation"],["encomendas","annual",49900,4990,"foundation"]]){
   const records={},filters=[];let payload;
   const db={rpc:async(name,args)=>{if(name==="backend_menu_trial_rate_limit")return{data:{allowed:true},error:null};if(name==="backend_menu_trial_evaluate")return{data:{decision:"allow"},error:null};if(name==="backend_billing_signup_create"){payload=args.payload;return{data:signup.id,error:null};}return{data:null,error:null};},auth:{admin:{inviteUserByEmail:async()=>({data:{user:{id:"fixture-owner"}},error:null})}},from(table){
-   const q={insert(value){records[table]=value;return q;},select(){return q;},eq(key,value){filters.push({table,key,value});return q;},update(){return q;},delete(){return q;},single:async()=>({data:{id:"fixture-id",share_id:"fixture-share"},error:null}),then(resolve,reject){return Promise.resolve({data:null,error:null}).then(resolve,reject);}};return q;
+   const q={insert(value){records[table]=value;return q;},select(){return q;},eq(key,value){filters.push({table,key,value});return q;},ilike(){return q;},limit(){return q;},maybeSingle:async()=>({data:null,error:null}),update(){return q;},delete(){return q;},single:async()=>({data:{id:"fixture-id",share_id:"fixture-share"},error:null}),then(resolve,reject){return Promise.resolve({data:null,error:null}).then(resolve,reject);}};return q;
   }};
   const handler=await loadHandler("ogritech-billing",db,()=>assert.fail("trial must not charge"),{BILLING_TERMS_VERSION:"fixture",BILLING_TERMS_SHA256:"a".repeat(64)});
   const body={action:"start_trial",product:"menu",offer,cycle,business_name:"Fixture",responsible_name:"Fixture",tax_document:"52998224725",email:"fixture@example.invalid",phone:"11999999999",publish_whatsapp:true,payment_method:"pix",terms_version:"fixture",accepted_terms:true,accepted_privacy:true,recurring_authorized:false,total_cents:1};
@@ -752,4 +752,29 @@ test("scheduled recovery verifies canonical provider amount before releasing a f
   const response=await handler(new Request("https://fixture.invalid/lifecycle",{method:"POST",headers:{"x-cron-secret":"fixture-cron"}}));
   assert.equal(response.status,consistent?200:502);const finished=calls.find(x=>x.name.endsWith("offer_change_finish"));assert.equal(finished.args.target_token,"lease");assert.equal(finished.args.needs_reconciliation,!consistent);
  }
+});
+
+test("existing customer email conflicts before consuming a phone proof or provisioning, and lookup failure fails closed", async () => {
+  for (const lookupFails of [false, true]) {
+    const calls=[];
+    const handler=await loadHandler("ogritech-billing",{
+      rpc:async name=>{calls.push(name);if(name==="backend_menu_trial_rate_limit")return{data:{allowed:true}};assert.equal(name,"backend_menu_trial_evaluate");return{data:{decision:"allow"}};},
+      from(table){assert.equal(table,"saas_clients");const q={select(columns){assert.equal(columns,"id");return q;},ilike(column,value){assert.equal(column,"owner_email");assert.equal(value,"some\\_one@example.invalid");return q;},limit(count){assert.equal(count,1);return q;},maybeSingle:async()=>lookupFails?{error:{code:"fixture"}}:{data:{id:"existing-or-archived-client"}}};return q;}
+    },()=>assert.fail("No invitation or payment"),trialEnvironment);
+    const response=await handler(trialRequest({...trialBody,email:"Some_one@example.invalid"}));
+    assert.equal(response.status,lookupFails?503:409);
+    const body=await response.json();assert.equal(body.error.code,lookupFails?"email_check_unavailable":"email_already_registered");
+    assert.doesNotMatch(JSON.stringify(body),/existing-or-archived-client|Some_one/);
+    assert.deepEqual(calls,["backend_menu_trial_rate_limit","backend_menu_trial_evaluate"]);
+  }
+});
+
+test("email collision after the precheck releases the provisional signup and shop without changing the existing account",async()=>{
+  const cleanup=[];
+  const handler=await loadHandler("ogritech-billing",{
+    rpc:async name=>{if(name==="backend_menu_trial_rate_limit")return{data:{allowed:true}};if(name==="backend_menu_trial_evaluate")return{data:{decision:"allow"}};if(name==="backend_billing_signup_create")return{data:signup.id};assert.equal(name,"backend_billing_signup_delete");cleanup.push("signup");return{error:null};},
+    from(table){let deleted=false;const q={select(){return q;},ilike(){return q;},limit(){return q;},maybeSingle:async()=>({data:null}),insert(){return q;},single:async()=>table==="barbershops"?{data:{id:"provisional-shop"}}:{error:{code:"23505",message:'duplicate key value violates unique constraint "saas_clients_owner_email_key"'}},delete(){assert.equal(table,"barbershops");deleted=true;return q;},eq(column,value){assert.equal(column,"id");assert.equal(value,"provisional-shop");return q;},then(resolve,reject){if(deleted)cleanup.push("shop");return Promise.resolve({error:null}).then(resolve,reject);}};return q;}
+  },()=>assert.fail("No invitation or payment"),trialEnvironment);
+  const response=await handler(trialRequest(trialBody));assert.equal(response.status,409);
+  assert.equal((await response.json()).error.code,"email_already_registered");assert.deepEqual(cleanup,["shop","signup"]);
 });

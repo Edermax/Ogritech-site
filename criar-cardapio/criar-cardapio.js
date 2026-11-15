@@ -50,6 +50,7 @@
   form.elements.responsible_tax_document.addEventListener("input", event => { event.target.value = maskCpf(event.target.value); });
   form.elements.phone.addEventListener("input", event => { event.target.value = digits(event.target.value).slice(0, 11).replace(/^(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2"); });
   form.addEventListener("input", event => {
+    if (event.target.name === "email") $("existingAccountHelp").hidden = true;
     if (!["business_name", "tax_document", "responsible_tax_document", "email", "phone"].includes(event.target.name)) return;
     phoneToken = ""; challengeId = ""; $("phoneMessage").textContent = "";
   });
@@ -58,15 +59,20 @@
     if (!url || !key) throw new Error("O cadastro está temporariamente indisponível.");
     const response = await fetch(url + "/functions/v1/ogritech-billing", { method: "POST", headers: { apikey: key, "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const result = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(result.error?.message || ({
+    if (!response.ok) {
+      const failure = new Error(result.error?.message || ({
       trial_already_used: "Este documento já usou o teste gratuito do Cardápio.",
       terms_not_configured: "A abertura de novas contas ainda não foi liberada.",
       provisioning_failed: "Não foi possível preparar seu cardápio. Tente novamente.",
       rate_limited: "Muitas tentativas. Aguarde antes de tentar novamente.",
       challenge_failed: "Confirme a verificação de segurança novamente.",
       phone_verification_required: "Confirme seu telefone pelo código recebido por SMS.",
-      phone_verification_unavailable: "A confirmação do telefone está temporariamente indisponível."
-    }[result.error?.code]) || "Não foi possível concluir agora.");
+      phone_verification_unavailable: "A confirmação do telefone está temporariamente indisponível.",
+      email_already_registered: "Este e-mail já tem uma conta na Ogritech. Acesse essa conta ou use outro e-mail para um novo cadastro."
+      }[result.error?.code]) || "Não foi possível concluir agora.");
+      failure.code = result.error?.code || "";
+      throw failure;
+    }
     return result.data;
   }
   function resetCaptcha() { captchaToken = ""; if (widgetId !== undefined) window.turnstile.reset(widgetId); }
@@ -127,7 +133,11 @@
       $("signupSection").hidden = true; $("resultSection").hidden = false;
       $("resultMessage").textContent = "Enviamos o convite para " + data.email + ". Seu teste vai até " + new Date(result.trial_ends_at).toLocaleDateString("pt-BR") + ".";
       $("loginLink").href = result.login_url || "/login/";
-    } catch (error) { message.textContent = error.message; }
+    } catch (error) { message.textContent = error.message; $("existingAccountHelp").hidden = error.code !== "email_already_registered"; }
     finally { submit.disabled = false; resetCaptcha(); }
+  });
+  $("changeSignupEmail").addEventListener("click", () => {
+    form.elements.email.focus();
+    form.elements.email.select();
   });
 })();

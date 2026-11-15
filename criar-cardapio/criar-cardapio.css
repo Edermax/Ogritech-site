@@ -41,5 +41,9 @@
 .dedicated-benefits li::marker{color:var(--cyan-light)}
 .compare-link{font-size:13px;margin-top:20px}
 .dedicated-trial{font-size:14px;font-weight:650}
+.existing-account-help{display:grid;gap:12px;padding:16px;margin-bottom:16px;border:1px solid var(--line);border-radius:12px;background:var(--ui-tint)}
+.existing-account-help a{font-weight:700}
+.existing-account-help button{background:#fff;color:var(--cyan-light);border:1px solid var(--line)}
+.existing-account-help small{font-size:12px;line-height:1.5}
 @media(max-width:800px){.page-signup main{grid-template-columns:minmax(0,1fr);gap:28px}.signup-guide{position:static}.signup-guide .journey{display:none}}
 @media(max-width:620px){.signup-offer-grid{grid-template-columns:minmax(0,1fr);gap:24px}.signup-offer{padding:24px}.signup-offers>h2{font-size:24px}.page-signup main{padding-inline:20px}.signup-guide h2{font-size:24px}}

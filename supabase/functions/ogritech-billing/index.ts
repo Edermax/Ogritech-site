@@ -438,6 +438,12 @@ Deno.serve(async (request) => {
     if (eligibility.decision === "used") return reply({ error: { code: "trial_already_used", message: "Este documento já utilizou o teste gratuito." } }, 409, origin);
     if (eligibility.decision === "review") return trialReviewResponse(eligibility, origin);
     if (eligibility.decision !== "allow") return reply({ error: { code: "trial_protection_unavailable" } }, 503, origin);
+    // Archived customers still own their Auth account and reserved email address.
+    // Check before consuming a phone proof or creating a signup/business.
+    const { data: existingClient, error: emailLookupError } = await admin.from("saas_clients").select("id")
+      .ilike("owner_email", input.email.replace(/[\\%_]/g, "\\$&")).limit(1).maybeSingle();
+    if (emailLookupError) return reply({ error: { code: "email_check_unavailable", message: "Não foi possível conferir o e-mail agora. Tente novamente em instantes." } }, 503, origin);
+    if (existingClient) return reply({ error: { code: "email_already_registered", message: "Este e-mail já tem uma conta na Ogritech. Acesse essa conta ou use outro e-mail para um novo cadastro." } }, 409, origin);
     const phoneConfig = phoneVerificationConfiguration();
     if (phoneConfig.enabled && !phoneConfig.ready) return reply({ error: { code: "phone_verification_unavailable" } }, 503, origin);
     if (phoneConfig.enabled && !/^[a-f0-9-]{72}$/.test(input.phone_verification_token)) return reply({ error: { code: "phone_verification_required", message: "Confirme seu telefone pelo código enviado por SMS." } }, 422, origin);
@@ -467,7 +473,14 @@ Deno.serve(async (request) => {
       if (shopError) throw shopError;
       const productName = input.product === "menu" ? MENU_OFFERS[input.offer].name : "Agenda";
       const { data: client, error: clientError } = await admin.from("saas_clients").insert({ name: clean(input.business_name), segment: clean(input.segment), contact_name: clean(input.responsible_name), owner_email: input.email, phone, origin: `Contratação self-service — ${productName}`, plan: productName, monthly_fee: cycle.base_monthly_cents / 100, status: "Ativo", invite_status: "Pendente", barbershop_id: shop.id, notes: input.service_invoice_preference === "requested" ? "Nota de serviço: solicitada pelo cliente. Emissão sujeita às obrigações fiscais aplicáveis." : input.service_invoice_preference === "not_requested" ? "Nota de serviço: cliente não solicitou no cadastro. Não constitui dispensa de emissão obrigatória." : "Nota de serviço: preferência não informada." }).select("id").single();
-      if (clientError) { await admin.from("barbershops").delete().eq("id", shop.id); throw clientError; }
+      if (clientError) {
+        await admin.from("barbershops").delete().eq("id", shop.id);
+        if (clientError.code === "23505" && clientError.message?.includes("saas_clients_owner_email_key")) {
+          await rollback();
+          return reply({ error: { code: "email_already_registered", message: "Este e-mail já tem uma conta na Ogritech. Acesse essa conta ou use outro e-mail para um novo cadastro." } }, 409, origin);
+        }
+        throw clientError;
+      }
       await admin.rpc("backend_billing_signup_link", { target_signup_id: signupId, target_barbershop_id: shop.id, target_saas_client_id: client.id });
       await admin.rpc("backend_billing_accept_terms", { payload: { signup_id: signupId, terms_version: termsVersion, terms_sha256: termsHash, recurring_authorized: input.payment_method === "card", ip_address: ip || "", user_agent: (request.headers.get("user-agent") || "").slice(0, 500) } });
       const invitation = await admin.auth.admin.inviteUserByEmail(input.email, { data: { full_name: clean(input.responsible_name), product: input.product }, redirectTo: firstAccessUrl("/update-password.html", input.product) });
