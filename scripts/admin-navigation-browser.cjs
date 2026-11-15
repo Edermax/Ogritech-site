@@ -21,7 +21,7 @@ const server=http.createServer((req,res)=>{try{
    await page.goto(base+'/admin.html');await page.locator('#adminLoading').waitFor({state:'hidden'});
    for(const theme of['light','dark']){
     await page.evaluate(theme=>OgritechPanelTheme.set(theme),theme);
-    for(const [key,parent]of[['overview','overview'],['businesses','businesses'],['trialReviews','businesses'],['users','users'],['billing','billing'],['products','billing'],['plans','billing'],['account','account']]){
+    for(const [key,parent]of[['overview','overview'],['businesses','businesses'],['trialReviews','businesses'],['support','businesses'],['users','users'],['billing','billing'],['products','billing'],['plans','billing'],['account','account']]){
      await page.locator('.platform-menu a[href="#'+parent+'"]').click();
      if(key!==parent)await page.locator('#adminSectionTabs a[href="#'+key+'"]').click();
      if(key==='trialReviews')await page.locator('[data-review-id]').first().waitFor();

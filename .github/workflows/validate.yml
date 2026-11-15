@@ -49,6 +49,7 @@ jobs:
       - run: npm run test:account-theme-browser
       - run: npm run test:panel-navigation-browser
       - run: node scripts/assistant-profiles-browser.cjs
+      - run: node scripts/assistant-human-contact-browser.cjs
       - run: npm run test:admin-theme-browser
       - run: npm run test:admin-navigation-browser
       - run: node scripts/configurable-plans-browser.cjs
@@ -64,6 +65,7 @@ jobs:
             outputs/panel-theme-review/
             outputs/panel-navigation/
             outputs/assistant-profiles/
+            outputs/assistant-human-contact/
             outputs/admin-navigation/
             outputs/configurable-plans/
             outputs/split-offers/

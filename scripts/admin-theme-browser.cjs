@@ -27,7 +27,7 @@ const server=http.createServer((req,res)=>{
   results.push({scene:label,darkContrastPassed:true,lightPreserved:true});
  }
  async function view(page,name){
-  const group=name==='trialReviews'?'businesses':['plans','products'].includes(name)?'billing':name;
+  const group=['trialReviews','support'].includes(name)?'businesses':['plans','products'].includes(name)?'billing':name;
   await page.locator('.platform-menu a[href="#'+group+'"]').click();
   if(group!==name)await page.locator('#adminSectionTabs a[href="#'+name+'"]').click();
   await page.waitForFunction(key=>location.hash==='#'+key,name);await settle(page);
@@ -44,7 +44,7 @@ const server=http.createServer((req,res)=>{
    await context.route('https://*.supabase.co/**',r=>r.abort());
    await page.goto(base+'/admin.html');await page.locator('#adminLoading').waitFor({state:'hidden'});
    assert.equal(await page.locator('#businessCount').innerText(),'2');
-   for(const name of['overview','businesses','users','plans','products','trialReviews','billing','account']){
+   for(const name of['overview','businesses','users','plans','products','trialReviews','support','billing','account']){
     await view(page,name);if(name==='trialReviews')await page.locator('[data-review-id]').first().waitFor();
     await check(page,name+'-'+width);
    }

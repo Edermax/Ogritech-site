@@ -520,11 +520,12 @@ const adminViews = {
     users: ["Acessos", "Gerencie proprietários e equipe dos seus clientes.", ["users"]],
     plans: ["Planos", "Confira os valores e as regras cadastrados para o produto.", ["plans"]],
     products: ["Assinaturas", "Consulte e gerencie o acesso ao Cardápio por negócio.", ["products"]],
+    support: ["Atendimento humano", "Solicitações de retorno recebidas pelo Ajudante Ogritech.", ["support"]],
     trialReviews: ["Revisão de testes", "Analise cadastros com dados já utilizados antes de liberar outro teste.", ["trialReviews"]],
     billing: ["Financeiro", "Acompanhe faturas, recebimentos e registros financeiros.", ["billing"]],
     account: ["Conta", "Gerencie a aparência do painel e sua sessão administrativa.", ["adminAccount"]]
 };
-const adminAreaFor = key => key === "trialReviews" ? "businesses" : ["products", "plans"].includes(key) ? "billing" : key;
+const adminAreaFor = key => ["trialReviews", "support"].includes(key) ? "businesses" : ["products", "plans"].includes(key) ? "billing" : key;
 function selectAdminView(focus = false) {
     const requested = location.hash.slice(1); const key = Object.hasOwn(adminViews, requested) ? requested : "overview";
     const [title, description, visible] = adminViews[key];
@@ -532,7 +533,7 @@ function selectAdminView(focus = false) {
     const areaTitles = { overview: "Resumo", businesses: "Negócios", users: "Acessos", billing: "Financeiro", account: "Conta" };
     $("adminViewTitle").textContent = areaTitles[area] || title; $("adminViewDescription").textContent = description;
     if (document.body) document.body.dataset.adminArea = area;
-    ["adminSummary", "adminShortcuts", "segments", "businesses", "users", "plans", "products", "billing", "trialReviews", "adminAccount"].forEach((id) => { $(id).hidden = !visible.includes(id); });
+    ["adminSummary", "adminShortcuts", "segments", "businesses", "users", "plans", "products", "billing", "trialReviews", "support", "adminAccount"].forEach((id) => { $(id).hidden = !visible.includes(id); });
     document.querySelectorAll(".platform-menu a").forEach((link) => {
         const active = link.getAttribute("href") === `#${area}`; link.classList.toggle("active", active);
         if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
@@ -544,6 +545,7 @@ function selectAdminView(focus = false) {
         link.classList.toggle("active", active);
         if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
     });
+    if (key === "support") window.loadOgritechHumanSupport?.();
     if (key === "trialReviews") window.loadOgritechTrialReviews?.();
     if (focus) { $("adminViewTitle").focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: "instant" }); }
 }

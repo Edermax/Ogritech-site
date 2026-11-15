@@ -14,7 +14,7 @@ const base = {
   supplied_phone: "11999998888",
   supplied_email: `${marker}@example.com`,
   supplied_location: "Campinas, SP",
-  supplied_preference: "WhatsApp",
+  supplied_preference: "E-mail",
   supplied_business_type: "Barbearia simulada",
   supplied_employee_range: "2 a 5",
   supplied_customer_source: "Site",
