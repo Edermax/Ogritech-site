@@ -25,7 +25,7 @@ Falha ao confirmar a assinatura mantém e-mail disponível. Durante a consulta h
 - 453 testes da aplicação aprovados.
 - 31 arquivos SQL: 800 verificações anteriores, 22 novas de canais, consentimento, isolamento, teste expirado, perfil inativo, fila humana sem disparos e leads por e-mail.
 - Navegador em 390/1440 px: visitantes, clientes elegíveis e sem elegibilidade, consentimento WhatsApp, solicitação autenticada nos canais telefônicos, links oficiais condicionais e registro de atendimento administrativo. Transporte simulado; sem contatos reais.
-- 60 cenas administrativas de tema claro/escuro e 12 combinações de plano/perfil do ajudante aprovadas. Formulário de retorno verificado no tema escuro.
+- 63 cenas administrativas de tema claro/escuro e 12 combinações de plano/perfil do ajudante aprovadas. Formulário de retorno verificado no tema escuro.
 - Consulta anônima remota retornou somente e-mail. Nenhuma solicitação, e-mail, ligação ou mensagem WhatsApp real foi enviada nos testes.
 
 O backup criptografado existente de 15/11 e o teste de restauração anterior permanecem as evidências de recuperação do lote. Para reverter a interface, usar a base `3add81462fe5f72b473a38f019331ec8ddd2077b`, preservando a restrição dos canais públicos no servidor. Os campos novos são opcionais para registros históricos e não precisam ser removidos. As solicitações humanas já registradas devem continuar disponíveis à equipe.
