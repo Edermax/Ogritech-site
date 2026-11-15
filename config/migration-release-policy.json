@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-11-14",
+  "auditedAt": "2026-11-15",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -103,7 +103,8 @@
       "guard_menu_offer_changes",
       "menu_tracking_customer_phone",
       "menu_product_visibility",
-      "menu_tracking_branding"
+      "menu_tracking_branding",
+      "configurable_menu_plans"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -117,7 +118,8 @@
       "guard_menu_offer_changes": "20261114012026",
       "menu_tracking_customer_phone": "20261114173559",
       "menu_product_visibility": "20261114201932",
-      "menu_tracking_branding": "20261114201933"
+      "menu_tracking_branding": "20261114201933",
+      "configurable_menu_plans": "20261115145119"
     },
     "observedMigrationNames": [
       "create_core_schema",
@@ -220,13 +222,14 @@
       "guard_menu_offer_changes",
       "menu_tracking_customer_phone",
       "menu_product_visibility",
-      "menu_tracking_branding"
+      "menu_tracking_branding",
+      "configurable_menu_plans"
     ],
     "observationEvidence": "docs/evidencias/cardapio-produtos-cores-2026-11-14.md"
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "menu_tracking_branding",
+    "appliedThrough": "configurable_menu_plans",
     "appliedOutOfOrder": [],
     "heldMigrations": [],
     "observationEvidence": "docs/evidencias/cardapio-produtos-cores-2026-11-14.md",
@@ -247,7 +250,8 @@
       "guard_menu_offer_changes": "20261114012937",
       "menu_tracking_customer_phone": "20261114174015",
       "menu_product_visibility": "20261114202127",
-      "menu_tracking_branding": "20261114202129"
+      "menu_tracking_branding": "20261114202129",
+      "configurable_menu_plans": "20261115154232"
     }
   }
 }

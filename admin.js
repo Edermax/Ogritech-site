@@ -58,7 +58,7 @@ async function validatePlatformAdmin() {
 async function loadData() {
     const [businessResult, planResult, productResult, subscriptionResult, userResult, customerResult, invoiceResult, paymentResult, refundResult] = await Promise.all([
         supabaseClient.from("saas_clients").select("id,barbershop_id,name,segment,contact_name,owner_email,phone,plan,monthly_fee,origin,notes,status,invite_status,user_count,client_count,appointment_count,business_revenue,created_at").is("deleted_at", null).order("created_at", { ascending: true }).limit(500),
-        supabaseClient.from("saas_plans").select("id,product_id,code,name,monthly_fee,description,features,featured,display_order,max_users,max_professionals,max_services").eq("active", true).order("display_order"),
+        supabaseClient.from("saas_plans").select("id,product_id,code,name,menu_offer_code,monthly_fee,annual_fee,active,description,features,featured,display_order,max_users,max_professionals,max_services").order("display_order"),
         supabaseClient.from("platform_products").select("id,code,name,launch_state,display_order").eq("active",true).order("display_order"),
         supabaseClient.from("platform_subscriptions").select("id,billing_customer_id,product_id,plan_id,status,base_amount,current_period_end").order("created_at",{ascending:false}).limit(2000),
         supabaseClient.functions.invoke("platform-users", { body: { action: "list" } }),
@@ -139,10 +139,12 @@ function renderBusinesses() {
 
 function renderPlans() {
     $("plansGrid").innerHTML = plans.map((plan) => {
+        const offer = OgritechOffers.forPlan(plan), active = plan.active !== false;
         const features = Array.isArray(plan.features) ? plan.features : [];
-        const limit = (value) => value == null ? "Ilimitado" : Number(value).toLocaleString("pt-BR");
-        return `<article class="plan-card ${plan.featured ? "featured" : ""}">${plan.featured ? '<span class="recommended-plan">MAIS ESCOLHIDO</span>' : ""}<p class="platform-kicker">${escapeHtml(plan.name)}</p><strong>${money.format(plan.monthly_fee)}<small>/mês</small></strong><p>Ou ${OgritechOffers.format(OgritechOffers.forPlan(plan).annualCents)}/ano · teste único de 14 dias</p><p>${escapeHtml(plan.description)}</p><div class="plan-limits"><span>${limit(plan.max_users)} usuários</span></div><ul>${features.map((feature) => `<li>✓ ${escapeHtml(feature)}</li>`).join("")}</ul><button type="button" class="outline-cyan-button full" data-edit-plan="${plan.id}">Editar regras</button></article>`;
-    }).join("");
+        const limit = plan.max_users == null ? "Ilimitado" : Number(plan.max_users).toLocaleString("pt-BR");
+        const link = environmentUrl(`criar-cardapio/${offer.code}/?plano_id=${encodeURIComponent(plan.id)}`);
+        return `<article class="plan-card ${plan.featured ? "featured" : ""}">${plan.featured ? '<span class="recommended-plan">RECOMENDADO</span>' : ""}<p class="platform-kicker">${escapeHtml(plan.name)}</p><strong>${money.format(plan.monthly_fee)}<small>/mês</small></strong><p>Ou ${OgritechOffers.format(offer.annualCents)}/ano · teste único de 14 dias</p><p>${escapeHtml(plan.description)}</p><p><span class="${active ? 'active-badge' : 'suspended-badge'}">${active ? 'Disponível para contratação' : 'Indisponível para novas contratações'}</span></p><p>Base: ${offer.orders ? 'Encomendas · pedidos e vendas no painel' : 'Cardápio · atendimento no WhatsApp'}</p><div class="plan-limits"><span>${limit} usuários</span></div><ul>${features.map(feature => `<li>✓ ${escapeHtml(feature)}</li>`).join("")}</ul><button type="button" class="outline-cyan-button full" data-edit-plan="${plan.id}">Editar plano</button>${active ? `<a class="outline-cyan-button full" href="${escapeHtml(link)}" target="_blank" rel="noopener">Abrir contratação deste plano</a>` : ""}</article>`;
+    }).join("") || '<p>Nenhum plano cadastrado. Use Criar novo plano para começar.</p>';
 }
 
 function optionalPositiveInteger(value) {
@@ -151,41 +153,46 @@ function optionalPositiveInteger(value) {
     return Number.isInteger(parsed) && parsed > 0 ? parsed : NaN;
 }
 
-function openPlanForm(plan) {
+function openPlanForm(plan = null) {
     $("planForm").reset(); $("planFormMessage").textContent = "";
-    $("planId").value = plan.id; $("planName").value = plan.name;
-    $("planPrice").value = Number(plan.monthly_fee).toFixed(2);
-    $("planPrice").readOnly = ["cardapio", "foundation"].includes(plan.code);
-    $("planMaxUsers").value = plan.max_users ?? "";
-    $("planMaxProfessionals").value = plan.max_professionals ?? "";
-    $("planMaxServices").value = plan.max_services ?? "";
-    $("planDescription").value = plan.description;
-    $("planFeatures").value = (Array.isArray(plan.features) ? plan.features : []).join("\n");
-    $("planFeatured").checked = Boolean(plan.featured);
-    $("planModalTitle").textContent = `Editar plano ${plan.name}`;
+    $("planId").value = plan?.id || ""; $("planName").value = plan?.name || "";
+    $("planName").readOnly = Boolean(plan);
+    $("planCode").value = plan?.code || ""; $("planCode").readOnly = Boolean(plan); $("planCode").dataset.edited = "false";
+    $("planOffer").value = plan ? OgritechOffers.forPlan(plan).code : "encomendas"; $("planOffer").disabled = Boolean(plan);
+    $("planPrice").value = plan ? Number(plan.monthly_fee).toFixed(2) : "";
+    $("planAnnualPrice").value = plan ? (OgritechOffers.forPlan(plan).annualCents/100).toFixed(2) : ""; $("planAnnualPrice").dataset.edited = "false";
+    for (const id of ["planPrice", "planAnnualPrice"]) $(id).readOnly = Boolean(plan && ["cardapio", "foundation"].includes(plan.code));
+    $("planMaxUsers").value = plan?.max_users ?? "";
+    $("planDescription").value = plan?.description || "";
+    $("planFeatures").value = (Array.isArray(plan?.features) ? plan.features : []).join("\n");
+    $("planFeatured").checked = Boolean(plan?.featured); $("planActive").checked = plan?.active !== false;
+    $("planDisplayOrder").value = plan?.display_order ?? 10;
+    $("planModalTitle").textContent = plan ? `Editar plano ${plan.name}` : "Criar novo plano";
+    $("savePlanButton").textContent = plan ? "Salvar plano" : "Criar plano";
     openAdminModal("planModal");
 }
 
 async function savePlan(event) {
     event.preventDefault();
-    const maxUsers = optionalPositiveInteger($("planMaxUsers").value);
-    const maxProfessionals = optionalPositiveInteger($("planMaxProfessionals").value);
-    const maxServices = optionalPositiveInteger($("planMaxServices").value);
-    if ([maxUsers, maxProfessionals, maxServices].some(Number.isNaN)) {
-        $("planFormMessage").textContent = "Use números inteiros maiores que zero ou deixe vazio para ilimitado.";
+    if ($("savePlanButton").disabled) return;
+    const users = optionalPositiveInteger($("planMaxUsers").value), monthly = Number($("planPrice").value), annual = Number($("planAnnualPrice").value);
+    if (Number.isNaN(users) || !(monthly > 0) || !(annual > 0) || annual > monthly*12) {
+        $("planFormMessage").textContent = "Confira os preços. O anual deve ser de até 12 mensalidades. Use um limite inteiro maior que zero ou deixe vazio para ilimitado.";
         $("planFormMessage").className = "form-message error"; return;
     }
-    const payload = {
-        monthly_fee: Number($("planPrice").value), description: $("planDescription").value.trim(),
-        features: $("planFeatures").value.split("\n").map((item) => item.trim()).filter(Boolean),
-        featured: $("planFeatured").checked, max_users: maxUsers,
-        max_professionals: maxProfessionals, max_services: maxServices
-    };
-    $("savePlanButton").disabled = true; $("planFormMessage").textContent = "Salvando regras...";
-    const { error } = await supabaseClient.from("saas_plans").update(payload).eq("id", $("planId").value);
-    $("savePlanButton").disabled = false;
-    if (error) { $("planFormMessage").textContent = error.message || "Não foi possível salvar o plano."; $("planFormMessage").className = "form-message error"; return; }
-    await loadData(); populateSelectors(); refreshViews(); closeModals();
+    const payload = { id: $("planId").value || null, code: $("planCode").value.trim().toLowerCase(), name: $("planName").value.trim(), offer_code: $("planOffer").value,
+        monthly_fee: monthly, annual_fee: annual, description: $("planDescription").value.trim(),
+        features: $("planFeatures").value.split("\n").map(item => item.trim()).filter(Boolean), featured: $("planFeatured").checked,
+        active: $("planActive").checked, display_order: Number($("planDisplayOrder").value), max_users: users };
+    $("savePlanButton").disabled = true; $("planFormMessage").textContent = "Salvando plano...";
+    try {
+        const { error } = await supabaseClient.rpc("platform_save_menu_plan", { payload });
+        if (error) throw error;
+        await loadData(); populateSelectors(); refreshViews(); closeModals();
+    } catch (error) {
+        $("planFormMessage").textContent = ["22023", "23505", "23514", "42501"].includes(error?.code) ? error.message : "Não foi possível salvar o plano. Confira sua conexão e tente novamente.";
+        $("planFormMessage").className = "form-message error";
+    } finally { $("savePlanButton").disabled = false; }
 }
 
 const billingStatusLabels = { draft: "Rascunho", open: "Em aberto", overdue: "Atrasada", paid: "Paga", void: "Cancelada", refunded: "Devolvida", partially_refunded: "Devolução parcial" };
@@ -240,13 +247,13 @@ function renderProductAccess() {
     if (!business) { $('productAccessTableBody').innerHTML = '<tr><td colspan="5">Nenhum negócio com Cardápio cadastrado. Use “Criar cardápio” na área Negócios para começar.</td></tr>'; return; }
     $('productAccessTableBody').innerHTML = products.map((product) => {
         const subscription = subscriptionFor(business,product);
-        const plan = plans.find((item) => item.id === subscription?.plan_id) || plans.find((item) => item.product_id === product.id);
+        const plan = plans.find((item) => item.id === subscription?.plan_id) || plans.find((item) => item.product_id === product.id && item.active !== false);
         const status = subscription?.status || 'not_subscribed';
         const canActivate = business && plan && product.code === 'menu';
         const action = subscription
             ? `<button data-product-action="change_offer" data-product-code="${product.code}">Alterar plano</button><button class="danger" data-product-action="cancel" data-product-code="${product.code}" data-plan-id="${plan?.id || ''}">Cancelar</button>`
             : canActivate ? `<button data-product-action="activate" data-product-code="${product.code}" data-plan-id="${plan.id}">Ativar</button>` : '<span>Plano indisponível</span>';
-        return `<tr><td><strong>${escapeHtml(product.name)}</strong><br><small>${escapeHtml(product.launch_state)}</small></td><td><select data-admin-offer aria-label="Plano do negócio">${plans.filter(item => item.product_id === product.id).map(item => `<option value="${escapeHtml(item.code === 'cardapio' ? 'cardapio' : 'encomendas')}"${item.id === plan?.id ? ' selected' : ''}>${escapeHtml(item.name)} · ${money.format(item.monthly_fee)}/mês · ${money.format(Number(item.monthly_fee)*10)}/ano</option>`).join('')}</select><small>Teste único de 14 dias; trocas preservam o prazo.</small></td><td>${subscription ? moneyPrecise.format(subscription.base_amount) : '—'}</td><td><span class="${subscription ? 'active-badge' : 'suspended-badge'}">${escapeHtml(productStatusLabels[status] || 'Não contratado')}</span></td><td><div class="admin-row-actions">${action}</div></td></tr>`;
+        return `<tr><td><strong>${escapeHtml(product.name)}</strong><br><small>${escapeHtml(product.launch_state)}</small></td><td><select data-admin-offer aria-label="Plano do negócio">${plans.filter(item => item.product_id === product.id && (item.active !== false || item.id === plan?.id)).map(item => `<option value="${escapeHtml(item.id)}"${item.id === plan?.id ? ' selected' : ''}>${escapeHtml(item.name)} · ${money.format(item.monthly_fee)}/mês · ${OgritechOffers.format(OgritechOffers.forPlan(item).annualCents)}/ano</option>`).join('')}</select><small>Teste único de 14 dias; trocas preservam o prazo.</small></td><td>${subscription ? moneyPrecise.format(subscription.base_amount) : '—'}</td><td><span class="${subscription ? 'active-badge' : 'suspended-badge'}">${escapeHtml(productStatusLabels[status] || 'Não contratado')}</span></td><td><div class="admin-row-actions">${action}</div></td></tr>`;
     }).join('');
 }
 
@@ -254,9 +261,11 @@ async function changeProductSubscription(button) {
     const business = businesses.find((item) => item.id === $('productBusinessFilter').value) || businesses.find(isMenuBusiness);
     if (!business || button.dataset.productCode !== 'menu') return;
     if (button.dataset.productAction === 'change_offer') {
-        const offer = button.closest('tr').querySelector('[data-admin-offer]').value;
+        const selectedPlan = plans.find(plan => plan.id === button.closest('tr').querySelector('[data-admin-offer]').value);
+        if (!selectedPlan || selectedPlan.active === false) return alert('Escolha um plano disponível.');
+        const offer = OgritechOffers.forPlan(selectedPlan).code;
         button.disabled = true;
-        const { data, error } = await supabaseClient.functions.invoke('ogritech-billing', { body: { action: 'change_offer', product: 'menu', barbershop_id: business.barbershop_id, offer } });
+        const { data, error } = await supabaseClient.functions.invoke('ogritech-billing', { body: { action: 'change_offer', product: 'menu', barbershop_id: business.barbershop_id, offer, plan_id: selectedPlan.id } });
         button.disabled = false;
         if (error || data?.error) return alert(await OgritechOffers.errorMessage({data,error}, 'Não foi possível alterar o plano.'));
         await loadData(); populateSelectors(); refreshViews(); return;
@@ -267,7 +276,7 @@ async function changeProductSubscription(button) {
     const { error } = await supabaseClient.rpc('platform_set_product_subscription', {
         target_saas_client_id: business.id,
         target_product_code: button.dataset.productCode,
-        target_plan_id: cancelling ? button.dataset.planId : plans.find(plan => plan.code === (button.closest("tr").querySelector("[data-admin-offer]").value === "cardapio" ? "cardapio" : "foundation"))?.id,
+        target_plan_id: cancelling ? button.dataset.planId : button.closest("tr").querySelector("[data-admin-offer]").value,
         target_status: cancelling ? 'cancelled' : 'active',
         target_base_amount: null
     });
@@ -284,7 +293,7 @@ function populateSelectors() {
     const segments = [...new Set([...Object.keys(SEGMENTS), ...businesses.map((business) => business.segment).filter(Boolean)])];
     $("segmentFilter").innerHTML = '<option value="all">Todos os segmentos</option>' + segments.map((segment) => `<option>${escapeHtml(segment)}</option>`).join("");
     const menuProduct = products.find((product) => product.code === 'menu');
-    $("businessPlan").innerHTML = plans.filter((plan) => plan.product_id === menuProduct?.id).map((plan) => `<option value="${escapeHtml(plan.name)}" data-price="${plan.monthly_fee}">${escapeHtml(plan.name)}</option>`).join("");
+    $("businessPlan").innerHTML = plans.filter((plan) => plan.product_id === menuProduct?.id && plan.active !== false).map((plan) => `<option value="${escapeHtml(plan.name)}" data-price="${plan.monthly_fee}">${escapeHtml(plan.name)}</option>`).join("");
     const businessOptions = businesses.filter((business) => business.barbershop_id && isMenuBusiness(business)).map((business) => `<option value="${business.barbershop_id}">${escapeHtml(business.name)}</option>`).join("");
     if ($("userBusiness")) $("userBusiness").innerHTML = businessOptions;
     if ($("userBusinessFilter")) $("userBusinessFilter").innerHTML = '<option value="all">Todos os negócios</option>' + businessOptions;
@@ -461,6 +470,11 @@ function bindEvents() {
     $("newBusinessButton").addEventListener("click", () => window.location.assign(environmentUrl("criar-cardapio/"))); $("businessPlan").addEventListener("change", syncPlanPrice); $("businessForm").addEventListener("submit", saveBusiness);
     $("plansGrid").addEventListener("click", (event) => { const button = event.target.closest("[data-edit-plan]"); if (button) openPlanForm(plans.find((plan) => plan.id === button.dataset.editPlan)); });
     $("planForm").addEventListener("submit", savePlan);
+    $("newPlanButton").addEventListener("click", () => openPlanForm());
+    $("planCode").addEventListener("input", () => { $("planCode").dataset.edited = "true"; });
+    $("planName").addEventListener("input", () => { if (!$("planId").value && $("planCode").dataset.edited !== "true") $("planCode").value = $("planName").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0,64); });
+    $("planAnnualPrice").addEventListener("input", () => { $("planAnnualPrice").dataset.edited = "true"; });
+    $("planPrice").addEventListener("input", () => { if (!$("planId").value && $("planAnnualPrice").dataset.edited !== "true") $("planAnnualPrice").value = (Number($("planPrice").value)*10).toFixed(2); });
     document.querySelectorAll("[data-close-modal]").forEach((button) => button.addEventListener("click", closeModals));
     document.querySelectorAll(".platform-modal").forEach((modal) => modal.addEventListener("click", (event) => { if (event.target === modal) closeModals(); }));
     $("businessTableBody").addEventListener("click", (event) => { const button = event.target.closest("[data-action]"); if (!button) return; const business = businesses.find((item) => item.id === button.dataset.id); if (!business) return; if (button.dataset.action === "detail") openBusinessDetail(business); if (button.dataset.action === "operate") operateBusiness(business); if (button.dataset.action === "edit") openBusinessForm(business); if (button.dataset.action === "delete") deleteBusiness(business); });
@@ -504,7 +518,7 @@ const adminViews = {
     overview: ["Resumo", "Acompanhe sua carteira de Cardápio e acesse as tarefas do dia.", ["adminSummary", "adminShortcuts", "segments"]],
     businesses: ["Negócios", "Consulte os cardápios e mantenha os cadastros organizados.", ["businesses"]],
     users: ["Acessos", "Gerencie proprietários e equipe dos seus clientes.", ["users"]],
-    plans: ["Plano do Cardápio", "Confira os valores e as regras cadastrados para o produto.", ["plans"]],
+    plans: ["Planos", "Confira os valores e as regras cadastrados para o produto.", ["plans"]],
     products: ["Assinaturas", "Consulte e gerencie o acesso ao Cardápio por negócio.", ["products"]],
     trialReviews: ["Revisão de testes", "Analise cadastros com dados já utilizados antes de liberar outro teste.", ["trialReviews"]],
     billing: ["Financeiro", "Acompanhe faturas, recebimentos e registros financeiros.", ["billing"]],

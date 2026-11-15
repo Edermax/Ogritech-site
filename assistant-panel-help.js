@@ -29,6 +29,7 @@
     upgrade: { section: "configuracoes", selector: '[data-alternative-plan="encomendas"]', label: "Ver troca para Ogritech Encomendas" }
   });
   const known = context => Boolean(context?.ready && Object.hasOwn(plans, context.offer) && Object.hasOwn(roles, context.role));
+  const planTitle = context => typeof context.planName === "string" && context.planName.trim() ? (/^Ogritech\b/i.test(context.planName) ? context.planName : `Ogritech ${context.planName}`) : plans[context.offer];
   const manager = context => ["owner", "admin"].includes(context.role);
   const result = (text, ids = []) => ({ text, actions: ids.map(id => ({ id, ...actions[id] })) });
 
@@ -39,7 +40,7 @@
       label: topic.label + (topic.orders && context.offer === "cardapio" ? " (Encomendas)" : topic.permission === "manage" && !manager(context) ? " (gestão)" : topic.permission === "owner" && context.role !== "owner" ? " (proprietário)" : "")
     }));
     if (context.offer === "encomendas") list.unshift(...list.splice(list.findIndex(topic => topic.id === "pedidos"), 1));
-    return { greeting: `Seu painel: ${plans[context.offer]}. Perfil: ${roles[context.role]}. Como posso ajudar?`, topics: list };
+    return { greeting: `Seu painel: ${planTitle(context)}. Perfil: ${roles[context.role]}. Como posso ajudar?`, topics: list };
   }
 
   function answer(id, context) {
@@ -54,7 +55,7 @@
         pagamentos: "gestão de pagamentos, comprovantes e opções de Pix dos pedidos na plataforma",
         notificacoes: "notificações automáticas de novos pedidos da plataforma"
       };
-      const explanation = `Seu plano atual, Ogritech Cardápio, não inclui ${features[id]}. Nele, o cliente escolhe os produtos e continua o atendimento no WhatsApp; entrega e pagamento são combinados por lá. O Ogritech Encomendas inclui esses recursos.`;
+      const explanation = `Seu plano atual, ${planTitle(context)}, não inclui ${features[id]}. Nele, o cliente escolhe os produtos e continua o atendimento no WhatsApp; entrega e pagamento são combinados por lá. O Ogritech Encomendas inclui esses recursos.`;
       return context.role === "owner"
         ? result(`${explanation} Você pode avaliar a troca em Conta → Plano e assinatura. O atalho abaixo abre as opções; a troca só acontece após sua confirmação.`, ["upgrade"])
         : result(`${explanation} Peça ao proprietário para avaliar a mudança em Conta → Plano e assinatura. Seu perfil não pode alterar a assinatura.`);
@@ -85,9 +86,9 @@
           ? "Confira o catálogo, o WhatsApp público, o atendimento e os horários. Em Cardápio → Publicação, conclua as etapas indicadas, confirme a revisão e use Publicar cardápio. No Ogritech Cardápio, a primeira publicação não exige pedido de teste nem configuração de pagamentos da plataforma."
           : "Confira os produtos, o atendimento, pagamentos e horários. Em Cardápio → Publicação, faça o pedido de teste, confirme a revisão e use Publicar cardápio quando as etapas estiverem concluídas.", [context.published ? "products" : "publication", ...(context.published ? ["publication"] : [])]);
       case "notificacoes": return result("Em Pedidos, abra Avisos de pedidos neste dispositivo, toque em Ativar neste dispositivo e confirme a permissão do navegador. Faça isso em cada aparelho compatível. No iPhone ou iPad, adicione a Ogritech à Tela de Início pelo Safari e abra pelo ícone antes de ativar. Os avisos dependem das permissões do dispositivo.", ["orders"]);
-      case "assinatura": return result(`Seu plano atual é ${plans[context.offer]}. Em Conta → Plano e assinatura, confira o status, os valores, a periodicidade, as opções de pagamento e os outros planos. Você também administra a renovação por lá. A troca de plano preserva o prazo de acesso, não reinicia o teste e apresenta as condições antes da confirmação.`, ["plan"]);
+      case "assinatura": return result(`Seu plano atual é ${planTitle(context)}. Em Conta → Plano e assinatura, confira o status, os valores, a periodicidade, as opções de pagamento e os outros planos. Você também administra a renovação por lá. A troca de plano preserva o prazo de acesso, não reinicia o teste e apresenta as condições antes da confirmação.`, ["plan"]);
       case "aplicativo": return result("Abra Conta → Aplicativo e toque em Instalar o app. Confirme a instalação no navegador. Se a instalação direta não estiver disponível, o botão mostra as opções para o dispositivo. Instalar o app mantém os recursos do seu plano e as permissões do seu perfil.", ["app"]);
-      case "acesso": return result(`${roles[context.role]} no ${plans[context.offer]}. ${context.role === "owner" ? "Você administra o negócio e a assinatura." : context.role === "admin" ? "Você administra os recursos do negócio incluídos no plano. A assinatura fica com o proprietário." : context.offer === "encomendas" ? "Você consulta pedidos e pode configurar os avisos no seu dispositivo. Edição e decisões sobre pedidos ficam com a gestão." : "A edição do catálogo fica com os gestores; a assinatura fica com o proprietário."} Em Conta → Acesso e segurança, você pode alterar sua senha ou sair desta conta.`, ["account"]);
+      case "acesso": return result(`${roles[context.role]} no ${planTitle(context)}. ${context.role === "owner" ? "Você administra o negócio e a assinatura." : context.role === "admin" ? "Você administra os recursos do negócio incluídos no plano. A assinatura fica com o proprietário." : context.offer === "encomendas" ? "Você consulta pedidos e pode configurar os avisos no seu dispositivo. Edição e decisões sobre pedidos ficam com a gestão." : "A edição do catálogo fica com os gestores; a assinatura fica com o proprietário."} Em Conta → Acesso e segurança, você pode alterar sua senha ou sair desta conta.`, ["account"]);
       default: return result("Escolha uma das dúvidas do seu painel.");
     }
   }

@@ -1,25 +1,25 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-14",
-  "baseline": "menu_tracking_branding",
+  "updatedAt": "2026-11-15",
+  "baseline": "configurable_menu_plans",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "LOCAL_MIGRATION_UP_AND_PGTAP",
-    "migrationCount": 101,
-    "tests": 769,
-    "evidence": "docs/evidencias/cardapio-produtos-cores-2026-11-14.md"
+    "migrationCount": 102,
+    "tests": 800,
+    "evidence": "docs/evidencias/cadastro-planos-2026-11-15.md"
   },
   "productionDryRun": {
     "status": "PASSED",
-    "executedAt": "2026-11-14",
+    "executedAt": "2026-11-15",
     "migrationCount": 0,
     "remoteChangesPerformed": false,
     "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/cardapio-produtos-cores-2026-11-14.md",
-    "aliasCompatibility": "101 migrations verified in staging and production; native visibility and branding aliases recorded without history repair. No pending migration."
+    "evidence": "docs/evidencias/cadastro-planos-2026-11-15.md",
+    "aliasCompatibility": "102 migrations verified in staging and production; native configurable_menu_plans aliases recorded without history repair. No pending migration."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
@@ -87,21 +87,20 @@
     "guard_menu_offer_changes",
     "menu_tracking_customer_phone"
   ],
-  "authorizationSource": "Usuário solicitou excluir/ocultar/reativar produtos, preservar a cor do cliente em todas as etapas e retomar a implementação e publicação.",
-  "authorizationScope": "Ações explícitas no catálogo, visibilidade operacional imediata sincronizada ao rascunho, preservação da identidade visual na confirmação e no acompanhamento.",
+  "authorizationSource": "Usuário solicitou implementar a criação de novos planos no painel administrativo, mantendo a autorização de publicação desta conversa.",
+  "authorizationScope": "Cadastro e gestão de variantes de Cardápio e Encomendas, integração com contratação e troca de plano, preços contratados preservados.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
-    "executedAt": "2026-11-14",
+    "executedAt": "2026-11-15",
     "migrations": [
-      "menu_product_visibility",
-      "menu_tracking_branding"
+      "configurable_menu_plans"
     ],
-    "reviewedPendingCount": 2,
-    "sourceBaseCommit": "7c1dbb4362bb53fac7c96ce4d48f75751279e8e0",
-    "stagingMigrationCount": 101,
-    "productionMigrationCount": 101,
+    "reviewedPendingCount": 1,
+    "sourceBaseCommit": "a1a83c0ff2942a641de953328b4fe3c69617b440",
+    "stagingMigrationCount": 102,
+    "productionMigrationCount": 102,
     "postPromotionPendingCount": 0,
-    "evidence": "docs/evidencias/cardapio-produtos-cores-2026-11-14.md"
+    "evidence": "docs/evidencias/cadastro-planos-2026-11-15.md"
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",
@@ -110,5 +109,11 @@
     "decryptedFilesRemoved": true,
     "temporaryDatabaseRemoved": true,
     "authorization": "Usuário autorizou implementar as correções e a publicação nesta conversa."
+  },
+  "latestBackupCheck": {
+    "status": "SUCCESS",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43707786238",
+    "executedAt": "2026-11-15",
+    "mode": "EXISTING_ENCRYPTED_BACKUP_VERIFIED_READ_ONLY"
   }
 }

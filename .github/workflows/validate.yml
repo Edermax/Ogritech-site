@@ -51,6 +51,7 @@ jobs:
       - run: node scripts/assistant-profiles-browser.cjs
       - run: npm run test:admin-theme-browser
       - run: npm run test:admin-navigation-browser
+      - run: node scripts/configurable-plans-browser.cjs
       - run: node scripts/split-offers-browser.mjs
       - run: node scripts/menu-theme-browser.mjs
       - run: node scripts/menu-customization-browser.mjs
@@ -64,6 +65,7 @@ jobs:
             outputs/panel-navigation/
             outputs/assistant-profiles/
             outputs/admin-navigation/
+            outputs/configurable-plans/
             outputs/split-offers/
             outputs/menu-light-theme/
             outputs/menu-customization/

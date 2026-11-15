@@ -11,6 +11,19 @@ const CYCLES = {
 const PRODUCT_PRICES = { agenda: 9700, menu: 4990 } as const;
 const MENU_OFFERS = { cardapio: { name: "Cardápio", planCode: "cardapio", monthly: 2990, annual: 29900 }, encomendas: { name: "Encomendas", planCode: "foundation", monthly: 4990, annual: 49900 } } as const;
 type MenuOffer = keyof typeof MENU_OFFERS;
+type MenuPricing = { monthly: number; annual: number; name?: string };
+type MenuPlan = { id: string; code: string; name: string; menu_offer_code: MenuOffer; monthly_fee: number; annual_fee: number };
+const planPricing = (plan: MenuPlan): MenuPricing => ({ monthly: Math.round(Number(plan.monthly_fee) * 100), annual: Math.round(Number(plan.annual_fee) * 100), name: plan.name });
+const signupPricing = (signup: { base_monthly_cents?: number; plan_annual_cents?: number; plan_name_snapshot?: string }): MenuPricing | undefined =>
+  signup.base_monthly_cents && signup.plan_annual_cents ? { monthly: signup.base_monthly_cents, annual: signup.plan_annual_cents, name: signup.plan_name_snapshot } : undefined;
+async function findMenuPlan(admin: ReturnType<typeof createClient>, offer: MenuOffer, id?: string) {
+  let query = admin.from("saas_plans").select("id,code,name,menu_offer_code,monthly_fee,annual_fee,platform_products!inner(code)").eq("platform_products.code", "menu").eq("active", true);
+  query = id ? query.eq("id", id) : query.eq("code", MENU_OFFERS[offer].planCode);
+  const result = await query.maybeSingle();
+  const plan = result.data as MenuPlan | null;
+  if (result.error || !plan || plan.menu_offer_code !== offer || !Number.isFinite(Number(plan.monthly_fee)) || !Number.isFinite(Number(plan.annual_fee))) return null;
+  return plan;
+}
 const allowedOrigins = (Deno.env.get("ALLOWED_ORIGINS") || "https://ogritech.com.br,http://127.0.0.1:4173,http://localhost:4173")
   .split(",").map((value) => value.trim()).filter(Boolean);
 const clean = (value: string) => value.trim().replace(/\s+/g, " ");
@@ -22,7 +35,7 @@ const reply = (body: unknown, status: number, origin: string | null) => new Resp
 }});
 
 const StartBody = z.object({
-  action: z.literal("start_trial"), offer: z.enum(["cardapio", "encomendas"]).default("encomendas"), business_name: z.string().trim().min(2).max(150),
+  action: z.literal("start_trial"), plan_id: z.string().uuid().optional(), expected_total_cents: z.number().int().positive().optional(), offer: z.enum(["cardapio", "encomendas"]).default("encomendas"), business_name: z.string().trim().min(2).max(150),
   responsible_name: z.string().trim().min(2).max(150), tax_document: z.string().max(24),
   responsible_tax_document: z.string().max(24).optional().default(""),
   phone_verification_token: z.string().max(256).optional().default(""),
@@ -106,10 +119,10 @@ function trialReviewResponse(result: { review_id?: string; review_status?: strin
     message: result.review_status === "rejected" ? "Não foi possível liberar outro teste gratuito para este cadastro. Fale com o suporte."
       : "Encontramos dados que precisam de revisão antes de liberar o teste. Sua solicitação foi registrada. Você pode verificar novamente com os mesmos dados. Nenhuma conta ou cobrança foi criada." } }, 202, origin);
 }
-function quote(cycle: keyof typeof CYCLES, product: keyof typeof PRODUCT_PRICES = "agenda", offer: MenuOffer = "encomendas") {
-  const rule = CYCLES[cycle], base = product === "menu" ? MENU_OFFERS[offer].monthly : PRODUCT_PRICES[product], subtotal = base * rule.months;
-  if (product === "menu" && cycle === "annual") return { base_monthly_cents: base, months: 12, discount_bps: 1667,
-    subtotal_cents: subtotal, total_cents: MENU_OFFERS[offer].annual };
+function quote(cycle: keyof typeof CYCLES, product: keyof typeof PRODUCT_PRICES = "agenda", offer: MenuOffer = "encomendas", pricing?: MenuPricing) {
+  const rule = CYCLES[cycle], base = product === "menu" ? (pricing?.monthly ?? MENU_OFFERS[offer].monthly) : PRODUCT_PRICES[product], subtotal = base * rule.months;
+  if (product === "menu" && cycle === "annual") { const total = pricing?.annual ?? MENU_OFFERS[offer].annual; return { base_monthly_cents: base, months: 12, discount_bps: Math.round((subtotal-total)*10000/subtotal),
+    subtotal_cents: subtotal, total_cents: total }; }
   return { base_monthly_cents: base, months: rule.months, discount_bps: rule.discountBps,
     subtotal_cents: subtotal, total_cents: Math.round(subtotal * (10_000 - rule.discountBps) / 10_000) };
 }
@@ -134,12 +147,12 @@ function safeCheckoutUrl(value: unknown) {
 
 // Hosted checkout: associated plans require a card token before subscription creation.
 // Keep recurrence on the server and collect the card only on Mercado Pago's page.
-function menuCheckoutPayload(signup: { id: string; email: string; trial_ends_at: string; access_until?: string | null; offer_code?: MenuOffer }, cycle: "monthly" | "annual", appUrl: string, backendUrl: string) {
-  const offer = quote(cycle, "menu", signup.offer_code || "encomendas");
+function menuCheckoutPayload(signup: { id: string; email: string; trial_ends_at: string; access_until?: string | null; offer_code?: MenuOffer; base_monthly_cents?: number; plan_annual_cents?: number; plan_name_snapshot?: string }, cycle: "monthly" | "annual", appUrl: string, backendUrl: string) {
+  const offer = quote(cycle, "menu", signup.offer_code || "encomendas", signupPricing(signup));
   const start = Math.max(Date.now() + 60_000, Date.parse(signup.access_until || signup.trial_ends_at));
   if (!Number.isFinite(start)) throw new Error("invalid_billing_boundary");
   return {
-    reason: `Ogritech ${MENU_OFFERS[signup.offer_code || "encomendas"].name} ${cycle === "annual" ? "anual" : "mensal"}`,
+    reason: `Ogritech ${signup.plan_name_snapshot || MENU_OFFERS[signup.offer_code || "encomendas"].name} ${cycle === "annual" ? "anual" : "mensal"}`,
     payer_email: signup.email, external_reference: `signup:${signup.id}`, status: "pending",
     auto_recurring: { frequency: offer.months, frequency_type: "months", transaction_amount: offer.total_cents / 100,
       currency_id: "BRL", start_date: new Date(start).toISOString() },
@@ -168,7 +181,17 @@ Deno.serve(async (request) => {
     const cycle = z.enum(["monthly", "quarterly", "semiannual", "annual"]).safeParse((json as { cycle?: unknown }).cycle);
     const product = z.enum(["agenda", "menu"]).safeParse((json as { product?: unknown }).product || "agenda");
     const offer = z.enum(["cardapio", "encomendas"]).safeParse((json as { offer?: unknown }).offer || "encomendas");
-    return cycle.success && product.success && offer.success && (product.data !== "menu" || ["monthly", "annual"].includes(cycle.data)) ? reply({ data: quote(cycle.data, product.data, offer.data) }, 200, origin) : reply({ error: { code: "invalid_quote" } }, 422, origin);
+    if (!cycle.success || !product.success || !offer.success || (product.data === "menu" && !["monthly", "annual"].includes(cycle.data))) return reply({ error: { code: "invalid_quote" } }, 422, origin);
+    const planId = z.string().uuid().optional().safeParse((json as { plan_id?: unknown }).plan_id);
+    if (!planId.success) return reply({ error: { code: "invalid_input" } }, 422, origin);
+    if (product.data === "menu" && planId.data) {
+      const backend = Deno.env.get("SUPABASE_URL") || "", secret = serviceKey();
+      if (!backend || !secret) return reply({ error: { code: "service_unavailable" } }, 503, origin);
+      const plan = await findMenuPlan(createClient(backend, secret, { auth: { persistSession: false } }), offer.data, planId.data);
+      if (!plan) return reply({ error: { code: "plan_unavailable", message: "Este plano não está disponível para contratação." } }, 409, origin);
+      return reply({ data: { ...quote(cycle.data, product.data, offer.data, planPricing(plan)), plan_id: plan.id, plan_name: plan.name } }, 200, origin);
+    }
+    return reply({ data: quote(cycle.data, product.data, offer.data) }, 200, origin);
   }
   if ((json as { action?: string }).action === "trial_configuration") {
     const config = phoneVerificationConfiguration();
@@ -210,7 +233,7 @@ Deno.serve(async (request) => {
   }
 
   if ((json as { action?: string }).action === "change_offer") {
-    const parsed = z.object({ action: z.literal("change_offer"), product: z.literal("menu"), barbershop_id: z.string().uuid(), offer: z.enum(["cardapio", "encomendas"]) }).safeParse(json);
+    const parsed = z.object({ action: z.literal("change_offer"), product: z.literal("menu"), barbershop_id: z.string().uuid(), offer: z.enum(["cardapio", "encomendas"]), plan_id: z.string().uuid().optional(), expected_total_cents: z.number().int().positive().optional() }).safeParse(json);
     if (!parsed.success) return reply({ error: { code: "invalid_input" } }, 422, origin);
     const bearer = request.headers.get("authorization") || "";
     if (!bearer.toLowerCase().startsWith("bearer ")) return reply({ error: { code: "unauthorized" } }, 401, origin);
@@ -224,30 +247,35 @@ Deno.serve(async (request) => {
       allowed = !permission.error && permission.data === true;
     }
     if (!allowed) return reply({ error: { code: "forbidden" } }, 403, origin);
+    const selectedPlan = await findMenuPlan(admin, parsed.data.offer, parsed.data.plan_id);
+    if (!selectedPlan) return reply({ error: { code: "plan_unavailable", message: "Este plano não está disponível. Atualize a assinatura." } }, 409, origin);
     const { data: signup, error } = await admin.rpc("backend_billing_status", { target_barbershop_id: parsed.data.barbershop_id, target_product_code: "menu" });
     if (error) return reply({ error: { code: "billing_status_unavailable" } }, 503, origin);
     if (!signup) {
       const caller = createClient(url, Deno.env.get("SUPABASE_ANON_KEY") || key, { global: { headers: { Authorization: bearer } }, auth: { persistSession: false } });
       const { data: product } = await admin.from("platform_products").select("id").eq("code", "menu").single();
-      const { data: plan } = await admin.from("saas_plans").select("id").eq("product_id", product?.id || "").eq("code", MENU_OFFERS[parsed.data.offer].planCode).eq("active", true).single();
+      const plan = selectedPlan;
       if (!plan) return reply({ error: { code: "product_catalog_unavailable" } }, 503, origin);
       const result = await caller.rpc("self_service_product_subscription", { target_barbershop_id: parsed.data.barbershop_id, target_product_code: "menu", target_action: "change_plan", target_plan_id: plan.id });
       if (result.error) return reply({ error: { code: "billing_change_failed", message: result.error.message } }, 409, origin);
       return reply({ data: { ...result.data, offer: parsed.data.offer } }, 200, origin);
     }
-    const claimed = await admin.rpc("backend_billing_offer_change_claim", { target_barbershop_id: parsed.data.barbershop_id, target_offer: parsed.data.offer, expected_updated_at: signup.updated_at });
+    const claimed = await admin.rpc("backend_billing_offer_change_claim", { target_barbershop_id: parsed.data.barbershop_id, target_offer: selectedPlan.code, expected_updated_at: signup.updated_at });
     if (claimed.error) return reply({ error: { code: "billing_change_unavailable", message: ["55000", "40001", "23514"].includes(claimed.error.code) ? claimed.error.message : "Não foi possível iniciar a troca. Atualize sua assinatura e tente novamente." } }, 409, origin);
     const operation = claimed.data;
     if (!operation?.signup) return reply({ error: { code: "billing_status_unavailable" } }, 503, origin);
     if (operation.unchanged) return reply({ data: { offer: operation.signup.offer_code, trial_ends_at: operation.signup.trial_ends_at } }, 200, origin);
     const reserved = operation.signup;
-    const target = quote(reserved.cycle, "menu", parsed.data.offer);
+    const target = quote(reserved.cycle, "menu", parsed.data.offer, planPricing(operation.target_plan || selectedPlan));
     const sandbox = url === "https://fuesdztsvrkkgnbqhcxi.supabase.co";
     const token = Deno.env.get(sandbox ? "MP_MENU_SANDBOX_ACCESS_TOKEN" : "MERCADO_PAGO_ACCESS_TOKEN") || "";
     const finish = async (needsReconciliation: boolean) => {
       const result = await admin.rpc("backend_billing_offer_change_finish", { target_operation_id: operation.operation_id, target_token: operation.lease_token, needs_reconciliation: needsReconciliation });
       if (result.error) console.error("change_offer.reservation_cleanup_failed", { signup_id: reserved.id });
     };
+    if (parsed.data.expected_total_cents !== undefined && parsed.data.expected_total_cents !== target.total_cents) {
+      await finish(false); return reply({ error: { code: "price_changed", message: "O valor do plano mudou. Atualize a página antes de confirmar." } }, 409, origin);
+    }
     const updateProvider = async (providerId: string, amount: number) => {
       if (!token) return false;
       const response = await fetch(`https://api.mercadopago.com/preapproval/${encodeURIComponent(providerId)}`, {
@@ -318,6 +346,7 @@ Deno.serve(async (request) => {
     const remainingMs = new Date(boundary).getTime() - Date.now();
     return reply({ data: {
       checkout_url: checkoutUrl || null,
+      plan_id: signup.saas_plan_id, plan_name: signup.plan_name_snapshot, monthly_cents: signup.base_monthly_cents, annual_cents: signup.plan_annual_cents,
       offer: signup.offer_code || "encomendas", cycle: signup.cycle, payment_method: signup.payment_method, total_cents: signup.total_cents,
       status: signup.status, trial_ends_at: signup.trial_ends_at, access_until: signup.access_until,
       boundary, days_remaining: Math.max(0, Math.ceil(remainingMs / 86_400_000)),
@@ -349,7 +378,7 @@ Deno.serve(async (request) => {
       return reply({ error: { code: "billing_already_configured", message: "Já existe uma assinatura ou pagamento em andamento. Consulte seu status antes de iniciar outro." } }, 409, origin);
     }
     const sandbox = url === "https://fuesdztsvrkkgnbqhcxi.supabase.co";
-    const chosen = quote(input.cycle, "menu", signup.offer_code || "encomendas"), accessToken = Deno.env.get(sandbox ? "MP_MENU_SANDBOX_ACCESS_TOKEN" : "MERCADO_PAGO_ACCESS_TOKEN") || "";
+    const chosen = quote(input.cycle, "menu", signup.offer_code || "encomendas", signupPricing(signup)), accessToken = Deno.env.get(sandbox ? "MP_MENU_SANDBOX_ACCESS_TOKEN" : "MERCADO_PAGO_ACCESS_TOKEN") || "";
     const planId = ""; // Hosted pending subscriptions carry their own server-defined recurrence.
     if (input.payment_method === "card" && (!accessToken || (sandbox && !Deno.env.get("MP_MENU_SANDBOX_WEBHOOK_SECRET")))) {
       return reply({ error: { code: "billing_not_configured", message: "O pagamento por cartão ainda não está disponível. Escolha Pix ou tente novamente mais tarde." } }, 503, origin);
@@ -447,10 +476,15 @@ Deno.serve(async (request) => {
     const phoneConfig = phoneVerificationConfiguration();
     if (phoneConfig.enabled && !phoneConfig.ready) return reply({ error: { code: "phone_verification_unavailable" } }, 503, origin);
     if (phoneConfig.enabled && !/^[a-f0-9-]{72}$/.test(input.phone_verification_token)) return reply({ error: { code: "phone_verification_required", message: "Confirme seu telefone pelo código enviado por SMS." } }, 422, origin);
-    const cycle = quote(input.cycle, input.product, input.offer), token = crypto.randomUUID() + crypto.randomUUID(), tokenHash = await sha256(token);
+    if (!["monthly", "annual"].includes(input.cycle)) return reply({ error: { code: "invalid_cycle" } }, 422, origin);
+    const selectedPlan = await findMenuPlan(admin, input.offer, input.plan_id);
+    if (!selectedPlan) return reply({ error: { code: "plan_unavailable", message: "Este plano não está disponível para contratação. Atualize a página." } }, 409, origin);
+    const cycle = quote(input.cycle, input.product, input.offer, planPricing(selectedPlan));
+    if (input.expected_total_cents !== undefined && input.expected_total_cents !== cycle.total_cents) return reply({ error: { code: "price_changed", message: "O valor do plano mudou. Atualize a página antes de confirmar." } }, 409, origin);
+    const token = crypto.randomUUID() + crypto.randomUUID(), tokenHash = await sha256(token);
     const trialEndsAt = new Date(Date.now() + 14 * 86_400_000).toISOString();
     const { data: signupId, error: signupError } = await admin.rpc("backend_billing_signup_create", { payload: {
-      product_code: input.product, offer_code: input.offer, tax_document: taxDocument, responsible_tax_document: responsibleDocument, business_name: clean(input.business_name), responsible_name: clean(input.responsible_name),
+      product_code: input.product, offer_code: input.offer, plan_id: selectedPlan.id, tax_document: taxDocument, responsible_tax_document: responsibleDocument, business_name: clean(input.business_name), responsible_name: clean(input.responsible_name),
       phone_verification_required: phoneConfig.enabled, phone_proof_hash: phoneConfig.enabled ? await sha256(input.phone_verification_token) : null,
       email: input.email, phone, segment: clean(input.segment), cycle: input.cycle, payment_method: input.payment_method,
       base_monthly_cents: cycle.base_monthly_cents, cycle_months: cycle.months, discount_bps: cycle.discount_bps, total_cents: cycle.total_cents,
@@ -463,6 +497,7 @@ Deno.serve(async (request) => {
       return error || !review ? reply({ error: { code: "trial_protection_unavailable" } }, 503, origin) : trialReviewResponse(review, origin);
     }
     if (signupError || !signupId) {
+      if (signupError?.code === "40001") return reply({ error: { code: "price_changed", message: "O valor do plano mudou. Atualize a página antes de confirmar." } }, 409, origin);
       console.error("start_trial.billing_signup", { code: signupError?.code, message: signupError?.message });
       return reply({ error: { code: "signup_failed" } }, 500, origin);
     }
@@ -471,7 +506,7 @@ Deno.serve(async (request) => {
     try {
       const { data: shop, error: shopError } = await admin.from("barbershops").insert({ name: clean(input.business_name), slug: `unidade-${crypto.randomUUID()}`, segment: clean(input.segment), active: true }).select("id").single();
       if (shopError) throw shopError;
-      const productName = input.product === "menu" ? MENU_OFFERS[input.offer].name : "Agenda";
+      const productName = input.product === "menu" ? selectedPlan.name : "Agenda";
       const { data: client, error: clientError } = await admin.from("saas_clients").insert({ name: clean(input.business_name), segment: clean(input.segment), contact_name: clean(input.responsible_name), owner_email: input.email, phone, origin: `Contratação self-service — ${productName}`, plan: productName, monthly_fee: cycle.base_monthly_cents / 100, status: "Ativo", invite_status: "Pendente", barbershop_id: shop.id, notes: input.service_invoice_preference === "requested" ? "Nota de serviço: solicitada pelo cliente. Emissão sujeita às obrigações fiscais aplicáveis." : input.service_invoice_preference === "not_requested" ? "Nota de serviço: cliente não solicitou no cadastro. Não constitui dispensa de emissão obrigatória." : "Nota de serviço: preferência não informada." }).select("id").single();
       if (clientError) {
         await admin.from("barbershops").delete().eq("id", shop.id);
@@ -489,7 +524,7 @@ Deno.serve(async (request) => {
       if (profile.error) throw profile.error;
       if (input.product === "menu") {
         const { data: product } = await admin.from("platform_products").select("id").eq("code", "menu").single();
-        const { data: plan } = await admin.from("saas_plans").select("id").eq("product_id", product?.id || "").eq("code", MENU_OFFERS[input.offer].planCode).single();
+        const plan = selectedPlan;
         const { data: customer, error: customerError } = await admin.from("billing_customers").insert({ saas_client_id: client.id, billing_email: input.email, tax_document: taxDocument, payment_method: "pix" }).select("id").single();
         if (customerError || !product || !plan || !customer) throw customerError || new Error("Catálogo comercial do Cardápio indisponível");
         const subscription = await admin.from("platform_subscriptions").insert({ billing_customer_id: customer.id, product_id: product.id, plan_id: plan.id, status: "trial", billing_cycle: input.cycle, base_amount: cycle.base_monthly_cents / 100, starts_on: new Date().toISOString().slice(0,10), next_billing_on: trialEndsAt.slice(0,10), current_period_start: new Date().toISOString(), current_period_end: trialEndsAt });

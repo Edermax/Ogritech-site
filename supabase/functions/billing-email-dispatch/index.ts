@@ -14,7 +14,7 @@ Deno.serve(async (request) => {
   if (error) return new Response("queue failed", { status: 500 });
   let sent = 0;
   for (const job of jobs || []) {
-    const { data: signup } = await admin.from("backend_billing_signups").select("business_name,responsible_name,email,cycle,total_cents,trial_ends_at,access_until,product_code").eq("id", job.signup_id).maybeSingle();
+    const { data: signup } = await admin.from("backend_billing_signups").select("business_name,responsible_name,email,cycle,total_cents,trial_ends_at,access_until,product_code,offer_code,plan_name_snapshot").eq("id", job.signup_id).maybeSingle();
     if (!signup) { await admin.from("backend_billing_outbox").update({ processed_at: new Date().toISOString(), last_error: "signup_not_found" }).eq("id", job.id); continue; }
     const email = renderBillingEmail(job.event_type, job.payload || {}, signup);
     const response = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${resend}`, "Content-Type": "application/json", "Idempotency-Key": job.id }, body: JSON.stringify({ from: "Ogritech <contato@ogritech.com.br>", to: [signup.email], reply_to: "suporte@ogritech.com.br", subject: email.subject, html: email.html, text: email.text }) });

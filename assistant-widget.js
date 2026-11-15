@@ -40,7 +40,7 @@
   let activeHelpTopic = null;
   let lastHelpContext = "";
   const helpContext = () => window.OgritechMenuWorkspace?.state() || {};
-  const contextKey = context => JSON.stringify([context.ready, context.offer, context.role, context.published, context.next, context.busy, context.dirtySettings]);
+  const contextKey = context => JSON.stringify([context.ready, context.offer, context.planName, context.role, context.published, context.next, context.busy, context.dirtySettings]);
   const helpNode = (tag, text, className) => {
     const node = document.createElement(tag);
     if (text) node.textContent = text;
