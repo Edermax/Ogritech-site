@@ -126,36 +126,117 @@ const out = 'outputs/panel-navigation'; fs.mkdirSync(out, { recursive: true });
     await staff.page.evaluate(() => window.OgritechPanelNavigation.show('vendas'));
     assert.equal(await staff.page.locator('body').getAttribute('data-panel-route'), 'orders');
     await staff.context.close();
-    const saved = await fixture(390);
-    await saved.page.evaluate(() => {
-      const rpc = supabaseClient.rpc.bind(supabaseClient);
-      supabaseClient.rpc = async (name, args) => {
-        if (name === 'save_menu_catalog_draft') { window.__savedDraft = structuredClone(args.draft_payload); return { data: {} }; }
-        if (name === 'menu_catalog_draft_status' && window.__savedDraft) return { data: { exists: true, payload: window.__savedDraft } };
-        if (name === 'publish_menu_catalog_draft') {
-          const { data: menu } = await supabaseClient.from('online_menus').select().maybeSingle();
-          menu.menu_categories = window.__savedDraft.categories;
-          window.__publishedDraft = structuredClone(window.__savedDraft); window.__savedDraft = null;
-          return { data: {} };
-        }
-        return rpc(name, args);
-      };
-    });
-    await go(saved.page, 'products');
-    await saved.page.locator('[data-edit-menu-item]').first().click();
-    await saved.page.locator('#menuItemName').fill('Bolo de chocolate atualizado');
-    await saved.page.locator('#menuItemSubmit').click();
-    await saved.page.waitForFunction(() => window.__savedDraft && !document.getElementById('panelProductEditor').checkVisibility());
-    await saved.page.waitForFunction(() => window.OgritechMenuWorkspace.state().ready && !window.OgritechMenuWorkspace.state().busy);
-    assert.match(await saved.page.locator('#menuCatalogList').textContent(), /Bolo de chocolate atualizado/);
-    assert.equal(await saved.page.evaluate(() => window.__savedDraft.categories[0].menu_items.length), 2);
-    await go(saved.page, 'menu');
-    assert.equal(await saved.page.locator('#menuPublicationButton').isEnabled(), true);
-    await saved.page.locator('#menuPublicationButton').click();
-    await saved.page.waitForFunction(() => window.__publishedDraft && window.OgritechMenuWorkspace.state().ready && !window.OgritechMenuWorkspace.state().busy);
-    assert.equal(await saved.page.locator('#menuPublicationButton').isEnabled(), false);
-    assert.equal(await saved.page.evaluate(() => window.__publishedDraft.categories[0].menu_items[0].name), 'Bolo de chocolate atualizado');
-    assert.deepEqual(saved.errors, []); await saved.context.close();
+    for (const width of [390, 1440]) {
+      const saved = await fixture(width);
+      const page = saved.page;
+      await page.evaluate(() => {
+        const rpc = supabaseClient.rpc.bind(supabaseClient);
+        const from = supabaseClient.from.bind(supabaseClient);
+        supabaseClient.from = table => {
+          const query = from(table), then = query.then.bind(query);
+          query.then = (resolve, reject) => then(result => resolve(structuredClone(result)), reject);
+          return query;
+        };
+        window.__catalogCalls = [];
+        supabaseClient.rpc = async (name, args) => {
+          if (['save_menu_catalog_draft', 'publish_menu_catalog_draft', 'save_menu_catalog_item'].includes(name)) window.__catalogCalls.push(name);
+          if (name === 'save_menu_catalog_draft') {
+            if (window.__saveFailure) return { error: { code: '08006' } };
+            window.__savedDraft = structuredClone(args.draft_payload); return { data: {} };
+          }
+          if (name === 'menu_catalog_draft_status' && window.__savedDraft) return { data: { exists: true, payload: window.__savedDraft } };
+          if (name === 'publish_menu_catalog_draft') {
+            if (window.__publicationFailure === 'network') throw new Error('fixture transport failure');
+            if (window.__publicationFailure) return { error: { code: '23514' } };
+            window.__fixtureMenu.menu_categories = structuredClone(window.__savedDraft.categories);
+            window.__publishedDraft = structuredClone(window.__savedDraft); window.__savedDraft = null;
+            if (window.__losePublicationResponse) throw new Error("fixture response lost after commit");
+            return { data: {} };
+          }
+          if (name === 'save_menu_catalog_item') return { data: { id: 'new-unpublished-item' } };
+          return rpc(name, args);
+        };
+      });
+      async function settled() {
+        await page.waitForFunction(() => !document.getElementById('panelProductEditor').checkVisibility() && window.OgritechMenuWorkspace.state().ready && !window.OgritechMenuWorkspace.state().busy);
+        assert.equal(await page.locator('body').getAttribute('data-panel-route'), 'products');
+      }
+      async function edit(name) {
+        await page.locator('[data-edit-menu-item="item-a"]').click();
+        await page.locator('#menuItemName').fill(name);
+      }
+      await page.evaluate(() => window.loadMenuAdmin());
+      await go(page, 'products');
+      await edit('Bolo de chocolate atualizado');
+      await page.locator('#menuItemSubmit').click(); await settled();
+      assert.equal(await page.evaluate(() => window.__publishedDraft.categories[0].menu_items[0].name), 'Bolo de chocolate atualizado');
+      assert.equal(await page.evaluate(() => window.__savedDraft), null);
+      assert.match(await page.locator('#menuWorkspaceMessage').textContent(), /atualizado no cardápio online/);
+      assert.equal(await page.locator('#menuCatalogPublicationNotice').isVisible(), false);
+
+      await page.locator('#panelAddProduct').click();
+      await page.locator('#menuCategoryName').fill('Mais pedidos');
+      await page.locator('#menuItemName').fill('Produto novo');
+      await page.locator('[data-price-label]').fill('Unidade');
+      await page.locator('[data-price-value]').fill('18.50');
+      await page.locator('#menuItemSubmit').click(); await settled();
+      assert.equal(await page.evaluate(() => window.__fixtureMenu.menu_categories[0].menu_items.length), 3);
+      assert.equal(await page.evaluate(() => window.__fixtureMenu.menu_categories[0].menu_items[2].name), 'Produto novo');
+
+      await edit('Produto oculto');
+      await page.locator('#menuItemActive').uncheck();
+      await page.locator('#menuItemSubmit').click(); await settled();
+      assert.equal(await page.evaluate(() => window.__fixtureMenu.menu_categories[0].menu_items[0].active), false);
+      assert.match(await page.locator('#menuWorkspaceMessage').textContent(), /salvo como oculto/);
+      assert.equal(await page.evaluate(() => window.__fixtureMenu.menu_categories[0].menu_items.filter(item => item.active && item.available).some(item => item.name === 'Produto oculto')), false);
+      await edit('Produto indisponível');
+      await page.locator('#menuItemActive').check();
+      await page.locator('#menuItemAvailable').uncheck();
+      await page.locator('#menuItemSubmit').click(); await settled();
+      assert.equal(await page.evaluate(() => window.__fixtureMenu.menu_categories[0].menu_items[0].available), false);
+      assert.match(await page.locator('#menuWorkspaceMessage').textContent(), /salvo como oculto/);
+
+      for (const failure of ['server', 'network']) {
+        await page.evaluate(failure => { window.__publicationFailure = failure; }, failure);
+        await edit('Alteração aguardando ' + failure);
+        await page.locator('#menuItemActive').check(); await page.locator('#menuItemAvailable').check();
+        await page.locator('#menuItemSubmit').click(); await settled();
+        assert.match(await page.locator('#menuWorkspaceMessage').textContent(), /Produto salvo, mas não foi possível atualizar/);
+        assert.equal(await page.locator('#menuCatalogPublishButton').isVisible(), true);
+        assert.notEqual(await page.evaluate(() => window.__fixtureMenu.menu_categories[0].menu_items[0].name), 'Alteração aguardando ' + failure);
+        const saves = await page.evaluate(() => window.__catalogCalls.filter(name => name === 'save_menu_catalog_draft').length);
+        await page.evaluate(() => { window.__publicationFailure = false; });
+        await page.locator('#menuCatalogPublishButton').click();
+        await page.waitForFunction(() => !window.__savedDraft && !window.OgritechMenuWorkspace.state().busy);
+        assert.equal(await page.evaluate(() => window.__fixtureMenu.menu_categories[0].menu_items[0].name), 'Alteração aguardando ' + failure);
+        assert.equal(await page.evaluate(() => window.__catalogCalls.filter(name => name === 'save_menu_catalog_draft').length), saves);
+        assert.equal(await page.locator('body').getAttribute('data-panel-route'), 'products');
+      }
+      await page.evaluate(() => { window.__losePublicationResponse = true; });
+      await edit('Publicação confirmada pela atualização');
+      await page.locator('#menuItemSubmit').click(); await settled();
+      assert.match(await page.locator('#menuWorkspaceMessage').textContent(), /atualizado no cardápio online/);
+      assert.equal(await page.locator('#menuCatalogPublicationNotice').isVisible(), false);
+      await page.evaluate(() => { window.__losePublicationResponse = false; window.__saveFailure = true; });
+      await edit('Nome que falhou ao salvar');
+      const publications = await page.evaluate(() => window.__catalogCalls.filter(name => name === 'publish_menu_catalog_draft').length);
+      await page.locator('#menuItemSubmit').click();
+      await page.waitForFunction(() => !window.OgritechMenuWorkspace.state().busy);
+      assert.equal(await page.locator('#panelProductEditor').isVisible(), true);
+      assert.equal(await page.locator('#menuItemName').inputValue(), 'Nome que falhou ao salvar');
+      assert.equal(await page.evaluate(() => window.__catalogCalls.filter(name => name === 'publish_menu_catalog_draft').length), publications);
+      await page.locator('#menuItemCancel').click();
+      await page.evaluate(() => { window.__fixtureMenu.published = false; });
+      await page.evaluate(() => window.loadMenuAdmin());
+      await go(page, 'products');
+      await edit('Produto antes da primeira publicação');
+      await page.locator('#menuItemSubmit').click(); await settled();
+      assert.equal(await page.evaluate(() => window.__catalogCalls.at(-1)), 'save_menu_catalog_item');
+      assert.equal(await page.evaluate(() => window.__fixtureMenu.published), false);
+      assert.deepEqual(saved.errors, []);
+      results.push({ width, immediateProductUpdate: true, immediateNewProduct: true, hiddenProductsPreserved: true, publicationFailureRetryInProducts: true, failedSavePreservesEditor: true, firstPublicationStillExplicit: true });
+      await saved.context.close();
+    }
     const unsaved = await fixture(390);
     await go(unsaved.page, 'menu');
     await unsaved.page.locator('[data-menu-workspace="settings"]').click();
@@ -171,7 +252,7 @@ const out = 'outputs/panel-navigation'; fs.mkdirSync(out, { recursive: true });
     assert.equal(await start.page.locator('#menuJourneyGuide').isVisible(), true);
     await start.page.screenshot({ path: `${out}/first-setup-390.png` });
     assert.deepEqual(start.errors, []); await start.context.close();
-    results.push({ employeePermissionsPreserved: true, initialSetupPreserved: true, draftSavedThroughEditor: true, draftPublishedFromCardapio: true, unsavedSettingsPreservedAcrossAccount: true });
+    results.push({ employeePermissionsPreserved: true, initialSetupPreserved: true, unsavedSettingsPreservedAcrossAccount: true });
     fs.writeFileSync(`${out}/result.json`, JSON.stringify(results, null, 2)); console.log(JSON.stringify(results));
   } finally { await browser.close(); server.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; server.close(); });

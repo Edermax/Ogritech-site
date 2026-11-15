@@ -44,7 +44,8 @@ function editor({ categories, itemId, categoryId, categoryName }) {
     crypto: { randomUUID: () => "new-id" },
     resetMenuItemEditor() {},
     runMenuAction: async (_messageId, _message, operation) => operation(),
-    savePublishedMenuDraft: async () => { saved = structuredClone(context.menuCatalogCategories); return { data: {} }; }
+    savePublishedMenuDraft: async () => { saved = structuredClone(context.menuCatalogCategories); return { data: {} }; },
+    publishSavedMenuProduct: async () => ({ data: {} })
   };
   vm.runInNewContext(submitSource, context);
   return {
