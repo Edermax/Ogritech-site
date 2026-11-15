@@ -142,7 +142,7 @@ updatePasswordForm.addEventListener("submit", async (event) => {
 
             if (!response.ok) {
                 const body = await response.json().catch(() => ({}));
-                updateError = { code: body.error_code, status: response.status };
+                updateError = { code: body.code || body.error_code, status: response.status };
             }
         } else {
             const { error } = await supabaseClient.auth.updateUser({ password: newPassword });

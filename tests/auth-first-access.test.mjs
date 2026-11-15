@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 const source=await readFile(new URL('../update-password.js',import.meta.url),'utf8');
-async function page(url,auth={}){
+async function page(url,auth={},request=()=>{throw Error('Unexpected network request')}){
  const elements=new Map();
  function element(id){if(!elements.has(id)){const hidden=new Set(['hidden']);const listeners={};elements.set(id,{value:'',required:false,disabled:false,textContent:'',listeners,classList:{add:x=>hidden.add(x),remove:x=>hidden.delete(x),contains:x=>hidden.has(x)},addEventListener:(event,fn)=>listeners[event]=fn,querySelector:()=>element('submit'),querySelectorAll:()=>[],reset(){},focus(){}});}return elements.get(id);}
  const calls=[];
- const context={URL,URLSearchParams,document:{getElementById:element,title:'Senha'},sessionStorage:{removeItem(){}},supabaseClient:{auth:{verifyOtp:async data=>{calls.push(data);return {data:{session:{user:{id:'fixture'}}},error:null}},...auth}},window:{location:{href:url},history:{replaceState(){}},ogritechEnvironmentUrl:()=>'/login/?env=staging',setTimeout(){}},fetch(){throw Error('Unexpected network request')}};
+ const context={URL,URLSearchParams,document:{getElementById:element,title:'Senha'},sessionStorage:{removeItem(){}},supabaseClient:{auth:{verifyOtp:async data=>{calls.push(data);return {data:{session:{user:{id:'fixture'}}},error:null}},...auth}},window:{location:{href:url},history:{replaceState(){}},ogritechEnvironmentUrl:()=>'/login/?env=staging',setTimeout(){}},fetch:request};
  vm.runInNewContext(source,context);await new Promise(resolve=>setImmediate(resolve));
  return {elements,calls};
 }
@@ -55,6 +55,32 @@ test('a rejected password can be corrected without consuming another recovery li
  assert.match(state.elements.get('updatePasswordMessage').textContent, /Senha atualizada/);
  assert.equal(updates, 2);
  assert.equal(state.calls.length, 1);
+});
+test('legacy recovery preserves the form after a weak-password response and can retry',async()=>{
+ for(const codeField of ['code','error_code']){
+  let updates=0,logouts=0;
+  const state=await page('https://ogritech.com.br/update-password.html#type=recovery&access_token=fixture',{
+   getUser:async()=>({data:{user:{id:'fixture'}},error:null})
+  },async(url,options)=>{
+   if(options.method==='POST'){logouts++;return {ok:true};}
+   updates++;
+   return updates===1?{ok:false,status:422,json:async()=>({[codeField]:'weak_password'})}:{ok:true};
+  });
+  const submit=state.elements.get('updatePasswordForm').listeners.submit;
+  for(const password of ['Abcdefg1!','Abcdefg2!']){
+   state.elements.get('newPassword').value=password;
+   state.elements.get('confirmPassword').value=password;
+   await submit({preventDefault(){}});
+   if(updates===1){
+    assert.match(state.elements.get('updatePasswordMessage').textContent,/mais forte/);
+    assert.equal(state.elements.get('submit').disabled,false);
+    assert.equal(state.elements.get('updatePasswordForm').classList.contains('hidden'),false);
+    assert.equal(logouts,0);
+   }
+  }
+  assert.equal(updates,2);assert.equal(logouts,1);
+  assert.match(state.elements.get('updatePasswordMessage').textContent,/Senha atualizada/);
+ }
 });
 test('legacy invitation restores its session before showing the password fields',async()=>{
  let restored=false;
