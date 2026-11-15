@@ -45,3 +45,5 @@ html[data-panel-theme="dark"] body.panel-readable-controls .ogri-assistant__back
 html[data-panel-theme="dark"] body.panel-readable-controls .ogri-assistant__choice input:checked+span{background:var(--control-tint);color:var(--control-accent-ink);border-color:#40869a}
 html[data-panel-theme="dark"] body:is(.panel-readable-controls,.platform-admin-page) :is(button,.table-button,.gold-button):disabled,
 html[data-panel-theme="dark"] body.panel-readable-controls #menuView :is(.table-button,.gold-button,#menuUnpublishButton,#menuBrandingDiscard):disabled{background:#172734;color:#a3b7c4;border-color:var(--border);box-shadow:none;cursor:not-allowed}
+
+html[data-panel-theme="dark"] body.platform-admin-page .plan-card a.outline-cyan-button { background:var(--control-raised); color:var(--control-text); border-color:var(--control-border); }

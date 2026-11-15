@@ -27,11 +27,12 @@ Consulta anônima de produção retornou os dois planos principais corretos; an�
 
 ## Validação
 
-- 451 testes existentes da aplicação aprovados, mais dois casos novos de identidade do plano e escape de HTML no e-mail.
+- 453 testes da aplicação aprovados, incluindo identidade do plano e escape de HTML no e-mail.
 - Banco local isolado: 30 arquivos, 800 verificações aprovadas, incluindo 31 novas sobre criação, autorização, limites, preços contratados, desativação, troca de mesma base e conflito de preços.
 - `scripts/configurable-plans-browser.cjs`: criação/edição/desativação/reativação nas duas bases, 390/1440 px, falha de salvamento preservando formulário, contratação anual por ID, plano indisponível, falha de catálogo, preço alterado e assinatura existente com preço anterior. Sem erros de página ou transbordamento. Incluído na CI.
 - `scripts/split-offers-browser.mjs`: 16 cenários anteriores de ofertas, contratação, painel e catálogo público aprovados, sem chamadas externas nas fixtures.
-- Cotação HTTP real de staging confirmou o valor anual canônico de um plano sintético, ignorando valor forjado pelo cliente.
+- Cotação HTTP real de staging confirmou o valor anual canônico de um plano sintético, ignorando valor forjado pelo cliente. As duas cotações anuais de produção também foram conferidas por HTTP.
+- Administração: 60 cenas de tema claro/escuro aprovadas. O novo link de contratação recebeu cores explícitas para manter o contraste no escuro. Auditoria de schema de produção atualizada para 102 migrations e executada sem divergências.
 
 ## Recuperação
 
