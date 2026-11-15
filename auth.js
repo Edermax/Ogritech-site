@@ -9,10 +9,12 @@ const ROLE_LABELS = {
 
 const SESSION_KEYS = [
     "japaAuth", "japaRole", "japaUserName", "japaUserRole",
-    "japaUserEmail", "japaUserId", "japaBarbershopId", "japaDemo", "japaDemoSegment"
+    "japaUserEmail", "japaUserId", "japaBarbershopId", "japaDemo", "japaDemoSegment",
+    "ogritechOperationalSession", "ogritechMasterMode", "ogritechMasterBusinessId", "ogritechMasterBusinessName"
 ];
 
 document.documentElement.style.visibility = "hidden";
+let pageSessionChanged = false;
 const environmentUrl = (path) => window.ogritechEnvironmentUrl?.(path) || path;
 
 function clearLocalSession() {
@@ -215,7 +217,21 @@ async function initializeAuthenticatedPage() {
         return;
     }
 
+    // Never leave one account's already-rendered panel visible after another
+    // tab changes the shared Supabase session. No Auth calls inside this callback.
+    supabaseClient.auth.onAuthStateChange((event, currentSession) => {
+        if (event !== "SIGNED_OUT" && !currentSession?.user) return;
+        if (currentSession?.user?.id === session.user.id) return;
+        pageSessionChanged = true;
+        document.documentElement.style.visibility = "hidden";
+        clearLocalSession();
+        sessionStorage.removeItem(`ogritechSignupEmail:${window.OGRITECH_ENV || "production"}`);
+        window.OgritechPanelNotifications?.stop();
+        window.location.replace(environmentUrl("login/"));
+    });
+
     const { data: isPlatformAdmin, error: platformAdminError } = await supabaseClient.rpc("is_platform_admin");
+    if (pageSessionChanged) return;
     if (platformAdminError) {
         console.error("Falha ao validar acesso administrativo:", platformAdminError);
         await showAuthenticationError("Não foi possível validar seu acesso administrativo. Atualize a página para tentar novamente.");
@@ -224,6 +240,7 @@ async function initializeAuthenticatedPage() {
     if (isPlatformAdmin && !location.pathname.endsWith("admin.html")) {
         if (sessionStorage.getItem("ogritechMasterMode") === "true" && sessionStorage.getItem("ogritechMasterBusinessId")) {
             await waitForDocument();
+            if (pageSessionChanged) return;
             renderUser({ role: "owner", full_name: "Master Ogritech", barbershop_id: sessionStorage.getItem("ogritechMasterBusinessId") });
             document.documentElement.style.visibility = "visible";
             document.getElementById("logoutButton")?.addEventListener("click", async () => {
@@ -239,11 +256,18 @@ async function initializeAuthenticatedPage() {
         window.location.replace(environmentUrl("admin.html")); return;
     }
 
+    const hadStaleMasterContext = !isPlatformAdmin && sessionStorage.getItem("ogritechMasterMode") === "true";
+    if (!isPlatformAdmin) {
+        ["ogritechMasterMode", "ogritechMasterBusinessId", "ogritechMasterBusinessName"]
+            .forEach(key => sessionStorage.removeItem(key));
+    }
+
     const { data: profile, error } = await supabaseClient
         .from("profiles")
         .select("barbershop_id, full_name, role, active")
         .eq("id", session.user.id)
         .single();
+    if (pageSessionChanged) return;
 
     if (error || !profile?.active) {
         window.OgritechPanelNotifications?.stop();
@@ -270,6 +294,7 @@ async function initializeAuthenticatedPage() {
     // estabelecimento durante sua própria avaliação.
     const operationalSessionKey = `${session.user.id}:${profile.role}:${profile.barbershop_id}`;
     const hasCurrentOperationalContext =
+        !hadStaleMasterContext &&
         sessionStorage.getItem("japaAuth") === "true" &&
         sessionStorage.getItem("japaUserId") === session.user.id &&
         sessionStorage.getItem("japaRole") === profile.role &&
@@ -283,6 +308,7 @@ async function initializeAuthenticatedPage() {
         const { data: billingResult } = await supabaseClient.functions.invoke("ogritech-billing", {
             body: { action: "billing_status", product: "menu", barbershop_id: profile.barbershop_id }
         });
+        if (pageSessionChanged) return;
         const billing = billingResult?.data;
         const boundaryExpired = billing?.boundary && new Date(billing.boundary) <= new Date();
         if (["past_due", "cancelled"].includes(billing?.status) || (billing?.status === "payment_pending" && boundaryExpired)) {
@@ -302,6 +328,7 @@ async function initializeAuthenticatedPage() {
     }
 
     await waitForDocument();
+    if (pageSessionChanged) return;
     renderUser(profile);
     enablePasswordChange();
     document.documentElement.style.visibility = "visible";

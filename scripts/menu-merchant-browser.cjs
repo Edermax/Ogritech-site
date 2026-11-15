@@ -27,7 +27,7 @@ const setup=async(page,role)=>{
   sessionStorage.setItem('japaRole',role);sessionStorage.setItem('japaUserId','fixture-'+role);sessionStorage.setItem('japaAuth','true');sessionStorage.setItem('ogritechOperationalSession',`fixture-${role}:${role}:${business}`);
   window.OGRITECH_ENV='production';
   const client=window.supabaseClient,priorFrom=client.from.bind(client),priorRpc=client.rpc.bind(client);
-  client.auth={getSession:async()=>({data:{session:sessionStorage.getItem('fixtureSignedOut')?null:{user:{id:'fixture-'+role}}}}),signOut:async()=>{sessionStorage.setItem('fixtureSignedOut','yes');return {};}};
+  client.auth={onAuthStateChange(){return{data:{subscription:{unsubscribe(){}}}};},getSession:async()=>({data:{session:sessionStorage.getItem('fixtureSignedOut')?null:{user:{id:'fixture-'+role}}}}),signOut:async()=>{sessionStorage.setItem('fixtureSignedOut','yes');return {};}};
   client.functions={invoke:async()=>({data:{data:{status:'trial_active',access_until:'2099-01-01T00:00:00Z'}}})};
   client.rpc=async(name,args)=>name==='is_platform_admin'?{data:false}:priorRpc(name,args);
   client.from=table=>{

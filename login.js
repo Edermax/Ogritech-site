@@ -12,6 +12,17 @@ const togglePasswordButton = document.getElementById("togglePasswordButton");
 
 const loginParameters = new URLSearchParams(window.location.search);
 const requestedDestination = loginParameters.get("destino");
+const requiresFreshLogin = loginParameters.has("primeiro_acesso") || loginParameters.get("trocar_conta") === "1";
+const pendingSignupEmailKey = `ogritechSignupEmail:${window.OGRITECH_ENV || "production"}`;
+const pendingSignupEmail = sessionStorage.getItem(pendingSignupEmailKey) || "";
+const OPERATIONAL_KEYS = [
+    "japaAuth", "japaRole", "japaUserName", "japaUserRole", "japaUserEmail",
+    "japaUserId", "japaBarbershopId", "japaDemo", "japaDemoSegment", "ogritechOperationalSession",
+    "ogritechMasterMode", "ogritechMasterBusinessId", "ogritechMasterBusinessName"
+];
+function clearOperationalContext() {
+    OPERATIONAL_KEYS.forEach(key => sessionStorage.removeItem(key));
+}
 const hadLegacyDemo = sessionStorage.getItem("japaDemo") === "true";
 if (hadLegacyDemo || loginParameters.get("reset_demo") === "1") {
     [
@@ -43,6 +54,8 @@ const ROLE_LABELS = {
 };
 
 function saveLocalSession(user, profile) {
+    clearOperationalContext();
+    sessionStorage.removeItem(pendingSignupEmailKey);
     sessionStorage.removeItem("japaDemo");
     sessionStorage.removeItem("japaDemoSegment");
     sessionStorage.setItem("japaAuth", "true");
@@ -70,9 +83,18 @@ async function destinationFor(role) {
 
 async function restoreExistingSession() {
     try {
+        if (requiresFreshLogin) {
+            await prepareFreshLogin();
+            return;
+        }
         const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
         if (sessionError) throw sessionError;
+        if (session && pendingSignupEmail && session.user.email?.toLowerCase() !== pendingSignupEmail.toLowerCase()) {
+            await prepareFreshLogin();
+            return;
+        }
         if (!session) {
+            if (pendingSignupEmail) emailInput.value = pendingSignupEmail;
             document.documentElement.style.visibility = "visible";
             return;
         }
@@ -97,6 +119,20 @@ async function restoreExistingSession() {
         loginMessage.className = "login-message error";
         document.documentElement.style.visibility = "visible";
     }
+}
+
+async function prepareFreshLogin() {
+    clearOperationalContext();
+    const { error } = await supabaseClient.auth.signOut({ scope: "local" });
+    if (error) throw error;
+    emailInput.value = pendingSignupEmail;
+    passwordInput.value = "";
+    loginMessage.textContent = loginParameters.get("trocar_conta") === "1"
+        ? "Entre com o e-mail e a senha da conta que deseja acessar."
+        : "Entre com o e-mail da conta que você acabou de criar. No primeiro acesso, abra antes o convite recebido por e-mail e defina sua senha.";
+    loginMessage.className = "login-message";
+    document.documentElement.style.visibility = "visible";
+    emailInput.focus();
 }
 
 loginForm.addEventListener("submit", async (event) => {
