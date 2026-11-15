@@ -3,6 +3,7 @@
     const environmentUrl = (path) => window.ogritechEnvironmentUrl?.(path) || path;
     let barbershopId = "";
     let currentOffer = "encomendas";
+    let currentPlanId = "", currentCycle = "monthly", planCatalog = [];
     let pollTimer = null;
     let pollAttempts = 0;
 
@@ -38,10 +39,21 @@
         }[state.status] || "Em análise";
         $("billingStatus").textContent = status;
         $("billingStatus").className = `status-pill ${state.status === "active" ? "success" : ["past_due", "cancelled"].includes(state.status) ? "danger" : ""}`;
-        const offer = globalThis.OgritechOffers?.offers[state.offer || "encomendas"];
+        const base = globalThis.OgritechOffers?.offers[state.offer || "encomendas"];
+        const offer = base ? { ...base, name: state.plan_name ? (/^Ogritech\b/i.test(state.plan_name) ? state.plan_name : `Ogritech ${state.plan_name}`) : base.name, monthlyCents: state.monthly_cents ?? base.monthlyCents, annualCents: state.annual_cents ?? base.annualCents } : null;
         currentOffer = state.offer || "encomendas";
-        $("billingOffer").value = currentOffer;
-        $("changeOfferForm").classList.toggle("hidden", !["trial_active", "active", "past_due"].includes(state.status));
+        currentPlanId = state.plan_id || planCatalog.find(plan => plan.code === OgritechOffers.offers[currentOffer].planCode)?.id || currentOffer;
+        currentCycle = state.cycle;
+        $("billingOffer").replaceChildren();
+        const options = [...planCatalog];
+        if (!options.some(plan => plan.id === currentPlanId)) options.unshift({ id: currentPlanId, name: state.plan_name || offer?.name || "Plano atual", offer_code: currentOffer, monthly_fee: (offer?.monthlyCents || 0)/100, annual_fee: (offer?.annualCents || 0)/100 });
+        for (const plan of options) {
+            const item = document.createElement("option"), pricing = plan.id === currentPlanId && offer ? offer : OgritechOffers.forPlan(plan);
+            item.value = plan.id; item.textContent = `${pricing.name} · ${OgritechOffers.format(state.cycle === "annual" ? pricing.annualCents : pricing.monthlyCents)} por ${state.cycle === "annual" ? "ano" : "mês"}`;
+            $("billingOffer").append(item);
+        }
+        $("billingOffer").value = currentPlanId;
+        $("changeOfferForm").classList.toggle("hidden", !planCatalog.length || !["trial_active", "active", "past_due"].includes(state.status));
         if (offer) {
             $("billingTitle").textContent = `Sua assinatura ${offer.name}`;
             $("billingCycle").innerHTML = `<option value="monthly">Mensal · ${OgritechOffers.format(offer.monthlyCents)}</option><option value="annual">Anual · ${OgritechOffers.format(offer.annualCents)}</option>`;
@@ -108,10 +120,14 @@
     $("changeOfferForm").addEventListener("submit", async event => {
         event.preventDefault();
         const selected = $("billingOffer").value;
-        if (selected === currentOffer) return message("Este já é o seu plano atual.");
+        if (selected === currentPlanId) return message("Este já é o seu plano atual.");
+        const plan = planCatalog.find(plan => plan.id === selected);
+        if (!plan) return message("Escolha um plano disponível.", true);
+        const offer = OgritechOffers.forPlan(plan);
+        if (!confirm(`Mudar para ${offer.name}? Confira o valor de ${OgritechOffers.format(currentCycle === "annual" ? offer.annualCents : offer.monthlyCents)} por ${currentCycle === "annual" ? "ano" : "mês"}. O prazo de acesso será preservado, sem novo teste gratuito.`)) return;
         $("changeOfferButton").disabled = true;
         try {
-            await invoke({ action: "change_offer", product: "menu", barbershop_id: barbershopId, offer: selected });
+            await invoke({ action: "change_offer", product: "menu", barbershop_id: barbershopId, offer: offer.code, plan_id: plan.id, expected_total_cents: currentCycle === "annual" ? offer.annualCents : offer.monthlyCents });
             await load(); message("Plano alterado sem novo teste gratuito. O prazo de acesso foi preservado e o novo preço vale na próxima cobrança.");
         } catch (error) { message(error.message, true); }
         finally { $("changeOfferButton").disabled = false; }
@@ -149,6 +165,7 @@
         if (!profile?.active || profile.role !== "owner" || !profile.barbershop_id) return location.replace(environmentUrl("painel/"));
         barbershopId = profile.barbershop_id;
         document.documentElement.style.visibility = "visible";
+        try { planCatalog = await OgritechOffers.loadCatalog(supabaseClient); } catch { /* Existing contract can still be paid without the public catalog. */ }
         await load();
     })().catch(() => { document.documentElement.style.visibility = "visible"; message("Não foi possível abrir sua assinatura. Tente novamente.", true); });
 })();

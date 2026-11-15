@@ -202,3 +202,6 @@
  .platform-admin-page .stat-icon { top:14px; left:12px; padding:7px; width:18px; height:18px; }
  .platform-admin-page .admin-shortcuts a { padding:18px 18px 18px 76px; }
 }
+
+.platform-admin-page #planForm label:has(input[type="checkbox"]) { flex-direction:row; align-items:center; gap:10px; }
+.platform-admin-page #planForm input[type="checkbox"] { width:20px; height:20px; min-height:20px; flex:0 0 20px; margin:0; padding:0; }

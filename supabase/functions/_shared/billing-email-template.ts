@@ -1,4 +1,4 @@
-type BillingSignup = { business_name:string; responsible_name:string; cycle:string; total_cents:number; trial_ends_at:string; access_until:string|null; product_code:string; offer_code?:"cardapio"|"encomendas" };
+type BillingSignup = { plan_name_snapshot?:string|null; business_name:string; responsible_name:string; cycle:string; total_cents:number; trial_ends_at:string; access_until:string|null; product_code:string; offer_code?:"cardapio"|"encomendas" };
 type BillingPayload = Record<string,unknown>;
 type Tone = "info"|"success"|"warning"|"danger"|"neutral";
 type EmailContent = { subject:string; preheader:string; title:string; message:string; detailLabel?:string; detailValue?:string; ctaLabel?:string; ctaUrl?:string; tone:Tone };
@@ -19,7 +19,7 @@ function layout(content:EmailContent,recipientName:string){
 }
 
 export function renderBillingEmail(eventType:string,payload:BillingPayload,signup:BillingSignup){
-  const productName=signup.product_code==="menu"?(signup.offer_code==="cardapio"?"Ogritech Cardápio":"Ogritech Encomendas"):"Ogritech Agenda";
+  const productName=signup.plan_name_snapshot ? (/^Ogritech\b/i.test(signup.plan_name_snapshot) ? signup.plan_name_snapshot : `Ogritech ${signup.plan_name_snapshot}`) : signup.product_code==="menu"?(signup.offer_code==="cardapio"?"Ogritech Cardápio":"Ogritech Encomendas"):"Ogritech Agenda";
   const business=escapeHtml(signup.business_name);
   const manageToken=String(payload?.management_token||"");
   const manageUrl=manageToken?`https://ogritech.com.br/contratar/#manage=${encodeURIComponent(manageToken)}`:"https://ogritech.com.br/contratar/";
@@ -31,6 +31,6 @@ export function renderBillingEmail(eventType:string,payload:BillingPayload,signu
   else if(eventType.startsWith("pix_requested")) content={subject:`Seu Pix de renovação — ${productName}`,preheader:"O Pix de renovação está disponível.",title:"Seu Pix está disponível",message:`<p style="margin:0">Seu período está perto do fim. Use o código abaixo para renovar o acesso de ${business}. Confirme sempre o destinatário antes de pagar.</p>`,detailLabel:"Valor · Código Pix",detailValue:`${money(signup.total_cents)} · ${String(payload?.qr_code||"")}`,ctaLabel:"Gerenciar contratação",ctaUrl:subscriptionUrl,tone:"warning"};
   else if(eventType.startsWith("cancellation")) content={subject:`Cancelamento confirmado — ${productName}`,preheader:"Sua renovação foi cancelada.",title:"Renovação cancelada",message:`<p style="margin:0">A renovação de ${business} foi cancelada. Você ainda poderá utilizar os recursos contratados até a data indicada abaixo.</p>`,detailLabel:"Acesso disponível até",detailValue:dateTime(signup.access_until||signup.trial_ends_at),ctaLabel:"Ver minha assinatura",ctaUrl:subscriptionUrl,tone:"neutral"};
   else if(eventType==="access_suspended") content={subject:`Acesso suspenso — ${productName}`,preheader:"Regularize o pagamento para reativar o acesso.",title:"Seu acesso foi suspenso",message:`<p style="margin:0">O período contratado de ${business} terminou sem confirmação de pagamento. Seus dados continuam preservados e o acesso será reativado após a aprovação.</p>`,detailLabel:"Situação",detailValue:"Aguardando regularização",ctaLabel:"Regularizar pagamento",ctaUrl:subscriptionUrl,tone:"danger"};
-  else content={subject:`Seu teste gratuito do ${productName} começou`,preheader:"Seu teste gratuito já está ativo.",title:"Seu teste gratuito começou",message:`<p style="margin:0">O ${productName} já está disponível para ${business}. Aproveite este período para configurar sua operação e validar a experiência com seus clientes.</p>`,detailLabel:"Teste disponível até",detailValue:dateTime(signup.trial_ends_at),ctaLabel:"Começar configuração",ctaUrl:configurationUrl,tone:"info"};
+  else content={subject:`Seu teste gratuito do ${productName} começou`,preheader:"Seu teste gratuito já está ativo.",title:"Seu teste gratuito começou",message:`<p style="margin:0">O ${escapeHtml(productName)} já está disponível para ${business}. Aproveite este período para configurar sua operação e validar a experiência com seus clientes.</p>`,detailLabel:"Teste disponível até",detailValue:dateTime(signup.trial_ends_at),ctaLabel:"Começar configuração",ctaUrl:configurationUrl,tone:"info"};
   return {subject:content.subject,...layout(content,signup.responsible_name)};
 }

@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="ogritech-apple-touch-v2.png">
     <link rel="manifest" href="manifest.webmanifest"><script src="panel-theme.js?v=20261112.1"></script>
     <link rel="stylesheet" href="style.css?v=20261113.2">
-    <link rel="stylesheet" href="admin.css?v=20261022.3">
+    <link rel="stylesheet" href="admin.css?v=20261115.1">
     <link rel="stylesheet" href="admin-theme.css?v=20261111.2"><link rel="stylesheet" href="panel-dark.css?v=20261112.4">
     <link rel="stylesheet" href="admin-navigation.css?v=20261112.1">
 </head>
@@ -89,7 +89,7 @@
             <section class="platform-panel" id="plans">
                 <div class="platform-section-title">
                     <div><p class="platform-kicker">ASSINATURAS</p><h2>Planos Cardápio e Encomendas</h2></div>
-                    <span>Valores, recursos e limites contratados</span>
+                    <button type="button" class="cyan-button" id="newPlanButton">Criar novo plano</button>
                 </div>
                 <div class="plans-grid" id="plansGrid"></div>
             </section>
@@ -183,16 +183,16 @@
             <button type="button" class="modal-close" data-close-modal aria-label="Fechar">×</button>
             <p class="platform-kicker">REGRAS DO PLANO</p>
             <h2 id="planModalTitle">Editar plano</h2>
-            <p class="modal-description">Deixe um limite vazio para oferecer o recurso sem limite.</p>
+            <p class="modal-description">Escolha a base de recursos, os preços e os limites. Desativar retira o plano das novas contratações; assinaturas existentes mantêm o acesso. Alterações de preço valem para novas contratações. Deixe o limite de usuários vazio para ilimitado.</p>
             <form id="planForm"><input type="hidden" id="planId"><div class="platform-form-grid">
-                <label>Nome<input id="planName" required maxlength="80" readonly></label>
-                <label>Mensalidade<input id="planPrice" type="number" min="0" step="0.01" required></label>
+                <label>Nome do plano<input id="planName" required minlength="2" maxlength="80"></label><label>Código do plano<input id="planCode" required minlength="3" maxlength="64" pattern="[a-z0-9](?:[a-z0-9_]|-){2,63}" autocapitalize="none" spellcheck="false"><small>Identificação única, sem espaços ou acentos. Não pode ser alterada depois.</small></label><label>Recursos incluídos<select id="planOffer" required><option value="cardapio">Base Ogritech Cardápio · atendimento no WhatsApp</option><option value="encomendas">Base Ogritech Encomendas · pedidos e vendas no painel</option></select><small>A base define os recursos disponíveis. Nome, código e base ficam fixos após criar.</small></label>
+                <label>Preço mensal (R$)<input id="planPrice" type="number" min="0.01" max="100000" step="0.01" required></label><label>Preço anual total (R$)<input id="planAnnualPrice" type="number" min="0.01" max="1200000" step="0.01" required><small>Valor total de 12 meses, até 12 mensalidades.</small></label><label>Ordem de exibição<input id="planDisplayOrder" type="number" min="0" max="99999" step="1" value="10" required></label>
                 <label>Usuários com acesso<input id="planMaxUsers" type="number" min="1" step="1" placeholder="Ilimitado"></label>
                 <label hidden>Profissionais na agenda<input id="planMaxProfessionals" type="number" min="1" step="1" placeholder="Ilimitado"></label>
                 <label hidden>Tipos de serviço<input id="planMaxServices" type="number" min="1" step="1" placeholder="Ilimitado"></label>
                 <label class="full-field">Descrição<textarea id="planDescription" rows="3" maxlength="300" required></textarea></label>
-                <label class="full-field">Recursos (um por linha)<textarea id="planFeatures" rows="5" maxlength="1000"></textarea></label>
-                <label><input id="planFeatured" type="checkbox"> Destacar como recomendado</label>
+                <label class="full-field">Recursos (um por linha)<textarea id="planFeatures" rows="5" maxlength="5000"></textarea></label>
+                <label><input id="planFeatured" type="checkbox"> Destacar como recomendado</label><label><input id="planActive" type="checkbox" checked> Disponível para novas contratações</label>
             </div><p role="status" aria-live="polite" class="form-message" id="planFormMessage"></p><button type="submit" class="cyan-button full" id="savePlanButton">Salvar plano</button></form>
         </div>
     </div>
@@ -299,7 +299,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
     <script src="supabase-config.js"></script>
     <script src="admin-trial-reviews.js?v=20261111.1"></script>
-    <script src="/product-offers.js?v=20261114.1"></script><script src="admin.js?v=20261114.1"></script>
+    <script src="/product-offers.js?v=20261115.2"></script><script src="admin.js?v=20261115.1"></script>
     <script src="admin-navigation.js?v=20261112.1"></script>
     <script src="pwa.js?v=20261114.1"></script>
 </body>

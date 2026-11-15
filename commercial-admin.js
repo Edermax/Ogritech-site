@@ -15,7 +15,7 @@
     function renderMenuOffer() {
         const planLabel = byId("tenantPlanLabel");
         if (planLabel && ["cardapio", "encomendas"].includes(menuOnboarding?.offer_code)) {
-            planLabel.textContent = `Plano: ${menuOnboarding.offer_code === "cardapio" ? "Cardápio" : "Encomendas"}`;
+            planLabel.textContent = `Plano: ${menuOnboarding.plan_name || (menuOnboarding.offer_code === "cardapio" ? "Cardápio" : "Encomendas")}`;
         }
 
         const simple = whatsappOnly();
@@ -1078,6 +1078,6 @@
     window.OgritechMenuWorkspace = {
         select: selectMenuWorkspace,
         newProduct() { if (!canManageMenu() || !menuDataReady || menuBusy) return; resetMenuItemEditor(); window.OgritechPanelNavigation?.openEditor(false); },
-        state: () => ({ role: typeof currentRole === "undefined" ? null : currentRole, published: Boolean(menuRecord?.published), ready: menuDataReady, busy: menuBusy, canManage: canManageMenu(), offer: menuOnboarding?.offer_code || "encomendas", workspace: selectedMenuWorkspace, next: nextMenuWorkspace(), dirtySettings: menuSettingsDirty })
+        state: () => ({ planName: menuOnboarding?.plan_name || null, role: typeof currentRole === "undefined" ? null : currentRole, published: Boolean(menuRecord?.published), ready: menuDataReady, busy: menuBusy, canManage: canManageMenu(), offer: menuOnboarding?.offer_code || "encomendas", workspace: selectedMenuWorkspace, next: nextMenuWorkspace(), dirtySettings: menuSettingsDirty })
     };
 })();

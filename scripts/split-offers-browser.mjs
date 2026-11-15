@@ -21,6 +21,7 @@ async function pageFor(kind,offer='cardapio',width=1440){
   const status=()=>({exists:true,offer_code:window.__offer,next_step:'review',completed_count:7,total_count:8,checks});
   window.supabaseClient={rpc:async(name,args)=>{
     window.__calls.push({name,args});
+    if(name==='public_menu_plans')return{data:plans.map(p=>({...p,offer_code:p.code==='cardapio'?'cardapio':'encomendas',annual_fee:p.code==='cardapio'?299:499,active:true}))};
     if(name==='public_menu')return{data:{menu:{...menu,offer_code:window.__offer,whatsapp_phone:'5511999999999'},categories,delivery_zones:[]}};
     if(name==='public_menu_assistant_status')return{data:{available:false}};
     if(name==='menu_onboarding_status')return{data:status()};
@@ -172,7 +173,7 @@ try{
   await page.waitForFunction(()=>document.getElementById('plansGrid').querySelectorAll('.plan-card').length===2);
   for(const text of ['29,90','299,00','49,90','499,00'])assert.ok((await page.locator('#plansGrid').textContent()).includes(text));
   await page.locator('#plansGrid').screenshot({path:resolve(output,'admin-plans.png')});
-  await page.click('a[href="#products"][data-admin-group]');await page.selectOption('[data-admin-offer]','cardapio');await page.click('[data-product-action="change_offer"]');
+  await page.click('a[href="#products"][data-admin-group]');await page.selectOption('[data-admin-offer]','simple-plan');await page.click('[data-product-action="change_offer"]');
   await page.waitForFunction(()=>window.__offer==='cardapio');assert.ok((await page.evaluate(()=>window.__calls)).some(call=>call.args?.action==='change_offer'&&call.args.offer==='cardapio'));
   report.checks.push('master admin displays both monthly/annual prices and changes customer plan');await context.close();
  }

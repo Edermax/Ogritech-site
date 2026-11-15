@@ -26,14 +26,14 @@
             const currentPlan = subscription ? plans.find(plan => plan.id === subscription.plan_id) : null;
             const offer = currentPlan ? OgritechOffers.forPlan(currentPlan) : null;
             const annual = subscription?.billing_cycle === "annual";
-            const currentName = offer?.name || subscription?.plan_name || "Plano não identificado";
-            const currentPrice = offer ? `${OgritechOffers.format(annual ? offer.annualCents : offer.monthlyCents)} por ${annual ? "ano" : "mês"}` : "Confira os dados da assinatura com o suporte.";
+            const currentName = subscription?.plan_name_snapshot || offer?.name || subscription?.plan_name || "Plano não identificado";
+            const currentPrice = offer ? `${OgritechOffers.format(annual ? (subscription.contract_annual_cents ?? offer.annualCents) : (subscription.contract_monthly_cents ?? offer.monthlyCents))} por ${annual ? "ano" : "mês"}` : "Confira os dados da assinatura com o suporte.";
             const description = selected => selected.orders ? "Catálogo completo, entrega, retirada e acompanhamento dos pedidos no painel." : "Catálogo com preços, pesos e opções. O cliente escolhe os produtos e continua o atendimento no WhatsApp.";
-            const alternatives = subscription ? plans.filter(plan => plan.id !== subscription.plan_id) : plans;
+            const alternatives = subscription ? plans.filter(plan => plan.id !== subscription.plan_id && plan.active !== false) : plans.filter(plan => plan.active !== false);
             const canChange = subscription && offer && !subscription.cancel_at_period_end;
             const planOptions = alternatives.length ? `<section class="subscription-options" aria-label="Outros planos"><h3>${subscription ? "Quer mudar de plano?" : "Conheça os planos"}</h3><p class="section-description">${subscription ? "Veja as outras opções para o seu negócio." : "Escolha um plano para começar."}</p><div class="subscription-options-grid">${alternatives.map(plan => {
                 const alternative = OgritechOffers.forPlan(plan);
-                return `<article class="subscription-option" data-alternative-plan="${safe(alternative.code)}"><h4>${safe(alternative.name)}</h4><p class="subscription-option-price">${OgritechOffers.format(alternative.monthlyCents)} por mês <span>ou ${OgritechOffers.format(alternative.annualCents)} por ano</span></p><p>${description(alternative)}</p>${subscription ? `<button class="table-button edit" type="button" data-subscription-action="change_plan" data-product="${safe(product.code)}" data-plan-id="${safe(plan.id)}"${canChange ? "" : " disabled"}>Mudar para ${safe(alternative.name)}</button>` : `<a class="gold-button" href="/criar-cardapio/?plano=${safe(alternative.code)}">Conhecer ${safe(alternative.name)}</a>`}</article>`;
+                return `<article class="subscription-option" data-alternative-plan="${safe(alternative.code)}"><h4>${safe(alternative.name)}</h4><p class="subscription-option-price">${OgritechOffers.format(alternative.monthlyCents)} por mês <span>ou ${OgritechOffers.format(alternative.annualCents)} por ano</span></p><p>${description(alternative)}</p>${subscription ? `<button class="table-button edit" type="button" data-subscription-action="change_plan" data-product="${safe(product.code)}" data-plan-id="${safe(plan.id)}"${canChange ? "" : " disabled"}>Mudar para ${safe(alternative.name)}</button>` : `<a class="gold-button" href="/criar-cardapio/${safe(alternative.code)}/?plano_id=${safe(plan.id)}">Conhecer ${safe(alternative.name)}</a>`}</article>`;
             }).join("")}</div>${subscription ? `<p class="section-description">A troca preserva seu prazo de acesso e não gera outro teste de 14 dias. O novo preço vale na próxima cobrança, sem cobrança proporcional.</p>${subscription.cancel_at_period_end ? `<p class="section-description">Mantenha a assinatura para liberar a troca de plano.</p>` : ""}` : ""}</section>` : "";
             const statusNames = { trial: "Teste gratuito", active: "Ativa", grace_period: "Prazo de tolerância", past_due: "Pagamento pendente", suspended: "Suspensa" };
             const status = subscription ? (subscription.cancel_at_period_end ? "Cancelamento agendado" : statusNames[subscription.status] || "Em análise") : "Não contratada";
@@ -82,7 +82,7 @@
         message("Processando sua solicitação...");
         if (action === "change_plan" && product === "menu") {
             const offer = OgritechOffers.forPlan(center.products.find(p => p.code === "menu")?.plans.find(p => p.id === plan));
-            const { data, error } = await supabaseClient.functions.invoke("ogritech-billing", { body: { action: "change_offer", product: "menu", barbershop_id: BARBERSHOP_ID, offer: offer.code } });
+            const { data, error } = await supabaseClient.functions.invoke("ogritech-billing", { body: { action: "change_offer", product: "menu", barbershop_id: BARBERSHOP_ID, offer: offer.code, plan_id: plan, expected_total_cents: activeSubscription("menu")?.billing_cycle === "annual" ? offer.annualCents : offer.monthlyCents } });
             busy = false; byId("exportBusinessData").disabled = false;
             if (error || data?.error) { render(); return message(await OgritechOffers.errorMessage({data,error}, "Não foi possível alterar o plano."), true); }
             await load(); window.dispatchEvent(new Event("ogritech:offer-changed"));
