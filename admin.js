@@ -63,7 +63,7 @@ async function loadData() {
         supabaseClient.from("platform_subscriptions").select("id,billing_customer_id,product_id,plan_id,status,base_amount,current_period_end").order("created_at",{ascending:false}).limit(2000),
         supabaseClient.functions.invoke("platform-users", { body: { action: "list" } }),
         supabaseClient.from("billing_customers").select("id,saas_client_id,billing_email,payment_method,billing_day").limit(1000),
-        supabaseClient.from("platform_invoices").select("id,invoice_number,billing_customer_id,status,issue_date,due_date,subtotal,discount_total,credit_total,total,paid_total,refunded_total,notes,created_at").order("created_at", { ascending: false }).limit(1000),
+        supabaseClient.from("platform_invoices").select("id,invoice_number,billing_customer_id,status,issue_date,due_date,subtotal,discount_total,credit_total,total,paid_total,refunded_total,notes,is_monthly_waived,created_at").order("created_at", { ascending: false }).limit(1000),
         supabaseClient.from("platform_payments").select("id,invoice_id,method,status,gross_amount,fee_amount,paid_at,created_at").order("created_at", { ascending: false }).limit(2000),
         supabaseClient.from("platform_refunds").select("id,payment_id,refund_type,status,amount,reason,created_at").limit(2000)
     ]);
@@ -217,11 +217,11 @@ function renderBilling() {
         const business = invoiceBusiness(invoice), status = effectiveInvoiceStatus(invoice);
         const invoicePayments = payments.filter((item) => item.invoice_id === invoice.id);
         const refundablePayment = invoicePayments.find((payment) => {
-            const returned = refunds.filter((item) => item.payment_id === payment.id && ["approved", "processed"].includes(item.status)).reduce((sum, item) => sum + Number(item.amount), 0);
+            const returned = refunds.filter((item) => item.payment_id === payment.id && ["requested", "approved", "processed"].includes(item.status)).reduce((sum, item) => sum + Number(item.amount), 0);
             return ["approved", "partially_refunded"].includes(payment.status) && returned < Number(payment.gross_amount);
         });
         const balance = Number(invoice.total) - Number(invoice.paid_total);
-        return `<tr><td><strong>${escapeHtml(invoice.invoice_number)}</strong></td><td>${escapeHtml(business?.name || "Cliente removido")}</td><td>${shortDate.format(new Date(`${invoice.issue_date}T00:00:00Z`))}</td><td>${shortDate.format(new Date(`${invoice.due_date}T00:00:00Z`))}</td><td>${moneyPrecise.format(invoice.total)}</td><td>${moneyPrecise.format(invoice.paid_total)}</td><td><span class="billing-status ${status}">${escapeHtml(billingStatusLabels[status] || status)}</span></td><td><div class="admin-row-actions">${balance > 0 && !["void", "refunded"].includes(status) ? `<button data-billing-action="pay" data-id="${invoice.id}">Baixar</button>` : ""}${refundablePayment ? `<button data-billing-action="refund" data-id="${refundablePayment.id}">Devolver</button>` : ""}</div></td></tr>`;
+        return `<tr><td><strong>${escapeHtml(invoice.invoice_number)}</strong></td><td>${escapeHtml(business?.name || "Cliente removido")}</td><td>${shortDate.format(new Date(`${invoice.issue_date}T00:00:00Z`))}</td><td>${shortDate.format(new Date(`${invoice.due_date}T00:00:00Z`))}</td><td>${moneyPrecise.format(invoice.total)}</td><td>${moneyPrecise.format(invoice.paid_total)}</td><td><span class="billing-status ${status}">${escapeHtml(invoice.is_monthly_waived ? "Abonada" : billingStatusLabels[status] || status)}</span></td><td><div class="admin-row-actions">${balance > 0 && !["void", "refunded"].includes(status) ? `<button data-billing-action="pay" data-id="${invoice.id}">Baixar</button>` : ""}${refundablePayment ? `<button data-billing-action="refund" data-id="${refundablePayment.id}">Devolver</button>` : ""}</div></td></tr>`;
     }).join("");
     $('billingEmpty').classList.toggle("hidden", filtered.length > 0);
     $('billingTableWrap').classList.toggle("hidden", filtered.length === 0);
@@ -251,7 +251,7 @@ function renderProductAccess() {
         const status = subscription?.status || 'not_subscribed';
         const canActivate = business && plan && product.code === 'menu';
         const action = subscription
-            ? `<button data-product-action="change_offer" data-product-code="${product.code}">Alterar plano</button><button class="danger" data-product-action="cancel" data-product-code="${product.code}" data-plan-id="${plan?.id || ''}">Cancelar</button>`
+            ? `<button data-product-action="change_offer" data-product-code="${product.code}">Alterar plano</button><button type="button" data-subscription-adjustment="refund" data-subscription-id="${subscription.id}">Devolver mensalidade</button><button type="button" data-subscription-adjustment="waive" data-subscription-id="${subscription.id}">Abonar mensalidade</button><button class="danger" data-product-action="cancel" data-product-code="${product.code}" data-plan-id="${plan?.id || ''}">Cancelar</button>`
             : canActivate ? `<button data-product-action="activate" data-product-code="${product.code}" data-plan-id="${plan.id}">Ativar</button>` : '<span>Plano indisponível</span>';
         return `<tr><td><strong>${escapeHtml(product.name)}</strong><br><small>${escapeHtml(product.launch_state)}</small></td><td><select data-admin-offer aria-label="Plano do negócio">${plans.filter(item => item.product_id === product.id && (item.active !== false || item.id === plan?.id)).map(item => `<option value="${escapeHtml(item.id)}"${item.id === plan?.id ? ' selected' : ''}>${escapeHtml(item.name)} · ${money.format(item.monthly_fee)}/mês · ${OgritechOffers.format(OgritechOffers.forPlan(item).annualCents)}/ano</option>`).join('')}</select><small>Teste único de 14 dias; trocas preservam o prazo.</small></td><td>${subscription ? moneyPrecise.format(subscription.base_amount) : '—'}</td><td><span class="${subscription ? 'active-badge' : 'suspended-badge'}">${escapeHtml(productStatusLabels[status] || 'Não contratado')}</span></td><td><div class="admin-row-actions">${action}</div></td></tr>`;
     }).join('');
@@ -345,7 +345,7 @@ async function savePayment(event) {
     await loadData(); refreshViews(); closeModals();
 }
 function openRefundForm(payment) {
-    const returned = refunds.filter((item) => item.payment_id === payment.id && ["approved", "processed"].includes(item.status)).reduce((sum, item) => sum + Number(item.amount), 0), available = Number(payment.gross_amount) - returned;
+    const returned = refunds.filter((item) => item.payment_id === payment.id && ["requested", "approved", "processed"].includes(item.status)).reduce((sum, item) => sum + Number(item.amount), 0), available = Number(payment.gross_amount) - returned;
     $('refundForm').reset(); $('refundFormMessage').textContent = ''; $('refundPaymentId').value = payment.id; $('refundAmount').value = available.toFixed(2); $('refundAmount').max = available.toFixed(2); $('refundPaymentMeta').textContent = `Disponível para devolução: ${moneyPrecise.format(available)}`; $('refundModal').classList.remove('hidden');
 }
 async function saveRefund(event) {
@@ -491,6 +491,13 @@ function bindEvents() {
     $("productBusinessFilter")?.addEventListener("change", () => { renderProductAccess(); decorateAdminTables(); });
     $("productAccessTableBody")?.addEventListener("click", (event) => { const button=event.target.closest('[data-product-action]'); if (button) changeProductSubscription(button); });
     $("invoiceBusiness")?.addEventListener("change", syncInvoiceBusiness);
+    $("productAccessTableBody")?.addEventListener("click", event => {
+        const button = event.target.closest("[data-subscription-adjustment]"); if (!button) return;
+        const business = businesses.find(item => item.id === $("productBusinessFilter").value) || businesses.find(isMenuBusiness);
+        window.OgritechSubscriptionAdjustments?.open(button.dataset.subscriptionId, button.dataset.subscriptionAdjustment, business?.name || "Cliente", business?.contact_name || business?.name || "", async () => {
+            await loadData(); populateSelectors(); if (business) $("productBusinessFilter").value = business.id; refreshViews();
+        });
+    });
     $("invoiceItemType")?.addEventListener("change", () => { if ($('invoiceItemType').value === 'subscription') syncInvoiceBusiness(); else { $('invoiceDescription').value = ''; $('invoiceUnitAmount').value = ''; updateInvoicePreview(); } });
     ["invoiceQuantity", "invoiceUnitAmount", "invoiceDiscount", "invoiceCredit"].forEach((id) => $(id)?.addEventListener("input", updateInvoicePreview));
     $("invoiceForm")?.addEventListener("submit", saveInvoice); $("paymentForm")?.addEventListener("submit", savePayment); $("refundForm")?.addEventListener("submit", saveRefund);

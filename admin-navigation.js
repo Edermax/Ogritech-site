@@ -44,7 +44,7 @@
     const submit = form.querySelector('button[type="submit"]');
     if (!submit) continue;
     const actions = node('div', '', 'admin-modal-actions');
-    const cancel = node('button', 'Cancelar', 'admin-cancel-action'); cancel.type = 'button';
+    const cancel = node('button', form.closest('#subscriptionAdjustmentModal') ? 'Fechar' : 'Cancelar', 'admin-cancel-action'); cancel.type = 'button';
     cancel.addEventListener('click', () => closeModals());
     actions.append(submit, cancel); form.append(actions);
   }
