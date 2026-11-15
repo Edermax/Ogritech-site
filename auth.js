@@ -225,6 +225,7 @@ async function initializeAuthenticatedPage() {
         pageSessionChanged = true;
         document.documentElement.style.visibility = "hidden";
         clearLocalSession();
+        sessionStorage.removeItem(`ogritechSignupEmail:${window.OGRITECH_ENV || "production"}`);
         window.OgritechPanelNotifications?.stop();
         window.location.replace(environmentUrl("login/"));
     });

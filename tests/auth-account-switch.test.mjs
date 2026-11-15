@@ -68,7 +68,9 @@ test('stale master-business context cannot be rendered as the new owner tenant',
 });
 test('switching account in another tab immediately hides and unloads the prior tenant panel',async()=>{
  const state=await panelPage();assert.equal(state.document.documentElement.style.visibility,'visible');
+ state.values.set(pendingKey,previous.email);
  state.change('SIGNED_IN',{user:previous});assert.equal(state.document.documentElement.style.visibility,'hidden');
+ assert.equal(state.values.get(pendingKey),undefined,'An old signup hint must not sign the newly authenticated user out again');
  assert.equal(state.values.get('japaBarbershopId'),undefined);assert.deepEqual(state.redirects,['https://ogritech.com.br/login/']);
 });
 test('token refresh for the same user preserves the panel; signout removes its tenant context',async()=>{
