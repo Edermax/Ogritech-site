@@ -13,7 +13,7 @@
     <link rel="manifest" href="manifest.webmanifest"><script src="panel-theme.js?v=20261112.1"></script>
     <link rel="stylesheet" href="style.css?v=20261113.2">
     <link rel="stylesheet" href="admin.css?v=20261115.1">
-    <link rel="stylesheet" href="admin-theme.css?v=20261111.2"><link rel="stylesheet" href="panel-dark.css?v=20261115.1">
+    <link rel="stylesheet" href="admin-theme.css?v=20261111.2"><link rel="stylesheet" href="panel-dark.css?v=20261115.2">
     <link rel="stylesheet" href="admin-navigation.css?v=20261112.1">
 </head>
 <body class="platform-admin-page">
@@ -48,7 +48,7 @@
 
 
             <nav class="admin-section-tabs" id="adminSectionTabs" aria-label="Seções da área atual" hidden>
-                <a href="#businesses" data-admin-group="businesses">Carteira</a><a href="#trialReviews" data-admin-group="businesses">Revisões de cadastro</a>
+                <a href="#businesses" data-admin-group="businesses">Carteira</a><a href="#trialReviews" data-admin-group="businesses">Revisões de cadastro</a><a href="#support" data-admin-group="businesses">Atendimento humano</a>
                 <a href="#billing" data-admin-group="billing">Cobranças</a><a href="#products" data-admin-group="billing">Assinaturas</a><a href="#plans" data-admin-group="billing">Planos</a>
             </nav>
             <section id="adminSummary" class="platform-stats" aria-label="Resumo da carteira">
@@ -59,6 +59,7 @@
             </section>
 
             <section class="admin-shortcuts" id="adminShortcuts" aria-label="Ações rápidas"><a href="#businesses"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#store"></use></svg><strong>Gerenciar negócios</strong><span>Cadastros e acesso aos cardápios</span></a><a href="#billing"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#receipt"></use></svg><strong>Conferir cobranças</strong><span>Faturas e recebimentos</span></a><a href="#trialReviews"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#users"></use></svg><strong>Revisar cadastros</strong><span>Solicitações de teste gratuito</span></a></section>
+            <section class="platform-panel" id="support" hidden><div class="platform-section-title"><div><p class="platform-kicker">CONTATO SOLICITADO</p><h2>Atendimento humano</h2><p>Pedidos de retorno enviados pelo Ajudante Ogritech. Use o canal autorizado pela pessoa e marque após o atendimento.</p></div><button id="refreshHumanSupport" type="button" class="outline-cyan-button">Atualizar solicitações</button></div><p id="humanSupportMessage" role="status"></p><div id="humanSupportList" class="segment-grid"></div></section>
             <section class="platform-panel" id="segments">
                 <div class="platform-section-title">
                     <div><p class="platform-kicker">DISTRIBUIÇÃO</p><h2>Clientes por segmento</h2></div>
@@ -298,8 +299,8 @@
     <dialog id="trialReviewDialog" class="trial-review-dialog" aria-labelledby="trialReviewDialogTitle"><form id="trialReviewForm"><h2 id="trialReviewDialogTitle">Revisar solicitação</h2><p id="trialReviewBusiness"></p><input type="hidden" id="trialReviewId"><label>Decisão<select id="trialReviewDecision" required><option value="">Selecione</option><option value="approved">Liberar uma exceção por 48 horas</option><option value="rejected">Não liberar outro teste</option></select></label><label>Motivo da decisão<textarea id="trialReviewReason" required minlength="5" maxlength="500" rows="3"></textarea></label><p>A decisão fica registrada. O teste começa somente quando a pessoa concluir o cadastro com os mesmos dados.</p><p id="trialDecisionMessage" role="status"></p><div class="admin-row-actions"><button type="button" id="closeTrialReview">Cancelar</button><button type="submit" id="saveTrialReview">Salvar decisão</button></div></form></dialog>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
     <script src="supabase-config.js"></script>
-    <script src="admin-trial-reviews.js?v=20261111.1"></script>
-    <script src="/product-offers.js?v=20261115.2"></script><script src="admin.js?v=20261115.1"></script>
+    <script src="admin-support.js?v=20261115.1"></script><script src="admin-trial-reviews.js?v=20261111.1"></script>
+    <script src="/product-offers.js?v=20261115.2"></script><script src="admin.js?v=20261115.2"></script>
     <script src="admin-navigation.js?v=20261112.1"></script>
     <script src="pwa.js?v=20261114.1"></script>
 </body>

@@ -12,13 +12,13 @@ const [script, css, mobileCss, journey, callbackMigration, emailMigration, email
   readFile(new URL("../supabase/functions/assistant-email-dispatch/index.ts", import.meta.url), "utf8")
 ]);
 
-test("assistente comercial mantém escopo e não inventa WhatsApp", () => {
+test("assistente mantém escopo e usa somente o contato oficial informado", () => {
   assert.match(script, /Aquisição e dúvidas comerciais/);
   assert.match(script, /Ogritech Cardápio/);
   assert.doesNotMatch(script, /Ogritech Agenda|R\$ 97/);
   assert.match(emailFunction, /contato@ogritech\.com\.br/);
-  assert.doesNotMatch(script, /wa\.me|api\.whatsapp\.com/);
-  assert.doesNotMatch(script, /99457.?7762/);
+  assert.match(script, /wa\.me\/5516994577762/);
+  assert.match(script, /const extended = panelMode/);
 });
 
 test("avatar flutuante é acessível e acompanha a viewport", () => {

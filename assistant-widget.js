@@ -39,6 +39,7 @@
   let opener = toggle;
   let activeHelpTopic = null;
   let lastHelpContext = "";
+  let contactOptions = { channels: ["E-mail"], email: "contato@ogritech.com.br" }, contactEpoch = 0, contactOpen = false;
   const helpContext = () => window.OgritechMenuWorkspace?.state() || {};
   const contextKey = context => JSON.stringify([context.ready, context.offer, context.planName, context.role, context.published, context.next, context.busy, context.dirtySettings]);
   const helpNode = (tag, text, className) => {
@@ -62,6 +63,7 @@
     return url.href;
   }
   function renderPanelHelp(topic = null) {
+    contactOpen = false; ++contactEpoch;
     activeHelpTopic = topic;
     const context = helpContext(), model = window.OgritechPanelHelp;
     lastHelpContext = contextKey(context);
@@ -77,6 +79,8 @@
       }
       body.append(options);
     }
+    const contact = helpNode("button", "Falar com atendimento humano", "ogri-assistant__option");
+    contact.type = "button"; contact.dataset.requestContact = "contato"; body.append(contact);
     if (entry) {
       const available = entry.actions.filter(action => helpActionAvailable(action, context));
       if (available.length) {
@@ -101,31 +105,45 @@
     teste: "Cada CPF ou CNPJ elegível recebe um único teste de 14 dias entre Cardápio e Encomendas. Trocar de plano não reinicia o teste. Não há cobrança durante o teste e você pode cancelar sem falar com atendentes. <a href='/criar-cardapio/'>Iniciar teste</a>.",
     beneficios: "Cardápio reúne fotos, preços, pesos e opções para o consumidor escolher e continuar no WhatsApp. Encomendas inclui entrega, retirada, agendamento e acompanhamento de pedidos no painel.",
     pagamento: "Aceitamos cartão recorrente e Pix. Não oferecemos boleto nem Pix Automático. O cancelamento é feito pela própria conta e o acesso continua até o fim do período pago.",
-    contato: "Você pode solicitar retorno por ligação telefônica, WhatsApp ou e-mail. Escolha o canal e informe seus dados."
+    contato: "Solicite o retorno de uma pessoa da equipe Ogritech por e-mail."
   };
 
   function menu() {
+    contactOpen = false; ++contactEpoch;
     if (panelMode) { renderPanelHelp(); return; }
     body.innerHTML = `<p class="ogri-assistant__message">Como posso ajudar com a Ogritech Cardápio?</p><div class="ogri-assistant__options">
       <button class="ogri-assistant__option" data-topic="planos">Planos e valores</button>
       <button class="ogri-assistant__option" data-topic="teste">Período gratuito</button>
       <button class="ogri-assistant__option" data-topic="beneficios">Benefícios</button>
       <button class="ogri-assistant__option" data-topic="pagamento">Pagamento e cancelamento</button>
-      <button class="ogri-assistant__option" data-topic="contato">Solicitar contato</button>
+      <button class="ogri-assistant__option" data-topic="contato">Falar com atendimento humano</button>
     </div><p class="ogri-assistant__notice">Atendimento restrito à aquisição, implantação e uso da Ogritech Cardápio.</p>`;
   }
 
   function answer(topic) {
     if (panelMode) { renderPanelHelp(topic); return; }
-    body.innerHTML = `<p class="ogri-assistant__message">${topics[topic]}</p><div class="ogri-assistant__actions"><button class="ogri-assistant__action" type="button" data-request-contact="${topic}">Solicitar contato</button></div><button class="ogri-assistant__back" type="button">← Ver outras dúvidas</button>`;
+    body.innerHTML = `<p class="ogri-assistant__message">${topics[topic]}</p><div class="ogri-assistant__actions"><button class="ogri-assistant__action" type="button" data-request-contact="${topic}">Falar com atendimento humano</button></div><button class="ogri-assistant__back" type="button">← Ver outras dúvidas</button>`;
     body.querySelector(".ogri-assistant__back").addEventListener("click", menu);
   }
 
-  function callbackForm(returnTopic = "contato") {
-    if (panelMode) return;
-    body.innerHTML = `<p class="ogri-assistant__message">Informe como prefere receber o contato da Ogritech.</p>
+  async function callbackForm(returnTopic = "contato") {
+    contactOpen = true; const epoch = ++contactEpoch;
+    contactOptions = { channels: ["E-mail"], email: "contato@ogritech.com.br" };
+    if (panelMode) {
+      body.replaceChildren(helpNode("p", "Conferindo os canais de atendimento...", "ogri-assistant__message"));
+      const fallback = helpNode("a", "Escrever por e-mail", "ogri-assistant__action");
+      fallback.href = "mailto:suporte@ogritech.com.br"; body.append(fallback);
+      const back = helpNode("button", "← Voltar", "ogri-assistant__back"); back.type = "button"; back.addEventListener("click", menu); body.append(back);
+      try {
+        const { data, error } = await supabaseClient.rpc("assistant_contact_options");
+        if (!error && Array.isArray(data?.channels)) contactOptions = data;
+      } catch { /* E-mail remains available if subscription verification fails. */ }
+      if (epoch !== contactEpoch || !contactOpen || panel.hidden) return;
+    }
+    const extended = panelMode && ["Ligação", "WhatsApp"].every(channel => contactOptions.channels.includes(channel));
+    body.innerHTML = `<p class="ogri-assistant__message">Solicite o retorno de uma pessoa da equipe Ogritech. ${extended ? "Escolha telefone, WhatsApp ou e-mail." : "O atendimento está disponível por e-mail."}</p>
       <form class="ogri-assistant__form" novalidate>
-        <fieldset><legend>Como prefere receber o contato? *</legend><label class="ogri-assistant__choice"><input type="radio" name="channel" value="Ligação" checked><span>Ligação telefônica</span></label><label class="ogri-assistant__choice"><input type="radio" name="channel" value="WhatsApp"><span>WhatsApp</span></label><label class="ogri-assistant__choice"><input type="radio" name="channel" value="E-mail"><span>E-mail</span></label></fieldset>
+        <fieldset><legend>Como prefere receber o contato? *</legend>${extended ? `<label class="ogri-assistant__choice"><input type="radio" name="channel" value="Ligação"><span>Ligação telefônica</span></label><label class="ogri-assistant__choice"><input type="radio" name="channel" value="WhatsApp"><span>WhatsApp</span></label>` : ""}<label class="ogri-assistant__choice"><input type="radio" name="channel" value="E-mail" checked><span>E-mail</span></label></fieldset>
         <label data-phone-field><span>Telefone *</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="(00) 00000-0000" required></label>
         <label data-email-field hidden><span>E-mail *</span><input name="email" type="email" inputmode="email" autocomplete="email" maxlength="320" placeholder="voce@empresa.com.br"></label>
         <label class="ogri-assistant__consent" data-whatsapp-consent><input type="checkbox" name="whatsappConsent" required><span>Aceito receber pelo WhatsApp uma mensagem da Ogritech iniciando o contato.</span></label>
@@ -133,7 +151,7 @@
         <label class="ogri-assistant__honeypot" aria-hidden="true">Site<input name="website" tabindex="-1" autocomplete="off"></label>
         <p class="ogri-assistant__form-message" role="alert"></p>
         <button class="ogri-assistant__submit" type="submit">Solicitar contato</button>
-      </form><button class="ogri-assistant__back" type="button">← Voltar</button>`;
+      </form><p class="ogri-assistant__notice">Você também pode escrever para <a href="mailto:${extended ? "suporte@ogritech.com.br" : "contato@ogritech.com.br"}">${extended ? "suporte@ogritech.com.br" : "contato@ogritech.com.br"}</a>.${extended ? ' Contato oficial: <a href="tel:+5516994577762">(16) 99457-7762</a> · <a href="https://wa.me/5516994577762" target="_blank" rel="noopener noreferrer">WhatsApp da Ogritech</a>.' : ""}</p><button class="ogri-assistant__back" type="button">← Voltar</button>`;
     const form = body.querySelector(".ogri-assistant__form");
     const phone = form.elements.phone;
     const email = form.elements.email;
@@ -155,11 +173,11 @@
     phone.addEventListener("input", event => {
       event.target.value = event.target.value.replace(/\D/g, "").slice(0, 11).replace(/^(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
     });
-    form.elements.channel.forEach(input => input.addEventListener("change", updateConsent));
+    form.querySelectorAll("[name=channel]").forEach(input => input.addEventListener("change", updateConsent));
     form.addEventListener("submit", submitCallback);
     body.querySelector(".ogri-assistant__back").addEventListener("click", returnTopic === "contato" ? menu : () => answer(returnTopic));
     updateConsent();
-    phone.focus();
+    email.focus();
   }
 
   function apiConfig() {
@@ -173,13 +191,14 @@
 
   async function submitCallback(event) {
     event.preventDefault();
-    if (panelMode) return;
     const form = event.currentTarget;
     const message = form.querySelector(".ogri-assistant__form-message");
     const submit = form.querySelector(".ogri-assistant__submit");
+    if (submit.disabled) return;
     const digits = form.elements.phone.value.replace(/\D/g, "");
     const email = form.elements.email.value.trim().toLowerCase();
     const channel = form.elements.channel.value;
+    if (!contactOptions.channels.includes(channel) || (!panelMode && channel !== "E-mail")) { message.textContent = "Escolha o atendimento por e-mail para continuar."; return; }
     const whatsappAccepted = form.elements.whatsappConsent.checked;
     if (channel !== "E-mail" && (digits.length < 10 || digits.length > 11)) { message.textContent = "Informe um telefone válido com DDD."; form.elements.phone.focus(); return; }
     if (channel === "E-mail" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { message.textContent = "Informe um e-mail válido."; form.elements.email.focus(); return; }
@@ -189,18 +208,22 @@
     message.textContent = "Enviando seus dados...";
     const { url, key } = apiConfig();
     try {
+      const session = panelMode ? await supabaseClient.auth.getSession() : null;
+      const accessToken = session?.data?.session?.access_token;
+      if (panelMode && channel !== "E-mail" && !accessToken) throw new Error("Sua sessão expirou. Entre novamente ou solicite contato por e-mail.");
       const response = await fetch(`${url}/rest/v1/rpc/public_submit_assistant_callback`, {
         method: "POST",
-        headers: { apikey: key, "Content-Type": "application/json" },
+        headers: { apikey: key, "Content-Type": "application/json", ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
         body: JSON.stringify({ supplied_phone: channel === "E-mail" ? "" : digits, supplied_email: channel === "E-mail" ? email : "", supplied_channel: channel, accepted_privacy: true, accepted_whatsapp: channel === "WhatsApp" && whatsappAccepted, website: form.elements.website.value })
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.message || "Não foi possível enviar agora.");
-      const delivery = result?.data?.delivery_status;
-      const successText = channel === "WhatsApp" && delivery === "sent" ? "Enviei uma mensagem para o seu WhatsApp. Podemos continuar por lá." : channel === "WhatsApp" ? "Solicitação recebida. Seu contato por WhatsApp foi autorizado e está na fila de atendimento." : channel === "E-mail" ? "Solicitação recebida. Seu contato por e-mail foi registrado." : "Solicitação recebida. A Ogritech entrará em contato por ligação telefônica.";
+      if (!contactOpen || !panel.contains(form)) return;
+      const successText = channel === "WhatsApp" ? "Solicitação recebida. Uma pessoa da equipe Ogritech poderá retornar pelo WhatsApp informado." : channel === "E-mail" ? "Solicitação recebida. Uma pessoa da equipe Ogritech poderá retornar pelo e-mail informado." : "Solicitação recebida. Uma pessoa da equipe Ogritech poderá retornar por ligação telefônica.";
       body.innerHTML = `<p class="ogri-assistant__message">${successText}</p><button class="ogri-assistant__back" type="button">← Voltar ao início</button>`;
       body.querySelector(".ogri-assistant__back").addEventListener("click", menu);
     } catch (error) {
+      if (!contactOpen || !panel.contains(form)) return;
       message.textContent = error?.message || "Não foi possível enviar agora. Tente novamente.";
       submit.disabled = false;
     }
@@ -208,6 +231,7 @@
 
   function setOpen(open) {
     if (open) hasInteracted = true;
+    else { contactOpen = false; ++contactEpoch; }
     panel.hidden = !open;
     toggle.setAttribute("aria-expanded", String(open));
     toggle.setAttribute("aria-label", `${open ? "Fechar" : "Abrir"} ${panelMode ? "ajudante" : "assistente"} Ogritech`);
@@ -226,6 +250,8 @@
   toggle.setAttribute("aria-controls", panel.id);
   if (panelMode) toggle.setAttribute("aria-label", "Abrir ajudante Ogritech");
   body.addEventListener("click", event => {
+    const requestButton = event.target.closest("[data-request-contact]");
+    if (requestButton) { callbackForm(requestButton.dataset.requestContact); return; }
     if (panelMode) {
       const topic = event.target.closest("[data-topic]");
       if (topic) answer(topic.dataset.topic);
@@ -261,10 +287,10 @@
       else answer(topicButton.dataset.topic);
       return;
     }
-    const requestButton = event.target.closest("[data-request-contact]");
-    if (requestButton) callbackForm(requestButton.dataset.requestContact);
+
   });
   if (panelMode) window.addEventListener("ogritech:menu-context-changed", () => {
+    if (contactOpen) { if (!helpContext().ready) { ++contactEpoch; contactOpen = false; renderPanelHelp(); } return; }
     if (!panel.hidden && contextKey(helpContext()) !== lastHelpContext) renderPanelHelp(activeHelpTopic);
   });
   document.addEventListener("keydown", event => { if (event.key === "Escape" && !panel.hidden) setOpen(false); });

@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-15",
-  "baseline": "configurable_menu_plans",
+  "baseline": "assistant_human_contact_channels",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "LOCAL_MIGRATION_UP_AND_PGTAP",
-    "migrationCount": 102,
-    "tests": 800,
-    "evidence": "docs/evidencias/cadastro-planos-2026-11-15.md"
+    "migrationCount": 103,
+    "tests": 822,
+    "evidence": "docs/evidencias/atendimento-humano-2026-11-15.md"
   },
   "productionDryRun": {
     "status": "PASSED",
@@ -18,8 +18,8 @@
     "migrationCount": 0,
     "remoteChangesPerformed": false,
     "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/cadastro-planos-2026-11-15.md",
-    "aliasCompatibility": "102 migrations verified in staging and production; native configurable_menu_plans aliases recorded without history repair. No pending migration."
+    "evidence": "docs/evidencias/atendimento-humano-2026-11-15.md",
+    "aliasCompatibility": "103 migrations verified in staging and production. Native assistant_human_contact_channels aliases recorded without history repair. No pending migration."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
@@ -87,20 +87,20 @@
     "guard_menu_offer_changes",
     "menu_tracking_customer_phone"
   ],
-  "authorizationSource": "Usuário solicitou implementar a criação de novos planos no painel administrativo, mantendo a autorização de publicação desta conversa.",
-  "authorizationScope": "Cadastro e gestão de variantes de Cardápio e Encomendas, integração com contratação e troca de plano, preços contratados preservados.",
+  "authorizationSource": "Usuário solicitou atendimento humano por perfil e assinatura e confirmou o retorno pelos três canais e o número oficial.",
+  "authorizationScope": "Retorno humano no Ajudante, e-mail para visitantes/leads e telefone/WhatsApp/e-mail para clientes ativos ou em teste vigente; fila administrativa de atendimento.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
     "executedAt": "2026-11-15",
     "migrations": [
-      "configurable_menu_plans"
+      "assistant_human_contact_channels"
     ],
     "reviewedPendingCount": 1,
-    "sourceBaseCommit": "a1a83c0ff2942a641de953328b4fe3c69617b440",
-    "stagingMigrationCount": 102,
-    "productionMigrationCount": 102,
+    "sourceBaseCommit": "3add81462fe5f72b473a38f019331ec8ddd2077b",
+    "stagingMigrationCount": 103,
+    "productionMigrationCount": 103,
     "postPromotionPendingCount": 0,
-    "evidence": "docs/evidencias/cadastro-planos-2026-11-15.md"
+    "evidence": "docs/evidencias/atendimento-humano-2026-11-15.md"
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",
