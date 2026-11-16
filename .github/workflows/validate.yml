@@ -58,6 +58,7 @@ jobs:
       - run: node scripts/menu-theme-browser.mjs
       - run: node scripts/menu-customization-browser.mjs
       - run: node scripts/auth-account-switch-browser.mjs
+      - run: node scripts/menu-panel-return-browser.mjs
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -74,5 +75,6 @@ jobs:
             outputs/menu-light-theme/
             outputs/menu-customization/
             outputs/account-switch/
+            outputs/menu-panel-return/
           retention-days: 7
           if-no-files-found: ignore
