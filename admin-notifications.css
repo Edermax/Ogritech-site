@@ -1,0 +1,24 @@
+.platform-admin-page .admin-topbar-actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+.platform-admin-page .admin-notifications-open { display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+.platform-admin-page .admin-notifications-badge { min-width:24px; padding:2px 6px; border-radius:20px; background:#b42338; color:#fff; font-size:12px; text-align:center; }
+.platform-admin-page .admin-notifications-announcement { margin:0 0 20px; color:#12586a; font-size:14px; }
+.platform-admin-page .admin-notifications-announcement:empty { display:none; }
+.platform-admin-page .admin-notifications-dialog { width:min(580px,calc(100% - 24px)); max-height:calc(100dvh - 32px); margin:16px 16px 16px auto; padding:24px; border:1px solid #bcccd7; border-radius:16px; background:#fff; color:#162b3a; box-shadow:0 16px 60px #08162440; overflow:auto; }
+.admin-notifications-dialog::backdrop { background:#08162466; }
+.admin-notifications-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.admin-notifications-heading h2 { margin:0; font-size:24px; }
+.admin-notifications-description { margin:16px 0; font-size:14px; }
+.admin-notifications-tools { display:flex; flex-wrap:wrap; gap:8px; }
+.admin-notifications-list { list-style:none; padding:0; margin:16px 0; }
+.admin-notifications-list li { padding:18px 0; border-top:1px solid #d7e1e8; overflow-wrap:anywhere; }
+.admin-notifications-list li[data-unread="true"] { border-left:3px solid #087a91; padding-left:12px; }
+.admin-notifications-list a { display:block; color:#12586a; font-weight:700; text-decoration:underline; text-underline-offset:3px; }
+.admin-notifications-list p { margin:8px 0; font-size:14px; }
+.admin-notifications-list time { display:block; margin-bottom:10px; color:#506574; font-size:12px; }
+.platform-admin-page[data-panel-theme="dark"] .admin-notifications-dialog,
+:root[data-panel-theme="dark"] .admin-notifications-dialog { background:#13232e; color:#e8f1f6; border-color:#3c5668; }
+:root[data-panel-theme="dark"] .admin-notifications-list li { border-top-color:#3c5668; }
+:root[data-panel-theme="dark"] .admin-notifications-list a,
+:root[data-panel-theme="dark"] .admin-notifications-announcement { color:#83dcea; }
+:root[data-panel-theme="dark"] .admin-notifications-list time { color:#b0c3d1; }
+@media(max-width:600px) { .platform-admin-page .admin-notifications-dialog { margin:12px auto; padding:18px; } }

@@ -3,30 +3,30 @@
   "updatedAt": "2026-11-16",
   "baseline": "archive_menu_sales_reports",
   "strategy": "contiguous_tail",
-  "authorized": true,
-  "decision": "APPROVED",
+  "authorized": false,
+  "decision": "BLOCKED_PENDING_REVIEW",
   "localReplay": {
     "status": "PASSED",
-    "mode": "TRANSACTIONAL_REPLAY_PENDING_TAIL_AND_FULL_PGTAP",
-    "migrationCount": 106,
-    "tests": 875,
-    "evidence": "docs/evidencias/diniz-limpeza-relatorios-2026-11-16.md"
+    "mode": "ISOLATED_APPLICATION_DATABASE",
+    "migrationCount": 107,
+    "tests": 899,
+    "evidence": "docs/evidencias/admin-notificacoes-2026-11-16.md"
   },
   "productionDryRun": {
-    "status": "PASSED",
+    "status": "PENDING",
     "executedAt": "2026-11-16",
-    "migrationCount": 0,
+    "migrationCount": 1,
     "remoteChangesPerformed": false,
-    "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/diniz-limpeza-relatorios-2026-11-16.md",
-    "aliasCompatibility": "106 migrations verified in staging and production; archive_menu_sales_reports aliases recorded without history repair. No pending migration."
+    "mode": "NOT_RUN",
+    "evidence": "docs/evidencias/admin-notificacoes-2026-11-16.md",
+    "aliasCompatibility": "Existing aliases preserved. platform_admin_notifications has not been applied remotely."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
-    "commercial_callbacks_and_billing": [],
+    "commercial_callbacks_and_billing": ["platform_admin_notifications"],
     "menu_release_required": [],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],

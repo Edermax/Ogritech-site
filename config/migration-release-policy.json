@@ -108,7 +108,8 @@
       "assistant_human_contact_channels",
       "subscription_billing_adjustments",
       "guard_reversed_online_refunds",
-      "archive_menu_sales_reports"
+      "archive_menu_sales_reports",
+      "platform_admin_notifications"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -243,7 +244,12 @@
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "archive_menu_sales_reports",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      {
+        "name": "platform_admin_notifications",
+        "reason": "Implementada e validada localmente; aplicar ao publicar as notificações administrativas."
+      }
+    ],
     "observationEvidence": "docs/evidencias/diniz-limpeza-relatorios-2026-11-16.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",

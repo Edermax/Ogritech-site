@@ -56,6 +56,8 @@
     "whatsapp-selection.js",
     "subscription-admin.js",
     "admin.js",
+    "admin-notifications.js",
+    "admin-notifications.css",
     "assinatura/index.html",
     "assinatura/assinatura.js",
     "cardapio-digital/index.html",
