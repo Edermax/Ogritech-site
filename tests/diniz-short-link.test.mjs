@@ -54,6 +54,7 @@ test("cálculo de entrega Diniz mantém validação estrita e isola outros estab
 
 test("identidade visual da Diniz usa ativos próprios sem afetar outros cardápios", async () => {
   const menuSource = await readFile(new URL("../cardapio/cardapio.js", import.meta.url), "utf8");
+  const mediaSource = await readFile(new URL("../menu-branding.js", import.meta.url), "utf8");
   const menuHtml = await readFile(new URL("../cardapio/index.html", import.meta.url), "utf8");
   const panelSource = await readFile(new URL("../script.js", import.meta.url), "utf8");
   for (const file of [
@@ -73,14 +74,14 @@ test("identidade visual da Diniz usa ativos próprios sem afetar outros cardápi
   }
   assert.match(menuSource, /slug === "diniz-doces-previa-7d1"/);
   assert.match(menuSource, /Imagem ilustrativa/);
-  assert.match(menuSource, /match: \/bolo de corte\/, src: "bolo-de-corte\.jpg"/);
-  assert.match(menuSource, /match: \/bolo de corte\.\*ninho com nutella\/, src: "bolo-chocolate-granulado\.jpg"/);
-  assert.match(menuSource, /match: \/pao de mel\/, src: "pao-de-mel\.jpg"/);
-  assert.match(menuSource, /match: \/pirulito\/, src: "pirulito\.jpg"/);
+  assert.match(mediaSource, /match: \/bolo de corte\/, src: "bolo-de-corte\.jpg"/);
+  assert.match(mediaSource, /match: \/bolo de corte\.\*ninho com nutella\/, src: "bolo-chocolate-granulado\.jpg"/);
+  assert.match(mediaSource, /match: \/pao de mel\/, src: "pao-de-mel\.jpg"/);
+  assert.match(mediaSource, /match: \/pirulito\/, src: "pirulito\.jpg"/);
   assert.match(menuSource, /piloto privado\\s\*\$\/i/);
-  assert.match(menuSource, /bolo-redondo\.png/);
-  assert.match(menuSource, /bolo-retangular-caramelo\.jpg/);
-  assert.match(menuSource, /brigadeiros\.png/);
+  assert.match(mediaSource, /bolo-redondo\.png/);
+  assert.match(mediaSource, /bolo-retangular-caramelo\.jpg/);
+  assert.match(mediaSource, /brigadeiros\.png/);
   assert.match(menuHtml, /id="menuBrandLogo"/);
   assert.match(panelSource, /assets\/diniz-doces\/logo\.jpg/);
 });

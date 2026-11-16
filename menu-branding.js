@@ -38,5 +38,22 @@
     if (!valid) throw new Error("Use uma imagem de até 10.000 pixels por lado e 40 megapixels.");
     return true;
   }
-  globalThis.OgritechMenuBranding = { validColor, contrastColor, assetUrl, applyColors, validateImage };
+  function productIllustration(slug, category, item) {
+    if (slug !== "diniz-doces" && slug !== "diniz-doces-previa-7d1") return null;
+    const label = `${category?.name || ""} ${item?.name || ""}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const illustrations = [
+      { match: /bolo de corte.*ninho com nutella/, src: "bolo-chocolate-granulado.jpg", alt: "Bolo de chocolate decorado produzido pela Diniz Doces" },
+      { match: /bolo de corte/, src: "bolo-de-corte.jpg", alt: "Fatias de bolo de corte produzidas pela Diniz Doces" },
+      { match: /bolo personalizado retangular/, src: "bolo-retangular-caramelo.jpg", alt: "Bolo retangular decorado da Diniz Doces" },
+      { match: /bolo personalizado redondo/, src: "bolo-redondo.png", alt: "Bolo redondo decorado da Diniz Doces" },
+      { match: /doces tradicionais/, src: "doces-sortidos.jpg", alt: "Seleção de doces da Diniz Doces" },
+      { match: /doces especiais/, src: "brigadeiros.png", alt: "Brigadeiros da Diniz Doces" },
+      { match: /pao de mel/, src: "pao-de-mel.jpg", alt: "Pão de mel personalizado produzido pela Diniz Doces" },
+      { match: /pirulito/, src: "pirulito.jpg", alt: "Pirulito personalizado produzido pela Diniz Doces" },
+    ];
+    const selected = illustrations.find(({ match }) => match.test(label));
+    if (selected) return { ...selected, src: `/assets/diniz-doces/${selected.src}` };
+    return null;
+  }
+  globalThis.OgritechMenuBranding = { validColor, contrastColor, assetUrl, applyColors, validateImage, productIllustration };
 })();

@@ -6,6 +6,7 @@ import vm from "node:vm";
 const root = new URL("../", import.meta.url);
 const source = await readFile(new URL("commercial-admin.js", root), "utf8");
 const html = await readFile(new URL("painel/index.html", root), "utf8");
+const branding = await readFile(new URL("menu-branding.js", root), "utf8");
 const allChecks = { segment: true, identity: true, catalog: true, fulfillment: true, payments: true, hours: true, test_order: true, review: true };
 
 function fixture() {
@@ -129,6 +130,7 @@ function browser(state = fixture(), options = {}) {
     escapeHtml: (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;"),
     ogritechEnvironmentUrl: (path) => `https://local.invalid${path}`
   });
+  vm.runInContext(branding, context);
   vm.runInContext(source, context);
   return {
     element, state, calls, selections, payments, weekdays,
@@ -194,6 +196,45 @@ test("cardápio publicado simplifica a configuração sem esconder a opção de 
   assert.equal(page.element("menuUnpublishButton").classList.contains("hidden"), false);
   assert.equal(page.element("menuPublicationButton").classList.contains("hidden"), true);
   assert.match(html, /id="menuPublicationButton"[^]*id="menuReloadButton"[^]*<\/div>/);
+});
+
+test("miniaturas da Diniz usam as imagens ilustrativas do cardápio sem cadastrar uma foto", async () => {
+  const state = fixture();
+  state.menu.slug = "diniz-doces";
+  const category = state.menu.menu_categories[0];
+  category.name = "Doces";
+  category.menu_items = [{ ...category.menu_items[0], name: "Doces especiais", image_url: null }];
+  const page = browser(state);
+  await page.load();
+  const products = page.element("menuCatalogList").innerHTML;
+  assert.match(products, /src="\/assets\/diniz-doces\/brigadeiros\.png"/);
+  assert.match(products, /Imagem ilustrativa/);
+  assert.doesNotMatch(products, /Sem foto/);
+  assert.equal(category.menu_items[0].image_url, null);
+});
+
+test("foto enviada pela Diniz tem prioridade sobre a imagem ilustrativa", async () => {
+  const state = fixture();
+  state.menu.slug = "diniz-doces";
+  const category = state.menu.menu_categories[0];
+  category.name = "Doces";
+  category.menu_items = [{ ...category.menu_items[0], name: "Doces especiais", image_url: "https://example.supabase.co/storage/v1/object/public/menu-images/photo.png" }];
+  const page = browser(state);
+  await page.load();
+  const products = page.element("menuCatalogList").innerHTML;
+  assert.match(products, /src="https:\/\/example\.supabase\.co\/storage\/v1\/object\/public\/menu-images\/photo\.png"/);
+  assert.doesNotMatch(products, /brigadeiros\.png|Imagem ilustrativa/);
+});
+
+test("outras lojas sem foto não recebem as imagens ilustrativas da Diniz", async () => {
+  const state = fixture();
+  state.menu.menu_categories[0].name = "Doces";
+  state.menu.menu_categories[0].menu_items[0].name = "Doces especiais";
+  const page = browser(state);
+  await page.load();
+  const products = page.element("menuCatalogList").innerHTML;
+  assert.match(products, /Sem foto/);
+  assert.doesNotMatch(products, /assets\/diniz-doces|Imagem ilustrativa/);
 });
 
 test("pedidos de validação interna não aparecem entre os pedidos dos clientes", async () => {
