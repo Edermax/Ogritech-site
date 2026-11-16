@@ -71,7 +71,7 @@ const server=http.createServer((req,res)=>{try{
    }
    assert.deepEqual(errors,[]);
    const calls=await page.evaluate(()=>__fixtureCalls);
-   assert.ok(calls.every(call=>!call.rpc||['is_platform_admin','platform_menu_trial_reviews'].includes(call.rpc)));
+   assert.ok(calls.every(call=>!call.rpc||['is_platform_admin','platform_menu_trial_reviews','platform_notification_inbox'].includes(call.rpc)));
    assert.ok(calls.every(call=>!call.function||call.action==='list'));
    await context.close();
   }

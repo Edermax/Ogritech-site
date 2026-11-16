@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="admin.css?v=20261115.2">
     <link rel="stylesheet" href="admin-theme.css?v=20261111.2"><link rel="stylesheet" href="panel-dark.css?v=20261115.3">
     <link rel="stylesheet" href="admin-navigation.css?v=20261112.1">
+    <link rel="stylesheet" href="admin-notifications.css?v=20261116.1">
 </head>
 <body class="platform-admin-page">
     <div class="platform-shell">
@@ -43,8 +44,15 @@
                     <h1 id="adminViewTitle" tabindex="-1">Resumo</h1>
                     <p><span id="adminViewDescription">Acompanhe seus clientes de Cardápio e acesse as tarefas do dia.</span></p>
                 </div>
-                <div class="security-pill"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#shield"></use></svg>Acesso privado</div>
+                <div class="admin-topbar-actions">
+                    <button type="button" id="adminNotificationsOpen" class="outline-cyan-button admin-notifications-open" aria-label="Notificações" aria-haspopup="dialog" aria-controls="adminNotificationsDialog" disabled>
+                        <svg class="admin-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+                        <span>Notificações</span><span id="adminNotificationsBadge" class="admin-notifications-badge" hidden>0</span>
+                    </button>
+                    <div class="security-pill"><svg class="admin-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#shield"></use></svg>Acesso privado</div>
+                </div>
             </header>
+            <p id="adminNotificationsAnnouncement" class="admin-notifications-announcement" role="status" aria-live="polite" aria-atomic="true"></p>
 
 
             <nav class="admin-section-tabs" id="adminSectionTabs" aria-label="Seções da área atual" hidden>
@@ -300,13 +308,22 @@
     </div>
 
     <div class="admin-loading" id="adminLoading">Validando acesso seguro...</div>
+    <dialog id="adminNotificationsDialog" class="admin-notifications-dialog" aria-labelledby="adminNotificationsTitle">
+        <div class="admin-notifications-heading"><div><p class="platform-kicker">ATIVIDADE DA PLATAFORMA</p><h2 id="adminNotificationsTitle">Notificações</h2></div><button type="button" id="adminNotificationsClose" class="outline-cyan-button" aria-label="Fechar notificações">Fechar</button></div>
+        <p class="admin-notifications-description">Novos cadastros, publicações de cardápio e solicitações de atendimento humano.</p>
+        <div class="admin-notifications-tools"><button type="button" id="adminNotificationsRefresh" class="outline-cyan-button">Atualizar</button><button type="button" id="adminNotificationsReadAll" class="outline-cyan-button" disabled>Marcar todas como lidas</button></div>
+        <p id="adminNotificationsMessage" role="status" aria-live="polite"></p>
+        <ol id="adminNotificationsList" class="admin-notifications-list"></ol>
+        <button type="button" id="adminNotificationsMore" class="outline-cyan-button full" hidden>Carregar anteriores</button>
+    </dialog>
     <footer class="app-legal-links"><a href="mailto:suporte@ogritech.com.br">Suporte</a><a href="mailto:financeiro@ogritech.com.br">Financeiro</a><a href="mailto:privacidade@ogritech.com.br">Privacidade</a></footer>
 
     <dialog id="trialReviewDialog" class="trial-review-dialog" aria-labelledby="trialReviewDialogTitle"><form id="trialReviewForm"><h2 id="trialReviewDialogTitle">Revisar solicitação</h2><p id="trialReviewBusiness"></p><input type="hidden" id="trialReviewId"><label>Decisão<select id="trialReviewDecision" required><option value="">Selecione</option><option value="approved">Liberar uma exceção por 48 horas</option><option value="rejected">Não liberar outro teste</option></select></label><label>Motivo da decisão<textarea id="trialReviewReason" required minlength="5" maxlength="500" rows="3"></textarea></label><p>A decisão fica registrada. O teste começa somente quando a pessoa concluir o cadastro com os mesmos dados.</p><p id="trialDecisionMessage" role="status"></p><div class="admin-row-actions"><button type="button" id="closeTrialReview">Cancelar</button><button type="submit" id="saveTrialReview">Salvar decisão</button></div></form></dialog>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
     <script src="supabase-config.js"></script>
     <script src="admin-support.js?v=20261115.1"></script><script src="admin-trial-reviews.js?v=20261111.1"></script>
-    <script src="/product-offers.js?v=20261115.2"></script><script src="admin.js?v=20261115.3"></script>
+    <script src="admin-notifications.js?v=20261116.1"></script>
+    <script src="/product-offers.js?v=20261115.2"></script><script src="admin.js?v=20261116.1"></script>
     <script src="pix-copy-code.js?v=20261115.1"></script><script src="admin-billing-adjustments.js?v=20261115.1"></script><script src="admin-navigation.js?v=20261115.1"></script>
     <script src="pwa.js?v=20261114.1"></script>
 </body>

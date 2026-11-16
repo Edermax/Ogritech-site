@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-16",
-  "baseline": "archive_menu_sales_reports",
+  "baseline": "platform_admin_notifications",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
-    "mode": "TRANSACTIONAL_REPLAY_PENDING_TAIL_AND_FULL_PGTAP",
-    "migrationCount": 106,
-    "tests": 875,
-    "evidence": "docs/evidencias/diniz-limpeza-relatorios-2026-11-16.md"
+    "mode": "CLEAN_GITHUB_ACTIONS_DATABASE",
+    "migrationCount": 107,
+    "tests": 899,
+    "evidence": "docs/evidencias/admin-notificacoes-2026-11-16.md"
   },
   "productionDryRun": {
     "status": "PASSED",
@@ -18,8 +18,8 @@
     "migrationCount": 0,
     "remoteChangesPerformed": false,
     "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/diniz-limpeza-relatorios-2026-11-16.md",
-    "aliasCompatibility": "106 migrations verified in staging and production; archive_menu_sales_reports aliases recorded without history repair. No pending migration."
+    "evidence": "docs/evidencias/admin-notificacoes-2026-11-16.md",
+    "aliasCompatibility": "107 migrations verified in staging and production. Explicit single migration applied by MCP; aliases recorded without history repair. No pending migration."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
