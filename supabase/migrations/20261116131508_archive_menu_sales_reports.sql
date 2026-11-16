@@ -22,4 +22,3 @@ begin
  if patched=definition then raise exception 'Sales report detail anchor missing'; end if;
  execute patched;
 end $archive_reports$;
-
