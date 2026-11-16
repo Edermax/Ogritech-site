@@ -679,12 +679,13 @@
         try {
             const [{ data: menu, error }, { data: orders, error: ordersError }, { data: templates, error: templateError }, { data: onboarding, error: onboardingError }] = await Promise.all([
                 supabaseClient.from("online_menus").select("*,menu_delivery_zones(code,name,fee,minimum_order,active),menu_categories(id,name,description,active,sort_order,menu_items(id,name,description,image_url,metadata,item_type,unit_label,minimum_quantity,maximum_quantity,lead_time_hours,active,available,sort_order,menu_item_prices(id,label,price,promotional_price,active,sort_order),menu_item_option_groups(sort_order,menu_option_groups(id,name,selection_type,minimum_selections,maximum_selections,free_selections,active,menu_options(id,name,price_delta,maximum_quantity,available,sort_order)))))").eq("barbershop_id", BARBERSHOP_ID).maybeSingle(),
-                supabaseClient.from("menu_orders").select("id,public_reference,order_number,updated_at,payment_receipt_id,payment_received_at,customer_name,customer_email,customer_phone,fulfillment_type,delivery_address,delivery_zone_code,scheduled_for,notes,status,payment_status,subtotal,delivery_fee,discount_amount,total_amount,created_at,is_test,items:menu_order_items(item_name,price_label,quantity,unit_price,line_total,notes,options:menu_order_item_options(group_name,option_name,quantity))").eq("barbershop_id", BARBERSHOP_ID).order("created_at", { ascending: false }).limit(100),
+                supabaseClient.from("menu_orders").select("id,public_reference,order_number,updated_at,payment_receipt_id,payment_received_at,customer_name,customer_email,customer_phone,fulfillment_type,delivery_address,delivery_zone_code,scheduled_for,notes,status,payment_status,subtotal,delivery_fee,discount_amount,total_amount,created_at,is_test,items:menu_order_items(item_name,price_label,quantity,unit_price,line_total,notes,options:menu_order_item_options(group_name,option_name,quantity))").eq("barbershop_id", BARBERSHOP_ID).eq("is_test", false).order("created_at", { ascending: false }).limit(100),
                 supabaseClient.from("menu_catalog_templates").select("code,name,description,segment,definition").eq("active", true).order("name"),
                 supabaseClient.rpc("menu_onboarding_status", { target_barbershop_id: BARBERSHOP_ID })
             ]);
             if (loadVersion !== menuLoadVersion) return false;
-            window.OgritechPanelNotifications?.setOrders(orders, { businessId: BARBERSHOP_ID, error: ordersError });
+            const customerOrders = orders?.filter((order) => !order.is_test) ?? null;
+            window.OgritechPanelNotifications?.setOrders(customerOrders, { businessId: BARBERSHOP_ID, error: ordersError });
             if (error || templateError || onboardingError) throw error || templateError || onboardingError;
             let draftStatus = null;
             if (menu?.published && canManageMenu()) {
@@ -801,7 +802,7 @@
             }));
             byId("menuCatalogList").querySelectorAll("[data-move-category]").forEach((button)=>button.addEventListener("click",()=>moveMenuCatalogEntry("category",button.dataset.moveCategory,Number(button.dataset.direction))));
             byId("menuCatalogList").querySelectorAll("[data-move-menu-item]").forEach((button)=>button.addEventListener("click",()=>moveMenuCatalogEntry("item",button.dataset.moveMenuItem,Number(button.dataset.direction))));
-            byId("menuOrdersList").innerHTML = ordersError ? `<p role="status">${escapeHtml(menuError(ordersError))} Use “Atualizar pedidos” para tentar novamente.</p>` : (orders || []).map((order) => {
+            byId("menuOrdersList").innerHTML = ordersError ? `<p role="status">${escapeHtml(menuError(ordersError))} Use “Atualizar pedidos” para tentar novamente.</p>` : (customerOrders || []).map((order) => {
                 const status = order.status === "pending" ? "received" : order.status;
                 const actions = status === "received" ? [{ action: "confirm", label: "Confirmar" }, ...(order.payment_status === "pending" ? [{ action: "reject", label: "Recusar" }] : [])] : status === "confirmed" ? [...(!whatsappOnly() ? [{ action: "ready", label: "Encomenda pronta" }] : []), { action: "complete", label: "Concluir" }] : [];
                 if (order.payment_status === "pending" && !["rejected", "cancelled"].includes(status)) actions.push({ action: "mark_paid", label: "Marcar pagamento recebido" });

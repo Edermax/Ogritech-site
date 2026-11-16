@@ -196,17 +196,34 @@ test("cardápio publicado simplifica a configuração sem esconder a opção de 
   assert.match(html, /id="menuPublicationButton"[^]*id="menuReloadButton"[^]*<\/div>/);
 });
 
-test("pedidos de teste ficam identificados e não recebem ações operacionais", async () => {
+test("pedidos de validação interna não aparecem entre os pedidos dos clientes", async () => {
   const page = browser();
   await page.load();
   assert.match(page.selections.find((entry) => entry.table === "menu_orders").columns, /is_test/);
   const orders = page.element("menuOrdersList").innerHTML;
-  assert.match(orders, /Pedido de teste, sem cobrança real/);
+  assert.doesNotMatch(orders, /TEST-1|Teste concluído|Pedido de teste, sem cobrança real/);
   assert.doesNotMatch(orders, /data-order="test-order"/);
   assert.match(orders, /data-order="real-order"/);
   assert.match(orders, /data-order-action="confirm"/);
   assert.match(orders, /data-order-action="reject"/);
   assert.doesNotMatch(orders, /data-order-action="complete"[^]*data-order="real-order"/);
+});
+
+test("somente a validação interna mantém a lista vazia e o cardápio pronto após atualizar", async () => {
+  const state = fixture();
+  state.menu.published = true;
+  state.menu.test_order_id = state.orders[0].id;
+  state.orders = [state.orders[0]];
+  const page = browser(state);
+  await page.load();
+  await page.fire("menuOrdersReload");
+  assert.match(page.element("menuOrdersList").innerHTML, /Nenhum pedido recebido/);
+  assert.doesNotMatch(page.element("menuOrdersList").innerHTML, /TEST-1|Teste concluído/);
+  assert.equal(state.menu.test_order_id, "test-order");
+  assert.equal(state.menu.published, true);
+  assert.equal(state.status.next_step, "ready");
+  assert.match(page.element("menuOnboardingBar").attributes["aria-valuetext"], /8 de 8/);
+  assert.equal(page.calls.some((call) => call.name === "update_menu_order"), false);
 });
 
 test("operação permite atualizar a lista de pedidos sem alterar nenhum pedido", async () => {
