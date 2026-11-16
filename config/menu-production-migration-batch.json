@@ -1,25 +1,25 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-15",
-  "baseline": "guard_reversed_online_refunds",
+  "updatedAt": "2026-11-16",
+  "baseline": "archive_menu_sales_reports",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
-    "mode": "LOCAL_MIGRATION_UP_AND_PGTAP",
-    "migrationCount": 105,
-    "tests": 867,
-    "evidence": "docs/evidencias/abonos-devolucoes-2026-11-15.md"
+    "mode": "TRANSACTIONAL_REPLAY_PENDING_TAIL_AND_FULL_PGTAP",
+    "migrationCount": 106,
+    "tests": 875,
+    "evidence": "docs/evidencias/diniz-limpeza-relatorios-2026-11-16.md"
   },
   "productionDryRun": {
     "status": "PASSED",
-    "executedAt": "2026-11-15",
+    "executedAt": "2026-11-16",
     "migrationCount": 0,
     "remoteChangesPerformed": false,
     "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/abonos-devolucoes-2026-11-15.md",
-    "aliasCompatibility": "105 migrations verified in staging and production; native adjustment and original-payment reversal guard aliases recorded without history repair. No pending migration."
+    "evidence": "docs/evidencias/diniz-limpeza-relatorios-2026-11-16.md",
+    "aliasCompatibility": "106 migrations verified in staging and production; archive_menu_sales_reports aliases recorded without history repair. No pending migration."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
@@ -85,23 +85,23 @@
     "menu_order_response_snapshot",
     "split_menu_offers",
     "guard_menu_offer_changes",
-    "menu_tracking_customer_phone"
+    "menu_tracking_customer_phone",
+    "archive_menu_sales_reports"
   ],
-  "authorizationSource": "Usuário solicitou devolução com Pix Copia e Cola e abono mensal com observação opcional; escolheu preservar cartão automático e habilitar abono somente para Pix/manual.",
-  "authorizationScope": "Preparação e confirmação manual de devoluções; abono de uma mensalidade Pix/manual, histórico financeiro, auditoria e proteção contra cobranças concorrentes.",
+  "authorizationSource": "Usuário solicitou zerar os pedidos antes do início dos testes e retirar os relatórios de vendas antigos da Diniz Doces.",
+  "authorizationScope": "Limpeza do histórico visível da Diniz Doces com arquivamento dos períodos antigos, preservando o agendador, os próximos relatórios e o isolamento dos demais negócios.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
-    "executedAt": "2026-11-15",
+    "executedAt": "2026-11-16",
     "migrations": [
-      "subscription_billing_adjustments",
-      "guard_reversed_online_refunds"
+      "archive_menu_sales_reports"
     ],
-    "reviewedPendingCount": 2,
-    "sourceBaseCommit": "9981c6d89b5da79f44eafda9effb7742bfe8e2b8",
-    "stagingMigrationCount": 105,
-    "productionMigrationCount": 105,
+    "reviewedPendingCount": 1,
+    "sourceBaseCommit": "229a061b535b5b27ed815ecba8be27ddd5faddeb",
+    "stagingMigrationCount": 106,
+    "productionMigrationCount": 106,
     "postPromotionPendingCount": 0,
-    "evidence": "docs/evidencias/abonos-devolucoes-2026-11-15.md"
+    "evidence": "docs/evidencias/diniz-limpeza-relatorios-2026-11-16.md"
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",

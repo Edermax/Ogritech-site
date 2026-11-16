@@ -91,5 +91,24 @@ create temporary table report_total as select count(*) count from private.menu_s
 select private.generate_menu_sales_reports('2026-12-01T12:00:00Z');
 select extensions.is((select count(*) from private.menu_sales_reports),(select count from report_total),'scheduler retries never duplicate weekly/monthly notifications');
 select extensions.ok(exists(select 1 from cron.job where jobname='ogritech-menu-sales-reports' and active),'recurring report generation is actually scheduled');
+
+create temporary table archived_report_ids as select id from private.menu_sales_reports where barbershop_id='e1100000-0000-4000-8000-000000000001';
+grant select on archived_report_ids to authenticated;
+create temporary table other_report_ids as select id from private.menu_sales_reports where barbershop_id='e1100000-0000-4000-8000-000000000002';
+update private.menu_sales_reports set archived_at=now() where barbershop_id='e1100000-0000-4000-8000-000000000001';
+set local role authenticated;
+select extensions.is(public.menu_sales_reports('e1100000-0000-4000-8000-000000000001'),'[]'::jsonb,'archived reports disappear from the owner history');
+select extensions.throws_ok($$select public.menu_sales_report('e1100000-0000-4000-8000-000000000001',(select id from archived_report_ids limit 1))$$,'22023','Report unavailable','an archived report cannot be reopened through a saved ID');
+reset role;
+select private.generate_menu_sales_reports('2026-12-01T12:00:00Z');
+select extensions.is(public.menu_sales_reports('e1100000-0000-4000-8000-000000000001'),'[]'::jsonb,'scheduler retries do not restore cleared periods');
+select extensions.is((select count(*) from private.menu_sales_reports where barbershop_id='e1100000-0000-4000-8000-000000000001'),(select count(*) from archived_report_ids),'archived unique period keys remain available to prevent regeneration');
+select extensions.ok(not exists(select 1 from private.menu_sales_reports where barbershop_id='e1100000-0000-4000-8000-000000000002' and archived_at is not null),'archiving one business leaves the other business reports untouched');
+select set_config('request.jwt.claims','{"sub":"e1300000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select extensions.is(jsonb_array_length(public.menu_sales_reports('e1100000-0000-4000-8000-000000000002')),(select count(*)::integer from other_report_ids),'the other owner still sees their existing reports');
+select set_config('request.jwt.claims','{"sub":"e1300000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select private.generate_menu_sales_reports('2026-12-08T12:00:00Z');
+select extensions.is(jsonb_array_length(public.menu_sales_reports('e1100000-0000-4000-8000-000000000001')),1,'future closed periods still generate a visible report');
+select extensions.is(public.menu_sales_reports('e1100000-0000-4000-8000-000000000001')->0->>'period_start','2026-11-30','the new report belongs to the next weekly period');
 select * from extensions.finish();
 rollback;

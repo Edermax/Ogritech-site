@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-11-15",
+  "auditedAt": "2026-11-16",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -107,7 +107,8 @@
       "configurable_menu_plans",
       "assistant_human_contact_channels",
       "subscription_billing_adjustments",
-      "guard_reversed_online_refunds"
+      "guard_reversed_online_refunds",
+      "archive_menu_sales_reports"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -125,7 +126,8 @@
       "configurable_menu_plans": "20261115145119",
       "assistant_human_contact_channels": "20261115185519",
       "subscription_billing_adjustments": "20261115195345",
-      "guard_reversed_online_refunds": "20261115201304"
+      "guard_reversed_online_refunds": "20261115201304",
+      "archive_menu_sales_reports": "20261116131740"
     },
     "observedMigrationNames": [
       "create_core_schema",
@@ -232,16 +234,17 @@
       "configurable_menu_plans",
       "assistant_human_contact_channels",
       "subscription_billing_adjustments",
-      "guard_reversed_online_refunds"
+      "guard_reversed_online_refunds",
+      "archive_menu_sales_reports"
     ],
-    "observationEvidence": "docs/evidencias/cardapio-produtos-cores-2026-11-14.md"
+    "observationEvidence": "docs/evidencias/diniz-limpeza-relatorios-2026-11-16.md"
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "guard_reversed_online_refunds",
+    "appliedThrough": "archive_menu_sales_reports",
     "appliedOutOfOrder": [],
     "heldMigrations": [],
-    "observationEvidence": "docs/evidencias/cardapio-produtos-cores-2026-11-14.md",
+    "observationEvidence": "docs/evidencias/diniz-limpeza-relatorios-2026-11-16.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
       "business_whatsapp_shares": "20261107143521",
@@ -263,7 +266,8 @@
       "configurable_menu_plans": "20261115154232",
       "assistant_human_contact_channels": "20261115185651",
       "subscription_billing_adjustments": "20261115195924",
-      "guard_reversed_online_refunds": "20261115201311"
+      "guard_reversed_online_refunds": "20261115201311",
+      "archive_menu_sales_reports": "20261116132005"
     }
   }
 }
