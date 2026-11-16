@@ -74,7 +74,7 @@ const server=http.createServer((req,res)=>{
    await page.evaluate(()=>openAdminModal('temporaryPasswordModal'));await check(page,'credential-card-'+width);await close(page);
    await view(page,'account');await page.locator('[data-panel-theme-select]').selectOption('dark');await page.reload();await page.locator('#adminLoading').waitFor({state:'hidden'});assert.equal(await page.locator('html').getAttribute('data-panel-theme'),'dark');await page.locator('[data-panel-theme-select]').selectOption('light');
    assert.deepEqual(errors,[]);const calls=await page.evaluate(()=>__fixtureCalls);
-   assert.ok(calls.every(call=>!call.rpc||['is_platform_admin','platform_menu_trial_reviews'].includes(call.rpc)));
+   assert.ok(calls.every(call=>!call.rpc||['is_platform_admin','platform_menu_trial_reviews','platform_notification_inbox'].includes(call.rpc)));
    assert.ok(calls.every(call=>!call.function||call.action==='list'));
    await context.close();
   }
