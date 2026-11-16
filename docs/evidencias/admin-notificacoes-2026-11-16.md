@@ -1,6 +1,6 @@
 # Notificações da administração — 16/11/2026
 
-Implementação local na branch `feat/admin-notifications-20261116`, baseada em `23403f4` de `origin/main`. A pasta principal de desenvolvimento foi preservada. Nenhum ambiente remoto foi alterado.
+Implementação na branch `feat/admin-notifications-20261116`, baseada em `23403f4` de `origin/main`. A pasta principal de desenvolvimento foi preservada. A publicação foi autorizada pelo usuário depois da visualização local; a implantação do banco está registrada abaixo.
 
 ## Comportamento
 
@@ -31,6 +31,17 @@ As leituras são idempotentes e associadas a `auth.uid()`. O limite de "marcar t
 
 ## Ativação
 
-Aplicar `20261116191650_platform_admin_notifications.sql` antes de publicar o frontend administrativo. Os arquivos novos constam do pacote de release. A migration está classificada como pendente de produção, e a autorização do lote foi redefinida para pendente porque a aprovação anterior dizia respeito à fila já publicada.
+Aplicada `20261116191650_platform_admin_notifications.sql` antes da entrega do frontend administrativo. Os arquivos novos constam do pacote de release. A autorização do lote foi atualizada após o pedido explícito de publicação; não houve migração de dados históricos nem alteração das credenciais.
 
-Staging, produção, dry-run remoto e publicação não foram executados nesta implementação. Os aliases históricos das migrations foram preservados.
+## Publicação autorizada — atualização
+
+- [PR #145](https://github.com/Edermax/Ogritech-site/pull/145): entrega do sino e das notificações ao painel online.
+- [Backup criptografado](https://github.com/Edermax/Ogritech-site/actions/runs/43952478339): concluído com sucesso, artefato `ogritech-production-20261116T204543Z`.
+- [Restauração do backup em ambiente descartável](https://github.com/Edermax/Ogritech-site/actions/runs/43953202665): concluída com sucesso antes da migração em produção.
+- [Validação de banco em instalação limpa](https://github.com/Edermax/Ogritech-site/actions/runs/43953056340/job/133600334611): 107 migrations reproduzidas, 33 arquivos SQL, 899 asserções aprovadas e teste de concorrência aprovado. O primeiro job de interface da mesma execução identificou uma lista antiga de RPCs de leitura nos testes de aparência; foi atualizada para reconhecer `platform_notification_inbox`, mantendo a proibição de mutations. Localmente, 63 cenas de aparência e oito cenários de navegação passaram após o ajuste.
+- Staging `fuesdztsvrkkgnbqhcxi`: migration `20261116204208`, total de 107 migrations. As 24 asserções executadas no ambiente remoto passaram com rollback. Zero fixtures de teste remanescentes.
+- Produção `mvzcoaiiwytycdqcvydf`: migration `20261116204928`, total de 107 migrations. Smoke transacional verificou os três gatilhos reais, acesso à caixa de entrada por administrador ativo, marcação de leitura e recusa de visitante anônimo. Rollback integral confirmado; zero usuários e pedidos fictícios remanescentes.
+- A análise de segurança não introduziu advertências ou erros novos. Os avisos informativos de RLS sem políticas nas duas tabelas são deliberados: o acesso direto permanece revogado e somente as RPCs autorizadas alcançam os dados. A advertência anterior sobre proteção de senhas vazadas permanece fora do escopo desta entrega.
+- Inventário de migrations, aliases e auditoria de schema reconciliados com as 107 migrations efetivamente aplicadas. A aplicação foi feita por migration explícita via MCP, sem `db push`, sem reparo de histórico e sem execução de uma fila de migrations.
+
+O frontend é entregue pelo GitHub Pages após a integração da PR, com os arquivos administrativos versionados para atualização do cache. A prévia local e suas fixtures não fazem parte do fluxo do painel online; os arquivos públicos continuam usando o Supabase de produção configurado no projeto.

@@ -1,32 +1,32 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-16",
-  "baseline": "archive_menu_sales_reports",
+  "baseline": "platform_admin_notifications",
   "strategy": "contiguous_tail",
-  "authorized": false,
-  "decision": "BLOCKED_PENDING_REVIEW",
+  "authorized": true,
+  "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
-    "mode": "ISOLATED_APPLICATION_DATABASE",
+    "mode": "CLEAN_GITHUB_ACTIONS_DATABASE",
     "migrationCount": 107,
     "tests": 899,
     "evidence": "docs/evidencias/admin-notificacoes-2026-11-16.md"
   },
   "productionDryRun": {
-    "status": "PENDING",
+    "status": "PASSED",
     "executedAt": "2026-11-16",
-    "migrationCount": 1,
+    "migrationCount": 0,
     "remoteChangesPerformed": false,
-    "mode": "NOT_RUN",
+    "mode": "POST_PROMOTION_READ_ONLY",
     "evidence": "docs/evidencias/admin-notificacoes-2026-11-16.md",
-    "aliasCompatibility": "Existing aliases preserved. platform_admin_notifications has not been applied remotely."
+    "aliasCompatibility": "107 migrations verified in staging and production. Explicit single migration applied by MCP; aliases recorded without history repair. No pending migration."
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
-    "commercial_callbacks_and_billing": ["platform_admin_notifications"],
+    "commercial_callbacks_and_billing": [],
     "menu_release_required": [],
     "ai_staging_disabled": [],
     "private_pilot_observability": [],
