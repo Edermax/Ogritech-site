@@ -119,7 +119,7 @@ function browser(state = fixture(), options = {}) {
     }
   };
   const context = vm.createContext({
-    window: { addEventListener() {} }, document: {
+    window: { addEventListener() {}, renderMenuShare: options.renderMenuShare }, document: {
       getElementById: element,
       querySelectorAll(selector) {
         const list = selector.startsWith(".menu-payment") ? payments : selector.startsWith(".menu-weekday") ? weekdays : [];
@@ -196,6 +196,21 @@ test("cardápio publicado simplifica a configuração sem esconder a opção de 
   assert.equal(page.element("menuUnpublishButton").classList.contains("hidden"), false);
   assert.equal(page.element("menuPublicationButton").classList.contains("hidden"), true);
   assert.match(html, /id="menuPublicationButton"[^]*id="menuReloadButton"[^]*<\/div>/);
+});
+
+test("a prévia abre na mesma tela e o compartilhamento mantém o link público sem origem do painel", async () => {
+  const state = fixture();
+  state.menu.published = true;
+  const shared = [];
+  const page = browser(state, { renderMenuShare: (_, url) => shared.push(url) });
+  await page.load();
+  assert.equal(new URL(page.element("menuPublicLink").href).searchParams.get("origem"), "painel");
+  assert.equal(page.element("menuOperationPublicLink").href, page.element("menuPublicLink").href);
+  assert.deepEqual(shared, ["https://local.invalid/cardapio/?empresa=pizzaria-centro"]);
+  for (const id of ["menuPublicLink", "menuOperationPublicLink"]) {
+    const tag = html.match(new RegExp(`<a[^>]*id="${id}"[^>]*>`))[0];
+    assert.doesNotMatch(tag, /target="_blank"/);
+  }
 });
 
 test("miniaturas da Diniz usam as imagens ilustrativas do cardápio sem cadastrar uma foto", async () => {
@@ -447,7 +462,7 @@ test("cardápio publicado permite editar a configuração sem impedir o rascunho
   assert.equal(page.element("menuItemName").disabled, false);
   assert.equal(page.element("menuPublicationButton").disabled, true);
   assert.equal(page.element("menuUnpublishButton").disabled, false);
-  assert.equal(page.element("menuPublicLink").href, "https://local.invalid/cardapio/?empresa=pizzaria-centro");
+  assert.equal(page.element("menuPublicLink").href, "https://local.invalid/cardapio/?empresa=pizzaria-centro&origem=painel");
   await page.fire("menuUnpublishButton");
   assert.equal(page.element("menuTitle").disabled, false);
   assert.equal(page.element("menuPublicLink").classList.contains("hidden"), true);

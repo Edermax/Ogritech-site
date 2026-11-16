@@ -752,7 +752,9 @@
             const operationLink = byId("menuOperationPublicLink");
             const operationStatus = byId("menuOperationStatus");
             if (menu?.published) {
-                link.href = publicMenuUrl(menu.slug);
+                const previewUrl = new URL(ogritechEnvironmentUrl(`/cardapio/?empresa=${encodeURIComponent(menu.slug)}`));
+                previewUrl.searchParams.set("origem", "painel");
+                link.href = previewUrl.href;
                 link.classList.remove("hidden");
                 operationLink.href = link.href;
                 operationLink.classList.remove("hidden");
@@ -762,7 +764,7 @@
             const sharePreview = byId("menuSharePreview");
             if (sharePanel && sharePreview) {
                 sharePanel.hidden = !menu?.published;
-                window.renderMenuShare?.(sharePreview, menu?.published ? link.href : null, byId("menuShareLink"));
+                window.renderMenuShare?.(sharePreview, menu?.published ? publicMenuUrl(menu.slug) : null, byId("menuShareLink"));
             }
             operationStatus.textContent = menu?.published ? "Cardápio publicado" : "Cardápio não publicado";
             operationStatus.setAttribute("data-state", menu?.published ? "published" : "draft");
