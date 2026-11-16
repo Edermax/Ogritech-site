@@ -69,23 +69,7 @@
     return rows.length ? `Como referência aproximada: ${rows.join("; ")}. O rendimento pode variar conforme o corte e o tipo de recheio.` : "A quantidade de pessoas pode variar conforme o corte. Confirme o rendimento com o estabelecimento.";
   }
   const applyVisualIdentity = (identity) => { globalThis.OgritechMenuBranding?.applyColors(document.documentElement,identity); };
-  const dinizIllustration = (category, item) => {
-    if (!isDinizMenu) return null;
-    const label = `${category?.name || ""} ${item?.name || ""}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    const illustrations = [
-      { match: /bolo de corte.*ninho com nutella/, src: "bolo-chocolate-granulado.jpg", alt: "Bolo de chocolate decorado produzido pela Diniz Doces" },
-      { match: /bolo de corte/, src: "bolo-de-corte.jpg", alt: "Fatias de bolo de corte produzidas pela Diniz Doces" },
-      { match: /bolo personalizado retangular/, src: "bolo-retangular-caramelo.jpg", alt: "Bolo retangular decorado da Diniz Doces" },
-      { match: /bolo personalizado redondo/, src: "bolo-redondo.png", alt: "Bolo redondo decorado da Diniz Doces" },
-      { match: /doces tradicionais/, src: "doces-sortidos.jpg", alt: "Seleção de doces da Diniz Doces" },
-      { match: /doces especiais/, src: "brigadeiros.png", alt: "Brigadeiros da Diniz Doces" },
-      { match: /pao de mel/, src: "pao-de-mel.jpg", alt: "Pão de mel personalizado produzido pela Diniz Doces" },
-      { match: /pirulito/, src: "pirulito.jpg", alt: "Pirulito personalizado produzido pela Diniz Doces" },
-    ];
-    const selected = illustrations.find(({ match }) => match.test(label));
-    if (selected) return { ...selected, src: `../assets/diniz-doces/${selected.src}` };
-    return null;
-  };
+  const dinizIllustration = (category, item) => globalThis.OgritechMenuBranding?.productIllustration(slug, category, item) || null;
   const deliveryZoneLabel = (zone) => Number(zone.fee) === 0 && zone.code === "bolo-agendado" ? `${clean(zone.name)} · taxa calculada após informar o endereço` : `${clean(zone.name)} · ${money.format(zone.fee)}`;
   const estimatedUnitPrice = (entry) => globalThis.OgritechMenuPricing.unitPrice(entry.price, entry.selections, entry.optionGroups);
   const localDateTimeValue = (date) => {
