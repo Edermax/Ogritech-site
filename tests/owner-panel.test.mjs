@@ -2,12 +2,14 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import test from 'node:test';
+const profileSource=await readFile(new URL("../catalog-profiles.js",import.meta.url),"utf8");
 const source = (await readFile(new URL('../admin.js', import.meta.url), 'utf8')).replace(/initializeDashboard\(\);\s*$/, '');
 function harness() {
  const elements = new Map();
  const node = id => { if (!elements.has(id)) elements.set(id,{textContent:'',hidden:false,innerHTML:'',value:'',disabled:false,focus(){},classList:{toggle(){}}});return elements.get(id); };
  const links = ['overview','businesses','users','billing','account'].map(key=>({href:`#${key}`,classList:{toggle(){}},attributes:{},getAttribute(){return this.href},setAttribute(k,v){this.attributes[k]=v},removeAttribute(k){delete this.attributes[k]}}));
  const context = vm.createContext({Intl,Date,console,URL,location:{hash:''},window:{scrollTo(){}},document:{getElementById:node,querySelectorAll(selector){return selector === '.platform-menu a' ? links : []}},supabaseClient:{rpc(){throw new Error('Unexpected mutation')}}});
+ vm.runInContext(profileSource,context);
  vm.runInContext(source,context);
  return {context,node,links,run:code=>vm.runInContext(code,context)};
 }

@@ -32,8 +32,8 @@
         $("pixCode").value = "";
         if (!state) {
             $("billingStatus").textContent = "Sem contratação";
-            $("billingSummary").textContent = "Este negócio ainda não tem uma assinatura do Cardápio.";
-            $("billingDeadline").textContent = "Não encontramos um teste do Cardápio para este negócio.";
+            $("billingSummary").textContent = "Este negócio ainda não tem uma assinatura do Catálogo.";
+            $("billingDeadline").textContent = "Não encontramos um teste do Catálogo para este negócio.";
             $("billingForm").classList.add("hidden");
             return;
         }
@@ -76,7 +76,7 @@
             $("billingDeadline").textContent = `Acesso ativo até ${formatDate(deadline)}.`;
             if (new Date(deadline) > new Date()) $("backToMenu").classList.remove("hidden");
         } else if (state.status === "cancel_at_period_end") {
-            $("billingSummary").textContent = "A renovação foi cancelada. Você pode usar o Cardápio até o fim do período pago.";
+            $("billingSummary").textContent = "A renovação foi cancelada. Você pode usar a vitrine até o fim do período pago.";
             $("billingDeadline").textContent = `Acesso preservado até ${formatDate(deadline)}.`;
             if (new Date(deadline) > new Date()) $("backToMenu").classList.remove("hidden");
         } else if (state.status === "trial_active") {
@@ -88,10 +88,10 @@
             $("billingDeadline").textContent = `Acesso previsto até ${formatDate(deadline)}.`;
             if(state.access_until && new Date(state.access_until)>new Date())$("backToMenu").classList.remove("hidden");
         } else if (state.status === "cancelled") {
-            $("billingSummary").textContent = "Sua assinatura foi encerrada. Fale com o suporte se deseja retomar o Cardápio.";
+            $("billingSummary").textContent = "Sua assinatura foi encerrada. Fale com o suporte se deseja retomar a vitrine.";
             $("billingDeadline").textContent = `O acesso foi encerrado em ${formatDate(deadline)}.`;
         } else {
-            $("billingSummary").textContent = "O período gratuito terminou. Regularize para reabrir o Cardápio automaticamente.";
+            $("billingSummary").textContent = "O período gratuito terminou. Regularize para reabrir a vitrine automaticamente.";
             $("billingDeadline").textContent = `O acesso operacional foi encerrado em ${formatDate(deadline)}.`;
         }
         if (state.status === "payment_pending" && state.payment_method === "card" && state.checkout_url) {

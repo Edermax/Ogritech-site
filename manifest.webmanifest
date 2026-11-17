@@ -1,7 +1,7 @@
 {
-  "name": "Ogritech Cardápio",
+  "name": "Ogritech Catálogo",
   "short_name": "Ogritech",
-  "description": "Cardápio digital, produtos e pedidos para negócios de alimentação.",
+  "description": "Vitrine online para alimentação, artesanato, colecionáveis e outros produtos.",
   "lang": "pt-BR",
   "start_url": "./painel/",
   "scope": "./",

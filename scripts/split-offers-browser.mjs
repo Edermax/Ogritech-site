@@ -55,7 +55,7 @@ async function pageFor(kind,offer='cardapio',width=1440){
    let body=await readFile(target);const contentType={'.html':'text/html','.js':'application/javascript','.css':'text/css','.png':'image/png','.ico':'image/x-icon','.webmanifest':'application/manifest+json'}[extname(target)]||'application/octet-stream';
    if(contentType==='text/html'){
     let html=body.toString();
-    if(['panel','admin'].includes(kind))html=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,tag=>/src="(?:\/)?(?:commercial-admin|subscription-admin|product-offers|panel-navigation|admin)\.js/.test(tag)?tag:'');
+    if(['panel','admin'].includes(kind))html=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,tag=>/src="(?:\/)?(?:catalog-profiles|commercial-admin|subscription-admin|product-offers|panel-navigation|admin)\.js/.test(tag)?tag:'');
     else html=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,tag=>/src="[^\"]*(?:https:|supabase-config|pwa\.js|assistant-widget|whatsapp\/share)/.test(tag)?'':tag);
     body=Buffer.from(html);
    }
@@ -134,7 +134,7 @@ try{
  for(const offer of ['cardapio','encomendas']){
   const {page,context}=await pageFor('signup',offer,390);await page.goto(origin+'/criar-cardapio/'+offer+'/?plano='+(offer==='cardapio'?'encomendas':'cardapio'),{waitUntil:'networkidle'});
   assert.equal(await page.locator('[name=offer]').inputValue(),offer);await page.selectOption('[name=cycle]','annual');assert.match(await page.locator('#selectedOfferPrice').textContent(),offer==='cardapio'?/299,00/:/499,00/);
-  await page.fill('[name=business_name]','Loja Teste');await page.fill('[name=tax_document]','52998224725');await page.fill('[name=responsible_name]','Pessoa Teste');await page.fill('[name=email]','fixture@example.invalid');await page.fill('[name=phone]','11999999999');await page.selectOption('[name=segment]','Pizzaria');await page.selectOption('[name=service_invoice_preference]','not_requested');await page.check('[name=accepted_terms]');await page.check('[name=publish_whatsapp]');
+  await page.fill('[name=business_name]','Loja Teste');await page.fill('[name=tax_document]','52998224725');await page.fill('[name=responsible_name]','Pessoa Teste');await page.fill('[name=email]','fixture@example.invalid');await page.fill('[name=phone]','11999999999');await page.selectOption('[name=segment]','pizzeria');await page.selectOption('[name=service_invoice_preference]','not_requested');await page.check('[name=accepted_terms]');await page.check('[name=publish_whatsapp]');
   await page.click('#submitButton');await page.locator('#resultSection').waitFor({state:'visible'});assert.equal(report.billingRequests.at(-1).offer,offer);assert.equal(report.billingRequests.at(-1).cycle,'annual');assert.equal(new URL(await page.locator('#loginLink').getAttribute('href')).searchParams.get('primeiro_acesso'),'1');assert.equal(await page.evaluate(()=>sessionStorage.getItem('ogritechSignupEmail:production')),'fixture@example.invalid');report.checks.push(`${offer} annual signup payload`);await context.close();
  }
  {
@@ -147,7 +147,7 @@ try{
    return route.fulfill({contentType:'application/json',body:JSON.stringify({data:{trial_ends_at:'2026-12-01T00:00:00Z',login_url:'/login/'}})});
   });
   await page.goto(origin+'/criar-cardapio/cardapio/',{waitUntil:'networkidle'});
-  await page.fill('[name=business_name]','Loja preservada');await page.fill('[name=tax_document]','52998224725');await page.fill('[name=responsible_name]','Pessoa Teste');await page.fill('[name=email]','taken@example.invalid');await page.fill('[name=phone]','11999999999');await page.selectOption('[name=segment]','Pizzaria');await page.selectOption('[name=service_invoice_preference]','not_requested');await page.check('[name=accepted_terms]');await page.check('[name=publish_whatsapp]');
+  await page.fill('[name=business_name]','Loja preservada');await page.fill('[name=tax_document]','52998224725');await page.fill('[name=responsible_name]','Pessoa Teste');await page.fill('[name=email]','taken@example.invalid');await page.fill('[name=phone]','11999999999');await page.selectOption('[name=segment]','pizzeria');await page.selectOption('[name=service_invoice_preference]','not_requested');await page.check('[name=accepted_terms]');await page.check('[name=publish_whatsapp]');
   await page.click('#submitButton');await page.locator('#existingAccountHelp').waitFor({state:'visible'});
   assert.equal(await page.locator('#submitButton').isEnabled(),true);
   assert.equal(await page.locator('[name=business_name]').inputValue(),'Loja preservada');

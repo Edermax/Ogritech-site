@@ -265,3 +265,8 @@ body.panel-readable-controls .subscription-option p { margin:0; }
 body.panel-readable-controls .subscription-option .subscription-option-price { font-weight:700; color:var(--control-text); }
 body.panel-readable-controls .subscription-option-price span { display:block; font-size:13px; font-weight:400; }
 body.panel-readable-controls .subscription-option :is(button,a) { width:fit-content; max-width:100%; min-height:44px; white-space:normal; }
+
+/* Keep activity/profile help above its action on narrow screens. */
+#catalogExtensions form { display:grid; gap:12px; margin:0 0 24px; }
+#catalogExtensions form small { display:block; line-height:1.5; }
+#catalogExtensions form button { justify-self:start; min-height:44px; }

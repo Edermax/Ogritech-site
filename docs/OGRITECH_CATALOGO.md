@@ -4,6 +4,10 @@ Estado: implementado e validado localmente na branch `feat/catalogo-planos-segme
 
 ## Oferta
 
+### Evolução local da vitrine e dos segmentos
+
+Em 17/11/2026, o usuário aprovou a adequação da divulgação, cadastro, páginas públicas e painéis à vitrine online. A implementação está na branch `feat/vitrine-segmentos-local-20261117`, autorizada somente localmente. A home apresenta alimentação, artesanato e colecionáveis; a taxonomia central inclui 15 categorias amplas e preserva as especializações de alimentação, totalizando 19 opções. Alimentação usa “Cardápio”, artesanato usa “Catálogo” e outros produtos usam “Vitrine”. A alteração explícita de atividade preserva catálogo, endereço, histórico e contrato. Detalhes, testes e acesso à prévia: [relatório local](evidencias/vitrine-segmentos-local-2026-11-17.md).
+
 | Plano | Mensal | Anual | Capacidades |
 | --- | ---: | ---: | --- |
 | Catálogo Essencial | R$ 9,90 | R$ 99,00 | Produtos, fotos, opções, identidade básica, link, QR Code e seleção para WhatsApp. |

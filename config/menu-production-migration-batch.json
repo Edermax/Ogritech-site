@@ -1,29 +1,28 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-17",
-  "baseline": "fix_catalog_cycle_claim_parameter",
+  "baseline": "catalog_business_segments",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "OFFLINE_ISOLATED_POSTGRES",
-    "evidence": "docs/OGRITECH_CATALOGO.md",
-    "migrationCount": 110,
-    "testFiles": 34,
-    "assertions": 947,
+    "evidence": "docs/evidencias/vitrine-segmentos-local-2026-11-17.md",
+    "migrationCount": 111,
+    "testFiles": 35,
+    "assertions": 1000,
     "failed": 0
   },
   "productionDryRun": {
-    "status": "REMOTE_TAIL_REVIEWED",
-    "remoteChangesPerformed": false,
-    "evidence": "docs/evidencias/catalogo-publicacao-2026-11-17.md",
+    "status": "APPLIED",
+    "remoteChangesPerformed": true,
+    "expectedPendingNames": [],
+    "appliedNames": [
+      "catalog_business_segments"
+    ],
     "mode": "MCP_EXPLICIT_MIGRATIONS",
-    "expectedPendingNames": [
-      "catalog_profiles_and_commercial_plans",
-      "catalog_cycle_reauthorization",
-      "fix_catalog_cycle_claim_parameter"
-    ]
+    "evidence": "docs/evidencias/vitrine-publicacao-2026-11-17.md"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
