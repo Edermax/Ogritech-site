@@ -11,7 +11,7 @@ try{
   await context.route('**/*',async route=>{if(new URL(route.request().url()).origin!==base){external.push(route.request().url());return route.abort();}return route.continue();});
   const page=await context.newPage();page.on('pageerror',error=>errors.push({url:page.url(),stack:error.stack}));
   await page.goto(base+'/',{waitUntil:'networkidle'});assert.match(await page.locator('h1').textContent(),/Sua vitrine online/);
-  for(const [tab,index] of [['Artesanato',1],['Colecionáveis',2]]){
+  for(const [tab,index] of [['Artesanato',1],['Vestuário',2]]){
    await page.getByRole('tab',{name:tab,exact:true}).click();
    await page.locator('[data-slide]').nth(index).locator('img').first().waitFor();
    await page.locator('.showcase').screenshot({path:`${out}/home-${tab.toLowerCase()}-${width}.png`,animations:'disabled'});
