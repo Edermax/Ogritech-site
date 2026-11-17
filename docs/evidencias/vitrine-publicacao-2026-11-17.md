@@ -20,10 +20,20 @@ O teste de navegador das ofertas passou em 22 cenários sem erro JavaScript ou c
 
 ## Backup e aplicação
 
-Backup criptografado iniciado no workflow existente: [44175189412](https://github.com/Edermax/Ogritech-site/actions/runs/44175189412), baseado no commit público anterior. O ensaio de restauração, a aplicação em produção e a publicação do frontend serão registrados após sua conclusão.
+Backup criptografado iniciado no workflow existente: [44175189412](https://github.com/Edermax/Ogritech-site/actions/runs/44175189412), baseado no commit público anterior. A restauração [44176339040](https://github.com/Edermax/Ogritech-site/actions/runs/44176339040) concluiu com sucesso em banco efêmero, baseada no mesmo commit público. A aplicação de banco foi liberada após o CI [44176576298](https://github.com/Edermax/Ogritech-site/actions/runs/44176576298), com static, database e panel-theme aprovados para o candidato `c436c0491c449ec05c747dafc885b96219ce1375`.
 
 A migração adiciona funções/trigger e estende os metadados públicos. Não percorre nem reclassifica os negócios existentes. A nova função pública não permite acesso anônimo; a implementação verifica gestão e acesso ao produto antes de alterar a atividade.
 
 ## Conferência após publicação
 
 Conferir a versão do Pages, a home e seus recursos, cadastro/preseleção dos segmentos, conteúdo público existente, shell/cache e integridade dos documentos legais. Não criar cadastros, pedidos ou cobranças reais durante a verificação pública.
+
+## Banco de produção concluído
+
+Migração `catalog_business_segments` aplicada em produção na versão remota `20261117211344`; inventário total de 111 migrações. As classificações de alimentação, personalizados e colecionáveis foram verificadas, assim como o bloqueio de execução anônima e a rota autenticada. O rótulo com acentuação de colecionáveis foi conferido no servidor.
+
+Hashes de negócios/segmentos, produtos, catálogos/links/modelos e assinaturas foram comparados imediatamente antes/depois da aplicação: todos permaneceram idênticos. Os quatro preços comerciais continuam corretos e o catálogo público existente mantém o perfil de alimentação.
+
+Os advisors de segurança permaneceram com os mesmos avisos anteriores (tabela com RLS sem política e proteção de senha vazada), sem novo aviso decorrente desta migração. A verificação de performance anterior não tinha erros. Não foram implantadas funções Edge nem alteradas credenciais, cobranças ou configurações do provedor.
+
+Frontend: aguardando conclusão dos checks do registro final e integração do [PR #148](https://github.com/Edermax/Ogritech-site/pull/148). Os commits de implementação e de registro diferem apenas em evidências e inventário da migração já aplicada.

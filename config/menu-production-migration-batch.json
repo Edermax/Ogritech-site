@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-17",
-  "baseline": "fix_catalog_cycle_claim_parameter",
+  "baseline": "catalog_business_segments",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
@@ -15,24 +15,21 @@
     "failed": 0
   },
   "productionDryRun": {
-    "status": "REMOTE_TAIL_REVIEWED",
-    "remoteChangesPerformed": false,
-    "expectedPendingNames": [
+    "status": "APPLIED",
+    "remoteChangesPerformed": true,
+    "expectedPendingNames": [],
+    "appliedNames": [
       "catalog_business_segments"
     ],
     "mode": "MCP_EXPLICIT_MIGRATIONS",
     "evidence": "docs/evidencias/vitrine-publicacao-2026-11-17.md"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "catalog_business_segments"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
-    "menu": [
-      "catalog_business_segments"
-    ]
+    "menu": []
   },
   "releaseConditions": [
     "Every migration in the contiguous tail receives an explicit production disposition.",

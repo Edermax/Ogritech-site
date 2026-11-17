@@ -1,5 +1,7 @@
 # Vitrine e tipos de negócio — implementação local de 17/11/2026
 
+Registro da etapa local. A autorização posterior de publicação, a homologação e o estado remoto estão no [registro de publicação](vitrine-publicacao-2026-11-17.md).
+
 Autorização: o usuário aprovou o prompt de adequação de público, divulgação, cadastro, páginas públicas e painéis e autorizou implementar **localmente**. Esta entrega não publica frontend, migrações ou funções em ambientes remotos.
 
 Branch: `feat/vitrine-segmentos-local-20261117`. Diretório: `work/vitrine-segmentos-local-20261117`. Base: `56e58008cfd37961ab83e7351fb00f3bab3a93f7`, equivalente às alterações de imagens publicadas no PR #147. As outras cópias de trabalho foram preservadas.
