@@ -75,11 +75,11 @@
     "criar-cardapio/encomendas/index.html",
     "contato/index.html",
     "contato/contato.js",
-    "assets/landing-menu/ogritech-bolsa-artesanal.svg",
-    "assets/landing-menu/ogritech-caneca-personalizada.svg",
-    "assets/landing-menu/ogritech-miniatura.svg",
-    "assets/landing-menu/ogritech-moeda-colecao.svg",
-    "assets/landing-menu/ilustracoes-vitrine-origem.json"
+    "assets/landing-menu/ogritech-bolsa-artesanal.webp",
+    "assets/landing-menu/ogritech-boneca-artesanal.webp",
+    "assets/landing-menu/ogritech-blusinha-feminina.webp",
+    "assets/landing-menu/ogritech-scarpin-sem-marca.webp",
+    "assets/landing-menu/fotos-vitrine-origem.json"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",

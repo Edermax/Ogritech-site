@@ -1,0 +1,48 @@
+{
+  "tool": "image_gen.imagegen (built-in)",
+  "generated_at": "2026-11-17",
+  "reference_images_used": false,
+  "source": "Imagens originais geradas por IA a partir de descrições; sem fotos de terceiros.",
+  "assets": [
+    {
+      "file": "assets/landing-menu/ogritech-blusinha-feminina.webp",
+      "original": "outputs/vitrine-fotos-20261117/originais/ogritech-blusinha-feminina.png",
+      "original_sha256": "ea5c21cef914596f7bcfed0f462fb2f1f517cb98470cae06334656470e0a2b31",
+      "sha256": "1eb4dcefe27560928cf84d813258690b304385a0fa7c20e7dae8fee49478af32",
+      "bytes": 10614,
+      "width": 800,
+      "height": 800,
+      "prompt": "Use case: product-mockup. Create one original photorealistic e-commerce studio product photograph, square composition, of a feminine short-sleeved blouse in dusty blush pink cotton, gently puffed sleeves and a simple square neckline. The garment is displayed on an invisible mannequin with no human body, no visible hanger, realistic seams and fine fabric texture. Seamless warm ivory background, soft diffused studio light and subtle natural shadow. Entire blouse fully visible, centered, with generous neutral margins so it remains readable when cropped into a narrow vertical product-card thumbnail; garment no more than 55 percent of image width. One product only, no collage, no other objects. No brand, no logo, no label text, no lettering, no watermark. Intended as a polished product image for the Ogritech clothing showcase."
+    },
+    {
+      "file": "assets/landing-menu/ogritech-scarpin-sem-marca.webp",
+      "original": "outputs/vitrine-fotos-20261117/originais/ogritech-scarpin-sem-marca.png",
+      "original_sha256": "7cadf513f4c965cae524f7a237ff87c8889b742898283fc4b0c50fd523a25507",
+      "sha256": "8189f9f1f52f41537c6048809da7fe34a79e4e43bff1c4535e61e6862b08da39",
+      "bytes": 14652,
+      "width": 800,
+      "height": 800,
+      "prompt": "Use case: product-mockup. Create one original photorealistic premium e-commerce studio photograph, square composition, of a single elegant unbranded black patent-leather women's pointed-toe stiletto pump. Slender high heel, sleek generic original silhouette, a red outsole subtly visible in a natural three-quarter side view. The shoe should be recognizable as a high-fashion style, with realistic glossy leather, natural reflections and physically plausible construction, without reproducing any label or logo. Seamless warm ivory studio background, soft diffused light and a subtle contact shadow. Entire shoe and heel fully visible, centered, with generous neutral margins, product no more than 58 percent of image width, suitable for a narrow vertical thumbnail crop. One shoe only, no collage, no packaging, no props, no text, no brand, no logos, no watermark."
+    },
+    {
+      "file": "assets/landing-menu/ogritech-bolsa-artesanal.webp",
+      "original": "outputs/vitrine-fotos-20261117/originais/ogritech-bolsa-artesanal.png",
+      "original_sha256": "6f6bac93054088f8514a6bf9ddd0e7b413cc57eb45e92b5ae00784ff6b7b9188",
+      "sha256": "df505cc8dde641a23a47e75f2c989a94b9b867fdef02ef8cda654c9413653eec",
+      "bytes": 52274,
+      "width": 800,
+      "height": 800,
+      "prompt": "Use case: product-mockup. Create one original photorealistic e-commerce studio product photograph, square composition, of a handmade crochet tote handbag made of natural beige cotton cord, with two sturdy woven handles and carefully detailed handcrafted stitching. Warm, authentic artisanal character, subtle natural irregularities in the crochet texture, believable construction and proportions. Seamless warm ivory background with soft diffused studio lighting and a discreet natural shadow. Show the entire bag upright in a gentle three-quarter view, centered, handles fully visible. Generous neutral margins, the bag no more than 55 percent of image width so it can fit a narrow vertical product-card crop. One bag only, no decorative props, no flowers, no people, no collage. No brand, no logo, no lettering or watermark. Polished product photography for a Brazilian handicraft catalog."
+    },
+    {
+      "file": "assets/landing-menu/ogritech-boneca-artesanal.webp",
+      "original": "outputs/vitrine-fotos-20261117/originais/ogritech-boneca-artesanal.png",
+      "original_sha256": "85d49fae3066a2d27b21d67188c959aa714a30300e143e55ed61bd7339d2b54a",
+      "sha256": "6332a07aa10bab82ab232c0614c35de970911c4d8aa0918a1b42c0295abc9594",
+      "bytes": 35332,
+      "width": 800,
+      "height": 800,
+      "prompt": "Use case: product-mockup. Create one original photorealistic e-commerce studio product photograph, square composition, of a handmade cloth rag doll with softly embroidered facial features, brown yarn braids, a simple pastel peach cotton dress and tiny fabric shoes. The doll is seated naturally, with handmade stitching and realistic cotton and yarn textures, warm and charming artisanal appearance. Seamless warm ivory background, soft diffused studio lighting, subtle contact shadow. Entire doll fully visible including braids, hands and feet, centered with generous empty margins, doll no more than 55 percent of image width to allow a narrow vertical product-card thumbnail crop. This is a fabric toy, not a real child. One doll only, no additional toys, no props, no collage, no text, no logos, no brand, no watermark."
+    }
+  ]
+}

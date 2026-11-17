@@ -41,6 +41,6 @@ test('marketing segment links preselect a known category without changing public
  const links=[...html.matchAll(/href="\/criar-cardapio\/\?segmento=([a-z-]+)"/g)].map(match=>match[1]);
  assert.equal(links.length,15);
  for(const code of links)assert.ok(api.segment(code));
- assert.match(html,/>Alimentação<\/button>/);assert.match(html,/>Artesanato<\/button>/);assert.match(html,/>Colecionáveis<\/button>/);
+ assert.match(html,/>Alimentação<\/button>/);assert.match(html,/>Artesanato<\/button>/);assert.match(html,/>Vestuário<\/button>/);
  assert.match(html,/ilustrativas/);
 });
