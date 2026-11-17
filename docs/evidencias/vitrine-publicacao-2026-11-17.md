@@ -37,3 +37,7 @@ Hashes de negócios/segmentos, produtos, catálogos/links/modelos e assinaturas 
 Os advisors de segurança permaneceram com os mesmos avisos anteriores (tabela com RLS sem política e proteção de senha vazada), sem novo aviso decorrente desta migração. A verificação de performance anterior não tinha erros. Não foram implantadas funções Edge nem alteradas credenciais, cobranças ou configurações do provedor.
 
 Frontend: aguardando conclusão dos checks do registro final e integração do [PR #148](https://github.com/Edermax/Ogritech-site/pull/148). Os commits de implementação e de registro diferem apenas em evidências e inventário da migração já aplicada.
+
+A validação do registro final detectou que a auditoria somente de leitura ainda esperava a baseline antiga de 110 migrações. `scripts/audit-production-schema.sql` foi sincronizado para 111 e `catalog_business_segments`, mantendo todas as verificações de RLS, políticas e funções privilegiadas. A auditoria também é executada contra o banco de produção para confirmar os invariantes reais.
+
+Avisos anteriores de segurança, sem relação nova com esta migração: [RLS sem política](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy) e [proteção contra senhas vazadas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
