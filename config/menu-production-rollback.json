@@ -3,8 +3,8 @@
   "updatedAt": "2026-11-17",
   "product": "Ogritech Catálogo",
   "rollbackTarget": {
-    "ref": "36226ef40045294e0be7d18c96402d03300de2bd",
-    "source": "Versão pública da vitrine no PR #148, conferida antes da substituição das fotos da home em 17/11/2026.",
+    "ref": "cc9cc3292e05e2fd90880c46c095da0fe6e71de1",
+    "source": "Home com fotos originais de vestuário/artesanato no PR #149, antes da alteração da ordem do carrossel.",
     "verifiedAsCurrentProduction": true,
     "requiredFiles": [
       "index.html",
