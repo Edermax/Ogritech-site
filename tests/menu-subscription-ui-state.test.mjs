@@ -7,13 +7,18 @@ const offerSource=await readFile(new URL('../product-offers.js',import.meta.url)
 function renderer(){
  const elements=new Map();
  const $=id=>{if(!elements.has(id)){const classes=new Set();elements.set(id,{replaceChildren(){},append(){},removeAttribute(){},textContent:'',value:'',className:'',classList:{add(c){classes.add(c);},remove(c){classes.delete(c);},toggle(c,on){if(on)classes.add(c);else classes.delete(c);},contains(c){return classes.has(c);}}});}return elements.get(id);};
- const context={$,Date,URL,document:{createElement:()=>({})},planCatalog:[],currentPlanId:'',currentCycle:'monthly',currentOffer:'encomendas',formatDate:value=>value};
+ const context={$,Date,URL,document:{createElement:()=>({})},changeCycle:$('changeOfferCycle'),planCatalog:[],currentPlanId:'',currentCycle:'monthly',currentOffer:'encomendas',formatDate:value=>value};
  runInNewContext(offerSource,context);
  const render=runInNewContext(source.slice(source.indexOf('function render(state)'),source.indexOf('async function load()'))+';render',context);
  return {render,$};
 }
 const future=new Date(Date.now()+86400000).toISOString();
 const base={cycle:'monthly',payment_method:'pix',trial_ends_at:future,access_until:future,days_remaining:1};
+test('cycle reauthorization offers a new payment choice while keeping the paid catalog accessible',()=>{
+ const {render,$}=renderer();$('recurringAuthorization').checked=true;
+ render({...base,status:'active',payment_method:'card',payment_reauthorization_required:true});
+ assert.equal($('billingForm').classList.contains('hidden'),false);assert.equal($('backToMenu').classList.contains('hidden'),false);assert.equal($('recurringAuthorization').checked,false);assert.match($('billingSummary').textContent,/autorize/);
+});
 test('paid and scheduled-cancellation states retain access without offering another checkout',()=>{
  for(const status of ['active','cancel_at_period_end']){
   const {render,$}=renderer();render({...base,status});

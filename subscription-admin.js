@@ -42,6 +42,7 @@
             let action = "";
             if (subscription?.cancel_at_period_end) action = `<button class="gold-button" type="button" data-subscription-action="reactivate" data-product="${safe(product.code)}">Manter assinatura</button>`;
             else if (subscription) action = `${paymentControls ? `<button class="gold-button" type="button" data-payment-action data-product="menu">Definir pagamento após o teste</button>` : ""}<button class="table-button danger" type="button" data-subscription-action="cancel" data-product="${safe(product.code)}">Cancelar renovação</button>`;
+            if(subscription) action += `<a class="table-button" href="${safe(globalThis.ogritechEnvironmentUrl?.('/assinatura/') || '/assinatura/')}">Gerenciar plano, periodicidade e pagamento</a>`;
             const until = subscription?.current_period_end ? ` · acesso previsto até ${new Date(subscription.current_period_end).toLocaleDateString("pt-BR")}` : "";
             return `<article class="subscription-current" data-current-plan="${safe(offer?.code || "")}"><header><div><p class="subscription-plan-label">${subscription ? "Seu plano atual" : "Nenhum plano contratado"}</p><h3>${subscription ? safe(currentName) : "Escolha como receber seus pedidos"}</h3></div><span class="commercial-badge">${status}${until}</span></header>${subscription ? `<p class="subscription-current-price">${safe(currentPrice)}</p><p class="subscription-period">Periodicidade: ${annual ? "anual" : "mensal"}</p>${offer ? `<p>${description(offer)}</p>` : ""}` : ""}${paymentControls}${offer?.orders ? modules : ""}<div class="commercial-actions">${action}</div>${planOptions}</article>`;
         }).join("") || "<p>Nenhum plano do Cardápio disponível.</p>";
@@ -82,7 +83,7 @@
         message("Processando sua solicitação...");
         if (action === "change_plan" && product === "menu") {
             const offer = OgritechOffers.forPlan(center.products.find(p => p.code === "menu")?.plans.find(p => p.id === plan));
-            const { data, error } = await supabaseClient.functions.invoke("ogritech-billing", { body: { action: "change_offer", product: "menu", barbershop_id: BARBERSHOP_ID, offer: offer.code, plan_id: plan, expected_total_cents: activeSubscription("menu")?.billing_cycle === "annual" ? offer.annualCents : offer.monthlyCents } });
+            const { data, error } = await supabaseClient.functions.invoke("ogritech-billing", { body: { action: "change_offer", product: "menu", barbershop_id: BARBERSHOP_ID, offer: offer.code, plan_id: plan, cycle: activeSubscription("menu")?.billing_cycle === "annual" ? "annual" : "monthly", expected_total_cents: activeSubscription("menu")?.billing_cycle === "annual" ? offer.annualCents : offer.monthlyCents } });
             busy = false; byId("exportBusinessData").disabled = false;
             if (error || data?.error) { render(); return message(await OgritechOffers.errorMessage({data,error}, "Não foi possível alterar o plano."), true); }
             await load(); window.dispatchEvent(new Event("ogritech:offer-changed"));

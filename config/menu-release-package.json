@@ -65,7 +65,10 @@
     "menu-whatsapp.js",
     "ogritech-notification-badge.png",
     "site-theme.css",
-    "order-confirmation.css"
+    "order-confirmation.css",
+    "catalog-profiles.js",
+    "catalog-admin.js",
+    "catalog-presentation.css"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",

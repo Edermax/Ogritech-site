@@ -6,6 +6,10 @@
     let currentPlanId = "", currentCycle = "monthly", planCatalog = [];
     let pollTimer = null;
     let pollAttempts = 0;
+    const changeCycle = document.createElement("select"); changeCycle.id="changeOfferCycle";
+    const changeCycleLabel=document.createElement("label");changeCycleLabel.textContent="Periodicidade na próxima renovação";changeCycleLabel.append(changeCycle);
+    changeCycle.innerHTML='<option value="monthly">Mensal</option><option value="annual">Anual</option>';
+    $("changeOfferButton").before(changeCycleLabel);
 
     function message(text, error = false) {
         $("billingMessage").textContent = text;
@@ -42,8 +46,9 @@
         const base = globalThis.OgritechOffers?.offers[state.offer || "encomendas"];
         const offer = base ? { ...base, name: state.plan_name ? (/^Ogritech\b/i.test(state.plan_name) ? state.plan_name : `Ogritech ${state.plan_name}`) : base.name, monthlyCents: state.monthly_cents ?? base.monthlyCents, annualCents: state.annual_cents ?? base.annualCents } : null;
         currentOffer = state.offer || "encomendas";
-        currentPlanId = state.plan_id || planCatalog.find(plan => plan.code === OgritechOffers.offers[currentOffer].planCode)?.id || currentOffer;
+        currentPlanId = state.plan_id || planCatalog.find(plan => plan.code === OgritechOffers.offers[currentOffer]?.planCode)?.id || currentOffer;
         currentCycle = state.cycle;
+        changeCycle.value=currentCycle;
         $("billingOffer").replaceChildren();
         const options = [...planCatalog];
         if (!options.some(plan => plan.id === currentPlanId)) options.unshift({ id: currentPlanId, name: state.plan_name || offer?.name || "Plano atual", offer_code: currentOffer, monthly_fee: (offer?.monthlyCents || 0)/100, annual_fee: (offer?.annualCents || 0)/100 });
@@ -62,11 +67,12 @@
         $("paymentMethod").value = state.payment_method === "card" ? "card" : "pix";
         $("recurringLabel").classList.toggle("hidden", $("paymentMethod").value !== "card");
         const deadline = state.access_until || state.trial_ends_at;
-        const canChoosePayment = ["trial_active", "past_due"].includes(state.status)
+        if(state.payment_reauthorization_required)$("recurringAuthorization").checked=false;
+        const canChoosePayment = (state.status==="active" && state.payment_reauthorization_required) || ["trial_active", "past_due"].includes(state.status)
             || (state.status === "payment_pending" && !state.subscription_created && !state.payment_requested);
         $("billingForm").classList.toggle("hidden", !canChoosePayment);
         if (state.status === "active") {
-            $("billingSummary").textContent = "Seu pagamento foi confirmado e o Cardápio está disponível.";
+            $("billingSummary").textContent = state.payment_reauthorization_required ? "A recorrência anterior foi encerrada. Escolha e autorize o pagamento da próxima renovação abaixo; seu período já pago continua disponível." : state.effective_offer==='encomendas' && state.offer==='cardapio' ? "Seu período já pago mantém o Completo até a data indicada. O Essencial escolhido vale para a próxima renovação." : "Seu pagamento foi confirmado e o catálogo está disponível.";
             $("billingDeadline").textContent = `Acesso ativo até ${formatDate(deadline)}.`;
             if (new Date(deadline) > new Date()) $("backToMenu").classList.remove("hidden");
         } else if (state.status === "cancel_at_period_end") {
@@ -74,12 +80,13 @@
             $("billingDeadline").textContent = `Acesso preservado até ${formatDate(deadline)}.`;
             if (new Date(deadline) > new Date()) $("backToMenu").classList.remove("hidden");
         } else if (state.status === "trial_active") {
-            $("billingSummary").textContent = `Seu período gratuito continua por ${state.days_remaining} dia${state.days_remaining === 1 ? "" : "s"}.`;
+            $("billingSummary").textContent = `${state.trial_full_access ? "Você experimenta o Completo; a escolha para depois do teste foi preservada. " : ""}Seu período gratuito continua por ${state.days_remaining} dia${state.days_remaining === 1 ? "" : "s"}.`;
             $("billingDeadline").textContent = `O teste termina em ${formatDate(state.trial_ends_at)}.`;
             if (new Date(deadline) > new Date()) $("backToMenu").classList.remove("hidden");
         } else if (state.status === "payment_pending") {
             $("billingSummary").textContent = "Aguardamos a confirmação do Mercado Pago.";
             $("billingDeadline").textContent = `Acesso previsto até ${formatDate(deadline)}.`;
+            if(state.access_until && new Date(state.access_until)>new Date())$("backToMenu").classList.remove("hidden");
         } else if (state.status === "cancelled") {
             $("billingSummary").textContent = "Sua assinatura foi encerrada. Fale com o suporte se deseja retomar o Cardápio.";
             $("billingDeadline").textContent = `O acesso foi encerrado em ${formatDate(deadline)}.`;
@@ -109,26 +116,30 @@
             clearTimeout(pollTimer);
             const state = await invoke({ action: "billing_status", product: "menu", barbershop_id: barbershopId });
             render(state);
+            let historyHost=$("catalogBillingHistory");
+            if(!historyHost){historyHost=document.createElement('section');historyHost.id='catalogBillingHistory';$("billingMessage").after(historyHost);}
+            if(state && ['past_due','cancelled'].includes(state.status)) await window.loadCatalogHistory?.(barbershopId,historyHost);else historyHost.hidden=true;
             if (state?.status === "payment_pending" && (state.payment_method === "pix" || new URLSearchParams(location.search).get("pagamento") === "retorno")) {
                 if (pollAttempts++ < 12) {
                     message("Aguardando a confirmação do Mercado Pago. Esta página será atualizada automaticamente.");
                     pollTimer = setTimeout(load, 5000);
                 } else message("A confirmação ainda não chegou. Consulte novamente mais tarde ou fale com o suporte; não é necessário refazer o pagamento.");
-            } else if (state?.status === "active") message("Pagamento confirmado. Seu acesso foi liberado.");
+            } else if (state?.status === "active" && !state.payment_reauthorization_required) message("Pagamento confirmado. Seu acesso foi liberado.");
         } catch (error) { $("billingForm").classList.add("hidden"); message(error.message, true); }
     }
     $("changeOfferForm").addEventListener("submit", async event => {
         event.preventDefault();
         const selected = $("billingOffer").value;
-        if (selected === currentPlanId) return message("Este já é o seu plano atual.");
+        if (selected === currentPlanId && changeCycle.value === currentCycle) return message("Este já é o seu plano e a periodicidade atuais.");
         const plan = planCatalog.find(plan => plan.id === selected);
         if (!plan) return message("Escolha um plano disponível.", true);
         const offer = OgritechOffers.forPlan(plan);
-        if (!confirm(`Mudar para ${offer.name}? Confira o valor de ${OgritechOffers.format(currentCycle === "annual" ? offer.annualCents : offer.monthlyCents)} por ${currentCycle === "annual" ? "ano" : "mês"}. O prazo de acesso será preservado, sem novo teste gratuito.`)) return;
+        const cycle=changeCycle.value;
+        if (!confirm(`Mudar para ${offer.name}? Confira o valor de ${OgritechOffers.format(cycle === "annual" ? offer.annualCents : offer.monthlyCents)} por ${cycle === "annual" ? "ano" : "mês"} na próxima renovação. O prazo de acesso será preservado, sem novo teste gratuito.${cycle!==currentCycle ? " Se houver recorrência em cartão, ela será encerrada e você precisará autorizar novamente o próximo pagamento." : ""}`)) return;
         $("changeOfferButton").disabled = true;
         try {
-            await invoke({ action: "change_offer", product: "menu", barbershop_id: barbershopId, offer: offer.code, plan_id: plan.id, expected_total_cents: currentCycle === "annual" ? offer.annualCents : offer.monthlyCents });
-            await load(); message("Plano alterado sem novo teste gratuito. O prazo de acesso foi preservado e o novo preço vale na próxima cobrança.");
+            const result=await invoke({ action: "change_offer", product: "menu", barbershop_id: barbershopId, offer: offer.code, plan_id: plan.id, cycle, expected_total_cents: cycle === "annual" ? offer.annualCents : offer.monthlyCents });
+            await load(); message(result?.reauthorization_required ? "Periodicidade alterada. Autorize o próximo pagamento no formulário abaixo. Seu acesso já pago foi preservado." : "Plano alterado sem novo teste gratuito. O prazo de acesso foi preservado e o novo preço vale na próxima cobrança.");
         } catch (error) { message(error.message, true); }
         finally { $("changeOfferButton").disabled = false; }
     });

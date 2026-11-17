@@ -19,7 +19,7 @@ export async function runMenuProductionPreflight(fetchImpl = fetch) {
       checks.push({ name, status: response.status, passed: validate(response.status, parsed) });
     } catch { checks.push({ name, status: null, passed: false }); }
   }
-  for (const [offer, monthly, annual] of [['cardapio',2990,29900],['encomendas',4990,49900]]) {
+  for (const [offer, monthly, annual] of [['cardapio',990,9900],['encomendas',2990,29900]]) {
     await probe(`${offer}_monthly_quote`, 'ogritech-billing', { action:'quote', product:'menu', offer, cycle:'monthly' },
       (status,body)=>status===200 && body?.data?.total_cents===monthly && body?.data?.months===1);
     await probe(`${offer}_annual_quote`, 'ogritech-billing', { action:'quote', product:'menu', offer, cycle:'annual' },

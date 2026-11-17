@@ -4,7 +4,8 @@
   const slug = pathSlug || new URLSearchParams(location.search).get("empresa") || "";
   const isDinizMenu = slug === "diniz-doces" || slug === "diniz-doces-previa-7d1";
   const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }), cart = new Map(), prices = new Map();
-  const whatsappOnly = () => page?.menu?.offer_code === "cardapio";
+  const whatsappOnly = () => page?.menu?.offer_code !== "encomendas";
+  const needsWhatsApp = () => whatsappOnly() || (page?.menu?.profile_code && page.menu.profile_code !== "food" && [...cart.values()].some(entry=>entry.isQuote));
   let page = null, pendingRequestId = null, assistantSessionToken = null, calculatedDeliveryFee = null;
   const createUuid = () => globalThis.crypto?.randomUUID?.() || "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => { const value = Math.floor(Math.random() * 16); return (char === "x" ? value : (value & 3) | 8).toString(16); });
   const clean = (value) => String(value || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
@@ -78,7 +79,7 @@
   };
   const requiredLeadTime = () => Math.max(0, ...[...cart.values()].map((entry) => Number(entry.leadTimeHours) || 0));
   function updateSchedulingRequirement() {
-    if (whatsappOnly()) { $("scheduledFor").required = false; return; }
+    if (needsWhatsApp()) { $("scheduledFor").required = false; return; }
     const input = $("scheduledFor"), hint = $("scheduledForHint"), leadTime = requiredLeadTime();
     input.required = leadTime > 0;
     if (!leadTime) { input.removeAttribute("min"); hint.textContent = "(Opcional)"; return; }
@@ -181,19 +182,19 @@
     }).join("");
     const link = $("whatsappSelectionLink");
     if (link) {
-      link.classList.toggle("hidden", !whatsappOnly());
+      link.classList.toggle("hidden", !needsWhatsApp());
       const customer = { name: $("whatsappCustomerName").value.trim(), phone: $("whatsappCustomerPhone").value.trim() };
       const validCustomer = customer.name.length >= 2 && customer.phone.replace(/\D/g, "").length >= 10 && $("whatsappCustomerForm").checkValidity();
       const target = validCustomer ? globalThis.OgritechWhatsAppSelection?.url(page?.menu?.whatsapp_phone, [...cart.values()], estimatedUnitPrice, customer) : null;
       if (target) link.href = target; else link.removeAttribute("href");
       link.setAttribute("aria-disabled", String(!target));
-      $("whatsappCustomerForm").classList.toggle("hidden", !whatsappOnly());
-      $("whatsappSelectionNotice").classList.toggle("hidden", !whatsappOnly());
-      if (whatsappOnly()) $("whatsappSelectionNotice").textContent = validCustomer
+      $("whatsappCustomerForm").classList.toggle("hidden", !needsWhatsApp());
+      $("whatsappSelectionNotice").classList.toggle("hidden", !needsWhatsApp());
+      if (needsWhatsApp()) $("whatsappSelectionNotice").textContent = validCustomer
         ? "O WhatsApp abrirá com seu nome, telefone e os itens escolhidos para você enviar. Disponibilidade, pagamento e entrega serão combinados com o estabelecimento."
         : "Informe seu nome e telefone com DDD para continuar pelo WhatsApp.";
-      if (whatsappOnly() && validCustomer && !target) $("whatsappSelectionNotice").textContent = "O WhatsApp deste estabelecimento está indisponível. Entre em contato para continuar o atendimento.";
-      $("proceedCheckoutButton").classList.toggle("hidden", whatsappOnly());
+      if (needsWhatsApp() && validCustomer && !target) $("whatsappSelectionNotice").textContent = "O WhatsApp deste estabelecimento está indisponível. Entre em contato para continuar o atendimento.";
+      $("proceedCheckoutButton").classList.toggle("hidden", Boolean(needsWhatsApp()));
     }
     $("cartReviewTotal").textContent = hasQuote ? `Referência: ${money.format(total)}` : money.format(total);
   }
@@ -354,7 +355,9 @@
     const data = await loadMenuData(); if (!data) return;
     const menuTitle = isDinizMenu ? data.menu.title.replace(/\s*[—-]\s*piloto privado\s*$/i, "").trim() : data.menu.title;
     data.categories = (data.categories || []).filter(category => (category.items || []).length > 0);
-    page = data; document.body.classList.toggle("menu-whatsapp-only", whatsappOnly()); applyVisualIdentity(data.menu.visual_identity); document.title = `${menuTitle} | Ogritech`; $("menuTitle").textContent = menuTitle; $("menuDescription").textContent = data.menu.description; $("menuDescription").classList.toggle("hidden", !data.menu.description?.trim());
+    page = data;
+    if (globalThis.OgritechCatalogProfiles) OgritechCatalogProfiles.apply(document.body,OgritechCatalogProfiles.resolve(data.menu));
+    document.body.classList.toggle("menu-whatsapp-only", whatsappOnly()); applyVisualIdentity(data.menu.visual_identity); document.title = `${menuTitle} | Ogritech`; $("menuTitle").textContent = menuTitle; $("menuDescription").textContent = data.menu.description; $("menuDescription").classList.toggle("hidden", !data.menu.description?.trim());
     const logoUrl = globalThis.OgritechMenuBranding?.assetUrl(data.menu.visual_identity?.logo_path, window.OGRITECH_SUPABASE_URL);
     $("menuBrandLockup").classList.toggle("hidden", !logoUrl && !(isDinizMenu && data.menu.visual_identity?.customized !== true));
     if (logoUrl) { $("menuBrandLogo").src=logoUrl; $("menuBrandLogo").alt=menuTitle; }
@@ -411,7 +414,7 @@
   const enterCheckoutMode = () => { document.body.classList.add("menu-checkout-active"); $("menuAssistantPanel").classList.add("hidden"); document.body.classList.remove("menu-assistant-open"); };
   const leaveCheckoutMode = () => { if ($("checkout").classList.contains("hidden")) document.body.classList.remove("menu-checkout-active"); };
   const openCartReview = () => { if (!cart.size) return; enterCheckoutMode(); $("cartReview").classList.remove("hidden"); updateBag(); $("cartReview").scrollIntoView({ behavior: "smooth", block: "start" }); };
-  const openCheckout = () => { if (!cart.size) return; if (whatsappOnly()) return openCartReview(); enterCheckoutMode(); $("cartReview").classList.remove("hidden"); $("checkout").classList.remove("hidden"); updateBag(); $("checkout").scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const openCheckout = () => { if (!cart.size) return; if (needsWhatsApp()) return openCartReview(); enterCheckoutMode(); $("cartReview").classList.remove("hidden"); $("checkout").classList.remove("hidden"); updateBag(); $("checkout").scrollIntoView({ behavior: "smooth", block: "start" }); };
   $("menuBagButton").addEventListener("click", () => {
     if (!cart.size) { $("menuBagStatus").textContent = "Sua sacola está vazia."; return; }
     openCartReview();
@@ -460,7 +463,7 @@
   });
   $("orderForm").addEventListener("input", (event) => { event.target.removeAttribute("aria-invalid"); });
   $("orderForm").addEventListener("submit", async (event) => {
-    event.preventDefault(); if (!cart.size) return; if (whatsappOnly()) { openCartReview(); return; } const form = new FormData(event.target), fulfillment = form.get("fulfillment");
+    event.preventDefault(); if (!cart.size) return; if (needsWhatsApp()) { openCartReview(); return; } const form = new FormData(event.target), fulfillment = form.get("fulfillment");
     if (isDinizMenu && fulfillment === "delivery" && !form.get("delivery_zone")) { $("orderMessage").textContent = "Complete o endereço e clique em Calcular entrega antes de enviar o pedido."; $("calculateDeliveryButton").focus(); $("calculateDeliveryButton").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     const leadTime = requiredLeadTime(), scheduledValue = form.get("scheduled_for"), scheduledDate = scheduledValue ? new Date(scheduledValue) : null;
     if (leadTime > 0 && (!scheduledDate || Number.isNaN(scheduledDate.getTime()) || scheduledDate.getTime() < Date.now() + leadTime * 60 * 60000)) { $("orderMessage").textContent = `Escolha uma data e um horário com pelo menos ${leadTime} horas de antecedência.`; $("scheduledFor").setAttribute("aria-invalid", "true"); $("scheduledFor").focus(); return; }
@@ -491,8 +494,9 @@
         const location = [verified.bairro, verified.localidade, verified.uf].filter(Boolean).join(" - ");
         commonOrder.supplied_address.text = commonOrder.supplied_address.text.trim().slice(0, 750) + ` | Localidade do CEP: ${location}`;
       }
-      ({ data, error } = await supabaseClient.rpc("public_create_menu_order_v2", { ...commonOrder, client_request_id: pendingRequestId, requested_for: form.get("scheduled_for") ? new Date(form.get("scheduled_for")).toISOString() : null }));
-      if (error?.code === "PGRST202" && !commonOrder.supplied_items.some((item) => item.selections.length)) ({ data, error } = await supabaseClient.rpc("public_create_menu_order", { ...commonOrder, supplied_items: commonOrder.supplied_items.map(({ menu_item_price_id, quantity }) => ({ menu_item_price_id, quantity })) }));
+      const coupon = String(form.get("coupon") || "").trim().toUpperCase();
+      ({ data, error } = await supabaseClient.rpc(coupon ? "public_create_catalog_order" : "public_create_menu_order_v2", { ...commonOrder, client_request_id: pendingRequestId, requested_for: form.get("scheduled_for") ? new Date(form.get("scheduled_for")).toISOString() : null, ...(coupon ? {supplied_coupon:coupon} : {}) }));
+      if (!coupon && error?.code === "PGRST202" && !commonOrder.supplied_items.some((item) => item.selections.length)) ({ data, error } = await supabaseClient.rpc("public_create_menu_order", { ...commonOrder, supplied_items: commonOrder.supplied_items.map(({ menu_item_price_id, quantity }) => ({ menu_item_price_id, quantity })) }));
     } catch { error = {message:"Confira sua conexão e tente novamente. Seus itens foram preservados."}; }
     if (error) { $("orderSubmitButton").disabled = false; $("orderMessage").textContent = error.message === "Item indisponível ou fora dos limites" ? `Confira a data do pedido. Os itens escolhidos exigem pelo menos ${leadTime || 48} horas de antecedência.` : `Não foi possível enviar o pedido: ${error.message}`; $("orderMessage").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     pendingRequestId = null;

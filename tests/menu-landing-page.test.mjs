@@ -14,9 +14,9 @@ test("landing dedicada apresenta oferta, recursos, preço e CTA para o teste", (
   assert.match(page, /id="recursos"/);
   assert.match(page, /id="como-funciona"/);
   assert.match(page, /id="preco"/);
-  assert.match(page, /R\$ 49,90/);
+  assert.match(page, /R\$ 29,90/);
   assert.match(page, /14 dias grátis/i);
-  assert.ok((page.match(/href="(?:\.\.\/|\/)criar-cardapio\/(?:(?:cardapio|encomendas)\/)?"/g) || []).length >= 4);
+  assert.ok((page.match(/href="(?:\.\.\/|\/)criar-cardapio\/(?:(?:cardapio|encomendas)\/)?(?:\?perfil=food)?"/g) || []).length >= 4);
 });
 
 test("landing é indexável, canônica e responsiva", () => {
@@ -47,7 +47,7 @@ test("landing segue as regras anteriores de títulos, numerais e moeda", () => {
   assert.doesNotMatch(page, /<li><span>[1-9]<\/span>/);
   assert.match(page, /R\$ 65,00/);
   assert.match(page, /R\$ 45,00/);
-  assert.match(page, /R\$ 49,90<\/strong><span>por mês<\/span>/);
+  assert.match(page, /R\$ 29,90<\/strong><span>por mês<\/span>/);
 });
 
 test("demonstração oferece confeitaria, salgaderia e marmitaria em carrossel acessível", () => {
@@ -65,7 +65,7 @@ test("demonstração oferece confeitaria, salgaderia e marmitaria em carrossel a
 });
 
 test("home apresenta diretamente o Cardápio sem catálogo multiproduto", () => {
- assert.match(home, /Seu cardápio\./);
+ assert.match(home, /Seu catálogo\./);
  assert.match(home, /href="\/criar-cardapio\/"/);
  assert.doesNotMatch(home, /Ogritech Agenda|Ogritech Páginas|Ogritech Orçamentos|availability-badge/);
  assert.doesNotMatch(sitemap, /agenda-online/);

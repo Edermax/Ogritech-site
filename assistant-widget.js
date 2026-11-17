@@ -101,9 +101,9 @@
   }
 
   const topics = {
-    planos: "Ogritech Cardápio: R$ 29,90/mês ou R$ 299,00/ano, com atendimento no WhatsApp. Ogritech Encomendas: R$ 49,90/mês ou R$ 499,00/ano, com gestão de pedidos no painel. Não há comissão por pedido. <a href='/criar-cardapio/'>Começar agora</a>.",
-    teste: "Cada CPF ou CNPJ elegível recebe um único teste de 14 dias entre Cardápio e Encomendas. Trocar de plano não reinicia o teste. Não há cobrança durante o teste e você pode cancelar sem falar com atendentes. <a href='/criar-cardapio/'>Iniciar teste</a>.",
-    beneficios: "Cardápio reúne fotos, preços, pesos e opções para o consumidor escolher e continuar no WhatsApp. Encomendas inclui entrega, retirada, agendamento e acompanhamento de pedidos no painel.",
+    planos: "Ogritech Catálogo Essencial: R$ 9,90/mês ou R$ 99,00/ano, com atendimento no WhatsApp. Catálogo Completo: R$ 29,90/mês ou R$ 299,00/ano, com gestão de pedidos no painel. Para alimentação, artesanato e produtos. Não há comissão por pedido. <a href='/criar-cardapio/'>Começar agora</a>.",
+    teste: "Cada CPF ou CNPJ elegível recebe um único teste de 14 dias no Completo, compartilhado entre planos e segmentos. Trocar de plano, segmento ou periodicidade não reinicia o teste. Não há cobrança durante o teste e você pode cancelar sem falar com atendentes. <a href='/criar-cardapio/'>Iniciar teste</a>.",
+    beneficios: "O Catálogo Essencial reúne fotos, preços e opções para o consumidor escolher e continuar no WhatsApp. O Completo inclui entrega local, retirada, agendamento e acompanhamento de pedidos no painel.",
     pagamento: "Aceitamos cartão recorrente e Pix. Não oferecemos boleto nem Pix Automático. O cancelamento é feito pela própria conta e o acesso continua até o fim do período pago.",
     contato: "Solicite o retorno de uma pessoa da equipe Ogritech por e-mail."
   };

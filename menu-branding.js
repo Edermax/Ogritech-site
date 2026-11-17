@@ -55,5 +55,18 @@
     if (selected) return { ...selected, src: `/assets/diniz-doces/${selected.src}` };
     return null;
   }
-  globalThis.OgritechMenuBranding = { validColor, contrastColor, assetUrl, applyColors, validateImage, productIllustration };
+  async function prepareImage(file, maxSide = 1600) {
+    await validateImage(file);
+    const bitmap=await createImageBitmap(file), scale=Math.min(1,maxSide/Math.max(bitmap.width,bitmap.height));
+    try {
+      const canvas=document.createElement("canvas"); canvas.width=Math.max(1,Math.round(bitmap.width*scale)); canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+      const context=canvas.getContext("2d"); if(!context)throw new Error("Não foi possível preparar a imagem.");
+      context.drawImage(bitmap,0,0,canvas.width,canvas.height);
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/webp",0.82));
+      if(!blob || blob.size>5*1024*1024)throw new Error("Não foi possível otimizar a imagem. Escolha outro arquivo.");
+      if(scale===1 && blob.size>=file.size)return file;
+      return new File([blob],file.name.replace(/\.[^.]+$/,"")+(blob.type==="image/webp"?".webp":".png"),{type:blob.type});
+    } finally {bitmap.close();}
+  }
+  globalThis.OgritechMenuBranding = { validColor, contrastColor, assetUrl, applyColors, validateImage, prepareImage, productIllustration };
 })();

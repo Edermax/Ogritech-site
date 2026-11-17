@@ -61,7 +61,7 @@ test("fim do teste abre uma recuperação autenticada e preserva o Cardápio", a
   assert.match(login, /ogritechEnvironmentUrl\("assinatura\/"\)/);
   assert.match(billing, /back_url: `\$\{appUrl\}\/assinatura\/\?pagamento=retorno/);
   assert.match(billing, /BillingStatusBody/);
-  assert.match(lifecycle, /Renovação Ogritech Cardápio/);
+  assert.match(lifecycle, /plan_name_snapshot/);
   assert.match(email, /renderBillingEmail/);
   assert.match(emailTemplate, /signup\.product_code\s*===\s*"menu"/);
   assert.match(emailTemplate, /subscriptionUrl=signup\.product_code==="menu"\?"https:\/\/ogritech\.com\.br\/login\/\?destino=assinatura"/);

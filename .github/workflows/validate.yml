@@ -56,6 +56,7 @@ jobs:
       - run: node scripts/configurable-plans-browser.cjs
       - run: node scripts/subscription-adjustments-browser.cjs
       - run: node scripts/split-offers-browser.mjs
+      - run: npm run test:catalog-browser
       - run: node scripts/menu-theme-browser.mjs
       - run: node scripts/menu-customization-browser.mjs
       - run: node scripts/auth-account-switch-browser.mjs
@@ -74,6 +75,7 @@ jobs:
             outputs/configurable-plans/
             outputs/subscription-adjustments/
             outputs/split-offers/
+            outputs/catalog-review/browser/
             outputs/menu-light-theme/
             outputs/menu-customization/
             outputs/account-switch/

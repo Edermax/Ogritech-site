@@ -7,7 +7,7 @@ const read = (path) => readFile(new URL(path, root), "utf8");
 
 test("contratação antiga é retirada e o Cardápio mantém sua oferta", async () => {
  const page = await read("contratar/index.html");const home=await read("index.html");
- assert.match(page,/http-equiv="refresh"/);assert.doesNotMatch(page,/contratar\.js/);assert.match(home,/R\$ 49,90/);assert.match(home,/R\$ 499/);
+ assert.match(page,/http-equiv="refresh"/);assert.doesNotMatch(page,/contratar\.js/);assert.match(home,/R\$ 29,90/);assert.match(home,/R\$ 99,00/);assert.match(home,/R\$ 299,00/);
 });
 
 test("billing protege teste por CNPJ e dados pré-autenticação", async () => {

@@ -1,4 +1,6 @@
 begin;
+-- Historical scenarios seed contracts from the preceding commercial version.
+update public.saas_plans set active=true where catalog_version=1 and product_id=(select id from public.platform_products where code='menu');
 select extensions.plan(45);
 insert into public.barbershops(id,name,slug,segment) values('eb100000-0000-4000-8000-000000000001','Adjustment fixture','adjustments-fixture','Restaurante');
 insert into public.saas_clients(id,name,segment,contact_name,owner_email,origin,plan,monthly_fee,status,barbershop_id) values('eb200000-0000-4000-8000-000000000001','Adjustment fixture','Restaurante','Fixture','adjustment@example.invalid','Teste','Encomendas',49.90,'Ativo','eb100000-0000-4000-8000-000000000001');

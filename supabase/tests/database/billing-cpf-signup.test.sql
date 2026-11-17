@@ -1,4 +1,6 @@
 begin;
+-- Seed historical contracts against their original commercial plan.
+update public.saas_plans set active=true where catalog_version=1 and product_id=(select id from public.platform_products where code='menu');
 set local search_path=public,extensions;
 select extensions.no_plan();
 create function pg_temp.cpf_signup(doc text, token text) returns void language sql as $$

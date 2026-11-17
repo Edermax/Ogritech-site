@@ -84,7 +84,7 @@
         logo_path:state.identity.logo_path || "",cover_path:state.identity.cover_path || ""};
       try {
         if (logoFile) {
-          await api.validateImage(logoFile);
+          logoFile = await api.prepareImage(logoFile,800);
           const ext = {"image/jpeg":"jpg","image/png":"png","image/webp":"webp"}[logoFile.type];
           const path = `${BARBERSHOP_ID}/${crypto.randomUUID()}.${ext}`;
           const result = await supabaseClient.storage.from("menu-images").upload(path,logoFile,{contentType:logoFile.type,cacheControl:"31536000",upsert:false});

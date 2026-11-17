@@ -5,7 +5,7 @@ import { runInNewContext } from "node:vm";
 const read = path => readFile(new URL(`../${path}`,import.meta.url),"utf8");
 const context = {Intl};runInNewContext(await read("product-offers.js"),context);runInNewContext(await read("whatsapp-selection.js"),context);
 test("offer catalog exposes the exact four prices and legacy full-plan mapping",()=>{
- const catalog=context.OgritechOffers;assert.equal(catalog.offers.cardapio.monthlyCents,2990);assert.equal(catalog.offers.cardapio.annualCents,29900);assert.equal(catalog.offers.encomendas.monthlyCents,4990);assert.equal(catalog.offers.encomendas.annualCents,49900);assert.equal(catalog.trialDays,14);assert.equal(catalog.forPlan({code:"foundation"}).code,"encomendas");assert.equal(catalog.forPlan({code:"cardapio"}).orders,false);
+ const catalog=context.OgritechOffers;assert.equal(catalog.offers.cardapio.monthlyCents,990);assert.equal(catalog.offers.cardapio.annualCents,9900);assert.equal(catalog.offers.encomendas.monthlyCents,2990);assert.equal(catalog.offers.encomendas.annualCents,29900);assert.equal(catalog.trialDays,14);assert.equal(catalog.forPlan({code:"foundation"}).code,"encomendas");assert.equal(catalog.forPlan({code:"cardapio"}).orders,false);
 });
 test("WhatsApp message keeps quantity, weight, options and subtotal without confirming an order",()=>{
  const url=context.OgritechWhatsAppSelection.url("5511999999999",[{name:"Bolo & chocolate",label:"2 kg",quantity:2,selections:[{quantity:1,name:"Brigadeiro"}]}],()=>100);
@@ -24,8 +24,8 @@ test("WhatsApp links reject missing or unsafe numbers and empty selections",()=>
  assert.equal(context.OgritechWhatsAppSelection.url("5511999999999",[],()=>0),null);
 });
 test("public price pages expose both products and preserve selection into signup",async()=>{
- for(const file of ["index.html","cardapio-digital/index.html"]){const html=await read(file);for(const text of ["R$ 29,90","R$ 299,00","R$ 49,90","R$ 499,00","/criar-cardapio/cardapio/","/criar-cardapio/encomendas/","não gera outro teste"])assert.ok(html.includes(text),`${file}: ${text}`);}
- const html=await read("criar-cardapio/index.html");assert.match(html,/name="offer"/);assert.match(html,/name="cycle"/);assert.match(html,/teste de 14 dias é único/);
+ for(const file of ["index.html","cardapio-digital/index.html"]){const html=await read(file);for(const text of ["R$ 9,90","R$ 99,00","R$ 29,90","R$ 299,00","/criar-cardapio/cardapio/","/criar-cardapio/encomendas/","não gera outro teste"])assert.ok(html.includes(text),`${file}: ${text}`);}
+ const html=await read("criar-cardapio/index.html");assert.match(html,/name="offer"/);assert.match(html,/name="cycle"/);assert.match(html,/teste do Completo dura 14 dias e é único/);
 });
 
 
@@ -36,7 +36,7 @@ test("billing conflict messages survive the Supabase HTTP error wrapper",async()
 });
 
 test("dedicated signup pages contain only the chosen plan and share the existing billing flow",async()=>{
- for(const [code,name,other,monthly,annual] of [["cardapio","Cardápio","Encomendas","29,90","299,00"],["encomendas","Encomendas","Cardápio","49,90","499,00"]]){
+ for(const [code,name,other,monthly,annual] of [["cardapio","Catálogo Essencial","Catálogo Completo","9,90","99,00"],["encomendas","Catálogo Completo","Catálogo Essencial","29,90","299,00"]]){
   const html=await read(`criar-cardapio/${code}/index.html`);
   assert.ok(html.includes(`data-offer="${code}"`));
   assert.ok(html.includes(`name="offer" id="offerChoice" value="${code}"`));

@@ -61,7 +61,7 @@
           <label>Observações (Opcional)<textarea name="notes" maxlength="2000"></textarea></label>
           <label class="honeypot">Site<input name="website" tabindex="-1"></label>
           <label><span><input name="privacy" type="checkbox" required> Aceito o aviso de privacidade.</span></label>
-          <aside class="checkout-estimate" aria-live="polite"><div><span>Produtos</span><strong id="checkoutSubtotal"></strong></div><div><span>Entrega</span><strong id="checkoutDelivery"></strong></div><div><span>Total estimado</span><strong id="checkoutEstimateTotal"></strong></div><p id="checkoutEstimateNote"></p></aside>
+          <label>Cupom opcional<input name="coupon" maxlength="24" pattern="[A-Za-z0-9_-]{3,24}" autocapitalize="characters"><small>O desconto será validado e calculado ao registrar o pedido.</small></label><aside class="checkout-estimate" aria-live="polite"><div><span>Produtos</span><strong id="checkoutSubtotal"></strong></div><div><span>Entrega</span><strong id="checkoutDelivery"></strong></div><div><span>Total estimado</span><strong id="checkoutEstimateTotal"></strong></div><p id="checkoutEstimateNote"></p></aside>
           <p class="order-confirmation-notice">Ao enviar, o pedido será registrado para o estabelecimento confirmar. O envio não confirma o pedido nem realiza pagamento.</p>
           <p id="orderMessage" class="public-message"></p>
           <button id="orderSubmitButton" class="public-button">Enviar pedido</button>
@@ -93,6 +93,6 @@
   <script src="/supabase-config.js"></script>
   <script src="/menu-panel-return.js?v=20261116.4"></script>
   <script src="/whatsapp-selection.js?v=20261114.3"></script><script src="/menu-pricing.js?v=20261020.1"></script>
-  <script src="/menu-branding.js?v=20261116.3"></script><script src="/menu-whatsapp.js?v=20261114.3"></script><script src="/cardapio/cardapio.js?v=20261116.3"></script>
+  <script src="/catalog-profiles.js?v=20261117"></script><script src="/menu-branding.js?v=20261117"></script><script src="/menu-whatsapp.js?v=20261114.3"></script><script src="/cardapio/cardapio.js?v=20261117"></script>
 </body>
 </html>

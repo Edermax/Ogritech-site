@@ -1,4 +1,6 @@
 begin;
+-- Historical scenarios seed contracts from the preceding commercial version.
+update public.saas_plans set active=true where catalog_version=1 and product_id=(select id from public.platform_products where code='menu');
 set local search_path=public,extensions;
 select extensions.plan(23);
 select extensions.has_table('public','menu_catalog_templates','templates de catálogo existem');
@@ -9,8 +11,8 @@ select extensions.has_table('public','menu_availability_rules','disponibilidade 
 select extensions.has_column('public','menu_items','item_type','item possui tipo universal');
 select extensions.has_column('public','online_menus','visual_identity','identidade visual é controlada');
 select extensions.has_column('public','online_menus','onboarding_step','progresso do onboarding é persistido');
-select extensions.is((select count(*) from public.menu_catalog_templates where active),4::bigint,'quatro templates iniciais ativos');
-select extensions.is((select count(distinct segment) from public.menu_catalog_templates),4::bigint,'templates cobrem quatro segmentos');
+select extensions.is((select count(*) from public.menu_catalog_templates where active),6::bigint,'modelos de alimentação, artesanato e produtos ativos');
+select extensions.is((select count(distinct segment) from public.menu_catalog_templates),6::bigint,'templates cobrem alimentação e novos segmentos');
 select extensions.ok(not has_table_privilege('anon','public.menu_catalog_templates','SELECT'),'anon não lê templates diretamente');
 select extensions.ok(not has_function_privilege('anon','public.apply_menu_catalog_template(uuid,text,text)','EXECUTE'),'anon não aplica template');
 select extensions.ok(has_function_privilege('authenticated','public.apply_menu_catalog_template(uuid,text,text)','EXECUTE'),'authenticated alcança wrapper autorizado');

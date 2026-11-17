@@ -34,16 +34,28 @@ Deno.serve(async (request) => {
   for (const operation of recovery.data || []) {
     let consistent = !operation.provider_subscription_id;
     try {
-      if (!consistent) {
+      if (operation.cycle_reauthorization) {
+        const recoveryToken=url==="https://fuesdztsvrkkgnbqhcxi.supabase.co"?Deno.env.get("MP_MENU_SANDBOX_ACCESS_TOKEN")||"":mpToken;
+        if(!recoveryToken || !operation.previous_provider_subscription_id)throw new Error("cycle_recovery_not_configured");
+        const endpoint=`https://api.mercadopago.com/preapproval/${encodeURIComponent(operation.previous_provider_subscription_id)}`;
+        const headers={Authorization:`Bearer ${recoveryToken}`,"Content-Type":"application/json"};
+        const before=await fetch(endpoint,{headers,signal:AbortSignal.timeout(10000)});const current=await before.json().catch(()=>({}));
+        if(!before.ok || String(current.id)!==String(operation.previous_provider_subscription_id))throw new Error("cycle_recovery_lookup_failed");
+        if(current.status!=="cancelled")await fetch(endpoint,{method:"PUT",headers,body:JSON.stringify({status:"cancelled"}),signal:AbortSignal.timeout(10000)});
+        const after=await fetch(endpoint,{headers,signal:AbortSignal.timeout(10000)});const confirmed=await after.json().catch(()=>({}));
+        consistent=after.ok && String(confirmed.id)===String(operation.previous_provider_subscription_id) && confirmed.status==="cancelled";
+        if(consistent){const commit=await admin.rpc("backend_catalog_cycle_cancel_commit",{target_operation_id:operation.operation_id,target_token:operation.lease_token});consistent=!commit.error;}
+      } else if (!consistent) {
         const recoveryToken = url === "https://fuesdztsvrkkgnbqhcxi.supabase.co" ? Deno.env.get("MP_MENU_SANDBOX_ACCESS_TOKEN") || "" : mpToken;
         if (!recoveryToken) throw new Error("recovery_not_configured");
         const response = await fetch(`https://api.mercadopago.com/preapproval/${encodeURIComponent(operation.provider_subscription_id)}`, {
           method: "PUT", headers: { Authorization: `Bearer ${recoveryToken}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ auto_recurring: { transaction_amount: operation.total_cents / 100, currency_id: "BRL" } }), signal: AbortSignal.timeout(10000)
+          body: JSON.stringify({ auto_recurring: { transaction_amount: operation.total_cents / 100, currency_id: "BRL", frequency: operation.cycle_months, frequency_type: "months" } }), signal: AbortSignal.timeout(10000)
         });
         const resource = await response.json().catch(() => ({}));
         consistent = response.ok && String(resource.id) === String(operation.provider_subscription_id)
-          && Math.round(Number(resource.auto_recurring?.transaction_amount) * 100) === operation.total_cents;
+          && Math.round(Number(resource.auto_recurring?.transaction_amount) * 100) === operation.total_cents
+          && Number(resource.auto_recurring?.frequency) === operation.cycle_months && resource.auto_recurring?.frequency_type === "months";
       }
     } catch { /* Keep failed work reserved and retry in the next recovery window. */ }
     const finished = await admin.rpc("backend_billing_offer_change_finish", { target_operation_id: operation.operation_id, target_token: operation.lease_token, needs_reconciliation: !consistent });
@@ -73,7 +85,7 @@ Deno.serve(async (request) => {
     const response = await fetch(`https://api.mercadopago.com/v1/${useOrders ? "orders" : "payments"}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${signupToken}`, "Content-Type": "application/json", "X-Idempotency-Key": attempt.request_id },
-      body: JSON.stringify(useOrders ? menuPixOrderPayload(signup,attempt) : { transaction_amount: signup.total_cents / 100, description: signup.offer_code === "cardapio" ? "Renovação Ogritech Cardápio" : "Renovação Ogritech Encomendas", payment_method_id: "pix", payer: { email: signup.email }, external_reference: externalReference, date_of_expiration: expiresAt, notification_url: `${url}/functions/v1/${sandbox ? "menu-sandbox-webhook" : "mercado-pago-webhook"}`, metadata: { signup_id: signup.id } }),
+      body: JSON.stringify(useOrders ? menuPixOrderPayload(signup,attempt) : { transaction_amount: signup.total_cents / 100, description: `Renovação Ogritech ${signup.plan_name_snapshot || "Catálogo"}`, payment_method_id: "pix", payer: { email: signup.email }, external_reference: externalReference, date_of_expiration: expiresAt, notification_url: `${url}/functions/v1/${sandbox ? "menu-sandbox-webhook" : "mercado-pago-webhook"}`, metadata: { signup_id: signup.id } }),
     });
     let payment = await response.json().catch(() => ({}));
     if (useOrders) {

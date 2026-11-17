@@ -10,10 +10,10 @@ test("landing publica a oferta padronizada do Cardápio sem oferta Fundadores", 
   ]);
 
   for (const page of pages) {
-    for (const marker of ["R$ 49,90", "14 dias grátis", "R$ 499", "Implantação gratuita por autosserviço", "Serviços manuais adicionais são orçados separadamente", "Sem comissão por pedido"]) {
+    for (const marker of ["R$ 29,90", "14 dias grátis", "R$ 299", "Implantação gratuita por autosserviço", "Serviços manuais adicionais são orçados separadamente", "Sem comissão por pedido"]) {
       assert.match(page, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"));
     }
     assert.doesNotMatch(page, /oferta\s+fundadores|plano\s+fundadores/i);
-    assert.doesNotMatch(page, /R\$ 99(?:\D|$)/i);
+    assert.doesNotMatch(page, /grátis para sempre/i);
   }
 });
