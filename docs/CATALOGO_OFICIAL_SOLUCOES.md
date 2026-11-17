@@ -1,3 +1,9 @@
+# Decisão de nomenclatura — 17/11/2026
+
+**Ogritech Catálogo** é a solução geral para alimentação, artesanato e produtos. As ofertas são **Ogritech Catálogo Essencial** e **Ogritech Catálogo Completo**. Na alimentação, a experiência mantém a denominação Cardápio (Cardápio Essencial e Cardápio Completo). Identificadores técnicos e contratos legados não são renomeados. Veja [escopo e transição](OGRITECH_CATALOGO.md). Os demais produtos mantêm seus nomes.
+
+## Registro anterior preservado
+
 # Catálogo oficial da Ogritech
 
 Decisão de produto aprovada pelo responsável em 13/11/2026. Implementação local; publicação deve seguir o pacote de release.

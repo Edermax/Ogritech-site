@@ -1,3 +1,5 @@
+> Decisão atual para novas ofertas: [Ogritech Catálogo — planos e segmentos de 17/11/2026](OGRITECH_CATALOGO.md). As seções anteriores abaixo são mantidas como histórico; contratos existentes preservam suas condições.
+
 # Ogritech Cardápio — visão e fio condutor
 
 ## Decisão vigente — 13/11/2026

@@ -6,7 +6,7 @@ function fetchProbe(override = {}) {
   const calls = [];
   return { calls, fetch: async (url, request) => {
     const body = JSON.parse(request.body); calls.push({ url, body, headers: request.headers });
-    if (body.action === 'quote') return Response.json({ data: { total_cents: body.offer === 'cardapio' ? (body.cycle === 'monthly' ? 2990 : 29900) : (body.cycle === 'monthly' ? 4990 : 49900), months: body.cycle === 'monthly' ? 1 : 12 } });
+    if (body.action === 'quote') return Response.json({ data: { total_cents: body.offer === 'cardapio' ? (body.cycle === 'monthly' ? 990 : 9900) : (body.cycle === 'monthly' ? 2990 : 29900), months: body.cycle === 'monthly' ? 1 : 12 } });
     if (body.action === 'trial_readiness') return Response.json({ data: { ready: true, product: 'menu', offer: body.offer } });
     return new Response('invalid notification', { status: override.webhookStatus || 400 });
   } };

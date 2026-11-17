@@ -1,4 +1,6 @@
 begin;
+-- Historical scenarios seed contracts from the preceding commercial version.
+update public.saas_plans set active=true where catalog_version=1 and product_id=(select id from public.platform_products where code='menu');
 set local search_path=public,extensions;
 select extensions.no_plan();
 insert into public.barbershops(id,name,slug,segment) values('ee100000-0000-4000-8000-000000000001','Plan fixture','configurable-plan-fixture','Restaurante');
@@ -33,6 +35,8 @@ select extensions.throws_ok($$select public.platform_save_menu_plan(pg_temp.plan
 create temporary table simple_plan as select public.platform_save_menu_plan(pg_temp.plan_payload('fixture-cardapio-pro','Fixture Cardápio Pro','cardapio',39.90,399)) as data;
 reset role;
 select extensions.ok(exists(select 1 from jsonb_array_elements(public.public_menu_plans()) p where p->>'code'='fixture-encomendas-pro'),'new active plan is available publicly');
+-- These fixtures model custom contracts from before the new full-trial policy.
+update public.saas_plans set catalog_version=1 where id in (select (data->>'id')::uuid from custom_plan union select (data->>'id')::uuid from simple_plan);
 select extensions.throws_ok($$update public.saas_plans set annual_fee=1 where code='cardapio' and menu_offer_code='cardapio'$$,'23514',null,'flagship annual price remains protected');
 select extensions.throws_ok($$update public.saas_plans set menu_offer_code='cardapio' where id=(select (data->>'id')::uuid from custom_plan)$$,'23514',null,'capability family cannot silently change for existing subscribers');
 insert into public.billing_customers(saas_client_id,billing_email) values('ee200000-0000-4000-8000-000000000001','plan-owner@example.invalid');

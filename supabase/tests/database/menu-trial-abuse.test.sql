@@ -1,4 +1,6 @@
 begin;
+-- This anti-abuse fixture uses the preceding commercial offer and its original prices.
+update public.saas_plans set active=true where catalog_version=1 and product_id=(select id from public.platform_products where code='menu');
 set local search_path=public,extensions;
 select extensions.no_plan();
 create function pg_temp.trial_payload(doc text,phone text default '91989898001',business text default 'Anti abuse fixture') returns jsonb language sql as $$

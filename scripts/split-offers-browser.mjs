@@ -16,7 +16,7 @@ async function pageFor(kind,offer='cardapio',width=1440){
   window.OGRITECH_SUPABASE_URL=origin;window.OGRITECH_SUPABASE_PUBLISHABLE_KEY='fixture';window.renderWhatsAppShare=()=>{};
   window.ogritechEnvironmentUrl=path=>new URL(path,location.origin).href;window.escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const checks={segment:true,identity:true,catalog:true,fulfillment:true,payments:true,hours:true,test_order:true,review:false};
-  const plans=[{id:'simple-plan',code:'cardapio',name:'Cardápio',monthly_fee:29.9},{id:'full-plan',code:'foundation',name:'Encomendas',monthly_fee:49.9}];
+  const plans=[{id:'simple-plan',code:'cardapio',name:'Cardápio',monthly_fee:29.9,annual_fee:299},{id:'full-plan',code:'foundation',name:'Encomendas',monthly_fee:49.9,annual_fee:499}];
   window.renderSettings=()=>{};
   const status=()=>({exists:true,offer_code:window.__offer,next_step:'review',completed_count:7,total_count:8,checks});
   window.supabaseClient={rpc:async(name,args)=>{
@@ -90,7 +90,7 @@ try{
   for(const code of ['cardapio','encomendas']){
    await page.goto(origin+'/',{waitUntil:'networkidle'});
    await page.click(`[data-offer="${code}"] a`);
-   await page.waitForURL(origin+'/criar-cardapio/'+code+'/');
+   await page.waitForURL(url=>url.pathname==='/criar-cardapio/'+code+'/');
    assert.equal(await page.locator('[name=offer]').inputValue(),code);
    assert.equal(await page.locator('.signup-offers').count(),0);
   }
@@ -108,12 +108,12 @@ try{
   for(const code of ['cardapio','encomendas']){
    await page.goto(origin+'/criar-cardapio/',{waitUntil:'networkidle'});
    await page.click('#choose-'+code);
-   await page.waitForURL(origin+'/criar-cardapio/'+code+'/');
+   await page.waitForURL(url=>url.pathname==='/criar-cardapio/'+code+'/');
    assert.equal(await page.locator('[name=offer]').inputValue(),code);
    assert.equal(await page.locator('select[name=offer]').count(),0);
    assert.equal(await page.locator('.signup-offers').count(),0);
    assert.match(await page.locator('#selectedOfferName').textContent(),code==='cardapio'?/Cardápio/:/Encomendas/);
-   assert.equal(await page.locator('#orderNotificationsChoice').isVisible(),code==='encomendas');
+   assert.equal(await page.locator('#orderNotificationsChoice').isVisible(),true);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
    await page.screenshot({path:resolve(output,`signup-${code}-${width}.png`),fullPage:true});
    await checkSignupScroll(page,`signup-${code}-${width}`);

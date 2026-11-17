@@ -7,8 +7,8 @@ const passingStatuses = new Set(["APPROVED"]);
 const knownStatuses = new Set(["APPROVED", "BLOCKED_HUMAN", "NEEDS_FRESH_EVIDENCE", "NOT_STARTED", "PARTIAL"]);
 
 export function evaluateMenuProductionLaunch(config) {
-  if (config?.product !== "Ogritech Cardápio" || config?.environment !== "production") {
-    throw new Error("Contrato de lançamento deve ser exclusivo do Ogritech Cardápio em produção.");
+  if (!["Ogritech Catálogo", "Ogritech Cardápio"].includes(config?.product) || config?.environment !== "production") {
+    throw new Error("Contrato de lançamento deve ser exclusivo do Ogritech Catálogo (Cardápio) em produção.");
   }
   if (!Array.isArray(config.gates) || config.gates.length !== 10) {
     throw new Error("O contrato deve conter exatamente os dez gates de lançamento.");

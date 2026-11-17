@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const root = new URL("../", import.meta.url);
-const officialProducts = ["Ogritech Cardápio", "Ogritech Encomendas"];
+const officialProducts = ["Ogritech Catálogo Essencial", "Ogritech Catálogo Completo"];
 
 test("frontend apresenta as duas ofertas atuais", async () => {
   const [home, contact, panel, offers] = await Promise.all([

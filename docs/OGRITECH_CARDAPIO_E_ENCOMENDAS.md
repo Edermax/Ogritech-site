@@ -1,3 +1,5 @@
+> Decisão atual para novas ofertas: [Ogritech Catálogo — planos e segmentos de 17/11/2026](OGRITECH_CATALOGO.md). As seções anteriores abaixo são mantidas como histórico; contratos existentes preservam suas condições.
+
 # Ogritech Cardápio e Ogritech Encomendas
 
 Decisão autorizada pelo usuário em 13/11/2026. Banco e funções publicados em produção; frontend entregue pelo PR #112, com publicação automática no GitHub Pages após merge.

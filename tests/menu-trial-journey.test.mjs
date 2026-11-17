@@ -12,7 +12,7 @@ test("jornada do Cardápio inicia teste gratuito e provisiona o produto correto"
   ]);
   assert.match(landing, /href="\/criar-cardapio\/"/);
   assert.match(page, /14 dias grátis/);
-  assert.match(page, /R\$ 49,90/);
+  assert.match(page, /R\$ 29,90/);
   assert.match(page, /Não pedimos cartão agora/);
   assert.match(client, /product:\s*"menu"/);
   assert.match(client, /payment_method:\s*"pix"/);
@@ -49,7 +49,7 @@ test("cliente define pagamento do Cardápio somente após iniciar o teste", asyn
   const [page, panel, billing] = await Promise.all([
     read("criar-cardapio/index.html"), read("subscription-admin.js"), read("supabase/functions/ogritech-billing/index.ts")
   ]);
-  for (const text of ["Você escolhe como continuar", "R$ 499,00", "Pix", "Cartão", "Nenhuma cobrança acontece automaticamente"]) assert.match(page, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  for (const text of ["Você escolhe como continuar", "R$ 299,00", "Pix", "Cartão", "Nenhuma cobrança acontece automaticamente"]) assert.match(page, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(panel, /data-payment-method/);
   assert.match(panel, /data-recurring-authorization/);
   assert.match(panel, /action: "choose_payment"/);

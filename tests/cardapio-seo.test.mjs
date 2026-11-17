@@ -6,7 +6,7 @@ test('indexable commercial pages have unique menu-focused metadata and no retire
  const titles=new Set(),descriptions=new Set();
  for(const [file,path] of [['index.html','/'],['cardapio-digital/index.html','/cardapio-digital/'],['contato/index.html','/contato/']]){
   const page=await read(file);const title=page.match(/<title>([^<]+)<\/title>/)?.[1];const description=page.match(/name="description" content="([^"]+)"/)?.[1];
-  assert.match(title,/cardápio digital/i);assert.ok(description);assert.ok(!titles.has(title));assert.ok(!descriptions.has(description));titles.add(title);descriptions.add(description);
+  assert.match(title,/(?:cardápio|catálogo) digital/i);assert.ok(description);assert.ok(!titles.has(title));assert.ok(!descriptions.has(description));titles.add(title);descriptions.add(description);
   assert.equal((page.match(/name="description"/g)||[]).length,1);assert.ok(page.includes(`rel="canonical" href="https://ogritech.com.br${path}"`));assert.ok(page.includes(`property="og:url" content="https://ogritech.com.br${path}"`));
   assert.doesNotMatch(page,/barbearia|SaaS para|Ogritech Agenda|Ogritech Páginas|Ogritech Orçamentos|Reduzir faltas|Agilizar orçamentos/i);
  }
@@ -20,5 +20,5 @@ test('crawlable private and retired pages remain noindex and outside sitemap',as
 });
 test('structured product data is valid, matches the visible price and has no fabricated ratings',async()=>{
  const html=await read('index.html');const json=JSON.parse(html.match(/<script type="application\/ld\+json">([^]*?)<\/script>/)[1]);
- const app=json['@graph'].find(x=>x['@type']==='SoftwareApplication');assert.equal(app.name,'Ogritech Cardápio');assert.equal(app.offers[0].price,'29.90');assert.equal(app.offers[1].price,'299.00');const full=json['@graph'].find(x=>x.name==='Ogritech Encomendas');assert.equal(full.offers[0].price,'49.90');assert.equal(full.offers[1].price,'499.00');assert.match(html,/R\$ 49,90/);assert.equal(app.offers[0].priceCurrency,'BRL');assert.ok(!app.aggregateRating);assert.ok(!app.review);
+ const app=json['@graph'].find(x=>x['@type']==='SoftwareApplication');assert.equal(app.name,'Ogritech Catálogo Essencial');assert.equal(app.offers[0].price,'9.90');assert.equal(app.offers[1].price,'99.00');const full=json['@graph'].find(x=>x.name==='Ogritech Catálogo Completo');assert.equal(full.offers[0].price,'29.90');assert.equal(full.offers[1].price,'299.00');assert.match(html,/R\$ 29,90/);assert.equal(app.offers[0].priceCurrency,'BRL');assert.ok(!app.aggregateRating);assert.ok(!app.review);
 });

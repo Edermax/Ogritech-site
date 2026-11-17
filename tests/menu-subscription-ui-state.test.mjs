@@ -7,7 +7,7 @@ const offerSource=await readFile(new URL('../product-offers.js',import.meta.url)
 function renderer(){
  const elements=new Map();
  const $=id=>{if(!elements.has(id)){const classes=new Set();elements.set(id,{replaceChildren(){},append(){},removeAttribute(){},textContent:'',value:'',className:'',classList:{add(c){classes.add(c);},remove(c){classes.delete(c);},toggle(c,on){if(on)classes.add(c);else classes.delete(c);},contains(c){return classes.has(c);}}});}return elements.get(id);};
- const context={$,Date,URL,document:{createElement:()=>({})},planCatalog:[],currentPlanId:'',currentCycle:'monthly',currentOffer:'encomendas',formatDate:value=>value};
+ const context={$,Date,URL,document:{createElement:()=>({})},changeCycle:$('changeOfferCycle'),planCatalog:[],currentPlanId:'',currentCycle:'monthly',currentOffer:'encomendas',formatDate:value=>value};
  runInNewContext(offerSource,context);
  const render=runInNewContext(source.slice(source.indexOf('function render(state)'),source.indexOf('async function load()'))+';render',context);
  return {render,$};

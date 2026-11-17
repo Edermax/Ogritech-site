@@ -46,7 +46,8 @@
     "test:account-theme-browser": "node scripts/account-theme-browser.cjs",
     "test:panel-navigation-browser": "node scripts/panel-navigation-browser.cjs",
     "test:admin-theme-browser": "node scripts/admin-theme-browser.cjs",
-    "test:admin-navigation-browser": "node scripts/admin-navigation-browser.cjs"
+    "test:admin-navigation-browser": "node scripts/admin-navigation-browser.cjs",
+    "test:catalog-browser": "node scripts/catalog-journeys-browser.mjs"
   },
   "engines": {
     "node": ">=22"

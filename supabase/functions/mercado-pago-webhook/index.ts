@@ -114,7 +114,11 @@ Deno.serve(async (request) => {
           throw new Error("payment_amount_mismatch");
         }
         const start = Math.max(Date.now(), new Date(signup.trial_ends_at).getTime(), signup.access_until ? new Date(signup.access_until).getTime() : 0);
-        const end = new Date(start); end.setUTCMonth(end.getUTCMonth() + Number(signup.cycle_months));
+        const end = new Date(start);
+        if(signup.product_code === "menu") {
+          const day=end.getUTCDate();end.setUTCDate(1);end.setUTCMonth(end.getUTCMonth()+Number(signup.cycle_months));
+          end.setUTCDate(Math.min(day,new Date(Date.UTC(end.getUTCFullYear(),end.getUTCMonth()+1,0)).getUTCDate()));
+        } else end.setUTCMonth(end.getUTCMonth() + Number(signup.cycle_months));
         const applied = await admin.rpc("backend_billing_webhook_apply", { target_signup_id: signup.id, target_payment_id: paymentId, target_status: "approved", target_access_until: end.toISOString() });
         if (applied.error) throw new Error("payment_apply_failed");
         if (signup.saas_client_id && signup.product_code !== "menu") {

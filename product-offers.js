@@ -1,10 +1,11 @@
 (() => {
   const offers = Object.freeze({
-    cardapio: Object.freeze({ code: "cardapio", planCode: "cardapio", name: "Ogritech Cardápio", monthlyCents: 2990, annualCents: 29900, orders: false }),
-    encomendas: Object.freeze({ code: "encomendas", planCode: "foundation", name: "Ogritech Encomendas", monthlyCents: 4990, annualCents: 49900, orders: true })
+    cardapio: Object.freeze({ code: "cardapio", planCode: "catalogo-essencial", name: "Ogritech Catálogo Essencial", monthlyCents: 990, annualCents: 9900, orders: false }),
+    encomendas: Object.freeze({ code: "encomendas", planCode: "catalogo-completo", name: "Ogritech Catálogo Completo", monthlyCents: 2990, annualCents: 29900, orders: true })
   });
   const forPlan = plan => {
-    const base = offers[plan?.offer_code || plan?.menu_offer_code] || (plan?.code === "cardapio" ? offers.cardapio : offers.encomendas);
+    const family = plan?.offer_code || plan?.menu_offer_code || ({cardapio:"cardapio",foundation:"encomendas","catalogo-essencial":"cardapio","catalogo-completo":"encomendas"})[plan?.code];
+    const base = offers[family] || { code: "unavailable", planCode: "", name: "Plano não identificado", monthlyCents: 0, annualCents: 0, orders: false };
     const monthly = Number(plan?.monthly_fee), annual = Number(plan?.annual_fee);
     return { ...base, id: plan?.id, planCode: plan?.code || base.planCode,
       name: plan?.name ? (/^Ogritech\b/i.test(plan.name) ? plan.name : `Ogritech ${plan.name}`) : base.name,

@@ -1,8 +1,12 @@
 (() => {
-  const TERMS_VERSION = "3.3-2026-11-13", form = document.querySelector("#menuTrialForm");
+  const TERMS_VERSION = "4.0-2026-11-17", form = document.querySelector("#menuTrialForm");
   const message = document.querySelector("#formMessage"), submit = document.querySelector("#submitButton");
   const $ = id => document.querySelector('#' + id), digits = value => value.replace(/\D/g, "");
   const offerChoice = form.elements.offer, cycleChoice = form.elements.cycle;
+  const params = new URLSearchParams(location.search);
+  if (["monthly", "annual"].includes(params.get("ciclo"))) cycleChoice.value = params.get("ciclo");
+  const segments = {food:"Pizzaria",crafts:"Artesanato e personalizados",products:"Produtos em geral"};
+  if (segments[params.get("perfil")]) form.elements.segment.value=segments[params.get("perfil")];
   const requestedPlan = new URLSearchParams(location.search).get("plano_id");
   let planCatalog = [], selectedPlan = null, catalogLoaded = false, catalogError = false, unavailableRequest = false;
   const planLabel = document.createElement("label"), planChoice = document.createElement("select");
@@ -33,15 +37,17 @@
   offerChoice.value = dedicatedOffer === "cardapio" ? "cardapio" : "encomendas";
   function updateOffer() {
     const offer = selectedPlan ? OgritechOffers.forPlan(selectedPlan) : OgritechOffers.offers[offerChoice.value], annual = cycleChoice.value === "annual";
-    $("selectedOfferName").textContent = offer.name;
+    const presentation = globalThis.OgritechCatalogProfiles;
+    const offerName = presentation?.offerName(offer, presentation.resolve(form.elements.segment?.value)) || offer.name;
+    $("selectedOfferName").textContent = offerName;
     $("selectedOfferPrice").textContent = OgritechOffers.format(annual ? offer.annualCents : offer.monthlyCents);
     $("selectedOfferPeriod").textContent = annual ? "/ano após o teste" : "/mês após o teste";
     $("selectedMonthlyPrice").textContent = OgritechOffers.format(offer.monthlyCents);
     $("selectedAnnualPrice").textContent = OgritechOffers.format(offer.annualCents);
-    $("selectedOfferSummary").textContent = `14 dias completos de ${offer.name}. Depois: ${OgritechOffers.format(annual ? offer.annualCents : offer.monthlyCents)} por ${annual ? "ano" : "mês"}.`;
+    $("selectedOfferSummary").textContent = `14 dias grátis no Completo. Sua escolha depois do teste: ${offerName}, ${OgritechOffers.format(annual ? offer.annualCents : offer.monthlyCents)} por ${annual ? "ano" : "mês"}.`;
     $("offerDescription").textContent = offer.orders
-      ? "Encomendas: receba e acompanhe os pedidos no painel, com entrega, retirada e agendamento."
-      : "Cardápio: o consumidor escolhe os produtos e continua no seu WhatsApp para combinar pagamento e entrega.";
+      ? "Completo: receba e acompanhe os pedidos no painel, com entrega local, retirada e agendamento."
+      : "Essencial: o consumidor escolhe os produtos e continua no seu WhatsApp para combinar pagamento e entrega. Durante os 14 dias, experimente também a gestão de pedidos do Completo.";
     const limits = $("selectedPlanLimits"), features = $("selectedPlanFeatures");
     limits.hidden = !selectedPlan;
     limits.textContent = selectedPlan ? (selectedPlan.max_users == null ? "Usuários sem limite neste plano." : `Até ${selectedPlan.max_users} usuário${Number(selectedPlan.max_users) === 1 ? "" : "s"} no painel, incluindo o responsável.`) : "";
@@ -51,9 +57,14 @@
     for (const detail of details) { const item = document.createElement("li"); item.textContent = detail; features.append(item); }
     if ($("cardapioSelected")) $("cardapioSelected").textContent = offer.orders ? "" : "Plano selecionado";
     if ($("encomendasSelected")) $("encomendasSelected").textContent = offer.orders ? "Plano selecionado" : "";
-    $("orderNotificationsChoice").hidden = !offer.orders;
+    $("orderNotificationsChoice").hidden = false;
     form.elements.publish_whatsapp.required = !offer.orders;
-    submit.textContent = offer.orders ? "Testar Encomendas grátis" : "Criar meu cardápio grátis";
+    const profile = globalThis.OgritechCatalogProfiles?.resolve(form.elements.segment?.value) || {noun:"catálogo",code:"products"};
+    submit.textContent = `Criar meu ${profile.noun} e testar 14 dias`;
+    for(const id of ["choose-cardapio","choose-encomendas"]) {
+      const link=$(id); if(!link?.href)continue; const url=new URL(link.href,location.href);
+      url.searchParams.set("perfil",profile.code); url.searchParams.set("ciclo",cycleChoice.value); link.href=url.href;
+    }
   }
   offerChoice.addEventListener("change", () => { unavailableRequest = false; selectedPlan = null; choosePlan(true); updateOffer(); });
   planChoice.addEventListener("change", () => {
@@ -61,6 +72,7 @@
     choosePlan(); updateOffer(); if (selectedPlan) message.textContent = "";
   });
   cycleChoice.addEventListener("change", updateOffer);
+  form.elements.segment?.addEventListener("change", updateOffer);
   updateOffer();
   async function refreshPlanCatalog(initial = false) {
     const previousId = selectedPlan?.id;

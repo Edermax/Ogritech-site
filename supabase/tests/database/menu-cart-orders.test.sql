@@ -1,4 +1,6 @@
 begin;
+-- Historical scenarios seed contracts from the preceding commercial version.
+update public.saas_plans set active=true where catalog_version=1 and product_id=(select id from public.platform_products where code='menu');
 set local search_path=public,extensions;
 select extensions.plan(35);
 

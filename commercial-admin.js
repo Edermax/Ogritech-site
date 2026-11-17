@@ -23,7 +23,7 @@
         byId("menuTestOrderButton")?.classList.toggle("menu-offer-hidden", simple);
         for (const id of ["menuMinimum", "menuDeliveryFee", "menuEstimatedMinutes"]) byId(id)?.closest?.("label")?.classList.toggle("menu-offer-hidden", simple);
         document.querySelectorAll('[data-menu-workspace="operation"],[data-menu-workspace="sales"],.menu-item[data-panel-route="orders"],.menu-item[data-panel-route="sales"]').forEach(element => element.classList.toggle("menu-offer-hidden", simple));
-        if (byId("menuOfferNotice")) byId("menuOfferNotice").textContent = simple ? "Ogritech Cardápio: seus clientes escolhem os produtos e continuam no WhatsApp. Pagamento e entrega são combinados por lá." : "Ogritech Encomendas: receba e acompanhe seus pedidos pela plataforma.";
+        if (byId("menuOfferNotice")) byId("menuOfferNotice").textContent = simple ? "Essencial: seus clientes escolhem os produtos e continuam no WhatsApp. Pagamento e entrega são combinados por lá." : (menuOnboarding?.selected_offer_code === "cardapio" ? "Você escolheu o Essencial. O acesso temporário ao Completo permite experimentar a gestão de pedidos durante o teste ou concluir seu período já pago." : "Completo: receba e acompanhe seus pedidos pela plataforma.");
         if (simple) {
             journeyContent.settings = ["2. Configure seu cardápio", "Confira o nome, as cores e o horário de atendimento. Cadastre o WhatsApp público da unidade para receber as seleções dos clientes.", "Preencher configurações", "menuTitle"];
             journeyContent.review = ["4. Revise e publique", "Revise o catálogo e o WhatsApp público. Confirme a revisão e publique para compartilhar seu link.", "Conferir minha revisão", "menuOnboardingPanel"];
@@ -133,6 +133,7 @@
         byId("menuStartComplete")?.classList.toggle("hidden", !menuRecord?.template_code);
         renderMenuOffer();
         window.OgritechPanelNavigation?.sync({ published, ready: menuDataReady, busy: menuBusy, canManage: canManageMenu(), offer: menuOnboarding?.offer_code || "encomendas", workspace: selectedMenuWorkspace, next: nextMenuWorkspace(), dirtySettings: menuSettingsDirty });
+        if (globalThis.OgritechCatalogProfiles) OgritechCatalogProfiles.apply(document.body,OgritechCatalogProfiles.resolve({...menuRecord,...menuOnboarding}));
     }
     const menuWorkspaceGroups = {
         operation: ["menuOrdersPanel"],
@@ -728,6 +729,7 @@
             byId("menuPrimaryColor").value = menu?.visual_identity?.primary_color || "#111827";
             byId("menuAccentColor").value = menu?.visual_identity?.accent_color || "#f59e0b";
             await window.loadMenuBranding?.(menu);
+            await window.loadCatalogExtensions?.(menu,onboarding,menuTemplates);
             document.querySelectorAll(".menu-payment").forEach((input) => { input.checked = (menu?.accepted_payment_methods || ["pix", "cash"]).includes(input.value); });
             const hours = menu?.weekly_hours || { weekdays: [1, 2, 3, 4, 5, 6], opens_at: "10:00", closes_at: "22:00" };
             byId("menuOpensAt").value = hours.opens_at || "10:00";
@@ -1028,9 +1030,9 @@
         if (!menuRecord) return notify(byId("menuItemMessage"), "Escolha um modelo de cardápio antes de adicionar itens.", true);
         if (menuSettingsDirty) return;
         await runMenuAction("menuItemMessage", byId("menuItemId").value ? "Atualizando produto..." : "Adicionando produto...", async () => {
-            const previousPath=byId("menuItemImagePath").value, file=byId("menuItemImage").files?.[0]; let uploadedPath="", imageUrl=menuImageRemoveRequested?"":byId("menuItemImageUrl").value;
+            const previousPath=byId("menuItemImagePath").value; let file=byId("menuItemImage").files?.[0]; let uploadedPath="", imageUrl=menuImageRemoveRequested?"":byId("menuItemImageUrl").value;
             if(file){
-                try { await globalThis.OgritechMenuBranding?.validateImage(file); }
+                try { file=await globalThis.OgritechMenuBranding.prepareImage(file); }
                 catch (error) { return { error: { code: "22023", message: error.message } }; }
                 const extension={"image/jpeg":"jpg","image/png":"png","image/webp":"webp"}[file.type]; uploadedPath=`${BARBERSHOP_ID}/${crypto.randomUUID()}.${extension}`;
                 const uploaded=await supabaseClient.storage.from("menu-images").upload(uploadedPath,file,{contentType:file.type,cacheControl:"31536000",upsert:false});

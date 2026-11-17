@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "product": "Ogritech Cardápio",
+  "product": "Ogritech Catálogo",
   "environment": "production",
-  "updatedAt": "2026-11-01",
+  "updatedAt": "2026-11-17",
   "releaseAuthorized": false,
   "gates": [
     {
@@ -26,9 +26,10 @@
       "evidence": [
         "config/operational-readiness.json",
         "docs/evidencias/cardapio-retomada-2026-10-19.md",
-        "docs/CARDAPIO_POLITICA_COMERCIAL.md"
+        "docs/CARDAPIO_POLITICA_COMERCIAL.md",
+        "docs/OGRITECH_CATALOGO.md"
       ],
-      "remaining": "Política comercial aprovada em 21/10: implantação gratuita por autosserviço, orientação incluída, serviços manuais sob orçamento separado; 14 dias grátis, R$ 49,90/mês ou R$ 499/ano. Emissão manual inicial aprovada como modelo operacional; ainda faltam confirmar regime/CNAE, emissor, competência e prazos com a contabilidade."
+      "remaining": "Decisão de 17/11: Essencial R$ 9,90/mês ou R$ 99,00/ano; Completo R$ 29,90/mês ou R$ 299,00/ano; 14 dias no Completo. Contratos anteriores preservados. Antes da publicação, permanecem as pendências fiscais já registradas: regime/CNAE, emissor, competência e prazos com a contabilidade."
     },
     {
       "id": "support_and_incidents",
@@ -239,5 +240,12 @@
     "lastLifecycleFailures": 0,
     "livePaymentValidated": false,
     "evidence": "docs/evidencias/cardapio-preflight-producao-2026-10-31.md"
+  },
+  "catalogRelease": {
+    "specification": "docs/OGRITECH_CATALOGO.md",
+    "termsVersion": "4.0-2026-11-17",
+    "migration": "20261117132401_catalog_profiles_and_commercial_plans.sql",
+    "remoteChangesPerformed": false,
+    "providerCycleChangeHomologated": false
   }
 }

@@ -1,37 +1,34 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-16",
+  "updatedAt": "2026-11-17",
   "baseline": "platform_admin_notifications",
   "strategy": "contiguous_tail",
-  "authorized": true,
-  "decision": "APPROVED",
+  "authorized": false,
+  "decision": "PREPARED",
   "localReplay": {
     "status": "PASSED",
-    "mode": "CLEAN_GITHUB_ACTIONS_DATABASE",
-    "migrationCount": 107,
-    "tests": 899,
-    "evidence": "docs/evidencias/admin-notificacoes-2026-11-16.md"
+    "mode": "OFFLINE_ISOLATED_POSTGRES",
+    "evidence": "docs/OGRITECH_CATALOGO.md",
+    "migrationCount": 108,
+    "testFiles": 34,
+    "assertions": 938,
+    "failed": 0
   },
   "productionDryRun": {
-    "status": "PASSED",
-    "executedAt": "2026-11-16",
-    "migrationCount": 0,
+    "status": "NOT_RUN",
     "remoteChangesPerformed": false,
-    "mode": "POST_PROMOTION_READ_ONLY",
-    "evidence": "docs/evidencias/admin-notificacoes-2026-11-16.md",
-    "aliasCompatibility": "107 migrations verified in staging and production. Explicit single migration applied by MCP; aliases recorded without history repair. No pending migration."
+    "evidence": "docs/OGRITECH_CATALOGO.md"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [],
+  "requiredMenuMigrations": [
+    "catalog_profiles_and_commercial_plans"
+  ],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
-    "commercial_callbacks_and_billing": [],
-    "menu_release_required": [],
-    "ai_staging_disabled": [],
-    "private_pilot_observability": [],
-    "tenant_specific_diniz": [],
-    "catalog_corrective": []
+    "menu": [
+      "catalog_profiles_and_commercial_plans"
+    ]
   },
   "releaseConditions": [
     "Every migration in the contiguous tail receives an explicit production disposition.",

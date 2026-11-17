@@ -109,7 +109,8 @@
       "subscription_billing_adjustments",
       "guard_reversed_online_refunds",
       "archive_menu_sales_reports",
-      "platform_admin_notifications"
+      "platform_admin_notifications",
+      "catalog_profiles_and_commercial_plans"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -246,7 +247,12 @@
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "platform_admin_notifications",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      {
+        "name": "catalog_profiles_and_commercial_plans",
+        "reason": "Nova oferta Catálogo e segmentos: validar pacote coordenado antes de publicação."
+      }
+    ],
     "observationEvidence": "docs/evidencias/admin-notificacoes-2026-11-16.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
