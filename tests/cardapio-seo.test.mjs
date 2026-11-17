@@ -6,7 +6,7 @@ test('indexable commercial pages have unique menu-focused metadata and no retire
  const titles=new Set(),descriptions=new Set();
  for(const [file,path] of [['index.html','/'],['cardapio-digital/index.html','/cardapio-digital/'],['contato/index.html','/contato/']]){
   const page=await read(file);const title=page.match(/<title>([^<]+)<\/title>/)?.[1];const description=page.match(/name="description" content="([^"]+)"/)?.[1];
-  assert.match(title,/(?:cardápio|catálogo) digital/i);assert.ok(description);assert.ok(!titles.has(title));assert.ok(!descriptions.has(description));titles.add(title);descriptions.add(description);
+  assert.match(title,/(?:cardápio|catálogo) digital|vitrine online/i);assert.ok(description);assert.ok(!titles.has(title));assert.ok(!descriptions.has(description));titles.add(title);descriptions.add(description);
   assert.equal((page.match(/name="description"/g)||[]).length,1);assert.ok(page.includes(`rel="canonical" href="https://ogritech.com.br${path}"`));assert.ok(page.includes(`property="og:url" content="https://ogritech.com.br${path}"`));
   assert.doesNotMatch(page,/barbearia|SaaS para|Ogritech Agenda|Ogritech Páginas|Ogritech Orçamentos|Reduzir faltas|Agilizar orçamentos/i);
  }

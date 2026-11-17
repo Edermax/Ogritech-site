@@ -111,13 +111,13 @@
   function menu() {
     contactOpen = false; ++contactEpoch;
     if (panelMode) { renderPanelHelp(); return; }
-    body.innerHTML = `<p class="ogri-assistant__message">Como posso ajudar com a Ogritech Cardápio?</p><div class="ogri-assistant__options">
+    body.innerHTML = `<p class="ogri-assistant__message">Como posso ajudar com a Ogritech Catálogo?</p><div class="ogri-assistant__options">
       <button class="ogri-assistant__option" data-topic="planos">Planos e valores</button>
       <button class="ogri-assistant__option" data-topic="teste">Período gratuito</button>
       <button class="ogri-assistant__option" data-topic="beneficios">Benefícios</button>
       <button class="ogri-assistant__option" data-topic="pagamento">Pagamento e cancelamento</button>
       <button class="ogri-assistant__option" data-topic="contato">Falar com atendimento humano</button>
-    </div><p class="ogri-assistant__notice">Atendimento restrito à aquisição, implantação e uso da Ogritech Cardápio.</p>`;
+    </div><p class="ogri-assistant__notice">Atendimento restrito à aquisição, implantação e uso da Ogritech Catálogo.</p>`;
   }
 
   function answer(topic) {

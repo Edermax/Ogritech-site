@@ -44,7 +44,7 @@ const server=http.createServer((req,res)=>{try{
     if(width<=1000){
      assert.equal(await page.locator('#segmentFilter').isVisible(),false);
      await page.locator('#adminAdvancedFilters>summary').click();
-     await page.locator('#segmentFilter').selectOption('Confeitaria');
+     await page.locator('#segmentFilter').selectOption('confectionery');
      assert.match(await page.locator('#adminAdvancedFilters>summary').textContent(),/ativos/);
      assert.equal(await page.locator('#businessTableBody tr').count(),1);
      await page.locator('#segmentFilter').selectOption('all');

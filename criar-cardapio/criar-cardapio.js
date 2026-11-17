@@ -5,8 +5,10 @@
   const offerChoice = form.elements.offer, cycleChoice = form.elements.cycle;
   const params = new URLSearchParams(location.search);
   if (["monthly", "annual"].includes(params.get("ciclo"))) cycleChoice.value = params.get("ciclo");
-  const segments = {food:"Pizzaria",crafts:"Artesanato e personalizados",products:"Produtos em geral"};
-  if (segments[params.get("perfil")]) form.elements.segment.value=segments[params.get("perfil")];
+  const presentation = globalThis.OgritechCatalogProfiles;
+  const requestedSegment = presentation?.segment(params.get("segmento"));
+  const initialSegment = requestedSegment?.code || ({food:"food",crafts:"crafts",products:"products"}[params.get("perfil")] || "");
+  presentation?.fillSelect(form.elements.segment, initialSegment, {placeholder:true});
   const requestedPlan = new URLSearchParams(location.search).get("plano_id");
   let planCatalog = [], selectedPlan = null, catalogLoaded = false, catalogError = false, unavailableRequest = false;
   const planLabel = document.createElement("label"), planChoice = document.createElement("select");
@@ -60,10 +62,12 @@
     $("orderNotificationsChoice").hidden = false;
     form.elements.publish_whatsapp.required = !offer.orders;
     const profile = globalThis.OgritechCatalogProfiles?.resolve(form.elements.segment?.value) || {noun:"catálogo",code:"products"};
-    submit.textContent = `Criar meu ${profile.noun} e testar 14 dias`;
+    const intro=document.querySelector('.intro h1');
+    if(intro && form.elements.segment?.value) intro.textContent=offer.orders ? `${profile.title} e pedidos organizados.` : `${profile.title}: apresente seus produtos e atenda pelo WhatsApp.`;
+    submit.textContent = `Criar ${profile.code === "products" ? "minha" : "meu"} ${profile.noun} e testar 14 dias`;
     for(const id of ["choose-cardapio","choose-encomendas"]) {
       const link=$(id); if(!link?.href)continue; const url=new URL(link.href,location.href);
-      url.searchParams.set("perfil",profile.code); url.searchParams.set("ciclo",cycleChoice.value); link.href=url.href;
+      url.searchParams.set("perfil",profile.code); if(form.elements.segment.value) url.searchParams.set("segmento",form.elements.segment.value); url.searchParams.set("ciclo",cycleChoice.value); link.href=url.href;
     }
   }
   offerChoice.addEventListener("change", () => { unavailableRequest = false; selectedPlan = null; choosePlan(true); updateOffer(); });
@@ -112,9 +116,9 @@
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
       const failure = new Error(result.error?.message || ({
-      trial_already_used: "Este documento já usou o teste gratuito do Cardápio.",
+      trial_already_used: "Este documento já usou o teste gratuito da Ogritech.",
       terms_not_configured: "A abertura de novas contas ainda não foi liberada.",
-      provisioning_failed: "Não foi possível preparar seu cardápio. Tente novamente.",
+      provisioning_failed: "Não foi possível preparar sua vitrine. Tente novamente.",
       rate_limited: "Muitas tentativas. Aguarde antes de tentar novamente.",
       challenge_failed: "Confirme a verificação de segurança novamente.",
       phone_verification_required: "Confirme seu telefone pelo código recebido por SMS.",
@@ -161,7 +165,7 @@
     if (!challengeId) { $("phoneMessage").textContent = "Solicite um código primeiro."; return; }
     const button = event.currentTarget; button.disabled = true;
     try { const result = await start({ ...phoneIdentity(), action: "verify_phone_code", challenge_id: challengeId, code: form.elements.phone_code.value });
-      phoneToken = result.phone_verification_token; $("phoneMessage").textContent = "Telefone confirmado. Você já pode criar seu cardápio.";
+      phoneToken = result.phone_verification_token; $("phoneMessage").textContent = "Telefone confirmado. Você já pode criar sua vitrine.";
     } catch (error) { $("phoneMessage").textContent = error.message; }
     finally { button.disabled = false; }
   });
@@ -171,7 +175,7 @@
     const data = Object.fromEntries(new FormData(form));
     try {
       await Promise.all([configReady, catalogReady]); securityReady();
-      if (configuration.phone_verification && !phoneToken) throw new Error("Confirme seu telefone antes de criar o cardápio.");
+      if (configuration.phone_verification && !phoneToken) throw new Error("Confirme seu telefone antes de criar a vitrine.");
       const result = await start({ action: "start_trial", product: "menu", offer: data.offer, plan_id: selectedPlan.id, expected_total_cents: cycleChoice.value === "annual" ? OgritechOffers.forPlan(selectedPlan).annualCents : OgritechOffers.forPlan(selectedPlan).monthlyCents, publish_whatsapp: data.publish_whatsapp === "on", business_name: data.business_name, responsible_name: data.responsible_name,
         tax_document: data.tax_document, responsible_tax_document: data.responsible_tax_document, email: data.email, phone: data.phone,
         phone_verification_token: phoneToken, turnstile_token: captchaToken, segment: data.segment, service_invoice_preference: data.service_invoice_preference,

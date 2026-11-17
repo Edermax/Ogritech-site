@@ -112,7 +112,8 @@
       "platform_admin_notifications",
       "catalog_profiles_and_commercial_plans",
       "catalog_cycle_reauthorization",
-      "fix_catalog_cycle_claim_parameter"
+      "fix_catalog_cycle_claim_parameter",
+      "catalog_business_segments"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -135,7 +136,8 @@
       "platform_admin_notifications": "20261116204208",
       "catalog_profiles_and_commercial_plans": "20261117160033",
       "catalog_cycle_reauthorization": "20261117161901",
-      "fix_catalog_cycle_claim_parameter": "20261117162103"
+      "fix_catalog_cycle_claim_parameter": "20261117162103",
+      "catalog_business_segments": "20261117210050"
     },
     "observedMigrationNames": [
       "create_core_schema",
@@ -249,13 +251,24 @@
       "catalog_cycle_reauthorization",
       "fix_catalog_cycle_claim_parameter"
     ],
-    "observationEvidence": "docs/evidencias/catalogo-publicacao-2026-11-17.md"
+    "observationEvidence": "docs/evidencias/catalogo-publicacao-2026-11-17.md",
+    "heldMigrations": [
+      {
+        "name": "catalog_business_segments",
+        "reason": "Implementação autorizada somente localmente; validação local e publicação remota separadas."
+      }
+    ]
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "fix_catalog_cycle_claim_parameter",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      {
+        "name": "catalog_business_segments",
+        "reason": "Publicação explicitamente autorizada pelo usuário em 17/11/2026; homologação de staging aprovada, aguardando backup/restauração e aplicação controlada."
+      }
+    ],
     "observationEvidence": "docs/evidencias/catalogo-publicacao-2026-11-17.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",

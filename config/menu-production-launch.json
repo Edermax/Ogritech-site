@@ -259,7 +259,7 @@
     "authorized": true,
     "date": "2026-11-17",
     "userInstruction": "publique",
-    "scope": "Catálogo: migrations, funções e frontend; preservação dos contratos anteriores",
-    "evidence": "docs/evidencias/catalogo-publicacao-2026-11-17.md"
+    "scope": "Vitrine e segmentos: migração aditiva e frontend, preservando catálogo, links, planos e contratos; sem alterações no provedor de pagamentos",
+    "evidence": "docs/evidencias/vitrine-publicacao-2026-11-17.md"
   }
 }

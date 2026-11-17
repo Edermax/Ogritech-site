@@ -14,7 +14,7 @@ const [script, css, mobileCss, journey, callbackMigration, emailMigration, email
 
 test("assistente mantém escopo e usa somente o contato oficial informado", () => {
   assert.match(script, /Aquisição e dúvidas comerciais/);
-  assert.match(script, /Ogritech Cardápio/);
+  assert.match(script, /Ogritech Catálogo/);
   assert.doesNotMatch(script, /Ogritech Agenda|R\$ 97/);
   assert.match(emailFunction, /contato@ogritech\.com\.br/);
   assert.match(script, /wa\.me\/5516994577762/);

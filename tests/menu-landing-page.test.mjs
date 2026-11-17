@@ -64,20 +64,20 @@ test("demonstração oferece confeitaria, salgaderia e marmitaria em carrossel a
   assert.match(styles, /@media\(max-width:900px\)\{\.hero\{grid-template-columns:minmax\(0,1fr\)\}\}/);
 });
 
-test("home apresenta diretamente o Cardápio sem catálogo multiproduto", () => {
- assert.match(home, /Seu catálogo\./);
+test("home apresenta a vitrine sem reintroduzir produtos descontinuados", () => {
+ assert.match(home, /Sua vitrine online,/);
  assert.match(home, /href="\/criar-cardapio\/"/);
  assert.doesNotMatch(home, /Ogritech Agenda|Ogritech Páginas|Ogritech Orçamentos|availability-badge/);
  assert.doesNotMatch(sitemap, /agenda-online/);
 });
 
-test("exemplos da home usam fotos distintas e agrupam tamanho e preço por produto", async () => {
+test("exemplos da home usam imagens próprias distintas e agrupam tamanho e preço por produto", async () => {
   const cards = [...home.matchAll(/<article class="menu-item">([\s\S]*?)<\/article>/g)].map((match) => match[1]);
   assert.equal(cards.length, 6);
   const sources = cards.map((card) => card.match(/<img src="([^"]+)"/)?.[1]);
   assert.equal(new Set(sources).size, 6);
   for (const card of cards) {
-    assert.match(card, /class="sample-purchase"><span>[^<]+<\/span><div><b>A partir de R\$/);
+    assert.match(card, /class="sample-purchase"><span>[^<]+<\/span><div><b>(?:A partir de R\$|R\$|Sob orçamento)/);
   }
   await Promise.all(sources.map((source) => readFile(new URL(`..${source}`, import.meta.url))));
 });

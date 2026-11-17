@@ -357,12 +357,18 @@
     data.categories = (data.categories || []).filter(category => (category.items || []).length > 0);
     page = data;
     if (globalThis.OgritechCatalogProfiles) OgritechCatalogProfiles.apply(document.body,OgritechCatalogProfiles.resolve(data.menu));
-    document.body.classList.toggle("menu-whatsapp-only", whatsappOnly()); applyVisualIdentity(data.menu.visual_identity); document.title = `${menuTitle} | Ogritech`; $("menuTitle").textContent = menuTitle; $("menuDescription").textContent = data.menu.description; $("menuDescription").classList.toggle("hidden", !data.menu.description?.trim());
+    document.body.classList.toggle("menu-whatsapp-only", whatsappOnly()); applyVisualIdentity(data.menu.visual_identity); document.title = `${menuTitle} | ${globalThis.OgritechCatalogProfiles?.resolve(data.menu).title || "Catálogo"} | Ogritech`; $("menuTitle").textContent = menuTitle; $("menuDescription").textContent = data.menu.description; $("menuDescription").classList.toggle("hidden", !data.menu.description?.trim());
     const logoUrl = globalThis.OgritechMenuBranding?.assetUrl(data.menu.visual_identity?.logo_path, window.OGRITECH_SUPABASE_URL);
     $("menuBrandLockup").classList.toggle("hidden", !logoUrl && !(isDinizMenu && data.menu.visual_identity?.customized !== true));
     if (logoUrl) { $("menuBrandLogo").src=logoUrl; $("menuBrandLogo").alt=menuTitle; }
     if (isDinizMenu && !logoUrl && data.menu.visual_identity?.customized !== true) { $("menuBrandLogo").src = "../assets/diniz-doces/logo.jpg"; $("menuBrandLogo").alt = "Diniz Doces"; $("menuBrandLockup").classList.remove("hidden"); }
     if (isDinizMenu) { $("calculateDeliveryButton").classList.remove("hidden"); $("deliveryProviderNotice").classList.remove("hidden"); }
+    const segmentCode=globalThis.OgritechCatalogProfiles?.segment(data.menu.segment)?.code;
+    if(['collectibles','secondhand'].includes(segmentCode)){
+      let note=$('catalogAvailabilityNote');
+      if(!note){note=document.createElement('p');note.id='catalogAvailabilityNote';note.className='menu-store-trust';$('catalog').before(note);}
+      note.textContent='Confirme a disponibilidade e a condição das peças com o vendedor antes de concluir a compra.';
+    }
     const paymentNames = {pix:"Pix",cash:"Dinheiro",credit_card:"Cartão de crédito",debit_card:"Cartão de débito"}, hours = data.menu.weekly_hours;
     $("menuPayments").textContent = `Pagamento combinado com o estabelecimento: ${(data.menu.payment_methods || []).map((code) => paymentNames[code] || code).join(", ")}.`;
     $("menuHours").textContent = formatHours(hours);

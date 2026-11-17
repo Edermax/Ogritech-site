@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-21",
-  "product": "Ogritech Cardápio",
+  "updatedAt": "2026-11-17",
+  "product": "Ogritech Catálogo",
   "rollbackTarget": {
-    "ref": "1771d9c5d737682329e775b22d8e4ba171f7075e",
-    "source": "GitHub Pages successful build after operational backup fix, verified 2026-10-19",
+    "ref": "9b2cb1eed2cf1c5ff733e3265b2e10b1fce3f240",
+    "source": "GitHub Pages built e branch main conferidos antes da publicação da vitrine em 17/11/2026.",
     "verifiedAsCurrentProduction": true,
     "requiredFiles": [
       "index.html",

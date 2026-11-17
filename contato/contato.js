@@ -1,12 +1,15 @@
 (() => {
+  const segmentChoice=document.querySelector('[name="tipo_negocio"]');
+  globalThis.OgritechCatalogProfiles?.fillSelect(segmentChoice,"",{placeholder:true});
+  if(segmentChoice)for(const option of segmentChoice.options)if(option.value)option.value=option.textContent;
   const form = document.querySelector("#lead-form"), steps = [...document.querySelectorAll(".step")], progress = [...document.querySelectorAll(".progress span")];
   const prev = document.querySelector("#prev"), next = document.querySelector("#next"), send = document.querySelector("#send"), note = document.querySelector("#note"), alertBox = document.querySelector("#alert"), current = document.querySelector("#current"), tool = document.querySelector("#tool"), adaptive = document.querySelector("#adaptive");
   let active = 0;
   document.querySelector(".honeypot")?.classList.add("hidden");
   form.whatsapp.addEventListener("input", e => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 11).replace(/^(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2"); });
   current.addEventListener("change", () => tool.classList.toggle("hidden", current.value === "Não"));
-  const questions = { "Ogritech Cardápio": ["Quantidade aproximada de produtos", "Onde recebe pedidos hoje?"] };
-  form.querySelectorAll("[name=interesse]").forEach(input => input.addEventListener("change", () => { adaptive.innerHTML = [...form.querySelectorAll("[name=interesse]:checked")].map(item => { const q = questions[item.value], key = item.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\W/g, "_").toLowerCase(); return `<article><h3>${item.value}</h3><div class="grid"><label><span>${q[0]}</span><input name="${key}_1" maxlength="200"></label><label><span>${q[1]}</span><input name="${key}_2" maxlength="200"></label></div></article>`; }).join(""); }));
+  const questions = ["Quantidade aproximada de produtos", "Onde recebe pedidos hoje?"];
+  form.querySelectorAll("[name=interesse]").forEach(input => input.addEventListener("change", () => { adaptive.innerHTML = [...form.querySelectorAll("[name=interesse]:checked")].map(item => { const q = questions, key = item.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\W/g, "_").toLowerCase(); return `<article><h3>${item.value}</h3><div class="grid"><label><span>${q[0]}</span><input name="${key}_1" maxlength="200"></label><label><span>${q[1]}</span><input name="${key}_2" maxlength="200"></label></div></article>`; }).join(""); }));
   form.querySelector("[name=interesse]")?.dispatchEvent(new Event("change"));
   form.querySelectorAll("[name=objetivo]").forEach(input => input.addEventListener("change", () => { if (form.querySelectorAll("[name=objetivo]:checked").length > 3) input.checked = false; }));
   function show(step) { active = step; steps.forEach((item, i) => item.classList.toggle("active", i === step)); progress.forEach((item, i) => item.classList.toggle("active", i <= step)); prev.classList.toggle("hidden", step === 0); next.classList.toggle("hidden", step === 2); send.classList.toggle("hidden", step !== 2); note.classList.toggle("hidden", step !== 2); note.textContent = window.OGRITECH_ENV === "staging" ? "Ambiente de teste: o contato será registrado na fila de staging." : "Ao enviar, seu aplicativo de e-mail será aberto com as respostas prontas para contato@ogritech.com.br."; alertBox.textContent = ""; document.querySelector(".form-shell").scrollIntoView({ behavior: "smooth", block: "start" }); }

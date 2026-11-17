@@ -10,7 +10,7 @@ test('legacy food models retain their terminology and general business defaults 
  assert.equal(profiles.resolve({segment:'Confeitaria, bolos e doces'}).noun,'cardápio');
  assert.equal(profiles.resolve({segment:'Artesanato e personalizados'}).code,'crafts');
  assert.equal(profiles.resolve({segment:'Produtos em geral'}).code,'products');
- assert.equal(profiles.resolve({segment:'Outro negócio'}).noun,'catálogo');
+ assert.equal(profiles.resolve({segment:'Outro negócio'}).noun,'vitrine');
  assert.equal(profiles.resolve({template_code:'crafts',segment:'Restaurante'}).code,'crafts');
  assert.equal(profiles.offerName(offers.offers.cardapio,profiles.profiles.food),'Ogritech Cardápio Essencial');
  assert.equal(profiles.offerName(offers.offers.cardapio,profiles.profiles.crafts),'Ogritech Catálogo Essencial');

@@ -1,5 +1,6 @@
 /* OGRITECH — ADMINISTRAÇÃO DA PLATAFORMA */
 const SEGMENTS = {
+    ...Object.fromEntries(OgritechCatalogProfiles.segments.map(entry => [entry.code, {icon:"●",color:entry.profile === "food" ? "#087f8c" : entry.profile === "crafts" ? "#996d45" : "#4775a2"}])),
     "Barbearia": { icon: "✂", color: "#f0d477" }, "Salão de beleza": { icon: "✦", color: "#d173df" },
     "Manicure": { icon: "◇", color: "#f18fb4" }, "Bronzeamento": { icon: "☀", color: "#f0ad4e" },
     "Professor de música": { icon: "♫", color: "#6ba8f7" }, "Personal training": { icon: "◆", color: "#65d39b" },
@@ -12,6 +13,7 @@ const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL
 const moneyPrecise = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 const shortDate = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" });
 const $ = (id) => document.getElementById(id);
+const segmentKey=value=>OgritechCatalogProfiles.segment(value)?.code || value;
 const adminIcon = (name) => `<svg class="admin-icon" width="18" height="18" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#${name}"></use></svg>`;
 const environmentUrl = (path) => window.ogritechEnvironmentUrl?.(path) || path;
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
@@ -106,7 +108,7 @@ function renderSummary() {
     const menuBusinesses = businesses.filter(isMenuBusiness);
     const active = menuBusinesses.filter(canOperateMenu);
     $("businessCount").textContent = menuBusinesses.length;
-    $("segmentCount").textContent = new Set(menuBusinesses.map((business) => business.segment)).size;
+    $("segmentCount").textContent = new Set(menuBusinesses.map((business) => segmentKey(business.segment))).size;
     $("activeCount").textContent = active.length;
     const realBusinesses = active.filter((business) => business.origin === "Cliente real");
     $("monthlyRevenue").textContent = money.format(realBusinesses.reduce((sum, business) => sum + Number(business.monthly_fee), 0));
@@ -114,24 +116,24 @@ function renderSummary() {
 
 function renderSegments() {
     const menuBusinesses = businesses.filter(isMenuBusiness);
-    $("segmentSummary").textContent = `${menuBusinesses.length} negócio(s) com Cardápio · ${businesses.length - menuBusinesses.length} cadastro(s) no histórico`;
-    $("segmentGrid").innerHTML = [...new Set(menuBusinesses.map((business) => business.segment))].map((segment) => {
+    $("segmentSummary").textContent = `${menuBusinesses.length} negócio(s) com catálogo · ${businesses.length - menuBusinesses.length} cadastro(s) no histórico`;
+    $("segmentGrid").innerHTML = [...new Set(menuBusinesses.map((business) => segmentKey(business.segment)))].map((segment) => {
         const meta = SEGMENTS[segment] || SEGMENTS.Outro;
-        const count = menuBusinesses.filter((business) => business.segment === segment).length;
-        return `<article class="segment-card" style="--segment-color:${meta.color}"><i>${adminIcon("store")}</i><div><strong>${escapeHtml(segment)}</strong><span>${count} negócio${count === 1 ? "" : "s"}</span></div><b>${count}</b></article>`;
-    }).join("") || '<p class="admin-muted">Os segmentos aparecerão quando o primeiro negócio tiver uma assinatura de Cardápio.</p>';
+        const count = menuBusinesses.filter((business) => segmentKey(business.segment) === segmentKey(segment)).length;
+        return `<article class="segment-card" style="--segment-color:${meta.color}"><i>${adminIcon("store")}</i><div><strong>${escapeHtml(OgritechCatalogProfiles.label(segment))}</strong><span>${count} negócio${count === 1 ? "" : "s"}</span></div><b>${count}</b></article>`;
+    }).join("") || '<p class="admin-muted">Os segmentos aparecerão quando o primeiro negócio tiver uma assinatura de catálogo.</p>';
 }
 
 function renderBusinesses() {
     const query = $("businessSearch").value.trim().toLocaleLowerCase("pt-BR"), segment = $("segmentFilter").value;
     const scope = $("businessScope").value;
-    const filtered = businesses.filter((business) => (scope === "all" || (scope === "menu" ? isMenuBusiness(business) : !isMenuBusiness(business))) && `${business.name} ${business.contact_name} ${business.owner_email || ""}`.toLocaleLowerCase("pt-BR").includes(query) && (segment === "all" || business.segment === segment));
+    const filtered = businesses.filter((business) => (scope === "all" || (scope === "menu" ? isMenuBusiness(business) : !isMenuBusiness(business))) && `${business.name} ${business.contact_name} ${business.owner_email || ""} ${OgritechCatalogProfiles.label(business.segment)}`.toLocaleLowerCase("pt-BR").includes(query) && (segment === "all" || segmentKey(business.segment) === segmentKey(segment)));
     $("businessTableBody").innerHTML = filtered.map((business) => {
         const meta = SEGMENTS[business.segment] || SEGMENTS.Outro;
         return `<tr><td><button class="business-link" data-action="detail" data-id="${business.id}"><span class="business-symbol" style="--segment-color:${meta.color}">${adminIcon("store")}</span><strong>${escapeHtml(business.name)}</strong></button></td>
-        <td>${escapeHtml(business.segment)}</td><td>${escapeHtml(business.contact_name)}</td><td><strong>${escapeHtml(business.phone || "Telefone pendente")}</strong><br><small>${escapeHtml(business.owner_email || "E-mail pendente")}</small></td><td><span class="origin-badge">${escapeHtml(business.origin)}</span></td>
+        <td>${escapeHtml(OgritechCatalogProfiles.label(business.segment))}</td><td>${escapeHtml(business.contact_name)}</td><td><strong>${escapeHtml(business.phone || "Telefone pendente")}</strong><br><small>${escapeHtml(business.owner_email || "E-mail pendente")}</small></td><td><span class="origin-badge">${escapeHtml(business.origin)}</span></td>
         <td><span class="plan-badge">${escapeHtml(isMenuBusiness(business) ? business.plan : "Histórico · " + business.plan)}</span></td><td>${money.format(business.monthly_fee)}</td><td><span class="${business.status === "Ativo" ? "active-badge" : "suspended-badge"}">${escapeHtml(business.status)}</span></td>
-        <td><div class="admin-row-actions"><button data-action="operate" data-id="${business.id}" ${canOperateMenu(business) ? "" : 'disabled title="A operação exige uma assinatura de Cardápio com acesso ativo"'}>${adminIcon("arrow")}Abrir painel</button><button data-action="edit" data-id="${business.id}">${adminIcon("edit")}Editar</button><button class="danger" data-action="delete" data-id="${business.id}">${adminIcon("archive")}Arquivar</button></div></td></tr>`;
+        <td><div class="admin-row-actions"><button data-action="operate" data-id="${business.id}" ${canOperateMenu(business) ? "" : 'disabled title="A operação exige uma assinatura de catálogo com acesso ativo"'}>${adminIcon("arrow")}Abrir painel</button><button data-action="edit" data-id="${business.id}">${adminIcon("edit")}Editar</button><button class="danger" data-action="delete" data-id="${business.id}">${adminIcon("archive")}Arquivar</button></div></td></tr>`;
     }).join("");
     $("businessEmpty").classList.toggle("hidden", filtered.length > 0);
     document.querySelector(".business-table-wrap").classList.toggle("hidden", filtered.length === 0);
@@ -143,7 +145,7 @@ function renderPlans() {
         const features = Array.isArray(plan.features) ? plan.features : [];
         const limit = plan.max_users == null ? "Ilimitado" : Number(plan.max_users).toLocaleString("pt-BR");
         const link = environmentUrl(`criar-cardapio/${offer.code}/?plano_id=${encodeURIComponent(plan.id)}`);
-        return `<article class="plan-card ${plan.featured ? "featured" : ""}">${plan.featured ? '<span class="recommended-plan">RECOMENDADO</span>' : ""}<p class="platform-kicker">${escapeHtml(plan.name)}</p><strong>${money.format(plan.monthly_fee)}<small>/mês</small></strong><p>Ou ${OgritechOffers.format(offer.annualCents)}/ano · teste único de 14 dias</p><p>${escapeHtml(plan.description)}</p><p><span class="${active ? 'active-badge' : 'suspended-badge'}">${active ? 'Disponível para contratação' : 'Indisponível para novas contratações'}</span></p><p>Base: ${offer.orders ? 'Encomendas · pedidos e vendas no painel' : 'Cardápio · atendimento no WhatsApp'}</p><div class="plan-limits"><span>${limit} usuários</span></div><ul>${features.map(feature => `<li>✓ ${escapeHtml(feature)}</li>`).join("")}</ul><button type="button" class="outline-cyan-button full" data-edit-plan="${plan.id}">Editar plano</button>${active ? `<a class="outline-cyan-button full" href="${escapeHtml(link)}" target="_blank" rel="noopener">Abrir contratação deste plano</a>` : ""}</article>`;
+        return `<article class="plan-card ${plan.featured ? "featured" : ""}">${plan.featured ? '<span class="recommended-plan">RECOMENDADO</span>' : ""}<p class="platform-kicker">${escapeHtml(plan.name)}</p><strong>${money.format(plan.monthly_fee)}<small>/mês</small></strong><p>Ou ${OgritechOffers.format(offer.annualCents)}/ano · teste único de 14 dias</p><p>${escapeHtml(plan.description)}</p><p><span class="${active ? 'active-badge' : 'suspended-badge'}">${active ? 'Disponível para contratação' : 'Indisponível para novas contratações'}</span></p><p>Base: ${offer.orders ? 'Completo · pedidos e vendas no painel' : 'Essencial · atendimento no WhatsApp'}</p><div class="plan-limits"><span>${limit} usuários</span></div><ul>${features.map(feature => `<li>✓ ${escapeHtml(feature)}</li>`).join("")}</ul><button type="button" class="outline-cyan-button full" data-edit-plan="${plan.id}">Editar plano</button>${active ? `<a class="outline-cyan-button full" href="${escapeHtml(link)}" target="_blank" rel="noopener">Abrir contratação deste plano</a>` : ""}</article>`;
     }).join("") || '<p>Nenhum plano cadastrado. Use Criar novo plano para começar.</p>';
 }
 
@@ -244,7 +246,7 @@ const productStatusLabels = { trial: "Teste", active: "Ativo", pending_activatio
 function renderProductAccess() {
     if (!$('productAccessTableBody')) return;
     const business = businesses.find((item) => item.id === $('productBusinessFilter').value) || businesses.find(isMenuBusiness);
-    if (!business) { $('productAccessTableBody').innerHTML = '<tr><td colspan="5">Nenhum negócio com Cardápio cadastrado. Use “Criar cardápio” na área Negócios para começar.</td></tr>'; return; }
+    if (!business) { $('productAccessTableBody').innerHTML = '<tr><td colspan="5">Nenhum negócio com catálogo cadastrado. Use “Criar vitrine” na área Negócios para começar.</td></tr>'; return; }
     $('productAccessTableBody').innerHTML = products.map((product) => {
         const subscription = subscriptionFor(business,product);
         const plan = plans.find((item) => item.id === subscription?.plan_id) || plans.find((item) => item.product_id === product.id && item.active !== false);
@@ -271,7 +273,7 @@ async function changeProductSubscription(button) {
         await loadData(); populateSelectors(); refreshViews(); return;
     }
     const cancelling = button.dataset.productAction === 'cancel';
-    if (cancelling && !confirm(`Cancelar somente o acesso ao Cardápio de ${business.name}? O histórico de pedidos será preservado.`)) return;
+    if (cancelling && !confirm(`Cancelar somente o acesso ao catálogo de ${business.name}? O histórico de pedidos será preservado.`)) return;
     button.disabled = true;
     const { error } = await supabaseClient.rpc('platform_set_product_subscription', {
         target_saas_client_id: business.id,
@@ -289,9 +291,10 @@ function refreshViews() { renderSummary(); renderSegments(); renderBusinesses();
 function populateSelectors() {
     const selectionIds = ["segmentFilter", "userBusinessFilter", "productBusinessFilter", "invoiceBusiness"];
     const priorSelection = Object.fromEntries(selectionIds.map((id) => [id, $(id)?.value]));
-    $("businessSegment").innerHTML = Object.keys(SEGMENTS).map((segment) => `<option>${segment}</option>`).join("");
-    const segments = [...new Set([...Object.keys(SEGMENTS), ...businesses.map((business) => business.segment).filter(Boolean)])];
-    $("segmentFilter").innerHTML = '<option value="all">Todos os segmentos</option>' + segments.map((segment) => `<option>${escapeHtml(segment)}</option>`).join("");
+    const availableSegments = Object.keys(SEGMENTS).filter(value => !OgritechCatalogProfiles.segment(value) || segmentKey(value) === value);
+    $("businessSegment").innerHTML = availableSegments.map((segment) => `<option value="${escapeHtml(segment)}">${escapeHtml(OgritechCatalogProfiles.label(segment))}</option>`).join("");
+    const segments = [...new Set([...availableSegments, ...businesses.map((business) => segmentKey(business.segment)).filter(Boolean)])];
+    $("segmentFilter").innerHTML = '<option value="all">Todos os segmentos</option>' + segments.map((segment) => `<option value="${escapeHtml(segment)}">${escapeHtml(OgritechCatalogProfiles.label(segment))}</option>`).join("");
     const menuProduct = products.find((product) => product.code === 'menu');
     $("businessPlan").innerHTML = plans.filter((plan) => plan.product_id === menuProduct?.id && plan.active !== false).map((plan) => `<option value="${escapeHtml(plan.name)}" data-price="${plan.monthly_fee}">${escapeHtml(plan.name)}</option>`).join("");
     const businessOptions = businesses.filter((business) => business.barbershop_id && isMenuBusiness(business)).map((business) => `<option value="${business.barbershop_id}">${escapeHtml(business.name)}</option>`).join("");
@@ -380,7 +383,7 @@ function openBusinessForm(business = null) {
 
 function openBusinessDetail(business) {
     selectedBusinessId = business.id; $("detailBusinessName").textContent = business.name;
-    $("detailBusinessMeta").textContent = `${business.segment} • ${business.plan} • ${business.status}`;
+    $("detailBusinessMeta").textContent = `${OgritechCatalogProfiles.label(business.segment)} • ${business.plan} • ${business.status}`;
     $("detailOperateButton").disabled = !canOperateMenu(business);
     $("detailAddUserButton").disabled = !isMenuBusiness(business);
     $("detailStatusButton").disabled = !isMenuBusiness(business);
@@ -442,7 +445,7 @@ async function deleteBusiness(business) {
 }
 
 function operateBusiness(business) {
-    if (!canOperateMenu(business)) return alert("Este cadastro não tem acesso ativo ao Cardápio. Consulte a assinatura do negócio.");
+    if (!canOperateMenu(business)) return alert("Este cadastro não tem acesso ativo ao catálogo. Consulte a assinatura do negócio.");
     if (!business.barbershop_id) return alert("Este cadastro ainda não está vinculado a uma unidade operacional.");
     sessionStorage.setItem("ogritechMasterMode", "true");
     sessionStorage.setItem("ogritechMasterBusinessId", business.barbershop_id);
@@ -522,11 +525,11 @@ function decorateAdminTables() {
     window.OgritechAdminLayout?.organizeActions();
 }
 const adminViews = {
-    overview: ["Resumo", "Acompanhe sua carteira de Cardápio e acesse as tarefas do dia.", ["adminSummary", "adminShortcuts", "segments"]],
-    businesses: ["Negócios", "Consulte os cardápios e mantenha os cadastros organizados.", ["businesses"]],
+    overview: ["Resumo", "Acompanhe sua carteira de catálogos e acesse as tarefas do dia.", ["adminSummary", "adminShortcuts", "segments"]],
+    businesses: ["Negócios", "Consulte os catálogos e mantenha os cadastros organizados.", ["businesses"]],
     users: ["Acessos", "Gerencie proprietários e equipe dos seus clientes.", ["users"]],
     plans: ["Planos", "Confira os valores e as regras cadastrados para o produto.", ["plans"]],
-    products: ["Assinaturas", "Consulte e gerencie o acesso ao Cardápio por negócio.", ["products"]],
+    products: ["Assinaturas", "Consulte e gerencie o acesso ao catálogo por negócio.", ["products"]],
     support: ["Atendimento humano", "Solicitações de retorno recebidas pelo Ajudante Ogritech.", ["support"]],
     trialReviews: ["Revisão de testes", "Analise cadastros com dados já utilizados antes de liberar outro teste.", ["trialReviews"]],
     billing: ["Financeiro", "Acompanhe faturas, recebimentos e registros financeiros.", ["billing"]],

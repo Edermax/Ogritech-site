@@ -47,7 +47,9 @@
     "test:panel-navigation-browser": "node scripts/panel-navigation-browser.cjs",
     "test:admin-theme-browser": "node scripts/admin-theme-browser.cjs",
     "test:admin-navigation-browser": "node scripts/admin-navigation-browser.cjs",
-    "test:catalog-browser": "node scripts/catalog-journeys-browser.mjs"
+    "test:catalog-browser": "node scripts/catalog-journeys-browser.mjs",
+    "preview:vitrine": "node scripts/vitrine-preview-server.mjs",
+    "test:vitrine-preview": "node scripts/vitrine-preview-browser.mjs"
   },
   "engines": {
     "node": ">=22"
