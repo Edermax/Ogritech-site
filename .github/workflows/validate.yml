@@ -36,6 +36,7 @@ jobs:
       - run: supabase db reset
       - run: supabase test db
       - run: python3 scripts/test-menu-offer-concurrency.py
+      - run: python3 scripts/test-catalog-inventory-concurrency.py
   panel-theme:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -57,6 +58,7 @@ jobs:
       - run: node scripts/subscription-adjustments-browser.cjs
       - run: node scripts/split-offers-browser.mjs
       - run: npm run test:catalog-browser
+      - run: node scripts/catalog-inventory-browser.mjs
       - run: node scripts/menu-theme-browser.mjs
       - run: node scripts/menu-customization-browser.mjs
       - run: node scripts/auth-account-switch-browser.mjs
@@ -76,6 +78,7 @@ jobs:
             outputs/subscription-adjustments/
             outputs/split-offers/
             outputs/catalog-review/browser/
+            outputs/catalog-review/stock-browser/
             outputs/menu-light-theme/
             outputs/menu-customization/
             outputs/account-switch/

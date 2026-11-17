@@ -3,33 +3,36 @@
   "updatedAt": "2026-11-17",
   "baseline": "catalog_business_segments",
   "strategy": "contiguous_tail",
-  "authorized": true,
-  "decision": "APPROVED",
+  "authorized": false,
+  "decision": "PENDING_PUBLICATION",
   "localReplay": {
     "status": "PASSED",
     "mode": "OFFLINE_ISOLATED_POSTGRES",
-    "evidence": "docs/evidencias/vitrine-segmentos-local-2026-11-17.md",
-    "migrationCount": 111,
-    "testFiles": 35,
-    "assertions": 1000,
+    "evidence": "docs/evidencias/estoque-local-2026-11-17.md",
+    "migrationCount": 112,
+    "testFiles": 36,
+    "assertions": 1066,
     "failed": 0
   },
   "productionDryRun": {
-    "status": "APPLIED",
-    "remoteChangesPerformed": true,
-    "expectedPendingNames": [],
-    "appliedNames": [
-      "catalog_business_segments"
+    "status": "REVIEWED",
+    "remoteChangesPerformed": false,
+    "expectedPendingNames": [
+      "catalog_product_inventory"
     ],
-    "mode": "MCP_EXPLICIT_MIGRATIONS",
-    "evidence": "docs/evidencias/vitrine-publicacao-2026-11-17.md"
+    "mode": "LOCAL_ONLY",
+    "evidence": "docs/evidencias/estoque-local-2026-11-17.md"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [],
+  "requiredMenuMigrations": [
+    "catalog_product_inventory"
+  ],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
-    "menu": []
+    "menu": [
+      "catalog_product_inventory"
+    ]
   },
   "releaseConditions": [
     "Every migration in the contiguous tail receives an explicit production disposition.",

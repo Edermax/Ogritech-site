@@ -113,7 +113,8 @@
       "catalog_profiles_and_commercial_plans",
       "catalog_cycle_reauthorization",
       "fix_catalog_cycle_claim_parameter",
-      "catalog_business_segments"
+      "catalog_business_segments",
+      "catalog_product_inventory"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -255,7 +256,11 @@
     "heldMigrations": [
       {
         "name": "catalog_business_segments",
-        "reason": "Implementação autorizada somente localmente; validação local e publicação remota separadas."
+        "reason": "ImplementaÃ§Ã£o autorizada somente localmente; validaÃ§Ã£o local e publicaÃ§Ã£o remota separadas."
+      },
+      {
+        "name": "catalog_product_inventory",
+        "reason": "Recurso de estoque em validação local."
       }
     ]
   },
@@ -263,7 +268,12 @@
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "catalog_business_segments",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      {
+        "name": "catalog_product_inventory",
+        "reason": "Implementação de estoque em validação local; ainda não aplicada em produção."
+      }
+    ],
     "observationEvidence": "docs/evidencias/vitrine-publicacao-2026-11-17.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",

@@ -208,6 +208,7 @@
   }
   function addConfigured(price, selections = [], quantity = 1) { const signature = `${price.id}:${selections.map((item) => `${item.menu_option_id}x${item.quantity}`).sort().join(",")}`; const entry = cart.get(signature) || { menu_item_price_id: price.id, name: price.item.name, label: price.label, price: price.amount, quantity: 0, minimumQuantity: Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1)), maximumQuantity: price.item.maximum_quantity == null ? 100 : Math.floor(Number(price.item.maximum_quantity)), selections, optionGroups: price.item.option_groups || [], isQuote: isQuoteItem(price.item), leadTimeHours: price.item.lead_time_hours }; entry.quantity = Math.min(entry.maximumQuantity, entry.quantity + quantity); cart.set(signature, entry); pendingRequestId = null; updateCart(); }
   function configure(price, quantity = Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1))) {
+    if (price.item.stock_available === false) return;
     const groups = price.item.option_groups || []; if (!groups.length) return addConfigured(price, [], quantity);
     $("configuratorTitle").textContent = price.item.name;
     $("configuratorVariant").textContent = `${displayPriceLabel(price.label)} · Quantidade: ${quantity}`;
@@ -384,7 +385,7 @@
       const priceOptions = records.length === 1
         ? `<input type="hidden" data-price-select="${item.id}" value="${first.id}">${singleLabel && normalizeSearch(singleLabel) !== "padrao" ? `<p class="menu-single-option">${clean(singleLabel)}</p>` : ""}`
         : `<label class="menu-price-picker"><span>${weightPickerLabel(records, quote)}<small class="menu-variants-count">${records.length} opções</small></span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(displayPriceLabel(record.label))}</option>`).join("")}</select></label>`;
-      const pricePicker = records.length ? `<div class="menu-item-purchase">${priceOptions}${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button type="button" class="public-button" data-add-selected="${item.id}">${(item.option_groups || []).length ? (quote ? "Personalizar solicitação" : "Personalizar pedido") : (quote ? "Solicitar análise" : "Adicionar")}</button></div></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
+      const pricePicker = records.length ? `<div class="menu-item-purchase">${priceOptions}${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button type="button" class="public-button" data-add-selected="${item.id}" ${item.stock_available === false ? "disabled" : ""}>${item.stock_available === false ? "Esgotado" : (item.option_groups || []).length ? (quote ? "Personalizar solicitação" : "Personalizar pedido") : (quote ? "Solicitar análise" : "Adicionar")}</button></div></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
       const illustration = dinizIllustration(category, item), media = item.image_url
         ? `<div class="menu-item-media"><img class="menu-item-image" loading="lazy" decoding="async" src="${clean(item.image_url)}" alt=""></div>`
         : illustration
