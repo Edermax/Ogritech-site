@@ -101,7 +101,9 @@ Deno.serve(async (request) => {
     const reference = String(resource.external_reference || resource.metadata?.signup_id || "");
     const signupId = reference.match(/[0-9a-f]{8}-[0-9a-f-]{27,}/i)?.[0] || "";
     const subscriptionId = String(resource.preapproval_id || resource.subscription_id || "");
-    const { data: signup, error: lookupError } = await admin.rpc("backend_billing_webhook_lookup", { target_signup_id: signupId || null, target_subscription_id: (isSubscription || subscriptionId) ? subscriptionId || dataId : "", target_payment_id: paymentId });
+    // Financial reversals still follow the actual payment, even if its recurrence was retired.
+    const isReversal=["refunded","charged_back"].includes(String(resource.payment?.status || resource.status));
+    const { data: signup, error: lookupError } = await admin.rpc("backend_billing_webhook_lookup", { target_signup_id: signupId || null, target_subscription_id: isReversal ? "" : (isSubscription || subscriptionId) ? subscriptionId || dataId : "", target_payment_id: paymentId });
     if (lookupError) throw new Error("signup_lookup_failed");
     if (signup) {
       if (sandbox && signup.product_code !== "menu") throw new Error("sandbox_product_mismatch");

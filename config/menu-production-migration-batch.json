@@ -1,34 +1,36 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-17",
-  "baseline": "platform_admin_notifications",
+  "baseline": "fix_catalog_cycle_claim_parameter",
   "strategy": "contiguous_tail",
-  "authorized": false,
-  "decision": "PREPARED",
+  "authorized": true,
+  "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "OFFLINE_ISOLATED_POSTGRES",
     "evidence": "docs/OGRITECH_CATALOGO.md",
-    "migrationCount": 108,
+    "migrationCount": 110,
     "testFiles": 34,
-    "assertions": 938,
+    "assertions": 947,
     "failed": 0
   },
   "productionDryRun": {
-    "status": "NOT_RUN",
+    "status": "REMOTE_TAIL_REVIEWED",
     "remoteChangesPerformed": false,
-    "evidence": "docs/OGRITECH_CATALOGO.md"
+    "evidence": "docs/evidencias/catalogo-publicacao-2026-11-17.md",
+    "mode": "MCP_EXPLICIT_MIGRATIONS",
+    "expectedPendingNames": [
+      "catalog_profiles_and_commercial_plans",
+      "catalog_cycle_reauthorization",
+      "fix_catalog_cycle_claim_parameter"
+    ]
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "catalog_profiles_and_commercial_plans"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
-    "menu": [
-      "catalog_profiles_and_commercial_plans"
-    ]
+    "menu": []
   },
   "releaseConditions": [
     "Every migration in the contiguous tail receives an explicit production disposition.",
@@ -83,7 +85,10 @@
     "split_menu_offers",
     "guard_menu_offer_changes",
     "menu_tracking_customer_phone",
-    "archive_menu_sales_reports"
+    "archive_menu_sales_reports",
+    "catalog_profiles_and_commercial_plans",
+    "catalog_cycle_reauthorization",
+    "fix_catalog_cycle_claim_parameter"
   ],
   "authorizationSource": "Usuário solicitou zerar os pedidos antes do início dos testes e retirar os relatórios de vendas antigos da Diniz Doces.",
   "authorizationScope": "Limpeza do histórico visível da Diniz Doces com arquivamento dos períodos antigos, preservando o agendador, os próximos relatórios e o isolamento dos demais negócios.",
@@ -110,8 +115,25 @@
   },
   "latestBackupCheck": {
     "status": "SUCCESS",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/43707786238",
-    "executedAt": "2026-11-15",
-    "mode": "EXISTING_ENCRYPTED_BACKUP_VERIFIED_READ_ONLY"
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/44119445456",
+    "restoreRun": "https://github.com/Edermax/Ogritech-site/actions/runs/44123342492",
+    "executedAt": "2026-11-17",
+    "mode": "FRESH_ENCRYPTED_BACKUP_AND_ISOLATED_RESTORE"
+  },
+  "publicationAuthorization": {
+    "date": "2026-11-17",
+    "instruction": "publique",
+    "scope": "Catálogo: banco, funções e frontend; preservar contratos anteriores"
+  },
+  "productionApplication": {
+    "status": "APPLIED",
+    "projectRef": "mvzcoaiiwytycdqcvydf",
+    "migrationCount": 110,
+    "remoteVersions": {
+      "catalog_profiles_and_commercial_plans": "20261117185655",
+      "catalog_cycle_reauthorization": "20261117185824",
+      "fix_catalog_cycle_claim_parameter": "20261117185829"
+    },
+    "evidence": "docs/evidencias/catalogo-publicacao-2026-11-17.md"
   }
 }

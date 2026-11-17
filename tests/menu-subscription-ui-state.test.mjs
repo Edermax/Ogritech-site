@@ -14,6 +14,11 @@ function renderer(){
 }
 const future=new Date(Date.now()+86400000).toISOString();
 const base={cycle:'monthly',payment_method:'pix',trial_ends_at:future,access_until:future,days_remaining:1};
+test('cycle reauthorization offers a new payment choice while keeping the paid catalog accessible',()=>{
+ const {render,$}=renderer();$('recurringAuthorization').checked=true;
+ render({...base,status:'active',payment_method:'card',payment_reauthorization_required:true});
+ assert.equal($('billingForm').classList.contains('hidden'),false);assert.equal($('backToMenu').classList.contains('hidden'),false);assert.equal($('recurringAuthorization').checked,false);assert.match($('billingSummary').textContent,/autorize/);
+});
 test('paid and scheduled-cancellation states retain access without offering another checkout',()=>{
  for(const status of ['active','cancel_at_period_end']){
   const {render,$}=renderer();render({...base,status});

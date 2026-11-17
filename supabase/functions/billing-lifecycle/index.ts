@@ -34,7 +34,18 @@ Deno.serve(async (request) => {
   for (const operation of recovery.data || []) {
     let consistent = !operation.provider_subscription_id;
     try {
-      if (!consistent) {
+      if (operation.cycle_reauthorization) {
+        const recoveryToken=url==="https://fuesdztsvrkkgnbqhcxi.supabase.co"?Deno.env.get("MP_MENU_SANDBOX_ACCESS_TOKEN")||"":mpToken;
+        if(!recoveryToken || !operation.previous_provider_subscription_id)throw new Error("cycle_recovery_not_configured");
+        const endpoint=`https://api.mercadopago.com/preapproval/${encodeURIComponent(operation.previous_provider_subscription_id)}`;
+        const headers={Authorization:`Bearer ${recoveryToken}`,"Content-Type":"application/json"};
+        const before=await fetch(endpoint,{headers,signal:AbortSignal.timeout(10000)});const current=await before.json().catch(()=>({}));
+        if(!before.ok || String(current.id)!==String(operation.previous_provider_subscription_id))throw new Error("cycle_recovery_lookup_failed");
+        if(current.status!=="cancelled")await fetch(endpoint,{method:"PUT",headers,body:JSON.stringify({status:"cancelled"}),signal:AbortSignal.timeout(10000)});
+        const after=await fetch(endpoint,{headers,signal:AbortSignal.timeout(10000)});const confirmed=await after.json().catch(()=>({}));
+        consistent=after.ok && String(confirmed.id)===String(operation.previous_provider_subscription_id) && confirmed.status==="cancelled";
+        if(consistent){const commit=await admin.rpc("backend_catalog_cycle_cancel_commit",{target_operation_id:operation.operation_id,target_token:operation.lease_token});consistent=!commit.error;}
+      } else if (!consistent) {
         const recoveryToken = url === "https://fuesdztsvrkkgnbqhcxi.supabase.co" ? Deno.env.get("MP_MENU_SANDBOX_ACCESS_TOKEN") || "" : mpToken;
         if (!recoveryToken) throw new Error("recovery_not_configured");
         const response = await fetch(`https://api.mercadopago.com/preapproval/${encodeURIComponent(operation.provider_subscription_id)}`, {

@@ -38,7 +38,13 @@ async function scene({profile='products',offer='cardapio',width=390,trial=false,
     return{data:null};
    },from(table){const data=table==='online_menus'?menu():table==='menu_orders'?[]:table==='menu_catalog_templates'?templates:table==='profiles'?{active:true,role:'owner',barbershop_id:tenant}:null;
     const q={select(){return q;},eq(){return q;},order(){return q;},limit(){return q;},maybeSingle(){return q;},then(resolve,reject){return Promise.resolve({data,error:null}).then(resolve,reject);}};return q;},
-   functions:{invoke:async(name,{body})=>{window.__calls.push({name,args:body});return{data:{data:{offer:body.offer}},error:null};}}};
+   functions:{invoke:async(name,{body})=>{
+    window.__calls.push({name,args:body});
+    if(body.action==='billing_status')return{data:{data:{offer:'encomendas',plan_id:plans[1].id,plan_name:plans[1].name,monthly_cents:2990,annual_cents:29900,effective_offer:'encomendas',cycle:window.__billingCycle||'monthly',payment_method:'card',status:'active',trial_ends_at:'2020-01-01T00:00:00Z',access_until:'2099-01-01T00:00:00Z',subscription_created:!window.__reauthorization,payment_requested:false,payment_reauthorization_required:Boolean(window.__reauthorization)}}};
+    if(body.action==='change_offer'){window.__billingCycle=body.cycle;window.__reauthorization=true;return{data:{data:{reauthorization_required:true}}};}
+    if(body.action==='choose_payment'){window.__reauthorization=false;return{data:{data:{checkout_url:null}}};}
+    return{data:{data:{offer:body.offer}},error:null};
+   }}};
  },{profile,offer,trial,quote,plans,origin});
  await context.route('**/*',async route=>{
   const url=new URL(route.request().url());if(url.origin!==origin){blockedRequests.push(url.origin);return route.fulfill({body:''});}
@@ -118,6 +124,19 @@ try{
    return{bounds,smaller:optimized.size<file.size,rejected};
   });
   assert.deepEqual(result,{bounds:[1600,1200],smaller:true,rejected:true});checks.push('new images are resized/compressed and corrupt images rejected');await s.context.close();
+ }
+ {
+  const s=await scene({offer:'encomendas'});await s.page.goto(origin+'/assinatura/',{waitUntil:'networkidle'});
+  await s.page.waitForFunction(()=>document.getElementById('billingStatus').textContent==='Assinatura ativa');
+  assert.equal(await s.page.locator('#billingForm').isVisible(),false);
+  await s.page.selectOption('#changeOfferCycle','annual');s.page.once('dialog',d=>d.accept());await s.page.click('#changeOfferButton');
+  await s.page.locator('#billingMessage').filter({hasText:'Autorize o próximo pagamento'}).waitFor();
+  assert.equal(await s.page.locator('#billingForm').isVisible(),true);assert.equal(await s.page.locator('#recurringAuthorization').isChecked(),false);assert.equal(await s.page.locator('#backToMenu').isVisible(),true);
+  await s.page.click('#paymentButton');assert.match(await s.page.locator('#billingMessage').textContent(),/Autorize/);
+  assert.equal((await s.page.evaluate(()=>window.__calls)).filter(c=>c.args?.action==='choose_payment').length,0);
+  await s.page.selectOption('#paymentMethod','pix');await s.page.click('#paymentButton');
+  const calls=await s.page.evaluate(()=>window.__calls);assert.equal(calls.find(c=>c.args?.action==='change_offer').args.expected_total_cents,29900);assert.equal(calls.find(c=>c.args?.action==='choose_payment').args.cycle,'annual');
+  checks.push('card cycle change preserves paid access and requires fresh payment authorization');await s.context.close();
  }
  assert.deepEqual(pageErrors,[]);assert.deepEqual(blockedRequests,[]);
  await writeFile(resolve(out,'results.json'),JSON.stringify({checks,pageErrors,blockedRequests},null,2));console.log(JSON.stringify({checks:checks.length,pageErrors,blockedRequests}));

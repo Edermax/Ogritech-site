@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-11-16",
+  "auditedAt": "2026-11-17",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -110,7 +110,9 @@
       "guard_reversed_online_refunds",
       "archive_menu_sales_reports",
       "platform_admin_notifications",
-      "catalog_profiles_and_commercial_plans"
+      "catalog_profiles_and_commercial_plans",
+      "catalog_cycle_reauthorization",
+      "fix_catalog_cycle_claim_parameter"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -130,7 +132,10 @@
       "subscription_billing_adjustments": "20261115195345",
       "guard_reversed_online_refunds": "20261115201304",
       "archive_menu_sales_reports": "20261116131740",
-      "platform_admin_notifications": "20261116204208"
+      "platform_admin_notifications": "20261116204208",
+      "catalog_profiles_and_commercial_plans": "20261117160033",
+      "catalog_cycle_reauthorization": "20261117161901",
+      "fix_catalog_cycle_claim_parameter": "20261117162103"
     },
     "observedMigrationNames": [
       "create_core_schema",
@@ -239,21 +244,19 @@
       "subscription_billing_adjustments",
       "guard_reversed_online_refunds",
       "archive_menu_sales_reports",
-      "platform_admin_notifications"
+      "platform_admin_notifications",
+      "catalog_profiles_and_commercial_plans",
+      "catalog_cycle_reauthorization",
+      "fix_catalog_cycle_claim_parameter"
     ],
-    "observationEvidence": "docs/evidencias/admin-notificacoes-2026-11-16.md"
+    "observationEvidence": "docs/evidencias/catalogo-publicacao-2026-11-17.md"
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "platform_admin_notifications",
+    "appliedThrough": "fix_catalog_cycle_claim_parameter",
     "appliedOutOfOrder": [],
-    "heldMigrations": [
-      {
-        "name": "catalog_profiles_and_commercial_plans",
-        "reason": "Nova oferta Catálogo e segmentos: validar pacote coordenado antes de publicação."
-      }
-    ],
-    "observationEvidence": "docs/evidencias/admin-notificacoes-2026-11-16.md",
+    "heldMigrations": [],
+    "observationEvidence": "docs/evidencias/catalogo-publicacao-2026-11-17.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
       "business_whatsapp_shares": "20261107143521",
@@ -277,7 +280,10 @@
       "subscription_billing_adjustments": "20261115195924",
       "guard_reversed_online_refunds": "20261115201311",
       "archive_menu_sales_reports": "20261116132005",
-      "platform_admin_notifications": "20261116204928"
+      "platform_admin_notifications": "20261116204928",
+      "catalog_profiles_and_commercial_plans": "20261117185655",
+      "catalog_cycle_reauthorization": "20261117185824",
+      "fix_catalog_cycle_claim_parameter": "20261117185829"
     }
   }
 }

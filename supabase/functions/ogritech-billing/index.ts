@@ -267,6 +267,7 @@ Deno.serve(async (request) => {
     if (!operation?.signup) return reply({ error: { code: "billing_status_unavailable" } }, 503, origin);
     if (operation.unchanged) return reply({ data: { offer: operation.signup.offer_code, trial_ends_at: operation.signup.trial_ends_at } }, 200, origin);
     const reserved = operation.signup;
+    const cycleReauthorization = operation.cycle_reauthorization === true;
     const target = quote(operation.target_cycle || reserved.cycle, "menu", parsed.data.offer, planPricing(operation.target_plan || selectedPlan));
     const sandbox = url === "https://fuesdztsvrkkgnbqhcxi.supabase.co";
     const token = Deno.env.get(sandbox ? "MP_MENU_SANDBOX_ACCESS_TOKEN" : "MERCADO_PAGO_ACCESS_TOKEN") || "";
@@ -288,9 +289,27 @@ Deno.serve(async (request) => {
         && Math.round(Number(resource.auto_recurring?.transaction_amount) * 100) === amount
         && Number(resource.auto_recurring?.frequency) === months && resource.auto_recurring?.frequency_type === "months";
     };
-    // A timeout can hide a successful commit. Always reconcile to the current DB price, never a stale snapshot.
+    const cancelForCycle = async () => {
+      if (!token || !reserved.provider_subscription_id) return false;
+      const endpoint=`https://api.mercadopago.com/preapproval/${encodeURIComponent(reserved.provider_subscription_id)}`;
+      const headers={Authorization:`Bearer ${token}`,"Content-Type":"application/json"};
+      const before=await fetch(endpoint,{headers,signal:AbortSignal.timeout(10000)});
+      const current=await before.json().catch(()=>({}));
+      if(!before.ok || String(current.id)!==String(reserved.provider_subscription_id))return false;
+      if(current.status==="cancelled")return true;
+      await fetch(endpoint,{method:"PUT",headers,body:JSON.stringify({status:"cancelled"}),signal:AbortSignal.timeout(10000)});
+      const after=await fetch(endpoint,{headers,signal:AbortSignal.timeout(10000)});
+      const confirmed=await after.json().catch(()=>({}));
+      return after.ok && String(confirmed.id)===String(reserved.provider_subscription_id) && confirmed.status==="cancelled";
+    };
+    // A timeout can hide a successful commit. Reconcile the reserved operation.
     const reconcile = async () => {
       try {
+        if(cycleReauthorization){
+          if(!(await cancelForCycle()))return false;
+          const committed=await admin.rpc("backend_catalog_cycle_cancel_commit",{target_operation_id:operation.operation_id,target_token:operation.lease_token});
+          return !committed.error;
+        }
         const latest = await admin.rpc("backend_billing_status", { target_barbershop_id: parsed.data.barbershop_id, target_product_code: "menu" });
         if (latest.error || latest.data?.id !== reserved.id) return false;
         return !latest.data.provider_subscription_id || await updateProvider(latest.data.provider_subscription_id, latest.data.total_cents, latest.data.cycle_months);
@@ -300,11 +319,11 @@ Deno.serve(async (request) => {
       await finish(false); return reply({ error: { code: "billing_not_configured" } }, 503, origin);
     }
     try {
-      if (reserved.provider_subscription_id && !(await updateProvider(reserved.provider_subscription_id, target.total_cents, target.months))) {
+      if (reserved.provider_subscription_id && !(cycleReauthorization ? await cancelForCycle() : await updateProvider(reserved.provider_subscription_id, target.total_cents, target.months))) {
         await finish(!(await reconcile()));
         return reply({ error: { code: "provider_update_failed", message: "Não foi possível confirmar a nova cobrança. Atualize sua assinatura antes de tentar novamente." } }, 502, origin);
       }
-      const result = await admin.rpc("backend_billing_offer_change_commit", { target_operation_id: operation.operation_id, target_token: operation.lease_token });
+      const result = await admin.rpc(cycleReauthorization ? "backend_catalog_cycle_cancel_commit" : "backend_billing_offer_change_commit", { target_operation_id: operation.operation_id, target_token: operation.lease_token });
       if (result.error) {
         await finish(!(await reconcile()));
         return reply({ error: { code: "billing_change_failed", message: "Não foi possível confirmar a troca. Atualize sua assinatura antes de tentar novamente." } }, 409, origin);
@@ -351,6 +370,7 @@ Deno.serve(async (request) => {
       plan_id: signup.saas_plan_id, plan_name: signup.plan_name_snapshot, monthly_cents: signup.base_monthly_cents, annual_cents: signup.plan_annual_cents,
       offer: signup.offer_code || "encomendas", cycle: signup.cycle, payment_method: signup.payment_method, total_cents: signup.total_cents,
       effective_offer: signup.effective_offer_code,
+      payment_reauthorization_required: signup.catalog_reauthorization_required === true,
       trial_full_access: signup.effective_offer_code === "encomendas" && Date.parse(signup.trial_ends_at) > Date.now(),
       status: signup.status, trial_ends_at: signup.trial_ends_at, access_until: signup.access_until,
       boundary, days_remaining: Math.max(0, Math.ceil(remainingMs / 86_400_000)),

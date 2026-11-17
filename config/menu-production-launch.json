@@ -53,9 +53,10 @@
         "docs/evidencias/cardapio-backup-restauracao-pre-lancamento-2026-09-27.md",
         "docs/evidencias/cardapio-retomada-2026-10-19.md",
         "https://github.com/Edermax/Ogritech-site/actions/runs/39288297613",
-        "https://github.com/Edermax/Ogritech-site/actions/runs/39288776485"
+        "https://github.com/Edermax/Ogritech-site/actions/runs/39288776485",
+        "docs/evidencias/catalogo-publicacao-2026-11-17.md"
       ],
-      "remaining": ""
+      "remaining": "Backup criptografado 44119445456 e restauração isolada 44123342492 aprovados em 17/11."
     },
     {
       "id": "database_promotion",
@@ -75,9 +76,10 @@
         "docs/evidencias/diniz-publicacao-2026-11-01.md",
         "https://github.com/Edermax/Ogritech-site/actions/runs/41335550041",
         "https://github.com/Edermax/Ogritech-site/actions/runs/41298316841",
-        "https://github.com/Edermax/Ogritech-site/actions/runs/41335545853"
+        "https://github.com/Edermax/Ogritech-site/actions/runs/41335545853",
+        "docs/evidencias/catalogo-publicacao-2026-11-17.md"
       ],
-      "remaining": ""
+      "remaining": "110 migrations confirmadas em produção; três migrations desta entrega aplicadas em ordem; funções e preflight de quatro preços aprovados."
     },
     {
       "id": "application_publication",
@@ -92,9 +94,10 @@
         "scripts/menu-release-package.mjs",
         "docs/CARDAPIO_PACOTE_PUBLICACAO.md",
         "docs/evidencias/cardapio-preflight-producao-2026-10-31.md",
-        "docs/evidencias/cardapio-monitor-diniz-2026-11-05.md"
+        "docs/evidencias/cardapio-monitor-diniz-2026-11-05.md",
+        "docs/evidencias/catalogo-publicacao-2026-11-17.md"
       ],
-      "remaining": "Frontend 42366e2 publicado no GitHub Pages; cardápio da Diniz ativo. Código remoto de billing, lifecycle e webhook conferido em 31/10. Sondas de preços, teste grátis e rejeição de webhook sem assinatura passaram em 5/11. Cobrança real e entrega de notificação financeira real ainda não comprovadas."
+      "remaining": "Banco e três funções atualizados. Frontend é publicado pelo merge do PR #146 e build do GitHub Pages; verificar URL e hash dos termos após o build."
     },
     {
       "id": "production_synthetic_test",
@@ -245,7 +248,18 @@
     "specification": "docs/OGRITECH_CATALOGO.md",
     "termsVersion": "4.0-2026-11-17",
     "migration": "20261117132401_catalog_profiles_and_commercial_plans.sql",
-    "remoteChangesPerformed": false,
-    "providerCycleChangeHomologated": false
+    "remoteChangesPerformed": true,
+    "providerCycleChangeHomologated": true,
+    "providerCycleChangeStrategy": "CANCEL_CONFIRMED_THEN_FRESH_AUTHORIZATION",
+    "financialCaptureValidated": false,
+    "backendPublished": true,
+    "frontendPullRequest": "https://github.com/Edermax/Ogritech-site/pull/146"
+  },
+  "technicalPublicationAuthorization": {
+    "authorized": true,
+    "date": "2026-11-17",
+    "userInstruction": "publique",
+    "scope": "Catálogo: migrations, funções e frontend; preservação dos contratos anteriores",
+    "evidence": "docs/evidencias/catalogo-publicacao-2026-11-17.md"
   }
 }

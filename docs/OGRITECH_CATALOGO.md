@@ -1,6 +1,6 @@
 # Ogritech Catálogo — decisão de 17/11/2026
 
-Estado: implementado e validado localmente na branch `feat/catalogo-planos-segmentos-20261117`, baseada em `origin/main` no commit `a9a6675`. Ainda não homologado remotamente ou publicado. Esta especificação substitui a oferta anterior para novas contratações; condições e evidências históricas continuam preservadas.
+Estado: implementado e validado localmente na branch `feat/catalogo-planos-segmentos-20261117`, baseada em `origin/main` no commit `a9a6675`. Homologação de staging concluída; banco e funções promovidos em 17/11. O frontend é publicado pelo PR #146, com autorização do usuário. Esta especificação substitui a oferta anterior para novas contratações; condições e evidências históricas continuam preservadas.
 
 ## Oferta
 
@@ -27,7 +27,7 @@ Não fazem parte desta entrega: estoque por combinação de variações, frete n
 
 Trocas não ampliam teste ou prazo adquirido. Redução do Completo preserva as capacidades pagas até o fim do período comprado. Alterações de plano e ciclo usam reserva durável e reconciliação do provedor, sem cobrança proporcional. Cobrança anual exige recorrência de 12 meses. Pedidos anteriores possuem uma consulta restrita com conclusão/cancelamento, sem permitir novos pedidos fora do Completo.
 
-O próximo valor/ciclo fica registrado na mesma assinatura; o prazo adquirido permanece em `access_until`/`current_period_end`. No cartão, o backend só confirma a alteração se o provedor devolver valor e intervalo corretos; falhas disparam reconciliação e mantêm a reserva quando a recuperação não é confirmada. A aceitação real da alteração de frequência e a manutenção da próxima data de cobrança no Mercado Pago precisam ser homologadas antes de liberar esta versão remotamente. Contratos legados sem registro financeiro recebem uma orientação explícita para configurar pagamento antes de mudar o ciclo; a solicitação não é ignorada silenciosamente. As provas locais substituem o provedor por uma implementação sintética, sem cobranças.
+O próximo valor/ciclo fica registrado na mesma assinatura Ogritech; o prazo adquirido permanece em `access_until`/`current_period_end`. No cartão, a API do Mercado Pago ignorou a alteração de frequência durante a homologação. Por isso, a troca de ciclo cancela e confirma a recorrência anterior antes de gravar a nova escolha. O cliente precisa autorizar um novo checkout, cujo início respeita o prazo adquirido. Não há duas recorrências ativas. A reserva durável permite retomar uma falha após o cancelamento, e notificações atrasadas da recorrência encerrada são ignoradas; estornos financeiros continuam seguindo o pagamento efetivo. Contratos sem cadastro financeiro recebem orientação explícita, sem ignorar silenciosamente a periodicidade pedida. Os quatro valores e intervalos foram criados/relidos como pending na conta de teste, sem cartão ou cobrança, e cancelados com confirmação. Isso não equivale a uma captura de pagamento real.
 
 Cupom inicial: um código de desconto fixo por negócio, com validade opcional e valor limitado ao subtotal de produtos. Código e total são validados no servidor, vinculados à idempotência; o desconto não altera a assinatura Ogritech. Capa usa o mecanismo existente de rascunho e publicação da identidade visual.
 
@@ -35,15 +35,15 @@ Cupom inicial: um código de desconto fixo por negócio, com validade opcional e
 
 Novos uploads são redimensionados e comprimidos antes do envio direto ao storage; limites, MIME, namespaces e autorização do armazenamento permanecem. Não foi contratada infraestrutura adicional nem criada franquia arbitrária de visitas. Sem auditoria de consumo remoto, não há estimativa de custo em reais por conta.
 
-Migration nova: `20261117132401_catalog_profiles_and_commercial_plans.sql`. Deve preceder funções e frontend compatíveis. A política de produção marca a migration como retida; uma autorização antiga de outro release não comprova aprovação desta publicação. A mudança exige alinhamento da versão `4.0-2026-11-17` e do SHA-256 dos termos, sem reescrever aceites antigos.
+Migrations desta entrega: `20261117132401_catalog_profiles_and_commercial_plans.sql`, `20261117161331_catalog_cycle_reauthorization.sql` e `20261117162012_fix_catalog_cycle_claim_parameter.sql`, nessa ordem, antes das funções e do frontend. A política de produção registra as três migrations aplicadas e seus aliases remotos. A publicação foi autorizada pelo responsável em 17/11. A mudança exige alinhamento da versão `4.0-2026-11-17` e do SHA-256 dos termos, sem reescrever aceites antigos.
 
 Reversão: suspender novas adesões das ofertas problemáticas e manter backend compatível com os contratos já criados. Não restaurar snapshots antigos de clientes, pagamentos ou pedidos. Reverter apenas nomes ou frontend sem suporte aos novos planos pode causar divergência comercial.
 
 ## Verificação
 
-Baseline antes das mudanças: 474 testes Node aprovados. Resultado final: `npm run validate` aprovado com 480 testes; aplicação limpa das 108 migrations e 938 asserções pgTAP em 34 arquivos, sem falhas. O banco de validação fica em um container local isolado sem rede; nenhum banco remoto ou banco local de uso anterior foi resetado.
+Baseline antes das mudanças: 474 testes Node aprovados. Resultado final: `npm run validate` aprovado com 485 testes; aplicação limpa das 110 migrations e 947 asserções pgTAP em 34 arquivos, sem falhas. O banco de validação fica em um container local isolado sem rede; nenhum banco remoto ou banco local de uso anterior foi resetado.
 
-`npm run test:catalog-browser`: 24 jornadas aprovadas, sem erros de página ou chamadas externas. Abrange três perfis, dois planos, dois ciclos, divulgação em celular/desktop, seleção preservada no cadastro, catálogo público, orçamento pelo WhatsApp, troca de apresentação, controles do Completo no teste, restrições do Essencial e otimização de imagens. As suítes de regressão `split-offers-browser.mjs` (22 verificações), `configurable-plans-browser.cjs` e `menu-customization-browser.mjs` também passaram. Os navegadores usam dados sintéticos; não comprovam uma cobrança real. Evidências reproduzíveis e limites estão em [validação local](evidencias/catalogo-validacao-local-2026-11-17.md).
+`npm run test:catalog-browser`: 25 jornadas aprovadas, sem erros de página ou chamadas externas. Abrange três perfis, dois planos, dois ciclos, divulgação em celular/desktop, seleção preservada no cadastro, catálogo público, orçamento pelo WhatsApp, troca de apresentação, controles do Completo no teste, restrições do Essencial e otimização de imagens. As suítes de regressão `split-offers-browser.mjs` (22 verificações), `configurable-plans-browser.cjs` e `menu-customization-browser.mjs` também passaram. Os navegadores usam dados sintéticos; não comprovam uma cobrança real. Evidências reproduzíveis e limites estão em [validação local](evidencias/catalogo-validacao-local-2026-11-17.md).
 
 ## Áreas afetadas e reaproveitamento
 
@@ -56,7 +56,7 @@ Baseline antes das mudanças: 474 testes Node aprovados. Resultado final: `npm r
 | Banco e cobrança | Uma migration nova, sem modificar as anteriores; billing, lifecycle e webhook existentes; novos preços versionados e recorrência de 1 ou 12 meses. |
 | Imagens e cache | Storage e identidade existentes; compressão de uploads, nomes imutáveis e novo shell do service worker. |
 
-Não foram criadas tabelas de catálogo, cobrança ou pedidos por segmento. As colunas novas registram versão comercial, acesso adquirido na transição, ciclo da operação e um cupom por negócio. Modelos, categorias, preços, opções, relatórios por estabelecimento, publicação em rascunho, storage e isolamento já existentes foram reaproveitados.
+Não foram criadas tabelas de catálogo, cobrança ou pedidos por segmento. As colunas novas registram versão comercial, acesso adquirido na transição, ciclo da operação e um cupom por negócio. Um registro privado das recorrências encerradas impede que seu cancelamento atrasado altere o contrato substituto. Modelos, categorias, preços, opções, relatórios por estabelecimento, publicação em rascunho, storage e isolamento já existentes foram reaproveitados.
 
 ## Sequência de publicação preparada
 
@@ -65,6 +65,6 @@ Não foram criadas tabelas de catálogo, cobrança ou pedidos por segmento. As c
 3. Após homologação e autorização de produção, aplicar a mesma ordem: banco → funções/configuração/termos → frontend/cache. Conferir planos ativos, contratos antigos, teste único, domínio público, isolamento e monitoramento sem gerar mensagens ou cobranças reais de teste.
 4. Se houver falha, interromper novas adesões e reconciliar operações pendentes. Preservar dados e contratos criados durante o release; não executar uma reversão destrutiva da migration.
 
-Pendências reais: homologação financeira remota, dry-run/backup/advisors atualizados e publicação autorizada. Os gates históricos de operação/fiscal/jurídico permanecem registrados em `config/menu-production-launch.json`, sem tratá-los como aprovados por testes de código. Não há uma estimativa de consumo real do provedor ou franquia numérica de tráfego definida nesta entrega.
+Publicação autorizada em 17/11. Backup criptografado e restauração aprovados; staging passou 48 asserções com rollback. Acompanhe o estado do release em [publicação](evidencias/catalogo-publicacao-2026-11-17.md). Os gates históricos de operação/fiscal/jurídico permanecem registrados em `config/menu-production-launch.json`, sem tratá-los como aprovados por testes de código. Não há uma estimativa de consumo real do provedor ou franquia numérica de tráfego definida nesta entrega.
 
 Fontes técnicas: [Supabase — uploads](https://supabase.com/docs/guides/storage/uploads/standard-uploads), [Supabase — RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Mercado Pago — atualização de assinatura](https://www.mercadopago.com.br/developers/pt/reference/online-payments/subscriptions/update-preapproval/put).

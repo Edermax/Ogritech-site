@@ -105,5 +105,23 @@ select public.backend_billing_offer_change_commit((select (data->>'operation_id'
 select public.backend_billing_offer_change_finish((select (data->>'operation_id')::uuid from downgrade_claim),(select (data->>'lease_token')::uuid from downgrade_claim),false);
 select extensions.ok(private.menu_has_orders('cc100000-0000-4000-8000-000000000001'),'downgrade keeps already-paid Complete rights');
 select extensions.is((select total_cents from private.billing_signups where id='cc300000-0000-4000-8000-000000000001'),990,'next monthly price is Essential');
+-- A recurring card cycle is replaced only after cancellation was confirmed by the backend.
+update private.billing_signups set provider_subscription_id='catalog-previous-recurrence-fixture',payment_method='card' where id='cc300000-0000-4000-8000-000000000001';
+create temporary table recurring_cycle_boundary as select access_until from private.billing_signups where id='cc300000-0000-4000-8000-000000000001';
+create temporary table recurring_cycle_claim as select public.backend_catalog_offer_change_claim('cc100000-0000-4000-8000-000000000001','catalogo-completo',(select updated_at from private.billing_signups where id='cc300000-0000-4000-8000-000000000001'),'annual') as data;
+select extensions.ok((select (data->>'cycle_reauthorization')::boolean from recurring_cycle_claim),'provider recurrence requires a fresh authorization when changing cycle');
+select public.backend_catalog_cycle_cancel_commit((select (data->>'operation_id')::uuid from recurring_cycle_claim),(select (data->>'lease_token')::uuid from recurring_cycle_claim));
+select extensions.lives_ok($$select public.backend_catalog_cycle_cancel_commit((select (data->>'operation_id')::uuid from recurring_cycle_claim),(select (data->>'lease_token')::uuid from recurring_cycle_claim))$$,'lost cancellation-commit response can be retried idempotently');
+select public.backend_billing_offer_change_finish((select (data->>'operation_id')::uuid from recurring_cycle_claim),(select (data->>'lease_token')::uuid from recurring_cycle_claim),false);
+select extensions.ok((select provider_subscription_id is null and catalog_reauthorization_required from private.billing_signups where id='cc300000-0000-4000-8000-000000000001'),'old recurrence is detached before any replacement checkout');
+select extensions.is((select access_until from private.billing_signups where id='cc300000-0000-4000-8000-000000000001'),(select access_until from recurring_cycle_boundary),'reauthorization keeps the paid access boundary');
+select extensions.ok(public.backend_billing_webhook_lookup('cc300000-0000-4000-8000-000000000001','catalog-previous-recurrence-fixture','') is null,'delayed events from retired recurrence cannot change the contract');
+select extensions.ok(public.backend_billing_choose_payment_lookup('cc100000-0000-4000-8000-000000000001') is not null,'paid active account can authorize the replacement payment');
+create temporary table recurring_payment_choice as select public.backend_billing_payment_choice_claim('cc300000-0000-4000-8000-000000000001',(select updated_at from private.billing_signups where id='cc300000-0000-4000-8000-000000000001')) as data;
+select public.backend_billing_choose_payment_update('cc300000-0000-4000-8000-000000000001',jsonb_build_object('selection_token',(select data->>'token' from recurring_payment_choice),'cycle','annual','payment_method','card','base_monthly_cents',2990,'cycle_months',12,'discount_bps',1667,'total_cents',29900,'provider_subscription_id','catalog-replacement-recurrence-fixture','provider_plan_id','','status','payment_pending','recurring_authorized',true));
+select extensions.ok((select not catalog_reauthorization_required and provider_subscription_id='catalog-replacement-recurrence-fixture' from private.billing_signups where id='cc300000-0000-4000-8000-000000000001'),'new hosted checkout is stored before its payment reservation is released');
+select extensions.ok(private.business_product_is_active('cc100000-0000-4000-8000-000000000001','menu'),'waiting for a replacement authorization does not suspend the purchased access');
+select extensions.ok(not has_function_privilege('authenticated','public.backend_catalog_cycle_cancel_commit(uuid,uuid)','execute'),'owners cannot bypass provider cancellation through the service RPC');
+select public.backend_billing_payment_choice_release('cc300000-0000-4000-8000-000000000001',(select (data->>'token')::uuid from recurring_payment_choice));
 select * from extensions.finish();
 rollback;
