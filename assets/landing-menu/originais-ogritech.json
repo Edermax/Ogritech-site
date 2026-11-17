@@ -1,0 +1,30 @@
+{
+  "origin": "Imagens originais geradas para Ogritech em 16/11/2026 com ImageGen, a partir de descrição textual, sem fotos de terceiros como referência.",
+  "source_record": "outputs/campanha-redes-sociais-2026-11-16/produtos-originais/prompts-e-origem.md (workspace do projeto)",
+  "purpose": "Demonstração fictícia da página principal.",
+  "optimization": "WebP de até 800 px, usando o otimizador existente da aplicação, sem alteração de conteúdo. Originais PNG preservados no workspace.",
+  "images": [
+    {
+      "file": "ogritech-bolo-cereja.webp",
+      "dimensions": [
+        800,
+        800
+      ],
+      "bytes": 60098,
+      "original_file": "ogritech-bolo-cereja.png",
+      "original_sha256": "2e0e33487ecd817f462dd8fbdc31cbb9d8c93c78f26f42b6e8a325aae566640b",
+      "webp_sha256": "4ad4e603c7f8da051ae7b51b30c3397e60c4040248b38f515c3d2a7309ddd2e8"
+    },
+    {
+      "file": "ogritech-brigadeiros.webp",
+      "dimensions": [
+        800,
+        800
+      ],
+      "bytes": 70704,
+      "original_file": "ogritech-brigadeiros.png",
+      "original_sha256": "e4af8adc22b8f13d0dfc2677e357a54aa6eaec57819ddd051da2f2d111fec14c",
+      "webp_sha256": "b0fdc89fd1283de3e55a4af4b146400b09710275b8d41997d9f2f1c5d8c9e0e2"
+    }
+  ]
+}
