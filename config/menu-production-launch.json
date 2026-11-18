@@ -257,9 +257,9 @@
   },
   "technicalPublicationAuthorization": {
     "authorized": true,
-    "date": "2026-11-17",
-    "userInstruction": "publique",
-    "scope": "Vitrine e segmentos: migração aditiva e frontend, preservando catálogo, links, planos e contratos; sem alterações no provedor de pagamentos",
-    "evidence": "docs/evidencias/vitrine-publicacao-2026-11-17.md"
+    "date": "2026-11-18",
+    "userInstruction": "Esta assim, publique correções",
+    "scope": "Publicar estoque opcional exclusivo do Completo, correções revisadas e texto da home; reparar HTTPS do domínio existente. Preservar contratos e pagamentos.",
+    "evidence": "docs/evidencias/estoque-publicacao-2026-11-18.md"
   }
 }

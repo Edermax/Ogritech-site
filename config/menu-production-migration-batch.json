@@ -3,8 +3,8 @@
   "updatedAt": "2026-11-18",
   "baseline": "catalog_business_segments",
   "strategy": "contiguous_tail",
-  "authorized": false,
-  "decision": "PENDING_PUBLICATION",
+  "authorized": true,
+  "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "OFFLINE_ISOLATED_POSTGRES",
@@ -15,13 +15,14 @@
     "failed": 0
   },
   "productionDryRun": {
-    "status": "REVIEWED",
+    "status": "PASSED",
+    "migrationCount": 1,
     "remoteChangesPerformed": false,
     "expectedPendingNames": [
       "catalog_product_inventory"
     ],
-    "mode": "LOCAL_ONLY",
-    "evidence": "docs/evidencias/estoque-local-2026-11-17.md"
+    "mode": "EXPLICIT_ADDITIVE_MIGRATION",
+    "evidence": "docs/evidencias/estoque-publicacao-2026-11-18.md"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [

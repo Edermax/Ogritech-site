@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-17",
+  "updatedAt": "2026-11-18",
   "product": "Ogritech Catálogo",
   "rollbackTarget": {
-    "ref": "cc9cc3292e05e2fd90880c46c095da0fe6e71de1",
-    "source": "Home com fotos originais de vestuário/artesanato no PR #149, antes da alteração da ordem do carrossel.",
+    "ref": "b854c51963cbbb92f4956d90396a3f72aa468b7f",
+    "source": "Produção anterior ao estoque, PR #150: fotos próprias e Vestuário primeiro.",
     "verifiedAsCurrentProduction": true,
     "requiredFiles": [
       "index.html",
