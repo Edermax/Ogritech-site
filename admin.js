@@ -8,7 +8,7 @@ const SEGMENTS = {
     "Confeitaria": { icon: "☷", color: "#d173df" }, "Pizzaria": { icon: "☷", color: "#f0ad4e" },
     "Outro": { icon: "●", color: "#8fa3aa" }
 };
-let businesses = [], plans = [], products = [], subscriptions = [], users = [], invoices = [], billingCustomers = [], payments = [], refunds = [], selectedBusinessId = null;
+let businesses = [], businessMenus = [], plans = [], products = [], subscriptions = [], users = [], invoices = [], billingCustomers = [], payments = [], refunds = [], selectedBusinessId = null;
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const moneyPrecise = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 const shortDate = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" });
@@ -83,6 +83,13 @@ async function loadData() {
     if (paymentResult.error) throw paymentResult.error;
     if (refundResult.error) throw refundResult.error;
     businesses = businessResult.data || [];
+    const businessIds = businesses.map((business) => business.barbershop_id).filter(Boolean);
+    businessMenus = [];
+    if (businessIds.length) {
+        const { data, error } = await supabaseClient.from("online_menus").select("barbershop_id,slug").in("barbershop_id", businessIds);
+        if (error) throw error;
+        businessMenus = data || [];
+    }
     products = (productResult.data || []).filter((product) => product.code === "menu");
     plans = (planResult.data || []).filter((plan) => products.some((product) => product.id === plan.product_id));
 
@@ -133,7 +140,7 @@ function renderBusinesses() {
         return `<tr><td><button class="business-link" data-action="detail" data-id="${business.id}"><span class="business-symbol" style="--segment-color:${meta.color}">${adminIcon("store")}</span><strong>${escapeHtml(business.name)}</strong></button></td>
         <td>${escapeHtml(OgritechCatalogProfiles.label(business.segment))}</td><td>${escapeHtml(business.contact_name)}</td><td><strong>${escapeHtml(business.phone || "Telefone pendente")}</strong><br><small>${escapeHtml(business.owner_email || "E-mail pendente")}</small></td><td><span class="origin-badge">${escapeHtml(business.origin)}</span></td>
         <td><span class="plan-badge">${escapeHtml(isMenuBusiness(business) ? business.plan : "Histórico · " + business.plan)}</span></td><td>${money.format(business.monthly_fee)}</td><td><span class="${business.status === "Ativo" ? "active-badge" : "suspended-badge"}">${escapeHtml(business.status)}</span></td>
-        <td><div class="admin-row-actions"><button data-action="operate" data-id="${business.id}" ${canOperateMenu(business) ? "" : 'disabled title="A operação exige uma assinatura de catálogo com acesso ativo"'}>${adminIcon("arrow")}Abrir painel</button><button data-action="edit" data-id="${business.id}">${adminIcon("edit")}Editar</button><button class="danger" data-action="delete" data-id="${business.id}">${adminIcon("archive")}Arquivar</button></div></td></tr>`;
+        <td><div class="admin-row-actions"><button data-action="operate" data-id="${business.id}" ${canOperateMenu(business) ? "" : 'disabled title="A operação exige uma assinatura de catálogo com acesso ativo"'}>${adminIcon("arrow")}Abrir painel</button><button data-action="open-menu" data-id="${business.id}" title="Visualizar cardápio público em uma nova aba">${adminIcon("book")}Abrir cardápio</button><button data-action="edit" data-id="${business.id}">${adminIcon("edit")}Editar</button><button class="danger" data-action="delete" data-id="${business.id}">${adminIcon("archive")}Arquivar</button></div></td></tr>`;
     }).join("");
     $("businessEmpty").classList.toggle("hidden", filtered.length > 0);
     document.querySelector(".business-table-wrap").classList.toggle("hidden", filtered.length === 0);
@@ -444,6 +451,12 @@ async function deleteBusiness(business) {
     await loadData(); populateSelectors(); refreshViews();
 }
 
+function openBusinessMenu(business) {
+    const menu = businessMenus.find((item) => item.barbershop_id === business.barbershop_id);
+    if (!menu?.slug) return alert("Este negócio ainda não possui um cardápio público configurado.");
+    window.open(environmentUrl(`cardapio/?empresa=${encodeURIComponent(menu.slug)}`), "_blank", "noopener,noreferrer");
+}
+
 function operateBusiness(business) {
     if (!canOperateMenu(business)) return alert("Este cadastro não tem acesso ativo ao catálogo. Consulte a assinatura do negócio.");
     if (!business.barbershop_id) return alert("Este cadastro ainda não está vinculado a uma unidade operacional.");
@@ -480,7 +493,7 @@ function bindEvents() {
     $("planPrice").addEventListener("input", () => { if (!$("planId").value && $("planAnnualPrice").dataset.edited !== "true") $("planAnnualPrice").value = (Number($("planPrice").value)*10).toFixed(2); });
     document.querySelectorAll("[data-close-modal]").forEach((button) => button.addEventListener("click", closeModals));
     document.querySelectorAll(".platform-modal").forEach((modal) => modal.addEventListener("click", (event) => { if (event.target === modal) closeModals(); }));
-    $("businessTableBody").addEventListener("click", (event) => { const button = event.target.closest("[data-action]"); if (!button) return; const business = businesses.find((item) => item.id === button.dataset.id); if (!business) return; if (button.dataset.action === "detail") openBusinessDetail(business); if (button.dataset.action === "operate") operateBusiness(business); if (button.dataset.action === "edit") openBusinessForm(business); if (button.dataset.action === "delete") deleteBusiness(business); });
+    $("businessTableBody").addEventListener("click", (event) => { const button = event.target.closest("[data-action]"); if (!button) return; const business = businesses.find((item) => item.id === button.dataset.id); if (!business) return; if (button.dataset.action === "detail") openBusinessDetail(business); if (button.dataset.action === "operate") operateBusiness(business); if (button.dataset.action === "open-menu") openBusinessMenu(business); if (button.dataset.action === "edit") openBusinessForm(business); if (button.dataset.action === "delete") deleteBusiness(business); });
     $("detailEditButton").addEventListener("click", () => { const business = businesses.find((item) => item.id === selectedBusinessId); closeModals(); openBusinessForm(business); });
     $("detailStatusButton").addEventListener("click", () => {
         const business = businesses.find((item) => item.id === selectedBusinessId);

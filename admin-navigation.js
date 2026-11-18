@@ -55,7 +55,7 @@
 
   function organizeActions() {
     for (const [id, keep] of [
-      ['businessTableBody', button => ['operate', 'edit'].includes(button.dataset.action)],
+      ['businessTableBody', button => ['operate', 'open-menu', 'edit'].includes(button.dataset.action)],
       ['usersTableBody', button => button.dataset.userAction === 'edit'],
       ['billingTableBody', button => button.dataset.billingAction === 'pay']]
     ) {

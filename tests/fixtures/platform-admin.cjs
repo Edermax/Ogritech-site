@@ -5,6 +5,7 @@ window.ogritechEnvironmentUrl=path=>path;
 const tables={
  profiles:{full_name:'Administrador de teste',active:true},
  saas_clients:[{id:'client-1',barbershop_id:'business-1',name:'Confeitaria de exemplo',segment:'Confeitaria',contact_name:'Responsável de exemplo',owner_email:'owner@example.invalid',phone:'11999999999',plan:'Cardápio',monthly_fee:49.90,origin:'Cliente real',status:'Ativo',invite_status:'Aceito',notes:'Cadastro de teste; nenhum dado de produção.'},{id:'client-2',barbershop_id:'business-2',name:'Salgaderia de exemplo',segment:'Lanchonete',contact_name:'Responsável de teste',owner_email:null,phone:null,plan:'Cardápio',monthly_fee:49.90,origin:'Demonstração',status:'Suspenso'}],
+ online_menus:[{barbershop_id:'business-1',slug:'confeitaria-exemplo'},{barbershop_id:'business-2',slug:'salgaderia-exemplo'}],
  saas_plans:[{id:'plan-1',product_id:'product-1',code:'menu',name:'Cardápio',monthly_fee:49.9,description:'Cardápio e pedidos para o seu negócio.',features:['Catálogo de produtos','Pedidos online'],featured:true,max_users:5,max_professionals:1,max_services:10}],
  platform_callback_requests:[{id:'support-1',contact_channel:'E-mail',email:'lead@example.invalid',status:'new',created_at:'2026-11-15T00:00:00Z'}],
  platform_products:[{id:'product-1',code:'menu',name:'Cardápio',launch_state:'Disponível'}],
