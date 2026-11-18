@@ -80,7 +80,8 @@
     "assets/landing-menu/ogritech-blusinha-feminina.webp",
     "assets/landing-menu/ogritech-scarpin-sem-marca.webp",
     "assets/landing-menu/fotos-vitrine-origem.json",
-    "catalog-inventory.js"
+    "catalog-inventory.js",
+    "style.css"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",

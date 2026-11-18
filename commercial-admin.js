@@ -276,6 +276,7 @@
         byId("menuPilotMetricsPanel")?.classList.toggle("hidden", !canManageMenu());
         if (byId("menuReviewDetails")) byId("menuReviewDetails").open = !published || menuCatalogDraftDirty;
         if (typeof Event === "function") window.dispatchEvent?.(new Event("ogritech:menu-context-changed"));
+        refreshMenuDeliveryZoneEditor();
     }
 
     const menuError = (error) => {
@@ -300,7 +301,7 @@
             menuSettingsDirty = false;
             const refreshed = await loadMenuAdmin();
             if (refreshed) {
-                const destinations = { menuTemplateMessage: "settings", menuMessage: "catalog", menuItemMessage: "catalog", menuOperationMessage: "operation", menuOnboardingMessage: menuRecord?.published && !wasPublished ? "operation" : "review" };
+                const destinations = { menuTemplateMessage: "settings", menuMessage: wasPublished ? "settings" : "catalog", menuItemMessage: "catalog", menuOperationMessage: "operation", menuOnboardingMessage: menuRecord?.published && !wasPublished ? "operation" : "review" };
                 selectMenuWorkspace(destinations[messageId] || selectedMenuWorkspace);
             }
             const message = typeof successMessage === "function" ? successMessage(result?.data) : successMessage;
@@ -389,16 +390,114 @@
     }
 
     function addMenuDeliveryZoneRow(value = {}) {
-        const row=document.createElement("div"); row.className="menu-delivery-zone-row menu-option-group-editor";
-        row.innerHTML=`<div class="form-row"><input data-zone-code type="hidden" value="${escapeHtml(value.code||`regiao-${crypto.randomUUID().slice(0,8)}`)}"><label>Região e cidade atendida<input data-zone-name maxlength="120" value="${escapeHtml(value.name||"")}" required></label></div><div class="form-row"><label>Taxa de entrega (R$)<input data-zone-fee type="number" min="0" step="0.01" value="${escapeHtml(value.fee??0)}" required></label><label>Pedido mínimo da região (R$)<input data-zone-minimum type="number" min="0" step="0.01" value="${escapeHtml(value.minimum_order??0)}" required></label></div><button class="table-button" data-remove-zone type="button">Remover região</button>`;
+        const row = document.createElement("details");
+        const free = value.fee !== undefined && Number(value.fee) === 0;
+        row.className = "menu-delivery-zone-row";
+        row.open = !value.code;
+        row.innerHTML = `<summary><span class="delivery-zone-title"><strong data-zone-title></strong><small data-zone-minimum-summary></small></span><strong class="delivery-zone-price" data-zone-price></strong><span class="delivery-zone-edit-label">Editar</span></summary>
+            <div class="delivery-zone-fields"><input data-zone-code type="hidden" value="${escapeHtml(value.code || `regiao-${crypto.randomUUID().slice(0, 8)}`)}">
+            <label>Região, bairro ou cidade<input data-zone-name maxlength="120" value="${escapeHtml(value.name || "")}" placeholder="Ex.: Centro — sua cidade" required><small>Este é o nome que o cliente verá ao escolher a entrega.</small></label>
+            <div class="form-row"><label>Como cobrar a entrega<select data-zone-fee-mode><option value="paid">Cobrar taxa de entrega</option><option value="free">Entrega grátis</option></select></label>
+            <label data-zone-fee-field>Taxa de entrega (R$)<input data-zone-fee type="number" inputmode="decimal" lang="pt-BR" min="${free ? "0" : "0.01"}" max="100000" step="0.01" value="${escapeHtml(value.fee ?? "")}" placeholder="Ex.: 5,00" ${free ? "readonly" : "required"}><small>Valor cobrado uma vez por pedido nesta região.</small></label></div>
+            <details class="delivery-zone-minimum" ${Number(value.minimum_order) > 0 ? "open" : ""}><summary>Pedido mínimo desta região (opcional)</summary><label>Mínimo em produtos (R$)<input data-zone-minimum type="number" inputmode="decimal" lang="pt-BR" min="0" max="1000000" step="0.01" value="${escapeHtml(value.minimum_order ?? 0)}"></label><p data-zone-minimum-hint></p></details>
+            <button class="table-button delivery-zone-remove" data-remove-zone type="button">Remover região</button></div>`;
+        row.querySelector("[data-zone-fee-mode]").value = free ? "free" : "paid";
+        row.querySelector("[data-zone-fee-field]").hidden = free;
+        row.dataset.paidFee = free ? "" : String(value.fee ?? "");
+        row.addEventListener("toggle", () => { row.querySelector(".delivery-zone-edit-label").textContent = row.open ? "Fechar" : "Editar"; });
         byId("menuDeliveryZoneRows").append(row);
+        return row;
+    }
+
+    const deliverySearchText = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR").trim();
+
+    function refreshMenuDeliveryZoneEditor() {
+        if (typeof document.createElement !== "function" || !byId("menuDeliveryZoneRows")) return;
+        const rows = [...byId("menuDeliveryZoneRows").querySelectorAll(".menu-delivery-zone-row")];
+        const generalMinimum = Math.max(0, Number(byId("menuMinimum")?.value) || 0);
+        const query = deliverySearchText(byId("menuDeliveryZoneSearch")?.value);
+        const configured = [];
+        let visible = 0;
+        for (const row of rows) {
+            const name = row.querySelector("[data-zone-name]").value.trim();
+            const rawFee = row.querySelector("[data-zone-fee]").value;
+            const fee = Number(rawFee);
+            const free = row.querySelector("[data-zone-fee-mode]").value === "free";
+            const validFee = rawFee !== "" && Number.isFinite(fee) && fee >= (free ? 0 : 0.01) && fee <= 100000;
+            const minimum = Math.max(generalMinimum, Number(row.querySelector("[data-zone-minimum]").value) || 0);
+            row.querySelector("[data-zone-title]").textContent = name || "Nova região";
+            row.querySelector("[data-zone-price]").textContent = validFee ? fee === 0 ? "Entrega grátis" : formatMoney.format(fee) : "Defina a taxa";
+            row.querySelector("[data-zone-minimum-summary]").textContent = minimum > 0 ? `Mínimo em produtos: ${formatMoney.format(minimum)}` : "Sem pedido mínimo";
+            row.querySelector("[data-zone-minimum-hint]").textContent = minimum > 0 ? `O cliente precisa comprar pelo menos ${formatMoney.format(minimum)} em produtos. A taxa de entrega é cobrada à parte. Vale o maior valor entre o mínimo geral e o desta região.` : "Deixe em zero para seguir o mínimo geral. Este valor não é uma taxa de entrega.";
+            row.hidden = Boolean(query && !deliverySearchText(name).includes(query));
+            if (!row.hidden) visible++;
+            if (name && validFee) configured.push({code: row.querySelector("[data-zone-code]").value, name, fee, minimum});
+        }
+        const fees = configured.map((zone) => zone.fee), freeCount = fees.filter((fee) => fee === 0).length;
+        byId("menuDeliveryZoneCount").textContent = `${rows.length} de 50 regiões`;
+        byId("menuDeliveryZoneRange").textContent = !fees.length ? "Defina a primeira taxa" : Math.min(...fees) === Math.max(...fees) ? `Taxa: ${formatMoney.format(fees[0])}` : `Taxas: ${formatMoney.format(Math.min(...fees))} a ${formatMoney.format(Math.max(...fees))}`;
+        byId("menuDeliveryZoneFree").textContent = freeCount ? `${freeCount} com entrega grátis` : "Taxa por região";
+        const empty = byId("menuDeliveryZoneEmpty");
+        empty.hidden = visible > 0;
+        empty.textContent = rows.length ? "Nenhuma região encontrada. Tente outro nome ou limpe a busca." : "Adicione sua primeira região e escolha a taxa ou a entrega grátis.";
+        byId("menuAddDeliveryZone").disabled = rows.length >= 50 || menuBusy || !menuDataReady || !canManageMenu();
+        byId("menuDeliveryZoneLimit").hidden = rows.length < 50;
+        const preview = byId("menuDeliveryPreviewRegion"), previous = preview.value;
+        preview.innerHTML = configured.length ? configured.map((zone) => `<option value="${escapeHtml(zone.code)}">${escapeHtml(zone.name)}</option>`).join("") : '<option value="">Cadastre uma região para simular</option>';
+        if (configured.some((zone) => zone.code === previous)) preview.value = previous;
+        preview.disabled = !configured.length || menuBusy || !menuDataReady || !canManageMenu();
+        const selected = configured.find((zone) => zone.code === preview.value);
+        const rawSubtotal = byId("menuDeliveryPreviewSubtotal").value.trim().replace(/\s/g, "");
+        const subtotal = rawSubtotal ? Number(rawSubtotal.includes(",") ? rawSubtotal.replace(/\./g, "").replace(",", ".") : rawSubtotal) : NaN;
+        const validSubtotal = Number.isFinite(subtotal) && subtotal >= 0;
+        byId("menuDeliveryPreviewFee").textContent = selected ? selected.fee === 0 ? "Grátis" : formatMoney.format(selected.fee) : "—";
+        byId("menuDeliveryPreviewTotal").textContent = selected && validSubtotal ? formatMoney.format((Math.round(subtotal * 100) + Math.round(selected.fee * 100)) / 100) : "—";
+        const notice = byId("menuDeliveryPreviewNotice");
+        notice.textContent = !selected ? "Preencha uma região e sua taxa para visualizar a cobrança." : !validSubtotal ? "Informe um valor de produtos válido para simular." : subtotal < selected.minimum ? `Para esta região, faltam ${formatMoney.format(selected.minimum - subtotal)} em produtos para atingir o mínimo de ${formatMoney.format(selected.minimum)}.` : "O pedido atinge o mínimo desta região. O total soma produtos e uma única taxa de entrega.";
+        notice.classList.toggle("delivery-preview-warning", Boolean(selected && validSubtotal && subtotal < selected.minimum));
     }
 
     function setupMenuDeliveryZoneEditor() {
         const fieldset=byId("menuDeliveryZoneFields"); if(!fieldset || byId("menuDeliveryZoneRows") || typeof document.createElement!=="function") return;
-        fieldset.innerHTML='<legend>Regiões de entrega</legend><p class="section-description">Adicione as regiões e suas respectivas cidades. Para oferecer entrega gratuita, use R$ 0,00. O pedido usa o maior valor entre o mínimo geral e o mínimo da região.</p><div id="menuDeliveryZoneRows" class="menu-editor-rows"></div><button id="menuAddDeliveryZone" class="table-button edit" type="button">+ Adicionar região</button>';
-        byId("menuAddDeliveryZone").addEventListener("click",()=>addMenuDeliveryZoneRow());
-        byId("menuDeliveryZoneRows").addEventListener("click",(event)=>{ if(event.target.closest("[data-remove-zone]")) event.target.closest(".menu-delivery-zone-row").remove(); });
+        fieldset.innerHTML = '<legend>Preço de entrega por região</legend><p class="section-description">O cliente escolhe a região e paga a taxa correspondente uma única vez por pedido. Retirada no local não tem taxa de entrega.</p><div class="delivery-zone-overview" aria-label="Resumo das regiões"><span id="menuDeliveryZoneCount"></span><span id="menuDeliveryZoneRange"></span><span id="menuDeliveryZoneFree"></span></div><div class="delivery-zone-toolbar"><label>Buscar região ou cidade<input id="menuDeliveryZoneSearch" type="search" placeholder="Digite um nome"></label><button id="menuAddDeliveryZone" class="table-button edit" type="button">+ Adicionar região</button></div><p id="menuDeliveryZoneLimit" class="section-description" hidden>Você atingiu o limite de 50 regiões. Edite ou remova uma região para adicionar outra.</p><p id="menuDeliveryZoneEmpty" class="delivery-zone-empty"></p><div id="menuDeliveryZoneRows" class="menu-editor-rows"></div><section class="delivery-charge-preview" aria-labelledby="menuDeliveryPreviewTitle"><h3 id="menuDeliveryPreviewTitle">Simule uma entrega</h3><p>Confira como os valores serão somados. Esta simulação não cria um pedido.</p><div class="form-row"><label>Região<select id="menuDeliveryPreviewRegion"></select></label><label>Valor dos produtos (R$)<input id="menuDeliveryPreviewSubtotal" type="text" inputmode="decimal" value="50,00" maxlength="16"></label></div><dl><div><dt>Taxa de entrega</dt><dd id="menuDeliveryPreviewFee"></dd></div><div><dt>Total com entrega</dt><dd id="menuDeliveryPreviewTotal"></dd></div></dl><p id="menuDeliveryPreviewNotice" role="status" aria-live="polite"></p></section><p class="delivery-zone-save-hint">Use <strong>Salvar configurações</strong> ao terminar para aplicar os preços à sua vitrine.</p>';
+        byId("menuAddDeliveryZone").addEventListener("click", () => {
+            if (byId("menuDeliveryZoneRows").children.length >= 50) return;
+            byId("menuDeliveryZoneSearch").value = "";
+            const row = addMenuDeliveryZoneRow();
+            menuSettingsDirty = true;
+            updateMenuControls();
+            row.querySelector("[data-zone-name]").focus();
+        });
+        fieldset.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-remove-zone]");
+            if (!button) return;
+            button.closest(".menu-delivery-zone-row").remove();
+            menuSettingsDirty = true;
+            updateMenuControls();
+        });
+        fieldset.addEventListener("change", (event) => {
+            if (event.target.matches("[data-zone-fee-mode]")) {
+                const row = event.target.closest(".menu-delivery-zone-row"), input = row.querySelector("[data-zone-fee]");
+                const free = event.target.value === "free";
+                if (free) { row.dataset.paidFee = input.value; input.value = "0"; }
+                else input.value = row.dataset.paidFee || "";
+                input.min = free ? "0" : "0.01"; input.required = !free; input.readOnly = free;
+                row.querySelector("[data-zone-fee-field]").hidden = free;
+                menuSettingsDirty = true;
+                updateMenuControls();
+            } else refreshMenuDeliveryZoneEditor();
+        });
+        fieldset.addEventListener("input", refreshMenuDeliveryZoneEditor);
+        fieldset.addEventListener("keydown", (event) => { if (["menuDeliveryZoneSearch", "menuDeliveryPreviewSubtotal"].includes(event.target.id) && event.key === "Enter") event.preventDefault(); });
+        fieldset.addEventListener("invalid", (event) => {
+            const row = event.target.closest(".menu-delivery-zone-row");
+            if (!row) return;
+            byId("menuDeliveryZoneSearch").value = "";
+            row.open = true;
+            if (event.target.matches("[data-zone-minimum]")) row.querySelector(".delivery-zone-minimum").open = true;
+            refreshMenuDeliveryZoneEditor();
+        }, true);
+        refreshMenuDeliveryZoneEditor();
     }
 
     function updateMenuDeliveryZoneAvailability() {
@@ -407,6 +506,7 @@
         const acceptsDelivery = Boolean(byId("menuAcceptsDelivery")?.checked);
         fieldset.classList.toggle("hidden", !acceptsDelivery);
         fieldset.disabled = !acceptsDelivery;
+        refreshMenuDeliveryZoneEditor();
     }
 
     function releaseMenuImagePreview() {
@@ -861,6 +961,16 @@
         if (!settings.payment_methods.length) return notify(byId("menuMessage"), "Selecione ao menos uma forma de pagamento.", true);
         if (!settings.weekdays.length || !settings.opens_at || settings.opens_at >= settings.closes_at) return notify(byId("menuMessage"), "Escolha os dias e um horário de encerramento posterior à abertura, no mesmo dia.", true);
         if (acceptsDelivery && (!zones.length || zones.some((zone)=>!zone.code||!zone.name))) return notify(byId("menuMessage"), "Cadastre ao menos uma região completa para entrega.", true);
+        if (acceptsDelivery) {
+            if (zones.length > 50) return notify(byId("menuMessage"), "Cadastre no máximo 50 regiões de entrega.", true);
+            const names = zones.map((zone) => deliverySearchText(zone.name));
+            if (new Set(names).size !== names.length) return notify(byId("menuMessage"), "Há regiões com o mesmo nome. Inclua o bairro ou a cidade para diferenciá-las.", true);
+            if (zones.some((zone) => !/^[a-z0-9][a-z0-9_-]{1,31}$/.test(zone.code) || !Number.isFinite(zone.fee) || zone.fee < 0 || zone.fee > 100000 || !Number.isFinite(zone.minimum_order) || zone.minimum_order < 0 || zone.minimum_order > 1000000)) return notify(byId("menuMessage"), "Confira as taxas e os mínimos: use valores válidos e não negativos.", true);
+            if (typeof document.createElement === "function" && byId("menuDeliveryZoneRows")) {
+                const invalid = [...byId("menuDeliveryZoneRows").querySelectorAll(".menu-delivery-zone-row")].find((row) => row.querySelector("[data-zone-fee-mode]").value === "paid" && !(Number(row.querySelector("[data-zone-fee]").value) > 0));
+                if (invalid) { invalid.open = true; return notify(byId("menuMessage"), "Informe uma taxa maior que zero ou escolha Entrega grátis para a região.", true); }
+            }
+        }
         if (menuRecord?.published) {
             if (!confirm("Aplicar estas configurações ao cardápio público agora? Os pedidos continuam disponíveis.")) return;
             return runMenuAction("menuMessage", "Atualizando cardápio público...", () => supabaseClient.rpc("save_published_menu_settings", { target_barbershop_id: BARBERSHOP_ID, settings, zones: acceptsDelivery ? zones : [] }), "Configurações atualizadas. O cardápio permaneceu no ar.");
@@ -889,7 +999,8 @@
         }
     });
 
-    byId("menuSettingsForm")?.addEventListener("input", () => {
+    byId("menuSettingsForm")?.addEventListener("input", (event) => {
+        if (["menuDeliveryZoneSearch", "menuDeliveryPreviewRegion", "menuDeliveryPreviewSubtotal"].includes(event.target?.id)) return;
         menuSettingsDirty = true;
         byId("menuNextStep").textContent = "Há alterações ainda não salvas. Salve a configuração antes de continuar com o catálogo, o teste e a revisão.";
         updateMenuControls();
