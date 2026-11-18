@@ -3,34 +3,29 @@
   "updatedAt": "2026-11-18",
   "baseline": "catalog_product_inventory",
   "strategy": "contiguous_tail",
-  "authorized": true,
-  "decision": "APPROVED",
+  "authorized": false,
+  "decision": "PENDING_VALIDATION",
   "localReplay": {
-    "status": "PASSED",
-    "mode": "OFFLINE_ISOLATED_POSTGRES",
-    "evidence": "docs/evidencias/revisao-2026-11-18.md",
-    "migrationCount": 112,
-    "testFiles": 36,
-    "assertions": 1074,
-    "failed": 0
+    "status": "PENDING",
+    "evidence": "docs/evidencias/quantidades-sabores-2026-11-18.md"
   },
   "productionDryRun": {
-    "status": "APPLIED",
-    "remoteChangesPerformed": true,
-    "expectedPendingNames": [],
-    "appliedNames": [
-      "catalog_product_inventory"
-    ],
-    "remoteVersion": "20261118155812",
-    "mode": "MCP_EXPLICIT_MIGRATIONS",
-    "evidence": "docs/evidencias/estoque-publicacao-2026-11-18.md"
+    "status": "PENDING",
+    "remoteChangesPerformed": false,
+    "expectedPendingNames": [
+      "catalog_quantity_distribution"
+    ]
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [],
+  "requiredMenuMigrations": [
+    "catalog_quantity_distribution"
+  ],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
-    "menu": []
+    "menu": [
+      "catalog_quantity_distribution"
+    ]
   },
   "releaseConditions": [
     "Every migration in the contiguous tail receives an explicit production disposition.",
@@ -91,8 +86,8 @@
     "fix_catalog_cycle_claim_parameter",
     "catalog_product_inventory"
   ],
-  "authorizationSource": "Usuário solicitou zerar os pedidos antes do início dos testes e retirar os relatórios de vendas antigos da Diniz Doces.",
-  "authorizationScope": "Limpeza do histórico visível da Diniz Doces com arquivamento dos períodos antigos, preservando o agendador, os próximos relatórios e o isolamento dos demais negócios.",
+  "authorizationSource": "Usuário solicitou implementar mínimo, múltiplos e distribuição entre sabores/opções, com melhoria visual do painel e da vitrine.",
+  "authorizationScope": "Implementação e distribuição da funcionalidade, preservando os produtos, preços e pedidos existentes; regras ativadas por produto.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
     "executedAt": "2026-11-16",

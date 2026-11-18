@@ -114,7 +114,8 @@
       "catalog_cycle_reauthorization",
       "fix_catalog_cycle_claim_parameter",
       "catalog_business_segments",
-      "catalog_product_inventory"
+      "catalog_product_inventory",
+      "catalog_quantity_distribution"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -260,7 +261,12 @@
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "catalog_product_inventory",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      {
+        "name": "catalog_quantity_distribution",
+        "reason": "Validação de múltiplos e distribuição em implementação; publicar após testes de banco e interface e reversão de funções preparada."
+      }
+    ],
     "observationEvidence": "docs/evidencias/estoque-publicacao-2026-11-18.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
