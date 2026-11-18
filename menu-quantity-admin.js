@@ -23,6 +23,9 @@
     $("menuQuantityAddOption").disabled = locked || !distribution || names().length >= 50;
     $("menuQuantityOptionCount").textContent = `${names().length} de 50 opções`;
     const rule = current(), minimum = Number($("menuItemMinimum").value), maximum = $("menuItemMaximum").value === "" ? null : Number($("menuItemMaximum").value);
+    const nativeStep = enabled ? (Number.isSafeInteger(rule.step) && rule.step > 0 ? rule.step : 1) : .001;
+    $("menuItemMinimum").step = nativeStep; $("menuItemMinimum").min = nativeStep;
+    $("menuItemMaximum").step = nativeStep; $("menuItemMaximum").min = enabled && minimum > 0 ? minimum : .001;
     const error = model.validateRules(rule, minimum, maximum);
     $("menuQuantityPreview").classList.toggle("quantity-preview-error", Boolean(error));
     $("menuQuantityPreview").textContent = error || (rule ? `O cliente poderá comprar ${[minimum, minimum + rule.step, minimum + rule.step * 2].filter(value => value <= (maximum || model.LIMIT)).join(", ")} unidades${maximum ? `, até ${maximum}` : ""}.${distribution ? ` A quantidade será dividida entre as opções, de ${rule.distribution_step} em ${rule.distribution_step}, sem acréscimo por sabor.` : ""} O preço informado é por unidade de venda.` : "Venda atual: a quantidade mínima continua aplicada. Ative os múltiplos para vender em lotes.");

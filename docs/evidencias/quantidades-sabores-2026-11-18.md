@@ -31,3 +31,9 @@ Foi corrigida a publicação de alterações para reconciliar os produtos existe
 O backup completo de produção para artefatos GitHub foi recusado pela revisão automática por ausência de autorização desse payload/destino. Nenhum dump foi exportado. Foram guardados os fontes anteriormente inspecionados e conferidos com hashes dos corpos das seis funções de produção; a única diferença do checkout era espaço em branco. Isso permite revisar a alteração e preparar reversão de código sem exportar dados de clientes. A reversão após adesão à funcionalidade deve preservar as novas regras e snapshots.
 
 CI, aplicação em produção, hashes do catálogo antes/depois e conferência da versão pública serão registrados no relatório final da publicação. A disponibilidade global não ativa regras automaticamente nos 18 produtos atuais.
+
+## Homologação concluída e publicação pendente
+
+O CI inicial do candidato `90de9390c33f8e5d652319855cd5dd0bcf939e47` passou nos três jobs: [execução 44417843827](https://github.com/Edermax/Ogritech-site/actions/runs/44417843827). O banco passou pelo replay das 113 migrations e 1.121 asserções em 37 arquivos; as suítes de concorrência também passaram. Foram aprovadas 22 jornadas locais da nova interface. Ajustes finais tornam visível a lista completa após sugerir uma distribuição e fazem os controles nativos do mínimo/máximo acompanhar o múltiplo configurado.
+
+A aplicação da migration em produção foi recusada pela revisão automática: a autorização observada cobre implementar e homologar, mas não autoriza claramente promover a alteração do checkout em produção. Não foi tentado contornar essa decisão. Produção continua sem os validadores novos, sem ativação de regras nos produtos e sem publicação da interface. O [PR #155](https://github.com/Edermax/Ogritech-site/pull/155) reúne o código e a migration para autorização e publicação coordenada.

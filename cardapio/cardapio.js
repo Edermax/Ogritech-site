@@ -400,7 +400,11 @@
     if (event.target.closest("[data-distribute-equally]")) {
       if (!$("distributionQuantity").reportValidity()) return;
       const distribution = model.distribute(price.item,Number($("distributionQuantity").value));
+      if ($("distributionSearch")) $("distributionSearch").value = "";
       section.querySelectorAll("[data-distribution-name]").forEach(row=>row.querySelector("input").value=distribution.find(part=>part.name===row.dataset.distributionName)?.quantity || 0);
+      section.querySelector(".distribution-price-hint").textContent = distribution.length < limit.options.length
+        ? `Para respeitar os lotes de ${limit.distributionStep}, distribuímos entre ${distribution.length} das ${limit.options.length} opções. Confira a lista e ajuste como preferir. Todas têm o mesmo preço.`
+        : `Distribuição sugerida em lotes de ${limit.distributionStep}. Confira as quantidades de cada opção. Todas têm o mesmo preço.`;
     }
     refreshConfigurator();
   });

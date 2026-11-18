@@ -61,6 +61,7 @@ try{
  for(const width of [320,390,768,1440])for(const theme of ['light','dark']){
   const {page,context}=await scene({panel:true,width,theme});await openProduct(page);
   assert.equal(await page.locator('#menuItemMinimum').inputValue(),'100');assert.equal(await page.locator('#menuQuantityStep').inputValue(),'25');
+  assert.equal(await page.locator('#menuItemMinimum').getAttribute('step'),'25');
   assert.equal(await page.locator('[data-quantity-option]').count(),4);assert.match(await page.locator('#menuQuantityPreview').textContent(),/100, 125, 150/);
   assert.equal(await page.locator('#menuItemForm').evaluate(form=>form.checkValidity()),true);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
@@ -112,7 +113,7 @@ try{
   checks.push('invalid and duplicate configuration rejected; explicit disabling clears rules');await context.close();
  }
  {
-  const {page,context}=await scene({options:Array.from({length:50},(_,i)=>`Sabor ${i+1}`)});await openDistribution(page);await page.locator('#distributionSearch').fill('Sabor 50');assert.equal(await page.locator('[data-distribution-name]:visible').count(),1);await page.locator('[data-distribute-equally]').click();assert.match(await page.locator('#distributionNotice').textContent(),/Quantidade completa/);await submitComposition(page);assert.equal(await page.locator('#cartCount').textContent(),'100');checks.push('fifty options: search does not change total and equal split skips zero portions');await context.close();
+  const {page,context}=await scene({options:Array.from({length:50},(_,i)=>`Sabor ${i+1}`)});await openDistribution(page);await page.locator('#distributionSearch').fill('Sabor 50');assert.equal(await page.locator('[data-distribution-name]:visible').count(),1);await page.locator('[data-distribute-equally]').click();assert.match(await page.locator('#distributionNotice').textContent(),/Quantidade completa/);assert.equal(await page.locator('#distributionSearch').inputValue(),'');assert.equal(await page.locator('[data-distribution-name]:visible').count(),50);assert.match(await page.locator('.distribution-price-hint').textContent(),/4 das 50 opções/);await submitComposition(page);assert.equal(await page.locator('#cartCount').textContent(),'100');checks.push('fifty options: search does not change total and equal split skips zero portions');await context.close();
  }
  {
   const {page,context}=await scene({extras:true});await openDistribution(page);await page.locator('[data-distribute-equally]').click();await page.locator('input[value=gift]').check();assert.match(await page.locator('#configuratorTotal').textContent(),/200,00/);await submitComposition(page);await page.locator('#checkoutButton').click();await page.locator('[data-cart-edit]').click();assert.equal(await page.locator('input[value=gift]').isChecked(),true);await page.locator('#distributionQuantity').fill('125');await page.locator('#closeConfigurator').click();assert.match(await page.locator('#cartItems').textContent(),/100 unidades/);checks.push('paid extras remain per unit and canceling an edit preserves the original selection');await context.close();
