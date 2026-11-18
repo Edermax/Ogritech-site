@@ -278,7 +278,10 @@
         const name = document.createElement("strong"); name.className = "assistant-suggestion-name"; name.textContent = suggestion.name;
         const detail = document.createElement("span"); detail.className = "assistant-suggestion-detail"; detail.textContent = displayPriceLabel(suggestion.label);
         const priceLabel = document.createElement("strong"); priceLabel.className = "assistant-suggestion-price"; priceLabel.textContent = money.format(Number(suggestion.price));
-        const button = document.createElement("button"); button.className = "public-button assistant-suggestion-action"; button.type = "button"; button.textContent = "Adicionar";
+        const button = document.createElement("button"); button.className = "public-button assistant-suggestion-action"; button.type = "button";
+        const suggestedPrice = prices.get(suggestion.menu_item_price_id);
+        button.disabled = !suggestedPrice || suggestedPrice.item.stock_available === false;
+        button.textContent = suggestedPrice?.item.stock_available === false ? "Esgotado" : suggestedPrice ? "Adicionar" : "Indisponível";
         button.addEventListener("click", () => { const price = prices.get(suggestion.menu_item_price_id); if (!price) return assistantMessage("Este item não está mais disponível. Atualize o cardápio e tente novamente."); configure(price); });
         copy.append(name, detail, priceLabel); row.append(copy, button); list.append(row);
       });

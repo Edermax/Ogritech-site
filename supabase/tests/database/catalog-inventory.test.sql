@@ -103,6 +103,13 @@ select public.review_menu_order_decision('cd100000-0000-4000-8000-000000000001',
 reset role;
 select extensions.is((select quantity from private.catalog_stock),2::bigint,'refusal returns reserved units');
 set local role authenticated;
+savepoint insufficient_reopen;
+select pg_temp.stock_cmd('exit',2,(public.catalog_inventory('cd100000-0000-4000-8000-000000000001')->'products'->0->>'version')::bigint);
+select extensions.throws_ok($$select public.review_menu_order_decision('cd100000-0000-4000-8000-000000000001',(select id from sale_id),'confirmed',(select updated_at from public.menu_orders where id=(select id from sale_id)),'Tentativa sem estoque')$$,'23514',null,'refused order cannot reopen without its reserved units');
+select extensions.is((select status from public.menu_orders where id=(select id from sale_id)),'rejected','failed reopening preserves refused status');
+select extensions.is(public.catalog_inventory('cd100000-0000-4000-8000-000000000001')->'products'->0->>'quantity','0','failed reopening does not create negative stock');
+rollback to savepoint insufficient_reopen;
+release savepoint insufficient_reopen;
 select public.review_menu_order_decision('cd100000-0000-4000-8000-000000000001',(select id from sale_id),'confirmed',(select updated_at from public.menu_orders where id=(select id from sale_id)),'Decisão de teste');
 reset role;
 select extensions.is((select quantity from private.catalog_stock),0::bigint,'reversing refusal reserves stock again');
@@ -143,6 +150,25 @@ select extensions.throws_ok($$select public.catalog_inventory('cd100000-0000-400
 select extensions.throws_ok($$select pg_temp.stock_cmd('entry',1,1)$$,'42501',null,'employee cannot move stock');
 reset role;
 update public.profiles set role='owner' where id='cd800000-0000-4000-8000-000000000001';
+savepoint paginated_history;
+set local role authenticated;
+do $$ declare stock_version bigint; step integer;
+begin
+ stock_version:=(public.catalog_inventory('cd100000-0000-4000-8000-000000000001')->'products'->0->>'version')::bigint;
+ for step in 1..55 loop
+  perform pg_temp.stock_cmd('entry',1,stock_version);stock_version:=stock_version+1;
+ end loop;
+end $$;
+create temporary table history_page_one as select public.catalog_inventory('cd100000-0000-4000-8000-000000000001') data;
+select extensions.is(jsonb_array_length((select data->'movements' from history_page_one)),50,'history page is bounded to fifty movements');
+select extensions.ok(not exists(select 1 from history_page_one,jsonb_array_elements(data->'movements') m where m ?| array['request_payload','request_id','actor_id','order_id']),'history never exposes request fingerprints or internal identities');
+create temporary table history_page_two as select public.catalog_inventory('cd100000-0000-4000-8000-000000000001',null,(select min((m->>'id')::bigint) from history_page_one,jsonb_array_elements(data->'movements') m)) data;
+select extensions.ok(jsonb_array_length((select data->'movements' from history_page_two))>0,'cursor returns older movements');
+select extensions.ok(not exists(select 1 from history_page_one a,history_page_two b,jsonb_array_elements(a.data->'movements') first_row,jsonb_array_elements(b.data->'movements') next_row where first_row->>'id'=next_row->>'id'),'history pages never duplicate a movement');
+select extensions.throws_ok($$select public.catalog_inventory('cd100000-0000-4000-8000-000000000001',null,0)$$,'22023',null,'invalid cursor is rejected');
+reset role;
+rollback to savepoint paginated_history;
+release savepoint paginated_history;
 -- Removing a product never erases its audited movements or prevents a prior return.
 create temporary table movements_before_delete as select count(*) count from private.catalog_stock_movements;
 update public.online_menus set published=false where barbershop_id='cd100000-0000-4000-8000-000000000001';

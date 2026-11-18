@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-17",
+  "updatedAt": "2026-11-18",
   "baseline": "catalog_business_segments",
   "strategy": "contiguous_tail",
   "authorized": false,
@@ -8,10 +8,10 @@
   "localReplay": {
     "status": "PASSED",
     "mode": "OFFLINE_ISOLATED_POSTGRES",
-    "evidence": "docs/evidencias/estoque-local-2026-11-17.md",
+    "evidence": "docs/evidencias/revisao-2026-11-18.md",
     "migrationCount": 112,
     "testFiles": 36,
-    "assertions": 1066,
+    "assertions": 1074,
     "failed": 0
   },
   "productionDryRun": {

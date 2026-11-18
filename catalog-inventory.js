@@ -20,11 +20,12 @@
     dialog.setAttribute('aria-labelledby','catalogStockTitle'); document.body.append(dialog);
     return dialog;
   }
-  async function open(ctx,item = null) {
+  async function open(ctx,item = null,afterSave = false) {
     if (!active(ctx)) return;
     const host = ensureDialog();
-    host.innerHTML = '<h2 id="catalogStockTitle">Estoque</h2><p data-stock-status role="status" aria-live="polite">Carregando...</p><button type="button" data-stock-close class="table-button">Fechar</button>';
+    host.innerHTML = '<h2 id="catalogStockTitle">Estoque</h2><p data-stock-status role="status" aria-live="polite">Carregando...</p><button type="button" data-stock-retry class="table-button" hidden>Tentar novamente</button><button type="button" data-stock-close class="table-button">Fechar</button>';
     host.querySelector('[data-stock-close]').onclick = () => host.close();
+    host.querySelector('[data-stock-retry]').onclick = () => open(ctx,item,afterSave);
     if (!host.open) host.showModal();
     const token = Symbol(); ctx.dialogToken = token;
     try {
@@ -41,6 +42,7 @@
       host.querySelector('[data-stock-close]').onclick = () => host.close();
       host.scrollTop = 0;
       host.querySelector('[data-stock-close]').focus({preventScroll:true});
+      if(afterSave) notice('Movimentação salva. O histórico foi atualizado.');
       host.querySelector('[data-stock-refresh]').onclick = () => open(ctx,item);
       let cursor = data.movements.at(-1)?.id;
       const more = host.querySelector('[data-stock-more]');
@@ -51,7 +53,7 @@
           if(!active(ctx) || ctx.dialogToken !== token)return;
           host.querySelector('[data-stock-history]').insertAdjacentHTML('beforeend',movementRows(next.movements));
           cursor = next.movements.at(-1)?.id; more.hidden = next.movements.length<50;
-        } catch(error) { if(active(ctx)) notice(error.message); }
+        } catch(error) { if(active(ctx) && ctx.dialogToken===token && host.open) notice(error.message); }
         finally { more.disabled = false; }
       };
       const form = host.querySelector('[data-stock-form]');
@@ -79,7 +81,7 @@
         try {
           await rpc('catalog_stock_command',{...args,request_id:pending.id});
           if(!active(ctx))return;
-          if(host.open && ctx.dialogToken===token){await open(ctx,item); notice('Movimentação salva. O histórico foi atualizado.');}
+          if(host.open && ctx.dialogToken===token)await open(ctx,item,true);
           const current = await read(ctx); if(active(ctx))renderButtons(ctx,current.products);
         } catch(error) { if(active(ctx) && ctx.dialogToken===token) notice(error.message); }
         finally {
@@ -87,7 +89,12 @@
           if(ctx.dialogToken===token){update();host.querySelector('[data-stock-refresh]').disabled=false;}
         }
       };
-    } catch(error) { if(active(ctx) && ctx.dialogToken===token) notice(error.message); }
+    } catch(error) {
+      if(active(ctx) && ctx.dialogToken===token && host.open){
+        notice(afterSave?'Movimentação salva, mas não foi possível carregar o saldo atualizado. Tente novamente para consultar o saldo.':error.message);
+        host.querySelector('[data-stock-retry]').hidden=false;
+      }
+    }
   }
   function renderButtons(ctx,stocks) {
     if(!active(ctx))return;
@@ -117,6 +124,12 @@
       const data=await read(ctx);if(version!==generation||!active(ctx))return;
       renderButtons(ctx,data.products);
       host.querySelector('[data-stock-summary-status]').textContent='Use o botão de estoque de cada produto para ativar o controle e registrar movimentações. Produtos sem controle continuam com a disponibilidade manual.';
-    }catch(error){if(version===generation&&active(ctx))host.querySelector('[data-stock-summary-status]').textContent=error.message;}
+    }catch(error){
+      if(version===generation&&active(ctx)){
+        host.querySelector('[data-stock-summary-status]').textContent=error.message;
+        const retry=document.createElement('button');retry.type='button';retry.className='table-button';retry.dataset.stockSummaryRetry='';retry.textContent='Tentar novamente';
+        retry.onclick=()=>globalThis.loadCatalogInventory(menu,status);host.append(retry);
+      }
+    }
   };
 })();
