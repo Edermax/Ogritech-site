@@ -16,3 +16,11 @@ Validação local:
 As interações no navegador utilizaram dados sintéticos e interceptaram a página de destino; não representam homologação dos produtos ou pedidos reais do cardápio. Capturas, script e resultados estão no diretório local `outputs/admin-abrir-cardapio-20261118` do workspace.
 
 Estado: implementação e validação locais concluídas, sem publicação em produção. Base: `origin/main`, commit `83be229`.
+
+## Preparação da publicação — 18/11/2026
+
+Usuário autorizou publicar as melhorias recentes. Estoque e correções anteriores já estão em `main` no commit `83be22975c26c14f56f92b8a84bf7224fe8c4baa`; este lote publica apenas a ação administrativa e sua fixture.
+
+`npm ci --ignore-scripts` instalou as versões do lockfile nesta cópia isolada. A validação completa `npm run validate` passou: checagem estática, 112 migrations classificadas e 490 testes Node, sem falhas. Os 24 cenários de navegador foram novamente aprovados, sem mutações de produção. O diff passou na conferência de whitespace e o código candidato está no commit `3d84fc6d65a0e1567481301e87772f94609b726e`.
+
+Revisão: [PR #153](https://github.com/Edermax/Ogritech-site/pull/153). Aguardar CI e publicação do Pages; a preparação não comprova implantação.
