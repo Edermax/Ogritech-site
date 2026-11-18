@@ -24,3 +24,5 @@ Usuário autorizou publicar as melhorias recentes. Estoque e correções anterio
 `npm ci --ignore-scripts` instalou as versões do lockfile nesta cópia isolada. A validação completa `npm run validate` passou: checagem estática, 112 migrations classificadas e 490 testes Node, sem falhas. Os 24 cenários de navegador foram novamente aprovados, sem mutações de produção. O diff passou na conferência de whitespace e o código candidato está no commit `3d84fc6d65a0e1567481301e87772f94609b726e`.
 
 Revisão: [PR #153](https://github.com/Edermax/Ogritech-site/pull/153). Aguardar CI e publicação do Pages; a preparação não comprova implantação.
+
+O CI inicial identificou uma fixture antiga da suíte de planos sem o método de consulta `in` usado pela nova leitura de cardápios. O simulador de `scripts/split-offers-browser.mjs` foi alinhado à consulta e passou nas 22 verificações locais, sem erros JavaScript e sem requisições externas. O código da aplicação não precisou de correção adicional. O workflow Validate também recebeu acionamento manual para executar os mesmos três jobs quando os eventos automáticos não iniciarem uma execução.
