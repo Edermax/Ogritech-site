@@ -35,6 +35,16 @@ try{
  for(const width of [390,1440]){
   const s=await scene({width});await s.page.goto(origin+'/',{waitUntil:'networkidle'});
   assert.match(await s.page.locator('h1').textContent(),/vitrine online/);assert.match(await s.page.locator('#catalogSegmentsTitle').textContent(),/seu negócio/);
+  assert.equal(await s.page.getByRole('link',{name:'Explore uma vitrine real',exact:true}).getAttribute('href'),'/diniz-doces/');
+  assert.equal(await s.page.getByRole('tab',{name:'Vestuário',exact:true}).getAttribute('aria-selected'),'true');
+  for(const label of ['Vestuário','Artesanato']){
+   const tab=s.page.getByRole('tab',{name:label,exact:true});await tab.click();
+   const panel=s.page.locator('#'+await tab.getAttribute('aria-controls'));
+   const photos=await panel.locator('img').evaluateAll(images=>images.map(i=>({path:i.getAttribute('src'),ready:i.complete&&i.naturalWidth>0})));
+   assert.equal(photos.length,2);assert.ok(photos.every(photo=>photo.path.startsWith('/assets/landing-menu/ogritech-')));
+   await panel.locator('img').evaluateAll(images=>Promise.all(images.map(image=>{image.loading='eager';return image.decode();})));
+  }
+  await s.page.getByRole('tab',{name:'Vestuário',exact:true}).click();
   for(const price of ['9,90','99,00','29,90','299,00'])assert.ok((await s.page.locator('body').textContent()).includes(price));
   assert.equal(await s.page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
   await s.page.screenshot({path:resolve(out,`home-${width}.png`),fullPage:true});checks.push(`marketing and four prices ${width}px`);await s.context.close();

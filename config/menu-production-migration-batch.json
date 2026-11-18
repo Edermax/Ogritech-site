@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-17",
-  "baseline": "catalog_business_segments",
+  "updatedAt": "2026-11-18",
+  "baseline": "catalog_product_inventory",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "OFFLINE_ISOLATED_POSTGRES",
-    "evidence": "docs/evidencias/vitrine-segmentos-local-2026-11-17.md",
-    "migrationCount": 111,
-    "testFiles": 35,
-    "assertions": 1000,
+    "evidence": "docs/evidencias/revisao-2026-11-18.md",
+    "migrationCount": 112,
+    "testFiles": 36,
+    "assertions": 1074,
     "failed": 0
   },
   "productionDryRun": {
@@ -19,10 +19,11 @@
     "remoteChangesPerformed": true,
     "expectedPendingNames": [],
     "appliedNames": [
-      "catalog_business_segments"
+      "catalog_product_inventory"
     ],
+    "remoteVersion": "20261118155812",
     "mode": "MCP_EXPLICIT_MIGRATIONS",
-    "evidence": "docs/evidencias/vitrine-publicacao-2026-11-17.md"
+    "evidence": "docs/evidencias/estoque-publicacao-2026-11-18.md"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
@@ -87,7 +88,8 @@
     "archive_menu_sales_reports",
     "catalog_profiles_and_commercial_plans",
     "catalog_cycle_reauthorization",
-    "fix_catalog_cycle_claim_parameter"
+    "fix_catalog_cycle_claim_parameter",
+    "catalog_product_inventory"
   ],
   "authorizationSource": "Usuário solicitou zerar os pedidos antes do início dos testes e retirar os relatórios de vendas antigos da Diniz Doces.",
   "authorizationScope": "Limpeza do histórico visível da Diniz Doces com arquivamento dos períodos antigos, preservando o agendador, os próximos relatórios e o isolamento dos demais negócios.",

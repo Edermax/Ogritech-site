@@ -79,7 +79,8 @@
     "assets/landing-menu/ogritech-boneca-artesanal.webp",
     "assets/landing-menu/ogritech-blusinha-feminina.webp",
     "assets/landing-menu/ogritech-scarpin-sem-marca.webp",
-    "assets/landing-menu/fotos-vitrine-origem.json"
+    "assets/landing-menu/fotos-vitrine-origem.json",
+    "catalog-inventory.js"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",

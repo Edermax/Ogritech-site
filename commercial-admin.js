@@ -832,6 +832,7 @@
             }));
             if (menu?.published) selectMenuWorkspace(previousWorkspace && previousWorkspace !== "start" ? previousWorkspace : "operation");
             else selectMenuWorkspace(nextMenuWorkspace());
+            await window.loadCatalogInventory?.(menu, onboarding);
             window.OgritechOrderNotifications?.initialize(BARBERSHOP_ID);
             loadMenuAssistantAdmin().catch(() => notify(byId("menuAssistantSettingsMessage"), "O assistente está temporariamente indisponível; o restante do Cardápio continua funcionando.", true));
             loadMenuPilotMetrics().catch((metricsError) => renderMenuPilotMetrics(null, metricsError));

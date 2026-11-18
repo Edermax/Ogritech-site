@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {resolve,sep,extname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {installCatalogFixture} from '../tests/fixtures/catalog-business.mjs';
+import {installStockFixture} from '../tests/fixtures/catalog-stock.mjs';
 const root=resolve(fileURLToPath(new URL('../',import.meta.url)));
 const port=Number(process.env.OGRITECH_PREVIEW_PORT || 8107),origin=`http://127.0.0.1:${port}`;
 const plans=[{id:'11111111-1111-4111-8111-111111111111',code:'catalogo-essencial',name:'Catálogo Essencial',menu_offer_code:'cardapio',offer_code:'cardapio',monthly_fee:9.90,annual_fee:99,active:true},{id:'22222222-2222-4222-8222-222222222222',code:'catalogo-completo',name:'Catálogo Completo',menu_offer_code:'encomendas',offer_code:'encomendas',monthly_fee:29.90,annual_fee:299,active:true}];
@@ -18,9 +19,9 @@ const server=createServer(async(req,res)=>{
   if(url.pathname==='/__preview/fixture.js'){
    if(url.searchParams.get('admin')==='true')return send(await readFile(resolve(root,'tests/fixtures/platform-admin.cjs'),'utf8').then(s=>s.slice(s.indexOf('String.raw`')+11,s.lastIndexOf('`;'))),'application/javascript');
    const profile=['food','crafts','products'].includes(url.searchParams.get('perfil'))?url.searchParams.get('perfil'):'products';
-   return send(`(${installCatalogFixture.toString()})(${JSON.stringify({profile,offer:'encomendas',trial:true,quote:false,plans,origin})});`,'application/javascript');
+   return send(`(${installCatalogFixture.toString()})(${JSON.stringify({profile,offer:'encomendas',trial:true,quote:false,plans,origin})});(${installStockFixture.toString()})();`,'application/javascript');
   }
-  if(url.pathname==='/__preview/panel.js')return send(`document.documentElement.style.visibility='visible';document.getElementById('content').hidden=false;document.getElementById('panelLoadState').hidden=true;document.querySelectorAll('.view-section').forEach(el=>el.classList.add('hidden'));document.getElementById('menuView').classList.remove('hidden');window.loadMenuAdmin().then(()=>{window.OgritechMenuWorkspace.select('settings');});`,'application/javascript');
+  if(url.pathname==='/__preview/panel.js')return send(`document.documentElement.style.visibility='visible';document.getElementById('content').hidden=false;document.getElementById('panelLoadState').hidden=true;document.querySelectorAll('.view-section').forEach(el=>el.classList.add('hidden'));document.getElementById('menuView').classList.remove('hidden');window.loadMenuAdmin().then(()=>{window.OgritechMenuWorkspace.select(new URLSearchParams(location.search).get('area')==='estoque'?'catalog':'settings');});`,'application/javascript');
   if(url.pathname==='/functions/v1/ogritech-billing'&&req.method==='POST'){
    let size=0,body='';for await(const chunk of req){size+=chunk.length;if(size>16384){res.writeHead(413);return res.end();}body+=chunk;}
    const input=JSON.parse(body);
@@ -36,7 +37,7 @@ const server=createServer(async(req,res)=>{
    let html=body.toString(),panel=url.pathname==='/painel/',admin=url.pathname==='/admin.html';
    html=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,tag=>{
     if(!/\bsrc=/.test(tag))return tag;
-    if(panel)return /src="(?:\/)?(?:catalog-profiles|catalog-admin|commercial-admin|product-offers|menu-branding|menu-branding-admin|panel-navigation)\.js/.test(tag)?tag:'';
+    if(panel)return /src="(?:\/)?(?:catalog-profiles|catalog-admin|catalog-inventory|commercial-admin|product-offers|menu-branding|menu-branding-admin|panel-navigation)\.js/.test(tag)?tag:'';
     return /src="[^\"]*(?:https:|supabase-config|pwa\.js|assistant-widget)/.test(tag)?'':tag;
    });
    const profile=['food','crafts','products'].includes(url.searchParams.get('perfil'))?url.searchParams.get('perfil'):'products';

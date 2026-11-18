@@ -4,6 +4,10 @@ Estado: implementado e validado localmente na branch `feat/catalogo-planos-segme
 
 ## Oferta
 
+### Estoque básico no Completo
+
+Implementação local de 17/11/2026: controle opcional por produto, quantidade atual em unidades inteiras e histórico de entradas, saídas, ajustes e pedidos. O saldo é compartilhado entre opções do mesmo produto; estoque por combinação de variantes continua fora do escopo. Acesso exclusivo ao Completo efetivo, inclusive no teste de 14 dias. Veja [implementação e testes](evidencias/estoque-local-2026-11-17.md).
+
 ### Evolução local da vitrine e dos segmentos
 
 Em 17/11/2026, o usuário aprovou a adequação da divulgação, cadastro, páginas públicas e painéis à vitrine online. A implementação está na branch `feat/vitrine-segmentos-local-20261117`, autorizada somente localmente. A home apresenta alimentação, artesanato e colecionáveis; a taxonomia central inclui 15 categorias amplas e preserva as especializações de alimentação, totalizando 19 opções. Alimentação usa “Cardápio”, artesanato usa “Catálogo” e outros produtos usam “Vitrine”. A alteração explícita de atividade preserva catálogo, endereço, histórico e contrato. Detalhes, testes e acesso à prévia: [relatório local](evidencias/vitrine-segmentos-local-2026-11-17.md).
