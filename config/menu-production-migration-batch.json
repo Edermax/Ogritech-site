@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-18",
-  "baseline": "catalog_business_segments",
+  "baseline": "catalog_product_inventory",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
@@ -15,25 +15,22 @@
     "failed": 0
   },
   "productionDryRun": {
-    "status": "PASSED",
-    "migrationCount": 1,
-    "remoteChangesPerformed": false,
-    "expectedPendingNames": [
+    "status": "APPLIED",
+    "remoteChangesPerformed": true,
+    "expectedPendingNames": [],
+    "appliedNames": [
       "catalog_product_inventory"
     ],
-    "mode": "EXPLICIT_ADDITIVE_MIGRATION",
+    "remoteVersion": "20261118155812",
+    "mode": "MCP_EXPLICIT_MIGRATIONS",
     "evidence": "docs/evidencias/estoque-publicacao-2026-11-18.md"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "catalog_product_inventory"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
-    "menu": [
-      "catalog_product_inventory"
-    ]
+    "menu": []
   },
   "releaseConditions": [
     "Every migration in the contiguous tail receives an explicit production disposition.",
@@ -91,7 +88,8 @@
     "archive_menu_sales_reports",
     "catalog_profiles_and_commercial_plans",
     "catalog_cycle_reauthorization",
-    "fix_catalog_cycle_claim_parameter"
+    "fix_catalog_cycle_claim_parameter",
+    "catalog_product_inventory"
   ],
   "authorizationSource": "Usuário solicitou zerar os pedidos antes do início dos testes e retirar os relatórios de vendas antigos da Diniz Doces.",
   "authorizationScope": "Limpeza do histórico visível da Diniz Doces com arquivamento dos períodos antigos, preservando o agendador, os próximos relatórios e o isolamento dos demais negócios.",

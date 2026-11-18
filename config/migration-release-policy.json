@@ -258,15 +258,10 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "catalog_business_segments",
+    "appliedThrough": "catalog_product_inventory",
     "appliedOutOfOrder": [],
-    "heldMigrations": [
-      {
-        "name": "catalog_product_inventory",
-        "reason": "Implementação de estoque em validação local; ainda não aplicada em produção."
-      }
-    ],
-    "observationEvidence": "docs/evidencias/vitrine-publicacao-2026-11-17.md",
+    "heldMigrations": [],
+    "observationEvidence": "docs/evidencias/estoque-publicacao-2026-11-18.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
       "business_whatsapp_shares": "20261107143521",
@@ -294,7 +289,8 @@
       "catalog_profiles_and_commercial_plans": "20261117185655",
       "catalog_cycle_reauthorization": "20261117185824",
       "fix_catalog_cycle_claim_parameter": "20261117185829",
-      "catalog_business_segments": "20261117211344"
+      "catalog_business_segments": "20261117211344",
+      "catalog_product_inventory": "20261118155812"
     }
   }
 }

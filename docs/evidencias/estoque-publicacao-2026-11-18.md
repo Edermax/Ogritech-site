@@ -21,4 +21,14 @@ A execução integral das 74 asserções via conector expirou na confirmação e
 
 O GitHub Pages apresentava certificado vencido, estado `bad_authz`, para `ogritech.com.br` e `www.ogritech.com.br`; Cloudflare devolvia 526. Não havia registro CAA restritivo nas consultas públicas. A emissão foi reiniciada recolocando o mesmo domínio nas configurações do GitHub Pages, conforme a documentação oficial. A configuração foi restaurada imediatamente. O GitHub gerou os commits `5e76787` (remoção de CNAME) e `19b9213` (recriação); o conteúdo final é igual à configuração anterior. Esses commits foram integrados à branch de publicação.
 
-Estado: publicação em andamento. Este registro será atualizado com homologação, restauração, versões remotas, CI e verificações finais.
+## Banco de produção e CI
+
+Os três gates do commit `4a1bafda340d809d29acac1b3fc03a435422041e` passaram no CI `44340638531`: static, database e panel-theme. O gate de banco executou a suíte completa e os dois ensaios de concorrência; o de interface incluiu as correções de recuperação e sugestões de estoque.
+
+Após backup/restauração e CI, migration aplicada em produção como `20261118155812_catalog_product_inventory`, totalizando 112. Hashes de empresas, catálogos, produtos, pedidos e assinaturas, capturados imediatamente antes/depois, permaneceram iguais. Nenhum saldo inicial ou movimento foi criado para os negócios existentes.
+
+Advisors de produção: nenhum ERROR. Mantidos os avisos anteriores de [RLS sem política](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy) em tabelas privadas bloqueadas ao cliente e [proteção contra senhas vazadas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection). As três tabelas privadas novas explicam três registros INFO adicionais de RLS sem política; seus índices ainda sem uso aparecem como INFO antes de haver movimentação. A contagem de FKs sem índice não aumentou.
+
+O usuário autorizou explicitamente a mudança temporária dos quatro registros A e do CNAME www para DNS only. A alteração foi aplicada somente nesses cinco registros. O GitHub confirmou ambos os domínios válidos e elegíveis para HTTPS, sem erro CAA. Proxy será restaurado assim que o certificado válido estiver instalado; o modo de validação TLS não foi reduzido.
+
+Frontend: [PR #152](https://github.com/Edermax/Ogritech-site/pull/152), aguardando os gates do registro final de produção e integração. Renovação de HTTPS continua em acompanhamento separado.
