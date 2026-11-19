@@ -272,15 +272,10 @@
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "catalog_quantity_distribution",
+    "appliedThrough": "catalog_product_photo_limits",
     "appliedOutOfOrder": [],
-    "heldMigrations": [
-      {
-        "name": "catalog_product_photo_limits",
-        "reason": "Fotos por plano em implementação e homologação; promoção após validação e autorização de produção."
-      }
-    ],
-    "observationEvidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md",
+    "heldMigrations": [],
+    "observationEvidence": "docs/evidencias/fotos-produto-publicacao-2026-11-19.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
       "business_whatsapp_shares": "20261107143521",
@@ -310,7 +305,8 @@
       "fix_catalog_cycle_claim_parameter": "20261117185829",
       "catalog_business_segments": "20261117211344",
       "catalog_product_inventory": "20261118155812",
-      "catalog_quantity_distribution": "20261119000747"
+      "catalog_quantity_distribution": "20261119000747",
+      "catalog_product_photo_limits": "20261119104818"
     }
   }
 }
