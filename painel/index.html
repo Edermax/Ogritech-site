@@ -92,7 +92,7 @@
 <link rel="stylesheet" href="/menu-order-management.css?v=20261113.4">
 <link rel="stylesheet" href="/sales-reports.css?v=20261112.2">
 <link rel="stylesheet" href="/panel-dark.css?v=20261115.3">
-<link rel="stylesheet" href="/panel-navigation.css?v=20261114.1">
+<link rel="stylesheet" href="/panel-navigation.css?v=20261119.1">
 </head>
 <body class="panel-readable-controls">
     <!-- Aplicação principal -->
@@ -148,6 +148,9 @@
 
         <!-- Conteúdo -->
         <main class="main-content">
+            <nav id="platformAdminReturn" class="platform-admin-return" aria-label="Voltar à administração da Ogritech" hidden>
+                <a class="text-button" id="backToShowcase" href="/admin.html#businesses"><span class="action-arrow action-arrow--back" aria-hidden="true"></span> Voltar à Ogritech</a>
+            </nav>
             <header class="topbar">
                 <div>
                     <p class="eyebrow" id="businessPanelEyebrow">SEU NEGÓCIO • PAINEL DO SEU CARDÁPIO</p>
@@ -156,7 +159,6 @@
                 <!-- Abre o modal de agendamento -->
                 <div class="topbar-actions">
                     <button class="table-button edit panel-install-button" id="panelInstallApp" type="button" aria-haspopup="dialog" hidden>Instalar o app</button>
-                    <a class="text-button hidden" id="backToShowcase" href="admin.html"><span class="action-arrow action-arrow--back" aria-hidden="true"></span> Voltar ao painel master</a>
                     <button class="gold-button solution-hidden" id="newAppointment">+ Novo agendamento</button>
                 </div>
             </header>
@@ -737,12 +739,12 @@
     <script src="business-config.js"></script>
 
     <!-- auth.js verifica se existe uma sessão válida -->
-    <script src="auth.js?v=20261114.4"></script>
+    <script src="auth.js?v=20261119.1"></script>
 
     <!-- JavaScript principal do dashboard -->
     <script src="/report-export.js?v=20261112.1"></script><script src="/sales-reports.js?v=20261112.2"></script><script src="/panel-notifications.js?v=20261112.2"></script>
-    <script src="script.js?v=20261112.2"></script>
-    <script src="/catalog-profiles.js?v=20261117.2"></script><script src="menu-branding.js?v=20261117"></script><script src="/product-offers.js?v=20261117"></script><script src="menu-branding-admin.js?v=20261117.2"></script><script src="/menu-order-notifications.js?v=20261114.1"></script><script src="/menu-order-actions.js?v=20261113.4"></script><script src="/catalog-admin.js?v=20261117.2"></script><script src="/catalog-inventory.js?v=20261118.1"></script><script src="/menu-quantity.js?v=20261118.1"></script><script src="/menu-quantity-admin.js?v=20261118.1"></script><script src="/product-photos.js?v=20261118.1"></script><script src="/product-photos-admin.js?v=20261118.1"></script><script src="commercial-admin.js?v=20261119.1"></script>
+    <script src="script.js?v=20261119.1"></script>
+    <script src="/catalog-profiles.js?v=20261117.2"></script><script src="menu-branding.js?v=20261117"></script><script src="/product-offers.js?v=20261117"></script><script src="menu-branding-admin.js?v=20261117.2"></script><script src="/menu-order-notifications.js?v=20261114.1"></script><script src="/menu-order-actions.js?v=20261113.4"></script><script src="/catalog-admin.js?v=20261117.2"></script><script src="/catalog-inventory.js?v=20261118.1"></script><script src="/menu-quantity.js?v=20261118.1"></script><script src="/menu-quantity-admin.js?v=20261118.1"></script><script src="/product-photos.js?v=20261118.1"></script><script src="/product-photos-admin.js?v=20261118.1"></script><script src="commercial-admin.js?v=20261119.2"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script><script src="/cardapio/share.js?v=20261112.1"></script><script src="subscription-admin.js?v=20261117.2"></script>
     <script src="/assistant-panel-help.js?v=20261117.2"></script><script src="/assistant-widget.js?v=20261117.2" data-context="panel"></script>
     <dialog class="panel-install-help" id="panelInstallHelp" aria-labelledby="panelInstallTitle">

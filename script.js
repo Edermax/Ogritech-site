@@ -220,12 +220,6 @@ function applyBusinessCustomization() {
     document.getElementById("businessTicket").textContent = currency.format(businessConfig.ticket);
     const ticketSubtitle = document.getElementById("businessTicketSubtitle");
     if (ticketSubtitle) ticketSubtitle.textContent = IS_DEMO ? "+5,4% este mês" : "Ainda sem operação";
-    const backToShowcase = document.getElementById("backToShowcase");
-    if (IS_MASTER_MODE && backToShowcase) {
-        backToShowcase.href = "admin.html";
-        backToShowcase.textContent = "← Voltar ao painel master";
-        backToShowcase.classList.remove("hidden");
-    }
 
     renderPanelBusinessImage();
 

@@ -54,10 +54,10 @@ test('switch-account link does not fall back to the prior tenant when local sign
  assert.equal(state.document.documentElement.style.visibility,'visible');assert.match(state.node('loginMessage').textContent,/Não foi possível/);
 });
 
-async function panelPage({master=false,deferredProfile=false}={}){
+async function panelPage({master=false,deferredProfile=false,platformAdmin=false}={}){
  const state=fixture('/painel/',{japaAuth:'true',japaUserId:current.id,japaRole:'owner',japaBarbershopId:profile.barbershop_id,ogritechOperationalSession:`${current.id}:owner:${profile.barbershop_id}`,...(master?{ogritechMasterMode:'true',ogritechMasterBusinessId:'previous-business',ogritechMasterBusinessName:'Loja anterior'}:{})});
  let onChange,resolveProfile;
- const client={auth:{getSession:async()=>({data:{session:{user:current}}}),onAuthStateChange:fn=>{onChange=fn;return{};},signOut:async()=>({})},rpc:async()=>({data:false}),from:()=>{const q={select:()=>q,eq:(column,id)=>{assert.equal(id,current.id);return q;},single:()=>deferredProfile?new Promise(resolve=>{resolveProfile=resolve;}):Promise.resolve({data:profile})};return q;},functions:{invoke:async()=>{state.calls.push('billing');return{data:{data:{status:'trial_active'}}};}}};
+ const client={auth:{getSession:async()=>({data:{session:{user:current}}}),onAuthStateChange:fn=>{onChange=fn;return{};},signOut:async()=>({})},rpc:async()=>({data:platformAdmin}),from:()=>{const q={select:()=>q,eq:(column,id)=>{assert.equal(id,current.id);return q;},single:()=>deferredProfile?new Promise(resolve=>{resolveProfile=resolve;}):Promise.resolve({data:profile})};return q;},functions:{invoke:async()=>{state.calls.push('billing');return{data:{data:{status:'trial_active'}}};}}};
  runInNewContext(auth,{document:state.document,window:state.window,location:state.location,sessionStorage:state.storage,supabaseClient:client,console:{error:error=>state.errors.push(error)}});
  await tick();return{...state,change:(event,session)=>onChange(event,session),resolveProfile:()=>resolveProfile({data:profile})};
 }
@@ -65,6 +65,17 @@ test('stale master-business context cannot be rendered as the new owner tenant',
  const state=await panelPage({master:true});
  assert.equal(state.values.get('ogritechMasterMode'),undefined);assert.equal(state.values.get('japaBarbershopId'),profile.barbershop_id);
  assert.ok(state.calls.includes('reload'));assert.equal(state.document.documentElement.style.visibility,'hidden');assert.equal(state.errors.length,0);
+});
+
+test('verified platform support gets an explicit return even before business loading',async()=>{
+ const state=await panelPage({master:true,platformAdmin:true});
+ assert.equal(state.node('platformAdminReturn').hidden,false);
+ assert.equal(state.node('backToShowcase').href,'https://ogritech.com.br/admin.html#businesses');
+ assert.equal(state.document.documentElement.style.visibility,'visible');
+ assert.equal(state.calls.includes('billing'),false);
+ state.change('SIGNED_OUT',null);
+ assert.equal(state.document.documentElement.style.visibility,'hidden');
+ assert.deepEqual(state.redirects,['https://ogritech.com.br/login/']);
 });
 test('switching account in another tab immediately hides and unloads the prior tenant panel',async()=>{
  const state=await panelPage();assert.equal(state.document.documentElement.style.visibility,'visible');

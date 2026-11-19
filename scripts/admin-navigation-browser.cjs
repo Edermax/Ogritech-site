@@ -62,6 +62,11 @@ const server=http.createServer((req,res)=>{try{
     await footer.locator('button[type="button"]').click();
     assert.equal(await page.locator('#businessModal').isVisible(),false);
     await page.locator('#businessSearch').fill('');
+    await page.evaluate(()=>{window.__menuPreview=null;window.open=(...args)=>{window.__menuPreview=args;};});
+    await page.locator('#businessTableBody [data-action="open-menu"]').first().click();
+    const preview=await page.evaluate(()=>window.__menuPreview);
+    assert.equal(new URL(preview[0],base).searchParams.get('origem'),'administracao');
+    assert.equal(preview[1],'_blank');assert.equal(preview[2],'noopener,noreferrer');
     await page.locator('.platform-menu a[href="#billing"]').click();
     await page.locator('#adminSectionTabs a[href="#products"]').click();
     await page.goBack();assert.equal(new URL(page.url()).hash,'#billing');

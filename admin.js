@@ -454,7 +454,7 @@ async function deleteBusiness(business) {
 function openBusinessMenu(business) {
     const menu = businessMenus.find((item) => item.barbershop_id === business.barbershop_id);
     if (!menu?.slug) return alert("Este negócio ainda não possui um cardápio público configurado.");
-    window.open(environmentUrl(`cardapio/?empresa=${encodeURIComponent(menu.slug)}`), "_blank", "noopener,noreferrer");
+    window.open(environmentUrl(`cardapio/?empresa=${encodeURIComponent(menu.slug)}&origem=administracao`), "_blank", "noopener,noreferrer");
 }
 
 function operateBusiness(business) {

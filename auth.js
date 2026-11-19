@@ -242,6 +242,12 @@ async function initializeAuthenticatedPage() {
             await waitForDocument();
             if (pageSessionChanged) return;
             renderUser({ role: "owner", full_name: "Master Ogritech", barbershop_id: sessionStorage.getItem("ogritechMasterBusinessId") });
+            const returnNavigation = document.getElementById("platformAdminReturn");
+            const returnLink = document.getElementById("backToShowcase");
+            if (returnNavigation && returnLink) {
+                returnLink.href = environmentUrl("/admin.html#businesses");
+                returnNavigation.hidden = false;
+            }
             document.documentElement.style.visibility = "visible";
             document.getElementById("logoutButton")?.addEventListener("click", async () => {
                 const loginUrl = environmentUrl("login/");
