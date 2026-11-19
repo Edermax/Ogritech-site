@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "observedAt": "2026-11-19T10:48:50.061Z",
-  "source": "Supabase MCP read-only migration inventories after product photo limits promotion; separately dated frontend/function observations retain their original dates.",
+  "observedAt": "2026-11-19T14:28:14.074260+00:00",
+  "source": "Supabase MCP read-only verification after authorized platform usage analytics migration; prior frontend observations retain their dates.",
   "frontend": {
     "commit": "7954337e5cbc99deadd88a179997c935d47bcb8f",
     "url": "https://ogritech.com.br/",
@@ -467,6 +467,10 @@
       {
         "version": "20261119104818",
         "name": "catalog_product_photo_limits"
+      },
+      {
+        "version": "20261119142006",
+        "name": "platform_usage_analytics"
       }
     ],
     "functions": [
@@ -513,7 +517,7 @@
         "ezbr_sha256": "dfcda94d14d10156d29f443f2a0b91da1edf5d83f05d2f71e4bbe5ef58dc6624"
       }
     ],
-    "migrationsObservedAt": "2026-11-19T10:48:50.061Z",
+    "migrationsObservedAt": "2026-11-19T14:28:14.074260+00:00",
     "functionsObservedAt": "2026-10-20"
   },
   "staging": {
@@ -974,9 +978,13 @@
       {
         "version": "20261119011836",
         "name": "catalog_product_photo_limits"
+      },
+      {
+        "version": "20261119115857",
+        "name": "platform_usage_analytics"
       }
     ],
-    "migrationsObservedAt": "2026-11-19T10:48:50.061Z"
+    "migrationsObservedAt": "2026-11-19T12:08:58.886Z"
   },
   "userAcceptance": {
     "recordedAt": "2026-10-19",

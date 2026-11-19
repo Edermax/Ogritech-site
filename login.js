@@ -178,6 +178,8 @@ loginForm.addEventListener("submit", async (event) => {
         }
 
         saveLocalSession(data.user, profile);
+        globalThis.OgritechUsage?.track("login_succeeded");
+        globalThis.OgritechUsage?.flush();
         loginMessage.textContent = "Login realizado com sucesso.";
         loginMessage.className = "login-message success";
         window.location.replace(await destinationFor(profile.role));

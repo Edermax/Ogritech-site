@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="admin.css?v=20261117.2">
     <link rel="stylesheet" href="admin-theme.css?v=20261111.2"><link rel="stylesheet" href="panel-dark.css?v=20261115.3">
     <link rel="stylesheet" href="admin-navigation.css?v=20261112.1">
-    <link rel="stylesheet" href="admin-notifications.css?v=20261116.1">
+    <link rel="stylesheet" href="admin-notifications.css?v=20261116.1"><link rel="stylesheet" href="admin-usage.css?v=20261119.1">
 </head>
 <body class="platform-admin-page">
     <div class="platform-shell">
@@ -56,9 +56,25 @@
 
 
             <nav class="admin-section-tabs" id="adminSectionTabs" aria-label="Seções da área atual" hidden>
+                <a href="#overview" data-admin-group="overview">Carteira de clientes</a><a href="#traffic" data-admin-group="overview">Tráfego e conversão</a>
                 <a href="#businesses" data-admin-group="businesses">Carteira</a><a href="#trialReviews" data-admin-group="businesses">Revisões de cadastro</a><a href="#support" data-admin-group="businesses">Atendimento humano</a>
                 <a href="#billing" data-admin-group="billing">Cobranças</a><a href="#products" data-admin-group="billing">Assinaturas</a><a href="#plans" data-admin-group="billing">Planos</a>
             </nav>
+            <section id="traffic" class="platform-panel" hidden aria-busy="false" aria-labelledby="usageTitle">
+ <div class="platform-section-title"><div><p class="platform-kicker">VISITAS, CLIQUES E JORNADAS</p><h2 id="usageTitle">Tráfego e conversão</h2><p>Veja de onde vêm os acessos, o que desperta interesse e em que etapa as pessoas param.</p></div><button id="usageExport" type="button" class="outline-cyan-button" disabled>Exportar CSV</button></div>
+ <form id="usageFilters" class="usage-toolbar"><label>Período<select id="usagePreset"><option value="1">Hoje</option><option value="7" selected>Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option><option value="custom">Personalizado</option></select></label><label>De<input id="usageStart" type="date" required></label><label>Até<input id="usageEnd" type="date" required></label><label>Área<select id="usageScope"><option value="all">Todas as áreas</option><option value="site">Site e cadastro</option><option value="app">Painel e plataforma</option><option value="storefront">Vitrines e pedidos</option></select></label><button id="usageRefresh" type="submit" class="cyan-button">Atualizar</button></form>
+ <p id="usageMessage" role="status" aria-live="polite"></p><p id="usageActivation" class="usage-note"></p>
+ <div id="usageResults" hidden><div class="usage-meta"><strong id="usagePeriodLabel"></strong><span id="usageFreshness"></span></div>
+ <p id="usageZero" class="usage-zero" hidden>Ainda não há visitas medidas neste período. Os números aparecerão quando visitantes permitirem as estatísticas e navegarem pelo site ou pela plataforma.</p>
+ <div class="usage-cards"><article><span>Visitantes estimados</span><strong id="usageVisitors">—</strong><small>Navegadores distintos</small></article><article><span>Sessões</span><strong id="usageSessions">—</strong><small>Visitas com estatísticas permitidas</small></article><article><span>Visualizações</span><strong id="usageViews">—</strong><small>Páginas abertas</small></article><article><span>Engajamento</span><strong id="usageEngagement">—</strong><small>Interação, tempo ativo ou mais de uma página</small></article></div>
+ <section class="usage-section"><h3>Como as visitas evoluem</h3><p>Visitantes estimados por dia no período selecionado.</p><div id="usageDailyChart" class="usage-chart" aria-label="Visitantes estimados por dia"></div><details><summary>Ver dados por dia</summary><div id="usageDailyTable" class="usage-table-wrap"></div></details></section>
+ <div class="usage-columns"><section class="usage-section"><h3>Onde o cadastro para</h3><p>Visitantes que avançaram, na ordem, a partir da abertura do cadastro. Retornos pelo mesmo navegador podem completar o fluxo dentro do período.</p><ol id="usageSignupFunnel" class="usage-funnel"></ol></section><section class="usage-section"><h3>Até onde vão no painel</h3><p>Da entrada no painel à publicação, considerando as etapas na ordem em que aconteceram.</p><ol id="usageAppFunnel" class="usage-funnel"></ol></section></div>
+ <section class="usage-section"><h3>Quais páginas visitam e até onde chegam</h3><p>A rolagem é aproximada pelos marcos de 25%, 50%, 75% e 90%. Zero indica que nenhum marco foi registrado. O tempo considera apenas a aba visível.</p><div id="usagePageTable" class="usage-table-wrap"></div></section>
+ <section class="usage-section"><h3>Onde clicam</h3><p>Ações importantes como escolher plano, criar vitrine, entrar, abrir Produtos e revisar a sacola.</p><div id="usageClickTable" class="usage-table-wrap"></div></section>
+ <div class="usage-columns"><section class="usage-section"><h3>De onde vêm</h3><div id="usageSourceTable" class="usage-table-wrap"></div></section><section class="usage-section"><h3>Como acessam</h3><div id="usageDeviceTable" class="usage-table-wrap"></div></section></div>
+ <section class="usage-section"><h3>Para onde seguem</h3><p>Passagens entre páginas durante a mesma sessão. Dados agrupados, sem expor a navegação individual.</p><div id="usagePathTable" class="usage-table-wrap"></div></section>
+ <p class="usage-note usage-privacy">Estas estatísticas abrangem os acessos que permitiram a medição. Visitantes são estimativas por navegador; bloqueadores, recusas e perda de conexão podem reduzir os números. A coleta não grava telas, textos digitados, senhas, dados de pagamento ou URLs de pedidos. A retenção dos eventos é de 90 dias, com descarte automático diário. Administradores da plataforma têm acesso somente aos relatórios agrupados.</p>
+ </div></section>
             <section id="adminSummary" class="platform-stats" aria-label="Resumo da carteira">
                 <article><svg class="admin-icon stat-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#store"></use></svg><span>Negócios com Catálogo</span><strong id="businessCount">0</strong><small>Cadastros do produto atual</small></article>
                 <article><svg class="admin-icon stat-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#pie"></use></svg><span>Segmentos atendidos</span><strong id="segmentCount">0</strong><small>Segmentos com catálogo</small></article>
@@ -66,7 +82,7 @@
                 <article><svg class="admin-icon stat-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#chart"></use></svg><span>Receita mensal estimada</span><strong id="monthlyRevenue">R$ 0</strong><small>Estimativa dos clientes reais</small></article>
             </section>
 
-            <section class="admin-shortcuts" id="adminShortcuts" aria-label="Ações rápidas"><a href="#businesses"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#store"></use></svg><strong>Gerenciar negócios</strong><span>Cadastros e acesso aos catálogos</span></a><a href="#billing"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#receipt"></use></svg><strong>Conferir cobranças</strong><span>Faturas e recebimentos</span></a><a href="#trialReviews"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#users"></use></svg><strong>Revisar cadastros</strong><span>Solicitações de teste gratuito</span></a></section>
+            <section class="admin-shortcuts" id="adminShortcuts" aria-label="Ações rápidas"><a href="#businesses"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#store"></use></svg><strong>Gerenciar negócios</strong><span>Cadastros e acesso aos catálogos</span></a><a href="#billing"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#receipt"></use></svg><strong>Conferir cobranças</strong><span>Faturas e recebimentos</span></a><a href="#trialReviews"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true" focusable="false"><use href="assets/owner-icons.svg#users"></use></svg><strong>Revisar cadastros</strong><span>Solicitações de teste gratuito</span></a><a href="#traffic"><svg class="admin-icon shortcut-icon" width="20" height="20" aria-hidden="true"><use href="assets/owner-icons.svg#chart"></use></svg><strong>Acompanhar visitas e cliques</strong><span>Tráfego, interesse e abandono das etapas</span></a></section>
             <section class="platform-panel" id="support" hidden><div class="platform-section-title"><div><p class="platform-kicker">CONTATO SOLICITADO</p><h2>Atendimento humano</h2><p>Pedidos de retorno enviados pelo Ajudante Ogritech. Use o canal autorizado pela pessoa e marque após o atendimento.</p></div><button id="refreshHumanSupport" type="button" class="outline-cyan-button">Atualizar solicitações</button></div><p id="humanSupportMessage" role="status"></p><div id="humanSupportList" class="segment-grid"></div></section>
             <section class="platform-panel" id="segments">
                 <div class="platform-section-title">
@@ -323,7 +339,7 @@
     <script src="supabase-config.js"></script>
     <script src="admin-support.js?v=20261115.1"></script><script src="admin-trial-reviews.js?v=20261111.1"></script>
     <script src="admin-notifications.js?v=20261116.1"></script>
-    <script src="/catalog-profiles.js?v=20261117.2"></script><script src="/product-offers.js?v=20261115.2"></script><script src="admin.js?v=20261118.1"></script>
+    <script src="/catalog-profiles.js?v=20261117.2"></script><script src="/product-offers.js?v=20261115.2"></script><script src="usage-model.js?v=20261119.1"></script><script src="admin-usage.js?v=20261119.1"></script><script src="admin.js?v=20261119.1"></script>
     <script src="pix-copy-code.js?v=20261115.1"></script><script src="admin-billing-adjustments.js?v=20261115.1"></script><script src="admin-navigation.js?v=20261118.1"></script>
     <script src="pwa.js?v=20261114.1"></script>
 </body>

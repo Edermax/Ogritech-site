@@ -176,6 +176,7 @@
     try {
       await Promise.all([configReady, catalogReady]); securityReady();
       if (configuration.phone_verification && !phoneToken) throw new Error("Confirme seu telefone antes de criar a vitrine.");
+      globalThis.OgritechUsage?.track("signup_submitted");
       const result = await start({ action: "start_trial", product: "menu", offer: data.offer, plan_id: selectedPlan.id, expected_total_cents: cycleChoice.value === "annual" ? OgritechOffers.forPlan(selectedPlan).annualCents : OgritechOffers.forPlan(selectedPlan).monthlyCents, publish_whatsapp: data.publish_whatsapp === "on", business_name: data.business_name, responsible_name: data.responsible_name,
         tax_document: data.tax_document, responsible_tax_document: data.responsible_tax_document, email: data.email, phone: data.phone,
         phone_verification_token: phoneToken, turnstile_token: captchaToken, segment: data.segment, service_invoice_preference: data.service_invoice_preference,
@@ -185,6 +186,7 @@
         submit.textContent = "Verificar liberação do teste"; return;
       }
       if (!result.trial_ends_at) throw new Error("Não foi possível confirmar a criação do cardápio. Tente novamente.");
+      globalThis.OgritechUsage?.track("signup_completed");
       try { if (data.offer === "encomendas" && form.elements.order_notifications?.checked) localStorage.setItem("ogritechOrderPushInterest", String(Date.now())); else localStorage.removeItem("ogritechOrderPushInterest"); } catch {}
       $("signupSection").hidden = true; $("resultSection").hidden = false;
       $("resultMessage").textContent = "Enviamos o convite para " + data.email + ". Seu teste vai até " + new Date(result.trial_ends_at).toLocaleDateString("pt-BR") + ".";

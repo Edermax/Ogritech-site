@@ -87,7 +87,12 @@
     "cardapio/catalog.css",
     "menu-pricing.js",
     "product-photos.js",
-    "product-photos-admin.js"
+    "product-photos-admin.js",
+    "usage-model.js",
+    "usage-analytics.js",
+    "usage-analytics.css",
+    "admin-usage.js",
+    "admin-usage.css"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",

@@ -539,6 +539,7 @@ function decorateAdminTables() {
 }
 const adminViews = {
     overview: ["Resumo", "Acompanhe sua carteira de catálogos e acesse as tarefas do dia.", ["adminSummary", "adminShortcuts", "segments"]],
+    traffic: ["Tráfego e conversão", "Acompanhe visitas, cliques e o avanço das pessoas pelo site e pela plataforma.", ["traffic"]],
     businesses: ["Negócios", "Consulte os catálogos e mantenha os cadastros organizados.", ["businesses"]],
     users: ["Acessos", "Gerencie proprietários e equipe dos seus clientes.", ["users"]],
     plans: ["Planos", "Confira os valores e as regras cadastrados para o produto.", ["plans"]],
@@ -548,26 +549,27 @@ const adminViews = {
     billing: ["Financeiro", "Acompanhe faturas, recebimentos e registros financeiros.", ["billing"]],
     account: ["Conta", "Gerencie a aparência do painel e sua sessão administrativa.", ["adminAccount"]]
 };
-const adminAreaFor = key => ["trialReviews", "support"].includes(key) ? "businesses" : ["products", "plans"].includes(key) ? "billing" : key;
+const adminAreaFor = key => key === "traffic" ? "overview" : ["trialReviews", "support"].includes(key) ? "businesses" : ["products", "plans"].includes(key) ? "billing" : key;
 function selectAdminView(focus = false) {
     const requested = location.hash.slice(1); const key = Object.hasOwn(adminViews, requested) ? requested : "overview";
     const [title, description, visible] = adminViews[key];
     const area = adminAreaFor(key);
     const areaTitles = { overview: "Resumo", businesses: "Negócios", users: "Acessos", billing: "Financeiro", account: "Conta" };
-    $("adminViewTitle").textContent = areaTitles[area] || title; $("adminViewDescription").textContent = description;
+    $("adminViewTitle").textContent = key === "traffic" ? title : areaTitles[area] || title; $("adminViewDescription").textContent = description;
     if (document.body) document.body.dataset.adminArea = area;
-    ["adminSummary", "adminShortcuts", "segments", "businesses", "users", "plans", "products", "billing", "trialReviews", "support", "adminAccount"].forEach((id) => { $(id).hidden = !visible.includes(id); });
+    ["adminSummary", "adminShortcuts", "segments", "businesses", "users", "plans", "products", "billing", "trialReviews", "support", "adminAccount", "traffic"].forEach((id) => { $(id).hidden = !visible.includes(id); });
     document.querySelectorAll(".platform-menu a").forEach((link) => {
         const active = link.getAttribute("href") === `#${area}`; link.classList.toggle("active", active);
         if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
     });
-    $("adminSectionTabs").hidden = !["businesses", "billing"].includes(area);
+    $("adminSectionTabs").hidden = !["overview", "businesses", "billing"].includes(area);
     document.querySelectorAll("[data-admin-group]").forEach(link => {
         link.hidden = link.dataset.adminGroup !== area;
         const active = link.getAttribute("href") === `#${key}`;
         link.classList.toggle("active", active);
         if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
     });
+    if (key === "traffic") window.OgritechUsageAdmin?.load();
     if (key === "support") window.loadOgritechHumanSupport?.();
     if (key === "trialReviews") window.loadOgritechTrialReviews?.();
     if (focus) { $("adminViewTitle").focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: "instant" }); }
