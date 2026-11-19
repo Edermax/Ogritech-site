@@ -54,7 +54,7 @@ test("cardápio aceita quantidade mínima e acréscimos unitários definidos no 
   assert.match(script, /data-quantity-select/);
   assert.match(script, /step="1"/);
   assert.match(script, /Math\.ceil\(Number\(item\.minimum_quantity\)/);
-  assert.match(script, /entry\.quantity = Math\.min\(entry\.maximumQuantity, entry\.quantity \+ quantity\)/);
+  assert.match(script, /previous.quantity \+ quantity > limit.maximum/);
   assert.match(script, /price\.amount \* quantity/);
 });
 

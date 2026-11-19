@@ -277,6 +277,7 @@
         if (byId("menuReviewDetails")) byId("menuReviewDetails").open = !published || menuCatalogDraftDirty;
         if (typeof Event === "function") window.dispatchEvent?.(new Event("ogritech:menu-context-changed"));
         refreshMenuDeliveryZoneEditor();
+        globalThis.OgritechQuantityEditor?.refresh();
     }
 
     const menuError = (error) => {
@@ -523,6 +524,7 @@
         byId("menuItemActive").checked = true; byId("menuItemAvailable").checked = true; menuImageRemoveRequested = false;
         byId("menuPriceRows").innerHTML = ""; byId("menuOptionGroupRows").innerHTML = ""; addMenuPriceRow();
         byId("menuItemImagePreview").classList.add("hidden"); byId("menuItemImagePreview").querySelector("img").removeAttribute("src");
+        globalThis.OgritechQuantityEditor?.load(null);
         byId("menuItemSubmit").textContent = "Salvar produto"; byId("menuItemCancel").classList.add("hidden");
         window.OgritechPanelNavigation?.closeEditor();
     }
@@ -541,6 +543,7 @@
         byId("menuPriceRows").innerHTML = ""; (item.menu_item_prices || []).forEach(addMenuPriceRow); if (!item.menu_item_prices?.length) addMenuPriceRow();
         byId("menuOptionGroupRows").innerHTML = "";
         (item.menu_item_option_groups || []).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map((link)=>link.menu_option_groups).filter(Boolean).forEach((group)=>addMenuOptionGroup({...group,options:(group.menu_options||[]).filter((option)=>option.available)}));
+        globalThis.OgritechQuantityEditor?.load(item);
         byId("menuItemSubmit").textContent = "Atualizar produto"; byId("menuItemCancel").classList.remove("hidden");
         window.OgritechPanelNavigation?.openEditor(true);
         byId("menuItemForm").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1142,6 +1145,9 @@
         if (!menuRecord) return notify(byId("menuItemMessage"), "Escolha um modelo de cardápio antes de adicionar itens.", true);
         if (menuSettingsDirty) return;
         await runMenuAction("menuItemMessage", byId("menuItemId").value ? "Atualizando produto..." : "Adicionando produto...", async () => {
+            let quantityMetadata;
+            try { quantityMetadata=globalThis.OgritechQuantityEditor?.read() || {}; }
+            catch(error) { return {error:{code:"22023",message:error.message}}; }
             const previousPath=byId("menuItemImagePath").value; let file=byId("menuItemImage").files?.[0]; let uploadedPath="", imageUrl=menuImageRemoveRequested?"":byId("menuItemImageUrl").value;
             if(file){
                 try { file=await globalThis.OgritechMenuBranding.prepareImage(file); }
@@ -1153,14 +1159,14 @@
             }
             const prices=[...byId("menuPriceRows").querySelectorAll(".menu-price-row")].map((row)=>({label:row.querySelector("[data-price-label]").value.trim(),price:Number(row.querySelector("[data-price-value]").value),promotional_price:row.querySelector("[data-price-promo]").value===""?null:Number(row.querySelector("[data-price-promo]").value)}));
             const optionGroups=[...byId("menuOptionGroupRows").querySelectorAll(".menu-option-group-editor")].map((group)=>({name:group.querySelector("[data-group-name]").value.trim(),selection_type:group.querySelector("[data-group-type]").value,minimum_selections:Number(group.querySelector("[data-group-min]").value||0),maximum_selections:Number(group.querySelector("[data-group-max]").value||1),free_selections:Number(group.querySelector("[data-group-free]").value||0),options:[...group.querySelectorAll(".menu-option-row")].map((row)=>({name:row.querySelector("[data-option-name]").value.trim(),price_delta:Number(row.querySelector("[data-option-price]").value||0),maximum_quantity:Number(row.querySelector("[data-option-maximum]").value||1)}))}));
-            const payload={id:byId("menuItemId").value||null,category_id:byId("menuCategoryId").value||null,category_name:byId("menuCategoryName").value.trim(),name:byId("menuItemName").value.trim(),description:byId("menuItemDescription").value.trim(),image_url:imageUrl,item_type:byId("menuItemType").value,unit_label:byId("menuItemUnit").value.trim(),minimum_quantity:Number(byId("menuItemMinimum").value),maximum_quantity:byId("menuItemMaximum").value===""?null:Number(byId("menuItemMaximum").value),lead_time_hours:Number(byId("menuItemLeadTime").value||0),active:byId("menuItemActive").checked,available:byId("menuItemAvailable").checked,prices,option_groups:optionGroups};
+            const payload={id:byId("menuItemId").value||null,category_id:byId("menuCategoryId").value||null,category_name:byId("menuCategoryName").value.trim(),name:byId("menuItemName").value.trim(),description:byId("menuItemDescription").value.trim(),image_url:imageUrl,item_type:byId("menuItemType").value,unit_label:byId("menuItemUnit").value.trim(),minimum_quantity:Number(byId("menuItemMinimum").value),maximum_quantity:byId("menuItemMaximum").value===""?null:Number(byId("menuItemMaximum").value),lead_time_hours:Number(byId("menuItemLeadTime").value||0),active:byId("menuItemActive").checked,available:byId("menuItemAvailable").checked,metadata:quantityMetadata,prices,option_groups:optionGroups};
             if(menuRecord.published){
                 let category=menuCatalogCategories.find((entry)=>entry.id===payload.category_id) || menuCatalogCategories.find((entry)=>entry.name.toLowerCase()===payload.category_name.toLowerCase());
                 if(!category){ category={id:crypto.randomUUID(),name:payload.category_name,active:true,sort_order:(menuCatalogCategories.length+1)*10,menu_items:[]}; menuCatalogCategories.push(category); }
                 category.name=payload.category_name;
                 const previousItem=menuCatalogCategories.flatMap((entry)=>entry.menu_items||[]).find((item)=>item.id===payload.id);
                 const draftItem={id:payload.id||crypto.randomUUID(),name:payload.name,description:payload.description,image_url:payload.image_url,item_type:payload.item_type,unit_label:payload.unit_label,minimum_quantity:payload.minimum_quantity,maximum_quantity:payload.maximum_quantity,lead_time_hours:payload.lead_time_hours,active:payload.active,available:payload.available,sort_order:((category.menu_items||[]).length+1)*10,menu_item_prices:prices.map((price,index)=>({...price,active:true,sort_order:(index+1)*10})),menu_item_option_groups:optionGroups.map((group,index)=>({sort_order:(index+1)*10,menu_option_groups:{...group,active:true,menu_options:group.options.map((option,optionIndex)=>({...option,available:true,sort_order:(optionIndex+1)*10}))}}))};
-                draftItem.metadata={...(previousItem?.metadata||{})};
+                draftItem.metadata={...(previousItem?.metadata||{}),...quantityMetadata};
                 const priorCategory=menuCatalogCategories.find((entry)=>entry.menu_items?.some((item)=>item.id===draftItem.id));
                 if(priorCategory && priorCategory!==category) priorCategory.menu_items=priorCategory.menu_items.filter((item)=>item.id!==draftItem.id);
                 category.menu_items=category.menu_items||[]; const existingIndex=category.menu_items.findIndex((item)=>item.id===draftItem.id);
@@ -1180,6 +1186,7 @@
         }, (data) => menuRecord.published ? (data?.item_visible ? "Produto salvo e atualizado no cardápio online." : "Produto salvo como oculto. Ele não aparece no cardápio online.") : "Produto salvo. Confira o catálogo e as etapas pendentes.");
     });
 
+    globalThis.OgritechQuantityEditor?.setup();
     setupMenuDeliveryZoneEditor();
     if (byId("menuPriceRows") && typeof document.createElement === "function") resetMenuItemEditor();
 

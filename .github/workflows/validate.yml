@@ -40,7 +40,7 @@ jobs:
       - run: python3 scripts/test-catalog-inventory-concurrency.py
   panel-theme:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -61,6 +61,7 @@ jobs:
       - run: npm run test:catalog-browser
       - run: node scripts/catalog-inventory-browser.mjs
       - run: node scripts/menu-delivery-regions-browser.mjs
+      - run: node scripts/menu-quantity-browser.mjs
       - run: node scripts/menu-theme-browser.mjs
       - run: node scripts/menu-customization-browser.mjs
       - run: node scripts/auth-account-switch-browser.mjs
@@ -82,6 +83,7 @@ jobs:
             outputs/catalog-review/browser/
             outputs/catalog-review/stock-browser/
             outputs/delivery-regions/
+            outputs/quantity-review/
             outputs/menu-light-theme/
             outputs/menu-customization/
             outputs/account-switch/

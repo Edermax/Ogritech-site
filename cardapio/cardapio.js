@@ -175,10 +175,11 @@
   }
   function renderCartReview(total, hasQuote) {
     $("cartItems").innerHTML = [...cart.entries()].map(([signature, entry]) => {
-      const selectionLabel = entry.selections.map((selection) => selection.name).filter(Boolean).join(", ");
+      const selectionLabel = [...entry.selections.map((selection) => selection.name), ...(entry.distribution || []).map(part => `${part.quantity} × ${part.name}`)].filter(Boolean).join(", ");
       const variation = [displayPriceLabel(entry.label), selectionLabel].filter(Boolean).join(" · ");
       const decrementDisabled = entry.quantity <= entry.minimumQuantity ? " disabled" : "";
-      return `<article class="cart-item" data-cart-item="${clean(signature)}"><div class="cart-item-copy"><strong>${clean(entry.name)}</strong>${variation ? `<span>${clean(variation)}</span>` : ""}<small>${money.format(estimatedUnitPrice(entry))} por unidade</small></div><div class="cart-item-controls"><div class="cart-quantity" aria-label="Quantidade de ${clean(entry.name)}"><button type="button" data-cart-decrease="${clean(signature)}" aria-label="Diminuir quantidade"${decrementDisabled}>−</button><output aria-live="polite">${entry.quantity}</output><button type="button" data-cart-increase="${clean(signature)}" aria-label="Aumentar quantidade">+</button></div><strong>${money.format(entry.quantity * estimatedUnitPrice(entry))}</strong><button class="cart-remove" type="button" data-cart-remove="${clean(signature)}">Remover</button></div></article>`;
+      const quantityControls = entry.distribution?.length ? `<span class="cart-distribution-total">${entry.quantity} unidades</span><button type="button" class="cart-edit-distribution" data-cart-edit="${clean(signature)}">Editar quantidades</button>` : `<div class="cart-quantity" aria-label="Quantidade de ${clean(entry.name)}"><button type="button" data-cart-decrease="${clean(signature)}" aria-label="Diminuir quantidade"${decrementDisabled}>−</button><output aria-live="polite">${entry.quantity}</output><button type="button" data-cart-increase="${clean(signature)}" aria-label="Aumentar quantidade"${entry.quantity + (entry.quantityStep || 1) > entry.maximumQuantity ? " disabled" : ""}>+</button></div>`;
+      return `<article class="cart-item" data-cart-item="${clean(signature)}"><div class="cart-item-copy"><strong>${clean(entry.name)}</strong>${variation ? `<span>${clean(variation)}</span>` : ""}<small>${money.format(estimatedUnitPrice(entry))} por unidade</small></div><div class="cart-item-controls">${quantityControls}<strong>${money.format(entry.quantity * estimatedUnitPrice(entry))}</strong><button class="cart-remove" type="button" data-cart-remove="${clean(signature)}">Remover</button></div></article>`;
     }).join("");
     const link = $("whatsappSelectionLink");
     if (link) {
@@ -206,10 +207,23 @@
     $("menuBagButton").setAttribute("aria-expanded", String(!$("cartReview").classList.contains("hidden")));
     $("menuBagStatus").textContent = "";
   }
-  function addConfigured(price, selections = [], quantity = 1) { const signature = `${price.id}:${selections.map((item) => `${item.menu_option_id}x${item.quantity}`).sort().join(",")}`; const entry = cart.get(signature) || { menu_item_price_id: price.id, name: price.item.name, label: price.label, price: price.amount, quantity: 0, minimumQuantity: Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1)), maximumQuantity: price.item.maximum_quantity == null ? 100 : Math.floor(Number(price.item.maximum_quantity)), selections, optionGroups: price.item.option_groups || [], isQuote: isQuoteItem(price.item), leadTimeHours: price.item.lead_time_hours }; entry.quantity = Math.min(entry.maximumQuantity, entry.quantity + quantity); cart.set(signature, entry); pendingRequestId = null; updateCart(); }
-  function configure(price, quantity = Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1))) {
+  function addConfigured(price, selections = [], quantity = 1, distribution = [], editingSignature = "") {
+    const model = globalThis.OgritechMenuQuantity, limit = model?.limits(price.item) || {minimum:Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1)),maximum:price.item.maximum_quantity == null ? 100 : Math.floor(Number(price.item.maximum_quantity)),step:1};
+    const error = model?.validate(price.item, quantity, distribution);
+    if (error) { $("configuratorMessage").textContent = error; return false; }
+    const signature = `${price.id}:${selections.map(item => `${item.menu_option_id}x${item.quantity}`).sort().join(",")}${distribution.length ? ":distribution:" + JSON.stringify(distribution.map(part => [part.name,part.quantity / quantity]).sort()) : ""}`;
+    const previous = signature === editingSignature ? null : cart.get(signature);
+    if (previous && previous.quantity + quantity > limit.maximum) { $("configuratorMessage").textContent = $("menuBagStatus").textContent = `A sacola já contém ${previous.quantity} unidades deste produto com as mesmas opções. O máximo é ${limit.maximum}. Edite a quantidade na sacola.`; return false; }
+    const entry = previous || {menu_item_price_id:price.id,name:price.item.name,label:price.label,price:price.amount,quantity:0,minimumQuantity:limit.minimum,maximumQuantity:limit.maximum,quantityStep:limit.step,selections,distribution:distribution.map(part=>({...part})),optionGroups:price.item.option_groups || [],isQuote:isQuoteItem(price.item),leadTimeHours:price.item.lead_time_hours};
+    if (previous && distribution.length) entry.distribution = entry.distribution.map(part => ({name:part.name,quantity:part.quantity + distribution.find(next=>next.name===part.name).quantity}));
+    entry.quantity += quantity;
+    if (editingSignature) cart.delete(editingSignature);
+    cart.set(signature,entry); pendingRequestId = null; updateCart(); return true;
+  }
+  function configure(price, quantity = Math.max(1, Math.ceil(Number(price.item.minimum_quantity) || 1)), existingSignature = "") {
     if (price.item.stock_available === false) return;
-    const groups = price.item.option_groups || []; if (!groups.length) return addConfigured(price, [], quantity);
+    const groups = price.item.option_groups || [], options = globalThis.OgritechMenuQuantity?.limits(price.item).options || [];
+    if (!groups.length && !options.length) return addConfigured(price, [], quantity);
     $("configuratorTitle").textContent = price.item.name;
     $("configuratorVariant").textContent = `${displayPriceLabel(price.label)} · Quantidade: ${quantity}`;
     $("configuratorGroups").innerHTML = groups.map((group, index) => {
@@ -218,14 +232,15 @@
       const included = Number(group.free_selections) ? ` · ${group.free_selections} ${Number(group.free_selections) === 1 ? "escolha incluída" : "escolhas incluídas"}` : "";
       return `<fieldset data-option-group="${group.id}" data-min="${min}" data-max="${max}" data-name="${clean(group.name)}"><legend><span class="configurator-step">${index + 1}</span><span class="configurator-group-title">${clean(group.name)}</span><small>${rule}${included}</small></legend><div class="configurator-group-status"><span class="configurator-requirement">${min ? "Obrigatório" : "Opcional"}</span><span data-group-status></span></div><p class="configurator-group-hint" data-group-hint></p>${group.options.length > 8 ? `<label class="configurator-filter">Buscar nas opções<input type="search" data-option-search placeholder="Digite para encontrar" aria-label="Buscar em ${clean(group.name)}" autocomplete="off"></label><p class="configurator-search-status" data-search-status role="status"></p>` : ""}<div class="configurator-options">${group.options.map((option) => `<label class="configurator-option"><input type="${group.selection_type === "single" ? "radio" : "checkbox"}" name="group-${group.id}" value="${option.id}" data-price="${option.price_delta}" data-option-name="${clean(option.name)}"><span class="configurator-option-copy"><span>${clean(option.name)}</span><small>${Number(option.price_delta) ? `+ ${money.format(option.price_delta)}${Number(group.free_selections) ? " após as escolhas incluídas" : ""}` : "Incluído"}</small></span>${group.selection_type !== "single" && Number(option.maximum_quantity) > 1 ? `<input aria-label="Quantidade de ${clean(option.name)}" data-option-quantity="${option.id}" data-option-max="${option.maximum_quantity}" type="number" min="1" max="${Math.min(Number(option.maximum_quantity), max)}" step="1" value="1" disabled>` : ""}</label>`).join("")}</div></fieldset>`;
     }).join("");
-    $("configurator").dataset.priceId = price.id; $("configurator").dataset.quantity = quantity; $("configuratorMessage").textContent = "";
+    $("configurator").dataset.priceId = price.id; $("configurator").dataset.quantity = quantity; $("configurator").dataset.editingSignature = existingSignature; $("configuratorMessage").textContent = "";
+    setupDistribution(price, quantity, existingSignature ? cart.get(existingSignature) : null);
     refreshConfigurator(); $("configurator").showModal(); $("configuratorGroups").scrollTop = 0;
   }
   function refreshConfigurator() {
     const price = prices.get($("configurator").dataset.priceId); if (!price) return null;
     const selections = []; let invalidFieldset = null, invalidInput = null, remaining = 0;
     $("configuratorMessage").textContent = "";
-    for (const fieldset of $("configuratorGroups").querySelectorAll("fieldset")) {
+    for (const fieldset of $("configuratorGroups").querySelectorAll("fieldset[data-option-group]")) {
       const inputs = [...fieldset.querySelectorAll('input[type="radio"],input[type="checkbox"]')];
       const checked = inputs.filter(input => input.checked), max = Number(fieldset.dataset.max), min = Number(fieldset.dataset.min);
       let count = 0;
@@ -262,11 +277,47 @@
         fieldset.querySelector("[data-search-status]").textContent = query ? matches ? `${matches} ${matches === 1 ? "opção encontrada" : "opções encontradas"}.` : "Nenhuma opção encontrada. Tente outro termo." : "";
       }
     }
+    const distributionState = refreshDistribution(price);
     const total = globalThis.OgritechMenuPricing.unitPrice(price.amount, selections.filter(selection => Number.isFinite(selection.quantity) && selection.quantity > 0), price.item.option_groups) * Number($("configurator").dataset.quantity);
     $("configuratorTotalLabel").textContent = isQuoteItem(price.item) ? "Valor de referência" : "Total estimado";
     $("configuratorTotal").textContent = money.format(total);
-    $("configuratorProgress").textContent = invalidFieldset ? remaining ? `Falta completar ${remaining} ${remaining === 1 ? "etapa obrigatória" : "etapas obrigatórias"}.` : "Confira a quantidade das opções." : "Personalização pronta. Você pode adicionar à sacola.";
-    return {selections, invalidFieldset, invalidInput};
+    $("configuratorProgress").textContent = distributionState.error || (invalidFieldset ? remaining ? `Falta completar ${remaining} ${remaining === 1 ? "etapa obrigatória" : "etapas obrigatórias"}.` : "Confira a quantidade das opções." : "Personalização pronta. Você pode adicionar à sacola.");
+    return {selections, invalidFieldset, invalidInput, distribution:distributionState.distribution, distributionError:distributionState.error};
+  }
+  function setupDistribution(price, quantity, entry) {
+    const model = globalThis.OgritechMenuQuantity, limit = model?.limits(price.item);
+    if (limit?.options.length) {
+      const section = document.createElement("section"); section.id = "quantityDistribution"; section.className = "quantity-distribution";
+      section.innerHTML = `<div class="distribution-heading"><div><small>MONTE SUA QUANTIDADE</small><h3>Divida entre as opções</h3></div><span>Mesmo preço</span></div><label class="distribution-total-label">Quantidade total<input id="distributionQuantity" type="number" inputmode="numeric" min="${limit.minimum}" max="${limit.maximum}" step="${limit.step}" value="${quantity}" required><small>Mínimo ${limit.minimum} · compra de ${limit.step} em ${limit.step}. Cada opção: de ${limit.distributionStep} em ${limit.distributionStep}.</small></label><div class="distribution-progress"><strong id="distributionCount" role="status" aria-live="polite"></strong><progress id="distributionProgress" max="${quantity}" value="0" aria-label="Unidades distribuídas"></progress><p id="distributionNotice"></p></div><div class="distribution-tools"><button type="button" data-distribute-equally>Distribuir igualmente</button><button type="button" data-distribute-clear>Limpar</button></div>${limit.options.length > 8 ? '<label class="distribution-search">Buscar sabor ou opção<input id="distributionSearch" type="search" placeholder="Digite um nome"></label><p id="distributionSearchStatus" role="status"></p>' : ""}<div class="distribution-options">${limit.options.map((name,index) => `<div class="distribution-option" data-distribution-name="${clean(name)}"><label for="distribution-option-${index}">${clean(name)}<small>Sem acréscimo</small></label><div class="distribution-counter"><button type="button" data-distribute-minus aria-label="Diminuir ${clean(name)}">−</button><input id="distribution-option-${index}" data-distribution-quantity type="number" inputmode="numeric" min="0" max="${quantity}" step="${limit.distributionStep}" value="${entry?.distribution?.find(part=>part.name===name)?.quantity || 0}" required aria-label="Quantidade de ${clean(name)}"><button type="button" data-distribute-plus aria-label="Aumentar ${clean(name)}">+</button></div></div>`).join("")}</div><p class="distribution-price-hint">O total soma as unidades escolhidas. Os sabores desta lista têm o mesmo preço.</p></section>`;
+      $("configuratorGroups").prepend(section);
+    }
+    if (entry) for (const selection of entry.selections) {
+      const input = [...$("configuratorGroups").querySelectorAll('input[type="checkbox"],input[type="radio"]')].find(input=>input.value===selection.menu_option_id);
+      if (input) { input.checked = true; const counter = $("configuratorGroups").querySelector(`[data-option-quantity="${input.value}"]`); if (counter) counter.value = selection.quantity; }
+    }
+  }
+  function refreshDistribution(price) {
+    const section = $("quantityDistribution"); if (!section) return {distribution:[],error:""};
+    const model = globalThis.OgritechMenuQuantity, limit = model.limits(price.item), quantityInput = $("distributionQuantity"), quantity = Number(quantityInput.value);
+    $("configurator").dataset.quantity = Number.isFinite(quantity) ? quantity : 0;
+    const rows = [...section.querySelectorAll("[data-distribution-name]")];
+    $("configuratorVariant").textContent = `${displayPriceLabel(price.label)} · Quantidade: ${Number.isFinite(quantity) ? quantity : 0}`;
+    const distribution = rows.map(row=>({name:row.dataset.distributionName,quantity:Number(row.querySelector("input").value)})).filter(part=>part.quantity!==0);
+    const total = distribution.reduce((sum,part)=>sum + (Number.isFinite(part.quantity) ? part.quantity : 0),0);
+    const error = !quantityInput.validity.valid ? `Escolha o total de ${limit.step} em ${limit.step}, a partir de ${limit.minimum}, até ${limit.maximum}.` : rows.some(row=>!row.querySelector("input").validity.valid) ? `Confira as opções: use zero ou múltiplos de ${limit.distributionStep}, até o total escolhido.` : model.validate(price.item,quantity,distribution);
+    $("distributionCount").textContent = `${total} de ${Number.isFinite(quantity) ? quantity : 0} unidades distribuídas`;
+    $("distributionProgress").max = quantity > 0 ? quantity : 1; $("distributionProgress").value = Math.max(0,Math.min(total,quantity));
+    $("distributionNotice").textContent = error || "Quantidade completa. Confira as opções e adicione à sacola.";
+    section.classList.toggle("distribution-complete",!error);
+    const query = normalizeSearch($("distributionSearch")?.value), visible = [];
+    for (const row of rows) {
+      const input = row.querySelector("input"); input.max = quantity > 0 ? quantity : limit.maximum;
+      row.querySelector("[data-distribute-minus]").disabled = Number(input.value) < limit.distributionStep;
+      row.querySelector("[data-distribute-plus]").disabled = !quantityInput.validity.valid || total + limit.distributionStep > quantity;
+      row.hidden = Boolean(query && !normalizeSearch(row.dataset.distributionName).includes(query)); if (!row.hidden) visible.push(row);
+    }
+    if ($("distributionSearchStatus")) $("distributionSearchStatus").textContent = query ? `${visible.length} opções encontradas. A distribuição considera a lista inteira.` : "";
+    return {distribution,error};
   }
   function assistantMessage(text, kind = "assistant") { const node = document.createElement("p"); node.className = `assistant-message${kind === "user" ? " user" : ""}`; node.textContent = text; $("menuAssistantMessages").append(node); node.scrollIntoView({ block: "nearest" }); }
   function assistantControls(data) {
@@ -326,6 +377,7 @@
   });
   $("configuratorForm").addEventListener("submit", (event) => {
     event.preventDefault(); const state = refreshConfigurator(); if (!state) return;
+    if (state.distributionError) { $("configuratorMessage").textContent = state.distributionError; $("quantityDistribution").scrollIntoView({block:"start",behavior:"smooth"}); return; }
     if (state.invalidFieldset) {
       const fieldset = state.invalidFieldset;
       fieldset.setAttribute("aria-invalid", "true");
@@ -334,10 +386,28 @@
       else fieldset.querySelector("input:not(:disabled)")?.focus();
       return;
     }
-    addConfigured(prices.get($("configurator").dataset.priceId), state.selections, Number($("configurator").dataset.quantity) || 1); $("configurator").close();
+    if (addConfigured(prices.get($("configurator").dataset.priceId), state.selections, Number($("configurator").dataset.quantity) || 1, state.distribution, $("configurator").dataset.editingSignature || "")) $("configurator").close();
   });
   $("closeConfigurator").addEventListener("click", () => $("configurator").close());
   $("configuratorGroups").addEventListener("input", refreshConfigurator);
+  $("configuratorGroups").addEventListener("click", event => {
+    const section = event.target.closest("#quantityDistribution"); if (!section) return;
+    const price = prices.get($("configurator").dataset.priceId), model = globalThis.OgritechMenuQuantity, limit = model.limits(price.item);
+    const row = event.target.closest("[data-distribution-name]"), input = row?.querySelector("input");
+    if (event.target.closest("[data-distribute-minus]")) input.value = Math.max(0,Number(input.value) - limit.distributionStep);
+    if (event.target.closest("[data-distribute-plus]")) input.value = Number(input.value) + limit.distributionStep;
+    if (event.target.closest("[data-distribute-clear]")) section.querySelectorAll("[data-distribution-quantity]").forEach(input=>input.value=0);
+    if (event.target.closest("[data-distribute-equally]")) {
+      if (!$("distributionQuantity").reportValidity()) return;
+      const distribution = model.distribute(price.item,Number($("distributionQuantity").value));
+      if ($("distributionSearch")) $("distributionSearch").value = "";
+      section.querySelectorAll("[data-distribution-name]").forEach(row=>row.querySelector("input").value=distribution.find(part=>part.name===row.dataset.distributionName)?.quantity || 0);
+      section.querySelector(".distribution-price-hint").textContent = distribution.length < limit.options.length
+        ? `Para respeitar os lotes de ${limit.distributionStep}, distribuímos entre ${distribution.length} das ${limit.options.length} opções. Confira a lista e ajuste como preferir. Todas têm o mesmo preço.`
+        : `Distribuição sugerida em lotes de ${limit.distributionStep}. Confira as quantidades de cada opção. Todas têm o mesmo preço.`;
+    }
+    refreshConfigurator();
+  });
   async function loadMenuData() {
     $("loading").innerHTML = '<p role="status">Carregando cardápio...</p>';
     try {
@@ -381,20 +451,21 @@
     $("categoryNav").innerHTML = data.categories.map((category, index) => `<a href="#${categoryId(index)}">${clean(category.name)}</a>`).join("");
     $("catalog").innerHTML = data.categories.map((category, categoryIndex) => `<section id="${categoryId(categoryIndex)}" class="catalog-section"><header class="catalog-section-heading"><h2>${clean(category.name)}</h2>${category.description ? `<p>${clean(category.description)}</p>` : ""}</header><div class="catalog-items">${category.items.map((item) => {
       const records = item.prices.map((record) => { const amount = Number(record.promotional_price ?? record.price); prices.set(record.id, { ...record, amount, item }); return { ...record, amount }; });
-      const quote = isQuoteItem(item), first = records[0], minimumQuantity = Math.max(1, Math.ceil(Number(item.minimum_quantity) || 1)), maximumQuantity = item.maximum_quantity == null ? "" : Math.floor(Number(item.maximum_quantity)), customQuantity = minimumQuantity > 1;
-      const quantityPicker = customQuantity ? `<label class="menu-quantity-picker"><span>Quantidade (mínimo ${minimumQuantity})</span><input type="number" inputmode="numeric" min="${minimumQuantity}"${maximumQuantity ? ` max="${maximumQuantity}"` : ""} step="1" value="${minimumQuantity}" data-quantity-select="${item.id}"></label>` : "";
+      const quote = isQuoteItem(item), first = records[0], minimumQuantity = Math.max(1, Math.ceil(Number(item.minimum_quantity) || 1)), maximumQuantity = item.maximum_quantity == null ? "" : Math.floor(Number(item.maximum_quantity)), customQuantity = minimumQuantity > 1 || Boolean(globalThis.OgritechMenuQuantity?.rules(item));
+      const quantityLimit = globalThis.OgritechMenuQuantity?.limits(item), hasDistribution = Boolean(quantityLimit?.options.length);
+      const quantityPicker = customQuantity ? `<label class="menu-quantity-picker"><span>Quantidade (mínimo ${minimumQuantity})</span><input type="number" inputmode="numeric" min="${minimumQuantity}"${quantityLimit ? ` max="${quantityLimit.maximum}"` : maximumQuantity ? ` max="${maximumQuantity}"` : ""} step="${quantityLimit?.step || 1}" value="${minimumQuantity}" data-quantity-select="${item.id}">${quantityLimit?.step > 1 ? `<small>De ${quantityLimit.step} em ${quantityLimit.step} unidades</small>` : ""}</label>` : "";
       const initialPrice = first ? clean(formatItemPrice(first, item, minimumQuantity, customQuantity)) : "Indisponível";
       const singleLabel = records.length === 1 ? displayPriceLabel(first.label) : "";
       const priceOptions = records.length === 1
         ? `<input type="hidden" data-price-select="${item.id}" value="${first.id}">${singleLabel && normalizeSearch(singleLabel) !== "padrao" ? `<p class="menu-single-option">${clean(singleLabel)}</p>` : ""}`
         : `<label class="menu-price-picker"><span>${weightPickerLabel(records, quote)}<small class="menu-variants-count">${records.length} opções</small></span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(displayPriceLabel(record.label))}</option>`).join("")}</select></label>`;
-      const pricePicker = records.length ? `<div class="menu-item-purchase">${priceOptions}${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button type="button" class="public-button" data-add-selected="${item.id}" ${item.stock_available === false ? "disabled" : ""}>${item.stock_available === false ? "Esgotado" : (item.option_groups || []).length ? (quote ? "Personalizar solicitação" : "Personalizar pedido") : (quote ? "Solicitar análise" : "Adicionar")}</button></div></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
+      const pricePicker = records.length ? `<div class="menu-item-purchase">${priceOptions}${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button type="button" class="public-button" data-add-selected="${item.id}" ${item.stock_available === false ? "disabled" : ""}>${item.stock_available === false ? "Esgotado" : hasDistribution ? "Escolher opções e quantidades" : (item.option_groups || []).length ? (quote ? "Personalizar solicitação" : "Personalizar pedido") : (quote ? "Solicitar análise" : "Adicionar")}</button></div></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
       const illustration = dinizIllustration(category, item), media = item.image_url
         ? `<div class="menu-item-media"><img class="menu-item-image" loading="lazy" decoding="async" src="${clean(item.image_url)}" alt=""></div>`
         : illustration
           ? `<div class="menu-item-media"><img class="menu-item-image" loading="lazy" decoding="async" src="${illustration.src}" alt="${illustration.alt}"><span class="menu-image-note">Imagem ilustrativa</span></div>`
           : `<div class="menu-item-placeholder" aria-hidden="true"><small>${item.item_type === "preorder" || Number(item.lead_time_hours) > 0 ? "Feito por encomenda" : "Confira as opções"}</small></div>`;
-      return `<article class="menu-item-card${(item.option_groups || []).length ? " menu-item-personalizable" : ""}${records.length > 1 || customQuantity ? " menu-item-card-with-pickers" : ""}" data-item="${item.id}">${media}<div class="menu-item-content"><div class="menu-item-heading"><h3>${clean(item.name)}</h3>${quote ? '<span class="menu-item-badge">Sob consulta</span>' : ((item.option_groups || []).length ? '<span class="menu-item-badge">Personalizável</span>' : "")}</div>${item.description ? `<p>${clean(item.description)}</p>` : ""}${pricePicker}</div></article>`;
+      return `<article class="menu-item-card${(item.option_groups || []).length || hasDistribution ? " menu-item-personalizable" : ""}${records.length > 1 || customQuantity ? " menu-item-card-with-pickers" : ""}" data-item="${item.id}">${media}<div class="menu-item-content"><div class="menu-item-heading"><h3>${clean(item.name)}</h3>${quote ? '<span class="menu-item-badge">Sob consulta</span>' : ((item.option_groups || []).length || hasDistribution ? '<span class="menu-item-badge">Personalizável</span>' : "")}</div>${item.description ? `<p>${clean(item.description)}</p>` : ""}${pricePicker}</div></article>`;
     }).join("")}</div></section>`).join("");
     const filterCatalog = () => {
       const query = normalizeSearch($("menuSearch").value);
@@ -436,11 +507,12 @@
   $("continueShoppingButton").addEventListener("click", () => { $("cartReview").classList.add("hidden"); $("checkout").classList.add("hidden"); updateBag(); leaveCheckoutMode(); $("catalog").scrollIntoView({ behavior: "smooth", block: "start" }); });
   $("closeCartReview").addEventListener("click", () => { $("cartReview").classList.add("hidden"); updateBag(); leaveCheckoutMode(); $("cartReviewButton").focus(); });
   $("cartItems").addEventListener("click", (event) => {
-    const action = event.target.closest("[data-cart-increase],[data-cart-decrease],[data-cart-remove]"); if (!action) return;
-    const signature = action.dataset.cartIncrease || action.dataset.cartDecrease || action.dataset.cartRemove, entry = cart.get(signature); if (!entry) return;
+    const action = event.target.closest("[data-cart-increase],[data-cart-decrease],[data-cart-remove],[data-cart-edit]"); if (!action) return;
+    const signature = action.dataset.cartIncrease || action.dataset.cartDecrease || action.dataset.cartRemove || action.dataset.cartEdit, entry = cart.get(signature); if (!entry) return;
+    if (action.dataset.cartEdit) { configure(prices.get(entry.menu_item_price_id),entry.quantity,signature); return; }
     if (action.dataset.cartRemove) cart.delete(signature);
-    else if (action.dataset.cartIncrease && entry.quantity < entry.maximumQuantity) entry.quantity = Math.min(entry.maximumQuantity, entry.quantity + 1);
-    else if (action.dataset.cartDecrease && entry.quantity > entry.minimumQuantity) entry.quantity -= 1;
+    else if (action.dataset.cartIncrease && entry.quantity < entry.maximumQuantity) entry.quantity = Math.min(entry.maximumQuantity, entry.quantity + (entry.quantityStep || 1));
+    else if (action.dataset.cartDecrease && entry.quantity > entry.minimumQuantity) entry.quantity = Math.max(entry.minimumQuantity,entry.quantity - (entry.quantityStep || 1));
     pendingRequestId = null;
     updateCart();
     if (!cart.size) {
@@ -478,7 +550,7 @@
     const leadTime = requiredLeadTime(), scheduledValue = form.get("scheduled_for"), scheduledDate = scheduledValue ? new Date(scheduledValue) : null;
     if (leadTime > 0 && (!scheduledDate || Number.isNaN(scheduledDate.getTime()) || scheduledDate.getTime() < Date.now() + leadTime * 60 * 60000)) { $("orderMessage").textContent = `Escolha uma data e um horário com pelo menos ${leadTime} horas de antecedência.`; $("scheduledFor").setAttribute("aria-invalid", "true"); $("scheduledFor").focus(); return; }
     const hasQuote = [...cart.values()].some((entry) => entry.isQuote); const suppliedNotes = `${hasQuote ? "SOLICITAÇÃO DE ORÇAMENTO — valor exibido é apenas referência e depende de confirmação humana. " : ""}${form.get("notes") || ""}`.trim();
-    const commonOrder = { target_slug: slug, supplied_name: form.get("name"), supplied_email: "", supplied_phone: form.get("phone"), target_fulfillment_type: fulfillment, supplied_address: fulfillment === "delivery" ? { text: form.get("address"), cep: String(form.get("delivery_cep") || "").replace(/\D/g, ""), zone_code: form.get("delivery_zone") || null } : null, supplied_notes: suppliedNotes, supplied_items: [...cart.values()].map(({ menu_item_price_id, quantity, selections }) => ({ menu_item_price_id, quantity, selections: selections.map(({ menu_option_id, quantity }) => ({ menu_option_id, quantity })) })), accepted_privacy: form.get("privacy") === "on", website: form.get("website") };
+    const commonOrder = { target_slug: slug, supplied_name: form.get("name"), supplied_email: "", supplied_phone: form.get("phone"), target_fulfillment_type: fulfillment, supplied_address: fulfillment === "delivery" ? { text: form.get("address"), cep: String(form.get("delivery_cep") || "").replace(/\D/g, ""), zone_code: form.get("delivery_zone") || null } : null, supplied_notes: suppliedNotes, supplied_items: [...cart.values()].map(({ menu_item_price_id, quantity, selections, distribution }) => ({ menu_item_price_id, quantity, ...(distribution?.length ? {distribution} : {}), selections: selections.map(({ menu_option_id, quantity }) => ({ menu_option_id, quantity })) })), accepted_privacy: form.get("privacy") === "on", website: form.get("website") };
     if ($("orderSubmitButton").disabled) return;
     pendingRequestId ||= createUuid(); $("orderMessage").textContent = "Enviando pedido..."; $("orderSubmitButton").disabled = true;
     let data, error;
@@ -506,7 +578,7 @@
       }
       const coupon = String(form.get("coupon") || "").trim().toUpperCase();
       ({ data, error } = await supabaseClient.rpc(coupon ? "public_create_catalog_order" : "public_create_menu_order_v2", { ...commonOrder, client_request_id: pendingRequestId, requested_for: form.get("scheduled_for") ? new Date(form.get("scheduled_for")).toISOString() : null, ...(coupon ? {supplied_coupon:coupon} : {}) }));
-      if (!coupon && error?.code === "PGRST202" && !commonOrder.supplied_items.some((item) => item.selections.length)) ({ data, error } = await supabaseClient.rpc("public_create_menu_order", { ...commonOrder, supplied_items: commonOrder.supplied_items.map(({ menu_item_price_id, quantity }) => ({ menu_item_price_id, quantity })) }));
+      if (!coupon && error?.code === "PGRST202" && !commonOrder.supplied_items.some((item) => item.selections.length || item.distribution?.length)) ({ data, error } = await supabaseClient.rpc("public_create_menu_order", { ...commonOrder, supplied_items: commonOrder.supplied_items.map(({ menu_item_price_id, quantity }) => ({ menu_item_price_id, quantity })) }));
     } catch { error = {message:"Confira sua conexão e tente novamente. Seus itens foram preservados."}; }
     if (error) { $("orderSubmitButton").disabled = false; $("orderMessage").textContent = error.message === "Item indisponível ou fora dos limites" ? `Confira a data do pedido. Os itens escolhidos exigem pelo menos ${leadTime || 48} horas de antecedência.` : `Não foi possível enviar o pedido: ${error.message}`; $("orderMessage").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     pendingRequestId = null;
@@ -515,7 +587,7 @@
     const whatsappPhone = String(page.menu.whatsapp_phone || "");
     const whatsappText = whatsappPhone ? globalThis.OgritechMenuWhatsapp.format({
       code: formattedCode, businessName: $("menuTitle").textContent, customerName: form.get("name"), customerPhone: form.get("phone"),
-      items: [...cart.values()].map((entry) => ({ name: entry.name, label: displayPriceLabel(entry.label), quantity: entry.quantity, selections: entry.selections.map((selection) => selection.name), lineTotal: entry.quantity * estimatedUnitPrice(entry) })),
+      items: [...cart.values()].map((entry) => ({ name: entry.name, label: displayPriceLabel(entry.label), quantity: entry.quantity, selections: [...entry.selections.map((selection) => selection.name), ...(entry.distribution || []).map(part=>`${part.quantity} × ${part.name}`)], lineTotal: entry.quantity * estimatedUnitPrice(entry) })),
       subtotal: data.subtotal, deliveryFee: data.delivery_fee, total: data.total_amount,
       fulfillment, address: fulfillment === "delivery" ? form.get("address") : "",
       scheduledFor: data.scheduled_for, notes: form.get("notes"), quote: hasQuote

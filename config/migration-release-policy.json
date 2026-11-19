@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-11-17",
+  "auditedAt": "2026-11-18",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -114,7 +114,8 @@
       "catalog_cycle_reauthorization",
       "fix_catalog_cycle_claim_parameter",
       "catalog_business_segments",
-      "catalog_product_inventory"
+      "catalog_product_inventory",
+      "catalog_quantity_distribution"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -253,15 +254,15 @@
       "catalog_cycle_reauthorization",
       "fix_catalog_cycle_claim_parameter"
     ],
-    "observationEvidence": "docs/evidencias/estoque-publicacao-2026-11-18.md",
+    "observationEvidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md",
     "heldMigrations": []
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "appliedThrough": "catalog_product_inventory",
+    "appliedThrough": "catalog_quantity_distribution",
     "appliedOutOfOrder": [],
     "heldMigrations": [],
-    "observationEvidence": "docs/evidencias/estoque-publicacao-2026-11-18.md",
+    "observationEvidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",
       "business_whatsapp_shares": "20261107143521",
@@ -290,7 +291,8 @@
       "catalog_cycle_reauthorization": "20261117185824",
       "fix_catalog_cycle_claim_parameter": "20261117185829",
       "catalog_business_segments": "20261117211344",
-      "catalog_product_inventory": "20261118155812"
+      "catalog_product_inventory": "20261118155812",
+      "catalog_quantity_distribution": "20261119000747"
     }
   }
 }

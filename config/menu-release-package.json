@@ -81,7 +81,11 @@
     "assets/landing-menu/ogritech-scarpin-sem-marca.webp",
     "assets/landing-menu/fotos-vitrine-origem.json",
     "catalog-inventory.js",
-    "style.css"
+    "style.css",
+    "menu-quantity.js",
+    "menu-quantity-admin.js",
+    "cardapio/catalog.css",
+    "menu-pricing.js"
   ],
   "orderedPhases": [
     "resolve_business_and_legal_decisions",

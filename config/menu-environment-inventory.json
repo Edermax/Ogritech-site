@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "observedAt": "2026-11-01",
-  "source": "Supabase CLI read-only migration inventories after the reviewed metadata correction; function metadata retains its separately dated observation.",
+  "observedAt": "2026-11-19T00:11:28.567Z",
+  "source": "Supabase MCP read-only migration inventories after the authorized quantity promotion; frontend and function metadata retain their separately dated observations.",
   "frontend": {
     "commit": "7954337e5cbc99deadd88a179997c935d47bcb8f",
     "url": "https://ogritech.com.br/",
@@ -335,6 +335,134 @@
       {
         "version": "20261101192056",
         "name": "allow_cpf_menu_signup"
+      },
+      {
+        "version": "20261104014418",
+        "name": "preserve_menu_special_hours"
+      },
+      {
+        "version": "20261106003917",
+        "name": "standard_menu_contact_and_orders"
+      },
+      {
+        "version": "20261106003929",
+        "name": "live_delivery_zone_updates"
+      },
+      {
+        "version": "20261106005157",
+        "name": "guard_paid_menu_rejections"
+      },
+      {
+        "version": "20261107143521",
+        "name": "business_whatsapp_shares"
+      },
+      {
+        "version": "20261107155101",
+        "name": "menu_optional_pix"
+      },
+      {
+        "version": "20261108002611",
+        "name": "menu_pix_order_amount"
+      },
+      {
+        "version": "20261108004137",
+        "name": "menu_service_area"
+      },
+      {
+        "version": "20261110235748",
+        "name": "menu_order_push_notifications"
+      },
+      {
+        "version": "20261110235754",
+        "name": "menu_order_push_transport"
+      },
+      {
+        "version": "20261112024937",
+        "name": "menu_trial_abuse_protection"
+      },
+      {
+        "version": "20261112024955",
+        "name": "menu_trial_review_api_hardening"
+      },
+      {
+        "version": "20261112050314",
+        "name": "menu_order_receipts_and_sequence"
+      },
+      {
+        "version": "20261112050324",
+        "name": "menu_sales_notification_reports"
+      },
+      {
+        "version": "20261112050335",
+        "name": "menu_order_response_snapshot"
+      },
+      {
+        "version": "20261113194819",
+        "name": "split_menu_offers"
+      },
+      {
+        "version": "20261114012937",
+        "name": "guard_menu_offer_changes"
+      },
+      {
+        "version": "20261114174015",
+        "name": "menu_tracking_customer_phone"
+      },
+      {
+        "version": "20261114202127",
+        "name": "menu_product_visibility"
+      },
+      {
+        "version": "20261114202129",
+        "name": "menu_tracking_branding"
+      },
+      {
+        "version": "20261115154232",
+        "name": "configurable_menu_plans"
+      },
+      {
+        "version": "20261115185651",
+        "name": "assistant_human_contact_channels"
+      },
+      {
+        "version": "20261115195924",
+        "name": "subscription_billing_adjustments"
+      },
+      {
+        "version": "20261115201311",
+        "name": "guard_reversed_online_refunds"
+      },
+      {
+        "version": "20261116132005",
+        "name": "archive_menu_sales_reports"
+      },
+      {
+        "version": "20261116204928",
+        "name": "platform_admin_notifications"
+      },
+      {
+        "version": "20261117185655",
+        "name": "catalog_profiles_and_commercial_plans"
+      },
+      {
+        "version": "20261117185824",
+        "name": "catalog_cycle_reauthorization"
+      },
+      {
+        "version": "20261117185829",
+        "name": "fix_catalog_cycle_claim_parameter"
+      },
+      {
+        "version": "20261117211344",
+        "name": "catalog_business_segments"
+      },
+      {
+        "version": "20261118155812",
+        "name": "catalog_product_inventory"
+      },
+      {
+        "version": "20261119000747",
+        "name": "catalog_quantity_distribution"
       }
     ],
     "functions": [
@@ -381,7 +509,7 @@
         "ezbr_sha256": "dfcda94d14d10156d29f443f2a0b91da1edf5d83f05d2f71e4bbe5ef58dc6624"
       }
     ],
-    "migrationsObservedAt": "2026-11-01",
+    "migrationsObservedAt": "2026-11-19T00:11:28.567Z",
     "functionsObservedAt": "2026-10-20"
   },
   "staging": {
@@ -710,9 +838,137 @@
       {
         "version": "20261101192056",
         "name": "allow_cpf_menu_signup"
+      },
+      {
+        "version": "20261104014418",
+        "name": "preserve_menu_special_hours"
+      },
+      {
+        "version": "20261106001516",
+        "name": "standard_menu_contact_and_orders"
+      },
+      {
+        "version": "20261106003532",
+        "name": "live_delivery_zone_updates"
+      },
+      {
+        "version": "20261106004424",
+        "name": "guard_paid_menu_rejections"
+      },
+      {
+        "version": "20261107141746",
+        "name": "business_whatsapp_shares"
+      },
+      {
+        "version": "20261107154851",
+        "name": "menu_optional_pix"
+      },
+      {
+        "version": "20261108002552",
+        "name": "menu_pix_order_amount"
+      },
+      {
+        "version": "20261108004128",
+        "name": "menu_service_area"
+      },
+      {
+        "version": "20261110234528",
+        "name": "menu_order_push_notifications"
+      },
+      {
+        "version": "20261110235244",
+        "name": "menu_order_push_transport"
+      },
+      {
+        "version": "20261111225657",
+        "name": "menu_trial_abuse_protection"
+      },
+      {
+        "version": "20261111230807",
+        "name": "menu_trial_review_api_hardening"
+      },
+      {
+        "version": "20261112033426",
+        "name": "menu_order_receipts_and_sequence"
+      },
+      {
+        "version": "20261112033448",
+        "name": "menu_sales_notification_reports"
+      },
+      {
+        "version": "20261112035316",
+        "name": "menu_order_response_snapshot"
+      },
+      {
+        "version": "20261113192700",
+        "name": "split_menu_offers"
+      },
+      {
+        "version": "20261114012026",
+        "name": "guard_menu_offer_changes"
+      },
+      {
+        "version": "20261114173559",
+        "name": "menu_tracking_customer_phone"
+      },
+      {
+        "version": "20261114201932",
+        "name": "menu_product_visibility"
+      },
+      {
+        "version": "20261114201933",
+        "name": "menu_tracking_branding"
+      },
+      {
+        "version": "20261115145119",
+        "name": "configurable_menu_plans"
+      },
+      {
+        "version": "20261115185519",
+        "name": "assistant_human_contact_channels"
+      },
+      {
+        "version": "20261115195345",
+        "name": "subscription_billing_adjustments"
+      },
+      {
+        "version": "20261115201304",
+        "name": "guard_reversed_online_refunds"
+      },
+      {
+        "version": "20261116131740",
+        "name": "archive_menu_sales_reports"
+      },
+      {
+        "version": "20261116204208",
+        "name": "platform_admin_notifications"
+      },
+      {
+        "version": "20261117160033",
+        "name": "catalog_profiles_and_commercial_plans"
+      },
+      {
+        "version": "20261117161901",
+        "name": "catalog_cycle_reauthorization"
+      },
+      {
+        "version": "20261117162103",
+        "name": "fix_catalog_cycle_claim_parameter"
+      },
+      {
+        "version": "20261117210050",
+        "name": "catalog_business_segments"
+      },
+      {
+        "version": "20261118123010",
+        "name": "catalog_product_inventory"
+      },
+      {
+        "version": "20261118225820",
+        "name": "catalog_quantity_distribution"
       }
     ],
-    "migrationsObservedAt": "2026-11-01"
+    "migrationsObservedAt": "2026-11-19T00:11:28.567Z"
   },
   "userAcceptance": {
     "recordedAt": "2026-10-19",
