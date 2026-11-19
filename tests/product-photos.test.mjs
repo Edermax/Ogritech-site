@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {runInNewContext} from 'node:vm';
+const context={URL};runInNewContext(await readFile(new URL('../product-photos.js',import.meta.url),'utf8'),context);const model=context.OgritechProductPhotos;
+const base='https://fixture.supabase.co',one='cf100000-0000-4000-8000-000000000001/11111111-1111-4111-8111-111111111111.webp',two=one.replace('/11111111-','/22222222-');
+test('effective plan determines the photo limit with a safe default',()=>{assert.equal(model.limitFor({offer_code:'encomendas'}),3);assert.equal(model.limitFor({offer_code:'cardapio'}),1);assert.equal(model.limitFor({offer_code:'encomendas',product_image_limit:1}),1);assert.equal(model.limitFor({}),1);});
+test('paths round-trip without accepting foreign schemes or traversal',()=>{const url=model.assetUrl(one,base);assert.equal(model.pathFromUrl(url),one);assert.equal(model.assetUrl('../bad.png',base),'');assert.equal(model.assetUrl(one,'javascript:alert(1)'), '');assert.equal(model.assetUrl(one,'http://example.com'),'');});
+test('cover remains first and Essential renders only one photo',()=>{const item={name:'Produto',image_url:model.assetUrl(one,base),metadata:{gallery_images:[two,one]}};assert.equal(model.urls(item,base,3).length,2);assert.equal(model.urls(item,base,1).length,1);assert.doesNotMatch(model.render(item,base,1),/data-photo-index/);assert.match(model.render(item,base,3),/Ver foto 2 de 2/);});
+test('merchant strings and photo URL JSON are escaped in gallery markup',()=>{const html=model.render({name:'<img onerror="bad">',image_url:base+'/a?x="',metadata:{gallery_images:[one]}},base,3);assert.doesNotMatch(html,/alt="<img/);assert.match(html,/&lt;img/);assert.match(html,/&quot;/);});

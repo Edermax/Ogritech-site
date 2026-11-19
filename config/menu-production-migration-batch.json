@@ -1,30 +1,30 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-18",
-  "baseline": "catalog_quantity_distribution",
+  "updatedAt": "2026-11-19",
+  "baseline": "catalog_product_photo_limits",
   "strategy": "contiguous_tail",
   "authorized": true,
   "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "CI_CLEAN_SUPABASE_REPLAY",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/44419075064",
-    "migrationCount": 113,
-    "testFiles": 37,
-    "assertions": 1121,
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/44505921901",
+    "migrationCount": 114,
+    "testFiles": 38,
+    "assertions": 1149,
     "failed": 0,
-    "evidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md"
+    "evidence": "docs/evidencias/fotos-produto-publicacao-2026-11-19.md"
   },
   "productionDryRun": {
     "status": "APPLIED",
     "remoteChangesPerformed": true,
     "expectedPendingNames": [],
     "appliedNames": [
-      "catalog_quantity_distribution"
+      "catalog_product_photo_limits"
     ],
-    "remoteVersion": "20261119000747",
-    "mode": "MCP_EXPLICIT_MIGRATIONS",
-    "evidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md"
+    "remoteVersion": "20261119104818",
+    "mode": "MCP_EXPLICIT_MIGRATION",
+    "evidence": "docs/evidencias/fotos-produto-publicacao-2026-11-19.md"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
@@ -91,23 +91,24 @@
     "catalog_cycle_reauthorization",
     "fix_catalog_cycle_claim_parameter",
     "catalog_product_inventory",
-    "catalog_quantity_distribution"
+    "catalog_quantity_distribution",
+    "catalog_product_photo_limits"
   ],
-  "authorizationSource": "Usuário respondeu Autorizo à aplicação da migration no banco de produção da Ogritech e à publicação das telas do PR #155.",
-  "authorizationScope": "Publicar mínimo, múltiplos e distribuição entre opções, preservando produtos, preços, estoque e histórico; ativação por produto.",
+  "authorizationSource": "Solicitação do usuário para permitir até três fotos no Completo e uma no Essencial, retomada pelo usuário em 19/11/2026; ação de produção aceita pela revisão automática.",
+  "authorizationScope": "Aplicar limites de fotos por plano e publicar as telas do PR #156, preservando produtos, preços, estoque, pedidos e assinaturas.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
-    "executedAt": "2026-11-18",
+    "executedAt": "2026-11-19T10:48:50.061Z",
     "migrations": [
-      "catalog_quantity_distribution"
+      "catalog_product_photo_limits"
     ],
     "reviewedPendingCount": 1,
-    "sourceBaseCommit": "8e5f1d096f2dd606f80f83841cc35ed7466088fe",
-    "validatedCandidate": "7892b922999122bb258056dd7209753ff425d7da",
-    "stagingMigrationCount": 113,
-    "productionMigrationCount": 113,
+    "sourceBaseCommit": "e32eb49de941c0c1331dc9d7f847e795c72499ed",
+    "validatedCandidate": "6b53dddd05473c003beb796fae737cc0086b276d",
+    "stagingMigrationCount": 114,
+    "productionMigrationCount": 114,
     "postPromotionPendingCount": 0,
-    "evidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md"
+    "evidence": "docs/evidencias/fotos-produto-publicacao-2026-11-19.md"
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",
@@ -125,26 +126,32 @@
     "mode": "FRESH_ENCRYPTED_BACKUP_AND_ISOLATED_RESTORE"
   },
   "publicationAuthorization": {
-    "date": "2026-11-18",
-    "instruction": "Autorizo",
-    "scope": "Aplicar a migration de quantidades em produção e publicar as novas telas do PR #155"
+    "date": "2026-11-19",
+    "instruction": "retome",
+    "scope": "Aplicar limites de fotos por plano e publicar as telas do PR #156, preservando produtos, preços, estoque, pedidos e assinaturas."
   },
   "productionApplication": {
     "status": "APPLIED",
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "migrationCount": 113,
+    "migrationCount": 114,
     "remoteVersions": {
       "catalog_profiles_and_commercial_plans": "20261117185655",
       "catalog_cycle_reauthorization": "20261117185824",
       "fix_catalog_cycle_claim_parameter": "20261117185829",
-      "catalog_quantity_distribution": "20261119000747"
+      "catalog_quantity_distribution": "20261119000747",
+      "catalog_product_photo_limits": "20261119104818"
     },
-    "evidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md"
+    "evidence": "docs/evidencias/fotos-produto-publicacao-2026-11-19.md"
   },
   "currentPromotionRecovery": {
-    "mode": "INSPECTED_FUNCTION_SOURCES_AND_BODY_HASHES",
+    "mode": "BACKWARD_COMPATIBLE_MIGRATION_WITH_INSPECTED_BASELINE_AND_FUNCTION_HASHES",
     "productionBackupExported": false,
     "customerRowsExported": false,
-    "evidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md"
+    "evidence": "docs/evidencias/fotos-produto-publicacao-2026-11-19.md"
+  },
+  "previousPublicationAuthorization": {
+    "date": "2026-11-18",
+    "instruction": "Autorizo",
+    "scope": "Aplicar a migration de quantidades em produção e publicar as novas telas do PR #155"
   }
 }

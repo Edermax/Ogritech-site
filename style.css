@@ -1984,3 +1984,16 @@ textarea:focus {
 .quantity-rule-preview { margin:0; padding:16px; border-radius:12px; background:var(--control-tint,#e6faff); border:1px solid var(--control-border,#bbdce5); color:var(--control-text,#17364b); line-height:1.65; }
 .quantity-rule-preview.quantity-preview-error { border-color:var(--panel-danger,#b93645); }
 @media(max-width:480px) { #menuQuantitySection { padding:14px; } }
+.product-photos-editor #menuItemImagePreview { display:none!important; }
+.product-photo-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin:16px 0; }
+.product-photo-editor-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:16px; }
+.product-photo-editor-card { min-width:0; padding:12px; border:1px solid var(--control-border,#7b919e); border-radius:14px; background:var(--control-surface,#fff); }
+.product-photo-editor-card img { display:block; width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:9px; margin-bottom:12px; }
+.product-photo-editor-card small { display:block; color:var(--control-muted,#526875); line-height:1.5; margin:8px 0; }
+.product-photo-editor-card.is-archived { border-style:dashed; }
+.product-photo-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.product-photo-actions button,.product-photo-toolbar button { min-height:44px; }
+.product-photo-empty { padding:18px; border:1px dashed var(--control-border,#7b919e); border-radius:12px; color:var(--control-muted,#526875); grid-column:1/-1; }
+#menuPhotoStatus { margin-top:12px; color:var(--control-accent-ink,#006b7e); font-size:14px; line-height:1.5; }
+@media(max-width:760px) { .product-photo-editor-grid { grid-template-columns:1fr; }.product-photo-editor-card { display:grid; grid-template-columns:100px minmax(0,1fr); gap:12px; }.product-photo-editor-card img { margin:0; }.product-photo-actions { flex-direction:column; align-items:flex-start; } }
+@media(max-width:480px) { .product-photo-editor-card { grid-template-columns:minmax(0,1fr); }.product-photo-editor-card img { max-height:160px; }.product-photo-actions { flex-direction:row; }.product-photo-actions button { white-space:nowrap; } }
