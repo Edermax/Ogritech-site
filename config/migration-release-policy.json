@@ -115,7 +115,8 @@
       "fix_catalog_cycle_claim_parameter",
       "catalog_business_segments",
       "catalog_product_inventory",
-      "catalog_quantity_distribution"
+      "catalog_quantity_distribution",
+      "catalog_product_photo_limits"
     ],
     "remoteVersionAliases": {
       "menu_order_push_notifications": "20261110234528",
@@ -261,7 +262,12 @@
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "catalog_quantity_distribution",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      {
+        "name": "catalog_product_photo_limits",
+        "reason": "Fotos por plano em implementação e homologação; promoção após validação e autorização de produção."
+      }
+    ],
     "observationEvidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",

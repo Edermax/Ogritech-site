@@ -460,13 +460,15 @@
         ? `<input type="hidden" data-price-select="${item.id}" value="${first.id}">${singleLabel && normalizeSearch(singleLabel) !== "padrao" ? `<p class="menu-single-option">${clean(singleLabel)}</p>` : ""}`
         : `<label class="menu-price-picker"><span>${weightPickerLabel(records, quote)}<small class="menu-variants-count">${records.length} opções</small></span><select data-price-select="${item.id}">${records.map((record) => `<option value="${record.id}">${clean(displayPriceLabel(record.label))}</option>`).join("")}</select></label>`;
       const pricePicker = records.length ? `<div class="menu-item-purchase">${priceOptions}${quantityPicker}<div class="menu-price-action"><strong data-selected-price="${item.id}">${initialPrice}</strong><button type="button" class="public-button" data-add-selected="${item.id}" ${item.stock_available === false ? "disabled" : ""}>${item.stock_available === false ? "Esgotado" : hasDistribution ? "Escolher opções e quantidades" : (item.option_groups || []).length ? (quote ? "Personalizar solicitação" : "Personalizar pedido") : (quote ? "Solicitar análise" : "Adicionar")}</button></div></div>` : `<p class="menu-quote-notice">Preço e disponibilidade são confirmados após análise dos detalhes.</p>`;
-      const illustration = dinizIllustration(category, item), media = item.image_url
+      const photoGallery = globalThis.OgritechProductPhotos?.render(item,window.OGRITECH_SUPABASE_URL,globalThis.OgritechProductPhotos.limitFor(data.menu));
+      const illustration = dinizIllustration(category, item), media = photoGallery || (item.image_url
         ? `<div class="menu-item-media"><img class="menu-item-image" loading="lazy" decoding="async" src="${clean(item.image_url)}" alt=""></div>`
         : illustration
           ? `<div class="menu-item-media"><img class="menu-item-image" loading="lazy" decoding="async" src="${illustration.src}" alt="${illustration.alt}"><span class="menu-image-note">Imagem ilustrativa</span></div>`
-          : `<div class="menu-item-placeholder" aria-hidden="true"><small>${item.item_type === "preorder" || Number(item.lead_time_hours) > 0 ? "Feito por encomenda" : "Confira as opções"}</small></div>`;
+          : `<div class="menu-item-placeholder" aria-hidden="true"><small>${item.item_type === "preorder" || Number(item.lead_time_hours) > 0 ? "Feito por encomenda" : "Confira as opções"}</small></div>`);
       return `<article class="menu-item-card${(item.option_groups || []).length || hasDistribution ? " menu-item-personalizable" : ""}${records.length > 1 || customQuantity ? " menu-item-card-with-pickers" : ""}" data-item="${item.id}">${media}<div class="menu-item-content"><div class="menu-item-heading"><h3>${clean(item.name)}</h3>${quote ? '<span class="menu-item-badge">Sob consulta</span>' : ((item.option_groups || []).length || hasDistribution ? '<span class="menu-item-badge">Personalizável</span>' : "")}</div>${item.description ? `<p>${clean(item.description)}</p>` : ""}${pricePicker}</div></article>`;
     }).join("")}</div></section>`).join("");
+    globalThis.OgritechProductPhotos?.bind($("catalog"));
     const filterCatalog = () => {
       const query = normalizeSearch($("menuSearch").value);
       let matches = 0;

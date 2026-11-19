@@ -278,6 +278,7 @@
         if (typeof Event === "function") window.dispatchEvent?.(new Event("ogritech:menu-context-changed"));
         refreshMenuDeliveryZoneEditor();
         globalThis.OgritechQuantityEditor?.refresh();
+        globalThis.OgritechProductPhotoEditor?.context({...menuOnboarding,disabled:!catalogEditable});
     }
 
     const menuError = (error) => {
@@ -525,6 +526,7 @@
         byId("menuPriceRows").innerHTML = ""; byId("menuOptionGroupRows").innerHTML = ""; addMenuPriceRow();
         byId("menuItemImagePreview").classList.add("hidden"); byId("menuItemImagePreview").querySelector("img").removeAttribute("src");
         globalThis.OgritechQuantityEditor?.load(null);
+        globalThis.OgritechProductPhotoEditor?.load(null);
         byId("menuItemSubmit").textContent = "Salvar produto"; byId("menuItemCancel").classList.add("hidden");
         window.OgritechPanelNavigation?.closeEditor();
     }
@@ -544,6 +546,7 @@
         byId("menuOptionGroupRows").innerHTML = "";
         (item.menu_item_option_groups || []).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map((link)=>link.menu_option_groups).filter(Boolean).forEach((group)=>addMenuOptionGroup({...group,options:(group.menu_options||[]).filter((option)=>option.available)}));
         globalThis.OgritechQuantityEditor?.load(item);
+        globalThis.OgritechProductPhotoEditor?.load(item);
         byId("menuItemSubmit").textContent = "Atualizar produto"; byId("menuItemCancel").classList.remove("hidden");
         window.OgritechPanelNavigation?.openEditor(true);
         byId("menuItemForm").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1115,6 +1118,7 @@
         if(event.target.closest("[data-remove-group]")) group.remove();
     });
     byId("menuItemImage")?.addEventListener("change",()=>{
+        if(globalThis.OgritechProductPhotoEditor?.active()) return;
         const file=byId("menuItemImage").files?.[0]; if(!file) return;
         if(!["image/jpeg","image/png","image/webp"].includes(file.type) || file.size>5*1024*1024){ byId("menuItemImage").value=""; return notify(byId("menuItemMessage"),"Use uma imagem JPEG, PNG ou WebP de até 5 MB.",true); }
         releaseMenuImagePreview();
@@ -1149,6 +1153,11 @@
             try { quantityMetadata=globalThis.OgritechQuantityEditor?.read() || {}; }
             catch(error) { return {error:{code:"22023",message:error.message}}; }
             const previousPath=byId("menuItemImagePath").value; let file=byId("menuItemImage").files?.[0]; let uploadedPath="", imageUrl=menuImageRemoveRequested?"":byId("menuItemImageUrl").value;
+            let photoTransaction=null;
+            if(globalThis.OgritechProductPhotoEditor?.active()){
+                try { photoTransaction=await globalThis.OgritechProductPhotoEditor.prepare(supabaseClient); imageUrl=photoTransaction.imageUrl; quantityMetadata={...quantityMetadata,...photoTransaction.metadata}; file=null; }
+                catch(error) { return {error:{code:"22023",message:error.message}}; }
+            }
             if(file){
                 try { file=await globalThis.OgritechMenuBranding.prepareImage(file); }
                 catch (error) { return { error: { code: "22023", message: error.message } }; }
@@ -1174,18 +1183,21 @@
                 else { draftItem.sort_order=Math.max(0,...category.menu_items.map((item)=>Number(item.sort_order)||0))+10; category.menu_items.push(draftItem); }
                 menuCatalogCategories=menuCatalogCategories.filter((entry)=>entry.menu_items?.length);
                 const result=await savePublishedMenuDraft();
-                if(result.error){ if(uploadedPath) await supabaseClient.storage.from("menu-images").remove([uploadedPath]); return result; }
+                if(result.error){ await globalThis.OgritechProductPhotoEditor?.rollback(supabaseClient,photoTransaction); if(uploadedPath) await supabaseClient.storage.from("menu-images").remove([uploadedPath]); return result; }
+                globalThis.OgritechProductPhotoEditor?.persisted(photoTransaction);
                 const publication = await publishSavedMenuProduct();
-                resetMenuItemEditor();
+                if(!publication.error && !publication.warning) resetMenuItemEditor();
                 return { ...publication, data: { ...publication.data, item_visible: payload.active && payload.available } };
             }
             const result=await supabaseClient.rpc("save_menu_catalog_item",{target_barbershop_id:BARBERSHOP_ID,payload});
-            if(result.error){ if(uploadedPath) await supabaseClient.storage.from("menu-images").remove([uploadedPath]); return result; }
-            if(previousPath && previousPath!==uploadedPath && (uploadedPath || menuImageRemoveRequested)) await supabaseClient.storage.from("menu-images").remove([previousPath]);
+            if(result.error){ await globalThis.OgritechProductPhotoEditor?.rollback(supabaseClient,photoTransaction); if(uploadedPath) await supabaseClient.storage.from("menu-images").remove([uploadedPath]); return result; }
+            globalThis.OgritechProductPhotoEditor?.persisted(photoTransaction);
+            if(!photoTransaction && previousPath && previousPath!==uploadedPath && (uploadedPath || menuImageRemoveRequested)) await supabaseClient.storage.from("menu-images").remove([previousPath]);
             resetMenuItemEditor(); return result;
         }, (data) => menuRecord.published ? (data?.item_visible ? "Produto salvo e atualizado no cardápio online." : "Produto salvo como oculto. Ele não aparece no cardápio online.") : "Produto salvo. Confira o catálogo e as etapas pendentes.");
     });
 
+    globalThis.OgritechProductPhotoEditor?.setup();
     globalThis.OgritechQuantityEditor?.setup();
     setupMenuDeliveryZoneEditor();
     if (byId("menuPriceRows") && typeof document.createElement === "function") resetMenuItemEditor();

@@ -4,6 +4,12 @@ Estado: implementado e validado localmente na branch `feat/catalogo-planos-segme
 
 ## Oferta
 
+### Fotos por produto
+
+O Essencial inclui uma foto por produto; o Completo inclui até três, inclusive durante o teste com acesso ao Completo. No painel, o responsável pode adicionar fotos, escolher a principal, substituí-las e removê-las. A vitrine apresenta a principal primeiro e permite navegar pelas fotos adicionais. O limite também é validado no banco, por estabelecimento e pelo acesso efetivo da assinatura.
+
+Ao mudar do Completo para o Essencial, as fotos adicionais já salvas são preservadas e deixam de aparecer na vitrine. Elas voltam a aparecer com o acesso ao Completo. O limite de armazenamento continua sendo 5 MB por arquivo JPEG, PNG ou WebP; o painel verifica e otimiza as imagens antes de enviá-las. Veja [implementação e testes](evidencias/fotos-produto-planos-2026-11-18.md).
+
 ### Estoque básico no Completo
 
 Implementação local de 17/11/2026: controle opcional por produto, quantidade atual em unidades inteiras e histórico de entradas, saídas, ajustes e pedidos. O saldo é compartilhado entre opções do mesmo produto; estoque por combinação de variantes continua fora do escopo. Acesso exclusivo ao Completo efetivo, inclusive no teste de 14 dias. Veja [implementação e testes](evidencias/estoque-local-2026-11-17.md).
@@ -14,8 +20,8 @@ Em 17/11/2026, o usuário aprovou a adequação da divulgação, cadastro, pági
 
 | Plano | Mensal | Anual | Capacidades |
 | --- | ---: | ---: | --- |
-| Catálogo Essencial | R$ 9,90 | R$ 99,00 | Produtos, fotos, opções, identidade básica, link, QR Code e seleção para WhatsApp. |
-| Catálogo Completo | R$ 29,90 | R$ 299,00 | Essencial, operação de pedidos, entrega local, retirada, relatórios existentes, cupom fixo e capa. |
+| Catálogo Essencial | R$ 9,90 | R$ 99,00 | Produtos, uma foto por produto, opções, identidade básica, link, QR Code e seleção para WhatsApp. |
+| Catálogo Completo | R$ 29,90 | R$ 299,00 | Essencial, até três fotos por produto, operação de pedidos, entrega local, retirada, relatórios existentes, cupom fixo e capa. |
 
 Anual significa uma cobrança a cada 12 meses, sem desconto adicional ou parcelamento prometido. Os recursos são iguais nas duas periodicidades. Novas ofertas usam os códigos `catalogo-essencial` e `catalogo-completo`, com as famílias de capacidades existentes `cardapio` e `encomendas`. O produto técnico continua `menu`.
 

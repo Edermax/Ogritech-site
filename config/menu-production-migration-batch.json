@@ -3,35 +3,29 @@
   "updatedAt": "2026-11-18",
   "baseline": "catalog_quantity_distribution",
   "strategy": "contiguous_tail",
-  "authorized": true,
-  "decision": "APPROVED",
+  "authorized": false,
+  "decision": "PENDING_VALIDATION",
   "localReplay": {
-    "status": "PASSED",
-    "mode": "CI_CLEAN_SUPABASE_REPLAY",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/44419075064",
-    "migrationCount": 113,
-    "testFiles": 37,
-    "assertions": 1121,
-    "failed": 0,
-    "evidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md"
+    "status": "PENDING",
+    "evidence": "docs/evidencias/fotos-produto-planos-2026-11-18.md"
   },
   "productionDryRun": {
-    "status": "APPLIED",
-    "remoteChangesPerformed": true,
-    "expectedPendingNames": [],
-    "appliedNames": [
-      "catalog_quantity_distribution"
+    "status": "PENDING",
+    "expectedPendingNames": [
+      "catalog_product_photo_limits"
     ],
-    "remoteVersion": "20261119000747",
-    "mode": "MCP_EXPLICIT_MIGRATIONS",
-    "evidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md"
+    "remoteChangesPerformed": false
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [],
+  "requiredMenuMigrations": [
+    "catalog_product_photo_limits"
+  ],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
-    "menu": []
+    "menu": [
+      "catalog_product_photo_limits"
+    ]
   },
   "releaseConditions": [
     "Every migration in the contiguous tail receives an explicit production disposition.",

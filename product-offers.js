@@ -1,7 +1,7 @@
 (() => {
   const offers = Object.freeze({
-    cardapio: Object.freeze({ code: "cardapio", planCode: "catalogo-essencial", name: "Ogritech Catálogo Essencial", monthlyCents: 990, annualCents: 9900, orders: false }),
-    encomendas: Object.freeze({ code: "encomendas", planCode: "catalogo-completo", name: "Ogritech Catálogo Completo", monthlyCents: 2990, annualCents: 29900, orders: true })
+    cardapio: Object.freeze({ code: "cardapio", planCode: "catalogo-essencial", name: "Ogritech Catálogo Essencial", monthlyCents: 990, annualCents: 9900, orders: false, productImageLimit: 1 }),
+    encomendas: Object.freeze({ code: "encomendas", planCode: "catalogo-completo", name: "Ogritech Catálogo Completo", monthlyCents: 2990, annualCents: 29900, orders: true, productImageLimit: 3 })
   });
   const forPlan = plan => {
     const family = plan?.offer_code || plan?.menu_offer_code || ({cardapio:"cardapio",foundation:"encomendas","catalogo-essencial":"cardapio","catalogo-completo":"encomendas"})[plan?.code];
