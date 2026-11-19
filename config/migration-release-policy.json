@@ -116,7 +116,8 @@
       "catalog_business_segments",
       "catalog_product_inventory",
       "catalog_quantity_distribution",
-      "catalog_product_photo_limits"
+      "catalog_product_photo_limits",
+      "platform_usage_analytics"
     ],
     "remoteVersionAliases": {
       "standard_menu_contact_and_orders": "20261106001516",
@@ -149,7 +150,8 @@
       "catalog_business_segments": "20261117210050",
       "catalog_product_inventory": "20261118123010",
       "catalog_quantity_distribution": "20261118225820",
-      "catalog_product_photo_limits": "20261119011836"
+      "catalog_product_photo_limits": "20261119011836",
+      "platform_usage_analytics": "20261119115857"
     },
     "observedMigrationNames": [
       "create_core_schema",
@@ -265,16 +267,22 @@
       "catalog_business_segments",
       "catalog_product_inventory",
       "catalog_quantity_distribution",
-      "catalog_product_photo_limits"
+      "catalog_product_photo_limits",
+      "platform_usage_analytics"
     ],
-    "observationEvidence": "docs/evidencias/fotos-produto-planos-2026-11-18.md",
+    "observationEvidence": "docs/evidencias/analytics-acessos-2026-11-19.md",
     "heldMigrations": []
   },
   "production": {
     "projectRef": "mvzcoaiiwytycdqcvydf",
     "appliedThrough": "catalog_product_photo_limits",
     "appliedOutOfOrder": [],
-    "heldMigrations": [],
+    "heldMigrations": [
+      {
+        "name": "platform_usage_analytics",
+        "reason": "Homologada em staging com 56 asserções revertidas; aguarda CI integral e promoção revisada."
+      }
+    ],
     "observationEvidence": "docs/evidencias/fotos-produto-publicacao-2026-11-19.md",
     "remoteVersionAliases": {
       "billing_rejected_email_event": "20261003162614",

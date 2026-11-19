@@ -302,7 +302,8 @@
             if (result?.error) throw result.error;
             menuSettingsDirty = false;
             const refreshed = await loadMenuAdmin();
-            if (refreshed && result?.warning && !menuCatalogDraftDirty && messageId === "menuItemMessage") resetMenuItemEditor();
+            if (refreshed && result?.warning && !menuCatalogDraftDirty && messageId === "menuItemMessage") { globalThis.OgritechUsage?.track("catalog_published"); resetMenuItemEditor(); }
+            if (refreshed && messageId === "menuOnboardingMessage" && !wasPublished && menuRecord?.published) globalThis.OgritechUsage?.track("catalog_published");
             if (refreshed) {
                 const destinations = { menuTemplateMessage: "settings", menuMessage: wasPublished ? "settings" : "catalog", menuItemMessage: "catalog", menuOperationMessage: "operation", menuOnboardingMessage: menuRecord?.published && !wasPublished ? "operation" : "review" };
                 selectMenuWorkspace(destinations[messageId] || selectedMenuWorkspace);
@@ -563,6 +564,7 @@
         try {
             const result = await supabaseClient.rpc("publish_menu_catalog_draft", { target_barbershop_id: BARBERSHOP_ID });
             if (result.error) throw result.error;
+            globalThis.OgritechUsage?.track("catalog_published");
             return result;
         } catch {
             return { warning: "Produto salvo, mas não foi possível atualizar o cardápio online. Use Atualizar cardápio aqui em Produtos para tentar novamente." };
@@ -573,7 +575,7 @@
         if (!canManageMenu() || !menuRecord?.published || !menuCatalogDraftDirty || menuSettingsDirty) return;
         return runMenuAction("menuItemMessage", "Atualizando cardápio online...", async () => {
             const result = await supabaseClient.rpc("publish_menu_catalog_draft", { target_barbershop_id: BARBERSHOP_ID });
-            if (!result.error) resetMenuItemEditor();
+            if (!result.error) { globalThis.OgritechUsage?.track("catalog_published"); resetMenuItemEditor(); }
             return result;
         }, "Cardápio online atualizado. Produtos ocultos continuam fora da vitrine.");
     });
@@ -1190,6 +1192,7 @@
                 const result=await savePublishedMenuDraft();
                 if(result.error){ await globalThis.OgritechProductPhotoEditor?.rollback(supabaseClient,photoTransaction); if(uploadedPath) await supabaseClient.storage.from("menu-images").remove([uploadedPath]); return result; }
                 globalThis.OgritechProductPhotoEditor?.persisted(photoTransaction);
+                globalThis.OgritechUsage?.track("product_saved");
                 const publication = await publishSavedMenuProduct();
                 if(!publication.error && !publication.warning) resetMenuItemEditor();
                 return { ...publication, data: { ...publication.data, item_visible: payload.active && payload.available } };
@@ -1197,6 +1200,7 @@
             const result=await supabaseClient.rpc("save_menu_catalog_item",{target_barbershop_id:BARBERSHOP_ID,payload});
             if(result.error){ await globalThis.OgritechProductPhotoEditor?.rollback(supabaseClient,photoTransaction); if(uploadedPath) await supabaseClient.storage.from("menu-images").remove([uploadedPath]); return result; }
             globalThis.OgritechProductPhotoEditor?.persisted(photoTransaction);
+            globalThis.OgritechUsage?.track("product_saved");
             if(!photoTransaction && previousPath && previousPath!==uploadedPath && (uploadedPath || menuImageRemoveRequested)) await supabaseClient.storage.from("menu-images").remove([previousPath]);
             resetMenuItemEditor(); return result;
         }, (data) => menuRecord.published ? (data?.item_visible ? "Produto salvo e atualizado no cardápio online." : "Produto salvo como oculto. Ele não aparece no cardápio online.") : "Produto salvo. Confira o catálogo e as etapas pendentes.");

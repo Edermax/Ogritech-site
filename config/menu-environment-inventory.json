@@ -974,9 +974,13 @@
       {
         "version": "20261119011836",
         "name": "catalog_product_photo_limits"
+      },
+      {
+        "version": "20261119115857",
+        "name": "platform_usage_analytics"
       }
     ],
-    "migrationsObservedAt": "2026-11-19T10:48:50.061Z"
+    "migrationsObservedAt": "2026-11-19T12:08:58.886Z"
   },
   "userAcceptance": {
     "recordedAt": "2026-10-19",
