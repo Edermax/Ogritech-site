@@ -1,4 +1,7 @@
 /* Daily navigation: one stable destination for each task. */
+.platform-admin-return{margin:0 0 16px}
+.platform-admin-return a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:10px 14px;border:1px solid var(--control-border);border-radius:10px;background:var(--control-surface);color:var(--control-accent-ink);font-weight:650;text-decoration:none}
+.platform-admin-return a:focus-visible{outline:2px solid var(--control-accent-ink);outline-offset:3px}
 body.panel-readable-controls .menu-item svg{flex:0 0 auto;width:20px;height:20px;color:var(--control-accent-ink)}
 body.panel-readable-controls .menu-item .panel-nav-label{width:auto;height:auto;border:0;font:inherit;line-height:1.3}
 body.panel-readable-controls .topbar{align-items:center;gap:16px}

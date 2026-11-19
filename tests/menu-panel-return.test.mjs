@@ -29,7 +29,7 @@ function page(options = {}) {
   const context = {
     location, history, URL, supabaseClient: client,
     document: { getElementById: id => ({ menuPanelReturn: navigation, menuPanelReturnLink: link })[id] },
-    window: { OGRITECH_ENV: "production", ogritechEnvironmentUrl: path => `https://ogritech.com.br${path}&env=production`, addEventListener: (name, callback) => { events[name] = callback; } }
+    window: { OGRITECH_ENV: "production", ogritechEnvironmentUrl: path => { const url = new URL(path, location.origin); url.searchParams.set("env", "production"); return url.href; }, addEventListener: (name, callback) => { events[name] = callback; } }
   };
   return { navigation, link, history, location, calls, events, authChange: (...args) => authChange?.(...args), ready: Promise.resolve(runInNewContext(source, context)) };
 }
@@ -115,4 +115,36 @@ test("the return destination is fixed even if an incoming URL suggests another s
   const fixture = page({ url: "https://ogritech.com.br/cardapio/diniz-doces?origem=painel&return_to=https://evil.invalid" });
   await fixture.ready;
   assert.equal(fixture.link.href, "https://ogritech.com.br/painel/?secao=loja&env=production");
+});
+
+test("a verified platform administrator returns to Ogritech businesses without requesting team data", async () => {
+  const fixture = page({ url: "https://ogritech.com.br/cardapio/?empresa=loja-teste&origem=administracao&return_to=https://evil.invalid" });
+  assert.equal(await fixture.ready, true);
+  assert.equal(fixture.link.href, "https://ogritech.com.br/admin.html?env=production#businesses");
+  assert.equal(fixture.link.textContent, "← Voltar à Ogritech");
+  assert.equal(fixture.history.state.ogritechMenuPanelPreview.source, "administracao");
+  assert.equal(fixture.location.searchParams.has("origem"), false);
+  assert.deepEqual(fixture.calls, ["identity", { name: "is_platform_admin", args: undefined }]);
+  const refresh = page({ url: fixture.location.href, history: fixture.history.state });
+  assert.equal(await refresh.ready, true);
+  assert.equal(refresh.link.href, fixture.link.href);
+});
+
+test("an administration URL hint cannot expose the return to guests, owners or unavailable authorization", async () => {
+  for (const options of [{ anonymous: true }, { denied: true }, { accessError: { code: "offline" } }]) {
+    const fixture = page({ ...options, url: "https://ogritech.com.br/cardapio/?empresa=loja-teste&origem=administracao" });
+    await fixture.ready;
+    assert.equal(fixture.navigation.hidden, true);
+    assert.equal(fixture.link.href, "");
+  }
+});
+
+test("an administrator signing out during verification never gets a stale return link", async () => {
+  let resolveAccess;
+  const fixture = page({ url: "https://ogritech.com.br/cardapio/?empresa=loja-teste&origem=administracao", access: () => new Promise(resolve => { resolveAccess = resolve; }) });
+  await new Promise(resolve => setImmediate(resolve));
+  fixture.authChange("SIGNED_OUT", null);
+  resolveAccess({ data: true });
+  await fixture.ready;
+  assert.equal(fixture.navigation.hidden, true);
 });
