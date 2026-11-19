@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-11-18",
+  "auditedAt": "2026-11-19",
   "staging": {
     "projectRef": "fuesdztsvrkkgnbqhcxi",
     "expectedMigrationNames": [
@@ -119,6 +119,12 @@
       "catalog_product_photo_limits"
     ],
     "remoteVersionAliases": {
+      "standard_menu_contact_and_orders": "20261106001516",
+      "live_delivery_zone_updates": "20261106003532",
+      "guard_paid_menu_rejections": "20261106004424",
+      "menu_optional_pix": "20261107154851",
+      "menu_pix_order_amount": "20261108002552",
+      "menu_service_area": "20261108004128",
       "menu_order_push_notifications": "20261110234528",
       "menu_order_push_transport": "20261110235244",
       "menu_trial_abuse_protection": "20261111225657",
@@ -141,7 +147,9 @@
       "catalog_cycle_reauthorization": "20261117161901",
       "fix_catalog_cycle_claim_parameter": "20261117162103",
       "catalog_business_segments": "20261117210050",
-      "catalog_product_inventory": "20261118123010"
+      "catalog_product_inventory": "20261118123010",
+      "catalog_quantity_distribution": "20261118225820",
+      "catalog_product_photo_limits": "20261119011836"
     },
     "observedMigrationNames": [
       "create_core_schema",
@@ -253,9 +261,13 @@
       "platform_admin_notifications",
       "catalog_profiles_and_commercial_plans",
       "catalog_cycle_reauthorization",
-      "fix_catalog_cycle_claim_parameter"
+      "fix_catalog_cycle_claim_parameter",
+      "catalog_business_segments",
+      "catalog_product_inventory",
+      "catalog_quantity_distribution",
+      "catalog_product_photo_limits"
     ],
-    "observationEvidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md",
+    "observationEvidence": "docs/evidencias/fotos-produto-planos-2026-11-18.md",
     "heldMigrations": []
   },
   "production": {

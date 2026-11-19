@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-18",
+  "updatedAt": "2026-11-19",
   "baseline": "catalog_quantity_distribution",
   "strategy": "contiguous_tail",
   "authorized": false,
   "decision": "PENDING_VALIDATION",
   "localReplay": {
-    "status": "PENDING",
+    "status": "PASS",
     "evidence": "docs/evidencias/fotos-produto-planos-2026-11-18.md"
   },
   "productionDryRun": {

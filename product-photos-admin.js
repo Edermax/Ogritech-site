@@ -3,7 +3,6 @@
  const escape=value=>String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let mounted=false,limit=1,locked=true,selecting=false,version=0,cover=null,extra=[],objectUrls=[];
  const base=()=>window.OGRITECH_SUPABASE_URL;
- const entries=()=>[cover,...extra].filter(Boolean);
  function release(){for(const url of objectUrls)URL.revokeObjectURL(url);objectUrls=[];}
  function card(entry,index,archived=false){return `<article class="product-photo-editor-card${archived?' is-archived':''}"><img src="${escape(entry.url)}" alt="Foto ${index+1} do produto"><div><strong>${index===0?'Foto principal':archived?'Foto preservada':`Foto ${index+1}`}</strong>${archived?'<small>Volta à vitrine com o Completo.</small>':''}<div class="product-photo-actions">${index>0&&!archived&&(!cover||cover.path||cover.file)?`<button type="button" class="table-button" data-photo-cover="${index}">Tornar principal</button>`:''}<button type="button" class="table-button" data-photo-remove="${index}">Remover</button></div></div></article>`;}
  function render(){
@@ -13,7 +12,7 @@
   $('menuPhotoLimit').textContent=`${activeCount} de ${limit} ${limit===1?'foto':'fotos'} na vitrine`;
   $('menuPhotoPlanNotice').textContent=limit===3?'Completo: até 3 fotos por produto. A principal aparece primeiro na vitrine.':`Essencial: 1 foto por produto.${extra.length?' As fotos adicionais foram preservadas e ficam fora da vitrine neste plano.':' No Completo, você pode adicionar até 3.'}`;
   $('menuItemImage').multiple=limit===3;
-  const label=document.querySelector('label[for=menuItemImage]');if(label)label.textContent=limit===3?'Adicionar fotos':'Adicionar foto';
+  const label=$('menuItemImage').closest('label'),caption=label&&[...label.childNodes].find(node=>node.nodeType===3);if(caption)caption.textContent=limit===3?'Adicionar fotos ':'Adicionar foto ';
   $('menuItemImage').disabled=locked||selecting||activeCount>=limit;
   $('menuPhotoReplace').disabled=locked||selecting;
   $('menuProductPhotos').querySelectorAll('button').forEach(button=>button.disabled=locked||selecting);

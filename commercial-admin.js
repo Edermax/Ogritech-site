@@ -302,6 +302,7 @@
             if (result?.error) throw result.error;
             menuSettingsDirty = false;
             const refreshed = await loadMenuAdmin();
+            if (refreshed && result?.warning && !menuCatalogDraftDirty && messageId === "menuItemMessage") resetMenuItemEditor();
             if (refreshed) {
                 const destinations = { menuTemplateMessage: "settings", menuMessage: wasPublished ? "settings" : "catalog", menuItemMessage: "catalog", menuOperationMessage: "operation", menuOnboardingMessage: menuRecord?.published && !wasPublished ? "operation" : "review" };
                 selectMenuWorkspace(destinations[messageId] || selectedMenuWorkspace);
@@ -570,7 +571,11 @@
 
     byId("menuCatalogPublishButton")?.addEventListener("click", () => {
         if (!canManageMenu() || !menuRecord?.published || !menuCatalogDraftDirty || menuSettingsDirty) return;
-        return runMenuAction("menuItemMessage", "Atualizando cardápio online...", () => supabaseClient.rpc("publish_menu_catalog_draft", { target_barbershop_id: BARBERSHOP_ID }), "Cardápio online atualizado. Produtos ocultos continuam fora da vitrine.");
+        return runMenuAction("menuItemMessage", "Atualizando cardápio online...", async () => {
+            const result = await supabaseClient.rpc("publish_menu_catalog_draft", { target_barbershop_id: BARBERSHOP_ID });
+            if (!result.error) resetMenuItemEditor();
+            return result;
+        }, "Cardápio online atualizado. Produtos ocultos continuam fora da vitrine.");
     });
 
     async function moveMenuCatalogEntry(kind, id, direction) {

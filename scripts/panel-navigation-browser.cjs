@@ -157,8 +157,8 @@ const out = 'outputs/panel-navigation'; fs.mkdirSync(out, { recursive: true });
           return rpc(name, args);
         };
       });
-      async function settled() {
-        await page.waitForFunction(() => !document.getElementById('panelProductEditor').checkVisibility() && window.OgritechMenuWorkspace.state().ready && !window.OgritechMenuWorkspace.state().busy);
+      async function settled(editorOpen = false) {
+        await page.waitForFunction(editorOpen => document.getElementById('panelProductEditor').checkVisibility() === editorOpen && window.OgritechMenuWorkspace.state().ready && !window.OgritechMenuWorkspace.state().busy, editorOpen);
         assert.equal(await page.locator('body').getAttribute('data-panel-route'), 'products');
       }
       async function edit(name) {
@@ -200,7 +200,7 @@ const out = 'outputs/panel-navigation'; fs.mkdirSync(out, { recursive: true });
         await page.evaluate(failure => { window.__publicationFailure = failure; }, failure);
         await edit('Alteração aguardando ' + failure);
         await page.locator('#menuItemActive').check(); await page.locator('#menuItemAvailable').check();
-        await page.locator('#menuItemSubmit').click(); await settled();
+        await page.locator('#menuItemSubmit').click(); await settled(true);
         assert.match(await page.locator('#menuWorkspaceMessage').textContent(), /Produto salvo, mas não foi possível atualizar/);
         assert.equal(await page.locator('#menuCatalogPublishButton').isVisible(), true);
         assert.notEqual(await page.evaluate(() => window.__fixtureMenu.menu_categories[0].menu_items[0].name), 'Alteração aguardando ' + failure);
@@ -208,6 +208,7 @@ const out = 'outputs/panel-navigation'; fs.mkdirSync(out, { recursive: true });
         await page.evaluate(() => { window.__publicationFailure = false; });
         await page.locator('#menuCatalogPublishButton').click();
         await page.waitForFunction(() => !window.__savedDraft && !window.OgritechMenuWorkspace.state().busy);
+        assert.equal(await page.locator('#panelProductEditor').isVisible(), false);
         assert.equal(await page.evaluate(() => window.__fixtureMenu.menu_categories[0].menu_items[0].name), 'Alteração aguardando ' + failure);
         assert.equal(await page.evaluate(() => window.__catalogCalls.filter(name => name === 'save_menu_catalog_draft').length), saves);
         assert.equal(await page.locator('body').getAttribute('data-panel-route'), 'products');
