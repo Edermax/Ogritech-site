@@ -32,8 +32,8 @@ O backup completo de produção para artefatos GitHub foi recusado pela revisão
 
 CI, aplicação em produção, hashes do catálogo antes/depois e conferência da versão pública serão registrados no relatório final da publicação. A disponibilidade global não ativa regras automaticamente nos 18 produtos atuais.
 
-## Homologação concluída e publicação pendente
+## Homologação, autorização e aplicação em produção
 
-O CI inicial do candidato `90de9390c33f8e5d652319855cd5dd0bcf939e47` passou nos três jobs: [execução 44417843827](https://github.com/Edermax/Ogritech-site/actions/runs/44417843827). O banco passou pelo replay das 113 migrations e 1.121 asserções em 37 arquivos; as suítes de concorrência também passaram. Foram aprovadas 22 jornadas locais da nova interface. Ajustes finais tornam visível a lista completa após sugerir uma distribuição e fazem os controles nativos do mínimo/máximo acompanhar o múltiplo configurado.
+O candidato 7892b922999122bb258056dd7209753ff425d7da passou nos três jobs do CI 44419075064. O replay de 113 migrations aprovou 1.121 asserções em 37 arquivos e as suítes de concorrência. As 22 jornadas locais e do CI também passaram.
 
-A aplicação da migration em produção foi recusada pela revisão automática: a autorização observada cobre implementar e homologar, mas não autoriza claramente promover a alteração do checkout em produção. Não foi tentado contornar essa decisão. Produção continua sem os validadores novos, sem ativação de regras nos produtos e sem publicação da interface. O [PR #155](https://github.com/Edermax/Ogritech-site/pull/155) reúne o código e a migration para autorização e publicação coordenada.
+Após a autorização explícita Autorizo para aplicar a migration e publicar as telas do PR #155, produção recebeu catalog_quantity_distribution na versão 20261119000747. O bloqueio anterior de autorização foi resolvido; a interface será liberada com o merge e o Pages após conferir o registro atualizado da release. As oito funções e permissões correspondem à homologação. Os hashes dos 18 produtos, preços e estoque continuam iguais, sem regras ativadas automaticamente. Detalhes em docs/evidencias/quantidades-publicacao-2026-11-18.md.

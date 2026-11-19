@@ -1,31 +1,37 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-18",
-  "baseline": "catalog_product_inventory",
+  "baseline": "catalog_quantity_distribution",
   "strategy": "contiguous_tail",
-  "authorized": false,
-  "decision": "PENDING_VALIDATION",
+  "authorized": true,
+  "decision": "APPROVED",
   "localReplay": {
-    "status": "PENDING",
-    "evidence": "docs/evidencias/quantidades-sabores-2026-11-18.md"
+    "status": "PASSED",
+    "mode": "CI_CLEAN_SUPABASE_REPLAY",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/44419075064",
+    "migrationCount": 113,
+    "testFiles": 37,
+    "assertions": 1121,
+    "failed": 0,
+    "evidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md"
   },
   "productionDryRun": {
-    "status": "PENDING",
-    "remoteChangesPerformed": false,
-    "expectedPendingNames": [
+    "status": "APPLIED",
+    "remoteChangesPerformed": true,
+    "expectedPendingNames": [],
+    "appliedNames": [
       "catalog_quantity_distribution"
-    ]
+    ],
+    "remoteVersion": "20261119000747",
+    "mode": "MCP_EXPLICIT_MIGRATIONS",
+    "evidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md"
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
-  "requiredMenuMigrations": [
-    "catalog_quantity_distribution"
-  ],
+  "requiredMenuMigrations": [],
   "classifications": {
     "shared_hardening": [],
     "agenda_or_identity": [],
-    "menu": [
-      "catalog_quantity_distribution"
-    ]
+    "menu": []
   },
   "releaseConditions": [
     "Every migration in the contiguous tail receives an explicit production disposition.",
@@ -84,22 +90,24 @@
     "catalog_profiles_and_commercial_plans",
     "catalog_cycle_reauthorization",
     "fix_catalog_cycle_claim_parameter",
-    "catalog_product_inventory"
+    "catalog_product_inventory",
+    "catalog_quantity_distribution"
   ],
-  "authorizationSource": "Usuário solicitou implementar mínimo, múltiplos e distribuição entre sabores/opções, com melhoria visual do painel e da vitrine.",
-  "authorizationScope": "Implementação e distribuição da funcionalidade, preservando os produtos, preços e pedidos existentes; regras ativadas por produto.",
+  "authorizationSource": "Usuário respondeu Autorizo à aplicação da migration no banco de produção da Ogritech e à publicação das telas do PR #155.",
+  "authorizationScope": "Publicar mínimo, múltiplos e distribuição entre opções, preservando produtos, preços, estoque e histórico; ativação por produto.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
-    "executedAt": "2026-11-16",
+    "executedAt": "2026-11-18",
     "migrations": [
-      "archive_menu_sales_reports"
+      "catalog_quantity_distribution"
     ],
     "reviewedPendingCount": 1,
-    "sourceBaseCommit": "229a061b535b5b27ed815ecba8be27ddd5faddeb",
-    "stagingMigrationCount": 106,
-    "productionMigrationCount": 106,
+    "sourceBaseCommit": "8e5f1d096f2dd606f80f83841cc35ed7466088fe",
+    "validatedCandidate": "7892b922999122bb258056dd7209753ff425d7da",
+    "stagingMigrationCount": 113,
+    "productionMigrationCount": 113,
     "postPromotionPendingCount": 0,
-    "evidence": "docs/evidencias/diniz-limpeza-relatorios-2026-11-16.md"
+    "evidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md"
   },
   "latestRestoreCheck": {
     "status": "SUCCESS",
@@ -117,19 +125,26 @@
     "mode": "FRESH_ENCRYPTED_BACKUP_AND_ISOLATED_RESTORE"
   },
   "publicationAuthorization": {
-    "date": "2026-11-17",
-    "instruction": "publique",
-    "scope": "Catálogo: banco, funções e frontend; preservar contratos anteriores"
+    "date": "2026-11-18",
+    "instruction": "Autorizo",
+    "scope": "Aplicar a migration de quantidades em produção e publicar as novas telas do PR #155"
   },
   "productionApplication": {
     "status": "APPLIED",
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "migrationCount": 110,
+    "migrationCount": 113,
     "remoteVersions": {
       "catalog_profiles_and_commercial_plans": "20261117185655",
       "catalog_cycle_reauthorization": "20261117185824",
-      "fix_catalog_cycle_claim_parameter": "20261117185829"
+      "fix_catalog_cycle_claim_parameter": "20261117185829",
+      "catalog_quantity_distribution": "20261119000747"
     },
-    "evidence": "docs/evidencias/catalogo-publicacao-2026-11-17.md"
+    "evidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md"
+  },
+  "currentPromotionRecovery": {
+    "mode": "INSPECTED_FUNCTION_SOURCES_AND_BODY_HASHES",
+    "productionBackupExported": false,
+    "customerRowsExported": false,
+    "evidence": "docs/evidencias/quantidades-publicacao-2026-11-18.md"
   }
 }
