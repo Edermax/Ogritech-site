@@ -36,7 +36,7 @@
     finally{clearTimeout(timeout);inFlight--;if(queue.length&&permitted()&&!document.hidden){clearTimeout(timer);timer=setTimeout(()=>flush(),10000);}}
   }
   function flushAtExit(){for(let batch=0;batch<5&&queue.length;batch++)void flush(true);}
-  function start(){if(!permitted())return;identity();visit=uuid();activeMs=0;activeSince=document.hidden?null:now();lastEngagement=0;milestones.clear();once.clear();track('page_view');if(page.startsWith('signup')&&formStarted)track('signup_started');context();}
+  function start(){if(!permitted())return;identity();visit=uuid();activeMs=0;activeSince=document.hidden?null:now();lastEngagement=0;formStarted=false;milestones.clear();once.clear();track('page_view');context();}
   function setConsent(allowed){const continuing=permitted()&&Boolean(allowed);if(!continuing){epoch++;queue=[];clearTimeout(timer);}choice={allowed:Boolean(allowed),at:now()};write(local,consentKey,choice);banner.hidden=true;preferences.textContent='Preferências de estatísticas';if(allowed&&!continuing)start();else if(!allowed){visitor=null;session=null;remove(local,visitorKey);remove(tab,sessionKey);}preferences.focus({preventScroll:true});}
   function showPreferences(){banner.hidden=false;banner.querySelector('button').focus({preventScroll:true});}
   function mount(){
@@ -62,13 +62,13 @@
   }
   function context(){const state=globalThis.OgritechMenuWorkspace?.state();if(page!=='panel'||!state?.ready)return;if(!once.has('panel')){once.add('panel');track('panel_open');}const route=document.body.dataset.panelRoute||state.workspace;if(route!==workspace&&Object.hasOwn(model.targets,'panel_'+route)){workspace=route;track('workspace_view','panel_'+route);}}
   document.addEventListener('click',event=>{if(event.target.closest('.usage-consent,.usage-preferences'))return;const target=clickTarget(event.target);if(target)track('click',target);});
-  document.addEventListener('focusin',event=>{if(page.startsWith('signup')&&event.target.closest('#menuTrialForm')&&!formStarted){formStarted=true;track('signup_started');}});
+  document.addEventListener('focusin',event=>{if(permitted()&&page.startsWith('signup')&&event.target.closest('#menuTrialForm')&&!formStarted){formStarted=true;track('signup_started');}});
   window.addEventListener('scroll',()=>{if(model.surface(page)!=='site'||!permitted())return;const height=document.documentElement.scrollHeight-innerHeight;if(height<=0)return;const depth=Math.floor(scrollY/height*100);for(const value of [25,50,75,90])if(depth>=value&&!milestones.has(value)){milestones.add(value);track('scroll','',value);}},{passive:true});
   function engagement(){if(!permitted())return;const seconds=Math.min(1800,Math.floor((activeMs+(activeSince===null?0:now()-activeSince))/1000));if(seconds>=10&&seconds!==lastEngagement){lastEngagement=seconds;track('engagement','',seconds);}}
   setInterval(()=>{engagement();context();},15000);
   document.addEventListener('visibilitychange',()=>{if(document.hidden){if(activeSince!==null)activeMs+=now()-activeSince;activeSince=null;engagement();flushAtExit();}else{activeSince=now();context();}});
   window.addEventListener('pagehide',()=>{engagement();flushAtExit();});window.addEventListener('ogritech:menu-context-changed',context);window.addEventListener('popstate',context);window.addEventListener('hashchange',context);
-  window.addEventListener('storage',event=>{if(event.key!==consentKey)return;const next=read(local,consentKey);epoch++;queue=[];choice=next;if(!permitted()){visitor=null;session=null;remove(tab,sessionKey);}else start();if(banner)banner.hidden=validChoice();});
+  window.addEventListener('storage',event=>{if(event.key!==consentKey)return;const continuing=permitted();choice=read(local,consentKey);if(continuing&&permitted()){if(banner)banner.hidden=true;return;}epoch++;queue=[];if(!permitted()){visitor=null;session=null;formStarted=false;remove(tab,sessionKey);}else start();if(banner)banner.hidden=validChoice();});
   let reportedFailure=false;
   const safeTrack=(...args)=>{try{track(...args);}catch{if(!reportedFailure)console.warn('ogritech_usage_event_failed');reportedFailure=true;}};
   globalThis.OgritechUsage=Object.freeze({track:safeTrack,flush,preferences:showPreferences});

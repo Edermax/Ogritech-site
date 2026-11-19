@@ -280,7 +280,7 @@
     "heldMigrations": [
       {
         "name": "platform_usage_analytics",
-        "reason": "Homologada em staging com 56 asserções revertidas; aguarda CI integral e promoção revisada."
+        "reason": "Homologada e aprovada no CI. Revisão automática bloqueou a aplicação por exigir autorização explícita para coleta persistente e RPCs anônimos em produção."
       }
     ],
     "observationEvidence": "docs/evidencias/fotos-produto-publicacao-2026-11-19.md",

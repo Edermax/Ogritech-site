@@ -4,13 +4,19 @@
   "baseline": "catalog_product_photo_limits",
   "strategy": "contiguous_tail",
   "authorized": false,
-  "decision": "PENDING_VALIDATION",
+  "decision": "AWAITING_PRODUCTION_AUTHORIZATION",
   "localReplay": {
-    "status": "PENDING",
+    "status": "PASSED",
+    "mode": "CI_CLEAN_SUPABASE_REPLAY",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/44521732082",
+    "migrationCount": 115,
+    "testFiles": 39,
+    "assertions": 1205,
+    "failed": 0,
     "evidence": "docs/evidencias/analytics-acessos-2026-11-19.md"
   },
   "productionDryRun": {
-    "status": "PENDING",
+    "status": "BLOCKED_BY_APPROVAL_REVIEW",
     "expectedPendingNames": [
       "platform_usage_analytics"
     ],
@@ -86,8 +92,8 @@
     "catalog_quantity_distribution",
     "catalog_product_photo_limits"
   ],
-  "authorizationSource": "Solicitação do usuário para permitir até três fotos no Completo e uma no Essencial, retomada pelo usuário em 19/11/2026; ação de produção aceita pela revisão automática.",
-  "authorizationScope": "Aplicar limites de fotos por plano e publicar as telas do PR #156, preservando produtos, preços, estoque, pedidos e assinaturas.",
+  "authorizationSource": "Usuário pediu acompanhar acessos e confirmou a consulta dentro do administrador. A revisão automática exigiu autorização explícita para aplicar a coleta persistente e os RPCs anônimos em produção; ainda não recebida para este PR.",
+  "authorizationScope": "Implementação e homologação concluídas; produção aguardando autorização explícita para o PR #157.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
     "executedAt": "2026-11-19T10:48:50.061Z",
@@ -118,9 +124,8 @@
     "mode": "FRESH_ENCRYPTED_BACKUP_AND_ISOLATED_RESTORE"
   },
   "publicationAuthorization": {
-    "date": "2026-11-19",
-    "instruction": "retome",
-    "scope": "Aplicar limites de fotos por plano e publicar as telas do PR #156, preservando produtos, preços, estoque, pedidos e assinaturas."
+    "status": "REQUIRED",
+    "scope": "Aplicar platform_usage_analytics no banco de produção e publicar o monitoramento do PR #157, com consentimento opcional e dados agrupados."
   },
   "productionApplication": {
     "status": "APPLIED",
@@ -136,14 +141,24 @@
     "evidence": "docs/evidencias/fotos-produto-publicacao-2026-11-19.md"
   },
   "currentPromotionRecovery": {
-    "mode": "BACKWARD_COMPATIBLE_MIGRATION_WITH_INSPECTED_BASELINE_AND_FUNCTION_HASHES",
+    "mode": "ADDITIVE_ANALYTICS_OBJECTS_AND_PREVIOUS_FRONTEND",
     "productionBackupExported": false,
     "customerRowsExported": false,
-    "evidence": "docs/evidencias/fotos-produto-publicacao-2026-11-19.md"
+    "evidence": "docs/evidencias/analytics-acessos-2026-11-19.md"
   },
   "previousPublicationAuthorization": {
-    "date": "2026-11-18",
-    "instruction": "Autorizo",
-    "scope": "Aplicar a migration de quantidades em produção e publicar as novas telas do PR #155"
+    "date": "2026-11-19",
+    "instruction": "retome",
+    "scope": "Aplicar limites de fotos por plano e publicar as telas do PR #156, preservando produtos, preços, estoque, pedidos e assinaturas."
+  },
+  "currentPromotion": {
+    "status": "AWAITING_EXPLICIT_PRODUCTION_AUTHORIZATION",
+    "migrations": [
+      "platform_usage_analytics"
+    ],
+    "validatedBackendCandidate": "878c6625ad53e4d937ff3c225f3d2e3e0bce78f0",
+    "productionChanged": false,
+    "reason": "Revisão automática: produção cria coleta persistente de dados e expõe RPCs anônimos sem autorização explícita de publicação.",
+    "evidence": "docs/evidencias/analytics-acessos-2026-11-19.md"
   }
 }
