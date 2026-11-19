@@ -3,12 +3,12 @@
   "updatedAt": "2026-11-19",
   "baseline": "catalog_product_photo_limits",
   "strategy": "contiguous_tail",
-  "authorized": false,
-  "decision": "AWAITING_PRODUCTION_AUTHORIZATION",
+  "authorized": true,
+  "decision": "APPLIED_AND_VERIFIED",
   "localReplay": {
     "status": "PASSED",
     "mode": "CI_CLEAN_SUPABASE_REPLAY",
-    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/44521732082",
+    "sourceRun": "https://github.com/Edermax/Ogritech-site/actions/runs/44524106167",
     "migrationCount": 115,
     "testFiles": 39,
     "assertions": 1205,
@@ -16,11 +16,12 @@
     "evidence": "docs/evidencias/analytics-acessos-2026-11-19.md"
   },
   "productionDryRun": {
-    "status": "BLOCKED_BY_APPROVAL_REVIEW",
+    "status": "EXACT_PENDING_MIGRATION_REVIEWED",
     "expectedPendingNames": [
       "platform_usage_analytics"
     ],
-    "remoteChangesPerformed": false
+    "applicationMethod": "Supabase apply_migration",
+    "remoteChangesPerformed": true
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
@@ -92,8 +93,8 @@
     "catalog_quantity_distribution",
     "catalog_product_photo_limits"
   ],
-  "authorizationSource": "Usuário pediu acompanhar acessos e confirmou a consulta dentro do administrador. A revisão automática exigiu autorização explícita para aplicar a coleta persistente e os RPCs anônimos em produção; ainda não recebida para este PR.",
-  "authorizationScope": "Implementação e homologação concluídas; produção aguardando autorização explícita para o PR #157.",
+  "authorizationSource": "Usuário respondeu \"publica\" ao pedido explícito para aplicar a atualização no banco de produção e publicar o monitoramento do PR #157; depois pediu \"retome\".",
+  "authorizationScope": "Aplicar platform_usage_analytics em produção e publicar o monitoramento do PR #157.",
   "lastPromotion": {
     "status": "APPLIED_AND_VERIFIED",
     "executedAt": "2026-11-19T10:48:50.061Z",
@@ -124,27 +125,30 @@
     "mode": "FRESH_ENCRYPTED_BACKUP_AND_ISOLATED_RESTORE"
   },
   "publicationAuthorization": {
-    "status": "REQUIRED",
-    "scope": "Aplicar platform_usage_analytics no banco de produção e publicar o monitoramento do PR #157, com consentimento opcional e dados agrupados."
+    "status": "AUTHORIZED",
+    "date": "2026-11-19",
+    "instruction": "publica; retome",
+    "scope": "Aplicar platform_usage_analytics em produção e publicar o monitoramento do PR #157."
   },
   "productionApplication": {
-    "status": "APPLIED",
+    "status": "APPLIED_AND_VERIFIED",
     "projectRef": "mvzcoaiiwytycdqcvydf",
-    "migrationCount": 114,
+    "migrationCount": 115,
     "remoteVersions": {
       "catalog_profiles_and_commercial_plans": "20261117185655",
       "catalog_cycle_reauthorization": "20261117185824",
       "fix_catalog_cycle_claim_parameter": "20261117185829",
       "catalog_quantity_distribution": "20261119000747",
-      "catalog_product_photo_limits": "20261119104818"
+      "catalog_product_photo_limits": "20261119104818",
+      "platform_usage_analytics": "20261119142006"
     },
-    "evidence": "docs/evidencias/fotos-produto-publicacao-2026-11-19.md"
+    "evidence": "docs/evidencias/analytics-publicacao-2026-11-19.md"
   },
   "currentPromotionRecovery": {
     "mode": "ADDITIVE_ANALYTICS_OBJECTS_AND_PREVIOUS_FRONTEND",
     "productionBackupExported": false,
     "customerRowsExported": false,
-    "evidence": "docs/evidencias/analytics-acessos-2026-11-19.md"
+    "evidence": "docs/evidencias/analytics-publicacao-2026-11-19.md"
   },
   "previousPublicationAuthorization": {
     "date": "2026-11-19",
@@ -152,13 +156,17 @@
     "scope": "Aplicar limites de fotos por plano e publicar as telas do PR #156, preservando produtos, preços, estoque, pedidos e assinaturas."
   },
   "currentPromotion": {
-    "status": "AWAITING_EXPLICIT_PRODUCTION_AUTHORIZATION",
+    "status": "APPLIED_AND_VERIFIED",
+    "executedAt": "2026-11-19T14:23:57.716428+00:00",
     "migrations": [
       "platform_usage_analytics"
     ],
-    "validatedBackendCandidate": "878c6625ad53e4d937ff3c225f3d2e3e0bce78f0",
-    "productionChanged": false,
-    "reason": "Revisão automática: produção cria coleta persistente de dados e expõe RPCs anônimos sem autorização explícita de publicação.",
-    "evidence": "docs/evidencias/analytics-acessos-2026-11-19.md"
+    "validatedBackendCandidate": "73f6e0387f308728fa009c98fa5048d65b2329e5",
+    "productionChanged": true,
+    "productionMigrationCount": 115,
+    "postPromotionPendingCount": 0,
+    "functionBodiesVerified": 6,
+    "customerRowsExported": false,
+    "evidence": "docs/evidencias/analytics-publicacao-2026-11-19.md"
   }
 }

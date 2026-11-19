@@ -5,8 +5,11 @@ import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import {chromium} from 'playwright';
 const require=createRequire(import.meta.url),adminFixture=require('../tests/fixtures/platform-admin.cjs');
-const root=resolve(fileURLToPath(new URL('../',import.meta.url))),origin='https://ogritech.com.br',out=resolve(root,'outputs/usage-review');await mkdir(out,{recursive:true});
+const published=process.env.OGRITECH_USAGE_BROWSER_PUBLISHED==='1';
+const root=resolve(fileURLToPath(new URL('../',import.meta.url))),origin='https://ogritech.com.br',out=resolve(root,published?'outputs/usage-public':'outputs/usage-review');await mkdir(out,{recursive:true});
 const checks=[],pageErrors=[],unexpectedRequests=[];
+const publishedAssets=new Map();
+async function publishedBody(path){if(!publishedAssets.has(path))publishedAssets.set(path,(async()=>{const response=await fetch(origin+path+'?usage_verify='+Date.now(),{signal:AbortSignal.timeout(20000)});assert(response.ok,'Published asset unavailable: '+path);return Buffer.from(await response.arrayBuffer());})());return publishedAssets.get(path);}
 const browser=await chromium.launch({headless:true,...(process.platform==='win32'?{executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'}:{})});
 async function scene({path='/',width=390,admin=false,storageBlocked=false,expired=false}={}){
  const requests=[],pending=[],context=await browser.newContext({viewport:{width,height:940},serviceWorkers:'block',reducedMotion:'reduce',acceptDownloads:true});
@@ -33,6 +36,7 @@ async function scene({path='/',width=390,admin=false,storageBlocked=false,expire
   if(url.origin!==origin||request.method()!=='GET'){unexpectedRequests.push({origin:url.origin,method:request.method()});return route.fulfill({body:''});}
   const file=resolve(root,decodeURIComponent(url.pathname).replace(/^\//,'')+(url.pathname.endsWith('/')?'index.html':''));if(!file.startsWith(root+sep))return route.fulfill({status:403});
   try{let body=await readFile(file);const contentType={'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.ico':'image/x-icon','.webp':'image/webp'}[extname(file)]||'application/octet-stream';
+   if(published)body=await publishedBody(url.pathname);
    if(contentType==='text/html')body=Buffer.from(body.toString().replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,tag=>admin?(/src="[^\"]*(?:https:|supabase-config)/.test(tag)?'':tag):(/src="\/usage-(?:model|analytics)\.js/.test(tag)?tag:'')));
    return route.fulfill({body,contentType});
   }catch{return route.fulfill({status:404});}
