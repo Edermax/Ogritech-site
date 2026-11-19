@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-11-19",
-  "baseline": "catalog_product_photo_limits",
+  "baseline": "platform_usage_analytics",
   "strategy": "contiguous_tail",
   "authorized": true,
-  "decision": "APPLIED_AND_VERIFIED",
+  "decision": "APPROVED",
   "localReplay": {
     "status": "PASSED",
     "mode": "CI_CLEAN_SUPABASE_REPLAY",
@@ -16,19 +16,18 @@
     "evidence": "docs/evidencias/analytics-acessos-2026-11-19.md"
   },
   "productionDryRun": {
-    "status": "EXACT_PENDING_MIGRATION_REVIEWED",
-    "expectedPendingNames": [
+    "status": "APPLIED_NO_PENDING_MIGRATIONS",
+    "reviewedAppliedNames": [
       "platform_usage_analytics"
     ],
+    "expectedPendingNames": [],
     "applicationMethod": "Supabase apply_migration",
     "remoteChangesPerformed": true
   },
   "cliConstraint": "Supabase db push applies the pending migration tail in order and has no per-file include flag.",
   "requiredMenuMigrations": [],
   "classifications": {
-    "shared_hardening": [
-      "platform_usage_analytics"
-    ],
+    "shared_hardening": [],
     "agenda_or_identity": [],
     "menu": []
   },
@@ -91,7 +90,8 @@
     "fix_catalog_cycle_claim_parameter",
     "catalog_product_inventory",
     "catalog_quantity_distribution",
-    "catalog_product_photo_limits"
+    "catalog_product_photo_limits",
+    "platform_usage_analytics"
   ],
   "authorizationSource": "Usuário respondeu \"publica\" ao pedido explícito para aplicar a atualização no banco de produção e publicar o monitoramento do PR #157; depois pediu \"retome\".",
   "authorizationScope": "Aplicar platform_usage_analytics em produção e publicar o monitoramento do PR #157.",
@@ -157,7 +157,7 @@
   },
   "currentPromotion": {
     "status": "APPLIED_AND_VERIFIED",
-    "executedAt": "2026-11-19T14:23:57.716428+00:00",
+    "executedAt": "2026-11-19T14:28:14.074260+00:00",
     "migrations": [
       "platform_usage_analytics"
     ],
