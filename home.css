@@ -106,6 +106,62 @@ footer img { display: block; width: 116px; height: auto; }
 .showcase-navigation { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; color: var(--muted); font-size: .73rem; }
 .showcase-arrow { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; font: 400 26px/1 Arial, sans-serif; }
 .showcase-arrow:hover { border-color: var(--teal); color: var(--teal); }
+.showcase-device {
+  position: relative;
+  width: min(390px, 100%);
+  margin: 16px auto 0;
+  padding: 9px;
+  border: 1px solid #66717a;
+  border-radius: 46px;
+  background: linear-gradient(135deg, #39434b, #11181d 35%, #202b33 75%, #48545d);
+  box-shadow: inset 0 0 0 2px #11181d, 0 18px 38px #172d3a26;
+}
+.showcase-device::before, .showcase-device::after {
+  content: "";
+  position: absolute;
+  width: 3px;
+  border-radius: 2px;
+  background: #39434b;
+  pointer-events: none;
+}
+.showcase-device::before { top: 110px; left: -3px; height: 48px; box-shadow: 0 58px 0 #39434b; }
+.showcase-device::after { top: 150px; right: -3px; height: 70px; }
+.showcase-screen { overflow: hidden; border-radius: 36px; background: #fff; }
+.device-status {
+  position: relative;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  color: #172d3a;
+  font: 650 12px/1 ui-sans-serif, system-ui, sans-serif;
+}
+.device-camera {
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  width: 88px;
+  height: 24px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #11181d;
+}
+.device-camera::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  right: 11px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid #263743;
+  border-radius: 50%;
+  background: #14202b;
+}
+.device-indicators { display: block; }
+.device-home { display: grid; place-items: center; height: 24px; }
+.device-home::before { content: ""; width: 100px; height: 4px; border-radius: 999px; background: #172d3a; }
+.showcase-device .phone { width: 100%; border: 0; border-radius: 0; box-shadow: none; }
 .phone {
   --sample-tint: #e9fafd;
   --sample-accent: #006b7e;
@@ -249,7 +305,7 @@ h1 em,h2 em { font-style:normal; color:var(--teal); font-family:inherit; }
 .button.secondary:hover { border-color:var(--teal); background:#f4fcfe; }
 .hero-price { margin-top:18px; font-size:14px; }
 .trust-list { margin-top:8px; font-size:13px; gap:6px 16px; }
-.product-stage h2 { color:var(--muted); font-size:14px; font-weight:550; }
+.product-stage h2 { margin-bottom:16px; color:#000; font-size:clamp(1.5rem,2.2vw,1.75rem); font-weight:750; line-height:1.2; letter-spacing:-.025em; text-wrap:balance; }
 .showcase-dots button { min-height:44px; padding:10px 14px; border-color:var(--line); font-family:inherit; font-size:12px; font-weight:600; line-height:1.3; }
 .showcase-dots button.active { background:var(--teal); border-color:var(--teal); color:#fff; }
 .phone { border:1px solid #c7d8e2; border-radius:20px; box-shadow:0 12px 36px #172d3a0d; }

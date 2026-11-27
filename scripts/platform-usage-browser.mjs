@@ -8,16 +8,17 @@ const require=createRequire(import.meta.url),adminFixture=require('../tests/fixt
 const published=process.env.OGRITECH_USAGE_BROWSER_PUBLISHED==='1';
 const root=resolve(fileURLToPath(new URL('../',import.meta.url))),origin='https://ogritech.com.br',out=resolve(root,published?'outputs/usage-public':'outputs/usage-review');await mkdir(out,{recursive:true});
 const checks=[],pageErrors=[],unexpectedRequests=[];
+const scenarioTime=Date.parse('2026-11-19T12:00:00Z');
 const publishedAssets=new Map();
 async function publishedBody(path){if(!publishedAssets.has(path))publishedAssets.set(path,(async()=>{const response=await fetch(origin+path+'?usage_verify='+Date.now(),{signal:AbortSignal.timeout(20000)});assert(response.ok,'Published asset unavailable: '+path);return Buffer.from(await response.arrayBuffer());})());return publishedAssets.get(path);}
 const browser=await chromium.launch({headless:true,...(process.platform==='win32'?{executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'}:{})});
 async function scene({path='/',width=390,admin=false,storageBlocked=false,expired=false}={}){
  const requests=[],pending=[],context=await browser.newContext({viewport:{width,height:940},serviceWorkers:'block',reducedMotion:'reduce',acceptDownloads:true});
  if(admin)await context.addInitScript({content:adminFixture});
- await context.addInitScript(({admin,storageBlocked,expired})=>{
+ await context.addInitScript(({admin,storageBlocked,expired,scenarioTime})=>{
   window.OGRITECH_USAGE_TEST=true;window.__usageFail=false;window.__usageCalls=[];window.__usageHold=false;window.__usageHeld=[];
   if(storageBlocked){Object.defineProperty(window,'localStorage',{get(){throw new DOMException('Blocked','SecurityError');}});Object.defineProperty(window,'sessionStorage',{get(){throw new DOMException('Blocked','SecurityError');}});}
-  if(expired)localStorage.setItem('ogritechUsageConsent:v1',JSON.stringify({allowed:true,at:Date.now()-181*86400000}));
+  if(expired)localStorage.setItem('ogritechUsageConsent:v1',JSON.stringify({allowed:true,at:scenarioTime-181*86400000}));
   if(admin){const rpc=window.supabaseClient.rpc.bind(window.supabaseClient);window.supabaseClient.rpc=async(name,args)=>{
    if(name!=='platform_usage_report')return rpc(name,args);window.__usageCalls.push(structuredClone(args));
    if(window.__usageFail)return{error:{code:window.__usageFail===true?'08006':window.__usageFail}};
@@ -27,7 +28,7 @@ async function scene({path='/',width=390,admin=false,storageBlocked=false,expire
    if(window.__usageMalicious){data.pages.push({page:'<img src=x onerror=alert(1)>',views:'=bad'});data.clicks.push({page:'unknown',target:'<script>bad</script>',clicks:1});}
    return{data};
   };}
- },{admin,storageBlocked,expired});
+ },{admin,storageBlocked,expired,scenarioTime});
  await context.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());
   if(url.pathname==='/rest/v1/rpc/public_record_platform_usage'){
@@ -41,7 +42,7 @@ async function scene({path='/',width=390,admin=false,storageBlocked=false,expire
    return route.fulfill({body,contentType});
   }catch{return route.fulfill({status:404});}
  });
- const page=await context.newPage();page.on('pageerror',e=>pageErrors.push(e.message));await page.clock.install({time:new Date('2026-11-19T12:00:00Z')});await page.goto(origin+path,{waitUntil:'networkidle'});
+ const page=await context.newPage();page.on('pageerror',e=>pageErrors.push(e.message));await page.clock.install({time:new Date(scenarioTime)});await page.goto(origin+path,{waitUntil:'networkidle'});
  if(admin)await page.waitForFunction(()=>document.getElementById('adminLoading').classList.contains('hidden'));
  else await page.evaluate(()=>document.documentElement.style.visibility='visible');
  return{page,context,requests,release:()=>pending.splice(0).forEach(done=>done())};
