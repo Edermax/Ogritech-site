@@ -24,6 +24,22 @@ if (showcase) {
   const dots = [...showcase.querySelectorAll("[data-showcase-dot]")];
   let activeSlide = 0;
   let pointerStart = null;
+  let autoplayTimer = null;
+  let userInteracted = false;
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  function updateAutoplay() {
+    window.clearInterval(autoplayTimer);
+    autoplayTimer = null;
+    if (userInteracted || document.hidden || reducedMotion.matches || slides.length < 2) return;
+    autoplayTimer = window.setInterval(() => showSlide(activeSlide + 1), 3000);
+  }
+
+  function stopAutoplay() {
+    userInteracted = true;
+    window.clearInterval(autoplayTimer);
+    autoplayTimer = null;
+  }
 
   function showSlide(index) {
     activeSlide = (index + slides.length) % slides.length;
@@ -57,4 +73,12 @@ if (showcase) {
     showSlide(activeSlide + (distance < 0 ? 1 : -1));
   });
   showcase.addEventListener("pointercancel", () => { pointerStart = null; });
+
+  // Once someone starts exploring, leave the carousel under their control.
+  ["pointerenter", "pointerdown", "focusin", "click", "keydown"].forEach((eventName) => {
+    showcase.addEventListener(eventName, stopAutoplay);
+  });
+  document.addEventListener("visibilitychange", updateAutoplay);
+  reducedMotion.addEventListener("change", updateAutoplay);
+  updateAutoplay();
 }
